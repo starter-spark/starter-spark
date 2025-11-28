@@ -63,6 +63,7 @@ export function ServoCalculator({ isOpen, onClose }: ServoCalculatorProps) {
           <button
             onClick={onClose}
             className="cursor-pointer p-1 hover:bg-slate-100 rounded transition-colors"
+            aria-label="Close calculator"
           >
             <X className="w-5 h-5 text-slate-500" />
           </button>
