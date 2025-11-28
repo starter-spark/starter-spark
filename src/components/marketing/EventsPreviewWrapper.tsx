@@ -42,40 +42,25 @@ export async function EventsPreview() {
     console.error("Failed to fetch posts:", postsError.message)
   }
 
-  // Get comment counts for each post in a single query
-  let discussions: Discussion[] = []
-  if (postsData && postsData.length > 0) {
-    const postIds = postsData.map((post) => post.id)
-    // Fetch comment counts grouped by post_id
-    const { data: commentCountsData, error: commentCountsError } = await supabase
-      .from("comments")
-      .select("post_id, count:id", { count: "exact" })
-      .in("post_id", postIds)
-      .group("post_id")
+  // Get comment counts for each post
+  const discussions: Discussion[] = []
+  if (postsData) {
+    for (const post of postsData) {
+      const { count } = await supabase
+        .from("comments")
+        .select("*", { count: "exact", head: true })
+        .eq("post_id", post.id)
 
-    if (commentCountsError) {
-      console.error("Failed to fetch comment counts:", commentCountsError.message)
-    }
-
-    // Build a map from post_id to count
-    const commentCountMap: Record<string, number> = {}
-    if (commentCountsData) {
-      for (const row of commentCountsData) {
-        commentCountMap[row.post_id] = row.count
-      }
-    }
-
-    discussions = postsData.map((post) => {
       const profile = post.profiles as { full_name: string | null } | null
-      return {
+      discussions.push({
         id: post.id,
         slug: post.slug,
         title: post.title,
         author_name: profile?.full_name || null,
-        comment_count: commentCountMap[post.id] || 0,
+        comment_count: count || 0,
         tags: post.tags,
-      }
-    })
+      })
+    }
   }
 
   // Get community stats
