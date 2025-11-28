@@ -12,8 +12,10 @@ import {
 } from "lucide-react"
 import { useState } from "react"
 import { useCartStore } from "@/store/cart"
+import { trackAddToCart } from "@/lib/analytics"
 
 interface BuyBoxProps {
+  id: string
   slug: string
   name: string
   price: number
@@ -23,6 +25,7 @@ interface BuyBoxProps {
 }
 
 export function BuyBox({
+  id,
   slug,
   name,
   price,
@@ -35,6 +38,16 @@ export function BuyBox({
 
   const handleAddToCart = () => {
     addItem({ slug, name, price, image }, quantity)
+
+    // Track add to cart event
+    trackAddToCart({
+      id,
+      name,
+      slug,
+      price,
+      quantity,
+    })
+
     setQuantity(1) // Reset quantity after adding
   }
 

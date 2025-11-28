@@ -1,4 +1,3 @@
-import { Footer } from "@/components/layout/Footer"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
@@ -22,8 +21,6 @@ export default function PrivacyPage() {
           </div>
         </div>
       </section>
-
-      <Footer />
     </main>
   )
 }

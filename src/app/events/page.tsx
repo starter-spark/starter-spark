@@ -1,5 +1,4 @@
 import { createClient } from "@/lib/supabase/server"
-import { Footer } from "@/components/layout/Footer"
 import { Calendar, MapPin, Clock, ExternalLink, ChevronDown } from "lucide-react"
 import Link from "next/link"
 import { EventsToggle } from "./EventsToggle"
@@ -261,8 +260,6 @@ export default async function EventsPage() {
           </div>
         </section>
       )}
-
-      <Footer />
     </main>
   )
 }

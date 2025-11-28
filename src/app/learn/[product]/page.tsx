@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
-import { Footer } from "@/components/layout/Footer"
+import { formatDuration } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
   BookOpen,
@@ -75,8 +75,9 @@ export default async function CoursePage({
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Check if user owns this product
+  // Check if user owns this product and fetch lesson progress
   let isOwned = false
+  let completedLessonIds: string[] = []
   if (user) {
     const { data: license } = await supabase
       .from("licenses")
@@ -87,25 +88,36 @@ export default async function CoursePage({
 
     if (license) {
       isOwned = true
+
+      // Fetch completed lessons for this user
+      const { data: progress } = await supabase
+        .from("lesson_progress")
+        .select("lesson_id")
+        .eq("user_id", user.id)
+
+      if (progress) {
+        completedLessonIds = progress.map((p) => p.lesson_id)
+      }
     }
   }
 
-  // Calculate total lessons
-  const totalLessons = sortedModules.reduce(
-    (acc, mod) => acc + mod.lessons.length,
-    0
+  // Calculate total lessons and progress
+  const allLessonIds = sortedModules.flatMap((mod) =>
+    mod.lessons.map((l) => l.id)
   )
+  const totalLessons = allLessonIds.length
+  const completedCount = allLessonIds.filter((id) =>
+    completedLessonIds.includes(id)
+  ).length
+  const progressPercent = totalLessons > 0
+    ? Math.round((completedCount / totalLessons) * 100)
+    : 0
 
-  // Format duration for display
-  const formatDuration = (minutes: number) => {
-    if (minutes < 60) return `${minutes} min`
-    const hours = Math.floor(minutes / 60)
-    const mins = minutes % 60
-    return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`
-  }
-
-  // Get first lesson slug for "Start Course" button
-  const firstLesson = sortedModules[0]?.lessons[0]
+  // Get first incomplete lesson or first lesson for "Continue/Start Course" button
+  const firstIncompleteLesson = sortedModules
+    .flatMap((mod) => mod.lessons)
+    .find((lesson) => !completedLessonIds.includes(lesson.id))
+  const firstLesson = firstIncompleteLesson || sortedModules[0]?.lessons[0]
 
   return (
     <main className="min-h-screen bg-slate-50">
@@ -161,20 +173,20 @@ export default async function CoursePage({
                 <>
                   <div className="text-center mb-4">
                     <div className="text-2xl font-mono text-slate-900 mb-1">
-                      0%
+                      {progressPercent}%
                     </div>
                     <p className="text-sm text-slate-500">completed</p>
                   </div>
                   <div className="h-2 bg-slate-200 rounded-full overflow-hidden mb-6">
                     <div
-                      className="h-full bg-cyan-700 rounded-full"
-                      style={{ width: "0%" }}
+                      className="h-full bg-cyan-700 rounded-full transition-all"
+                      style={{ width: `${progressPercent}%` }}
                     />
                   </div>
                   {firstLesson && (
                     <Link href={`/learn/${product.slug}/${firstLesson.slug}`}>
                       <Button className="w-full bg-cyan-700 hover:bg-cyan-600 text-white font-mono">
-                        Start Course
+                        {progressPercent > 0 ? "Continue Course" : "Start Course"}
                         <ChevronRight className="w-4 h-4 ml-2" />
                       </Button>
                     </Link>
@@ -230,7 +242,7 @@ export default async function CoursePage({
                 <div className="divide-y divide-slate-100">
                   {module.lessons.map((lesson) => {
                     const isAccessible = isOwned
-                    const isCompleted = false // TODO: fetch from lesson_progress
+                    const isCompleted = completedLessonIds.includes(lesson.id)
 
                     return (
                       <div
@@ -296,8 +308,6 @@ export default async function CoursePage({
           </div>
         </div>
       </section>
-
-      <Footer />
     </main>
   )
 }

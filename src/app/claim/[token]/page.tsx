@@ -1,6 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
 import { supabaseAdmin } from "@/lib/supabase/admin"
-import { Footer } from "@/components/layout/Footer"
 import { Button } from "@/components/ui/button"
 import { Package, CheckCircle, AlertCircle, ArrowRight, LogIn } from "lucide-react"
 import Link from "next/link"
@@ -70,7 +69,6 @@ export default async function ClaimPage({ params }: ClaimPageProps) {
             </div>
           </div>
         </section>
-        <Footer />
       </main>
     )
   }
@@ -99,7 +97,6 @@ export default async function ClaimPage({ params }: ClaimPageProps) {
             </Link>
           </div>
         </section>
-        <Footer />
       </main>
     )
   }
@@ -150,7 +147,6 @@ export default async function ClaimPage({ params }: ClaimPageProps) {
             </p>
           </div>
         </section>
-        <Footer />
       </main>
     )
   }
@@ -193,7 +189,6 @@ export default async function ClaimPage({ params }: ClaimPageProps) {
           </p>
         </div>
       </section>
-      <Footer />
     </main>
   )
 }

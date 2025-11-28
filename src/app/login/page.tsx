@@ -1,4 +1,3 @@
-import { Footer } from "@/components/layout/Footer"
 import { LoginForm } from "./LoginForm"
 
 export const metadata = {
@@ -37,8 +36,6 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           </p>
         </div>
       </section>
-
-      <Footer />
     </main>
   )
 }

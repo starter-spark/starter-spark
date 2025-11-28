@@ -1,4 +1,3 @@
-import { Footer } from "@/components/layout/Footer"
 import {
   HeroSection,
   DifferentiatorsSection,
@@ -17,7 +16,6 @@ export default function Home() {
       <LearningPreviewSection />
       <MissionImpactSection />
       <EventsPreviewSection />
-      <Footer />
     </main>
   )
 }

@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
-import { Footer } from "@/components/layout/Footer"
+import { formatRelativeTime } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -85,22 +85,6 @@ export default async function CommunityPage({
     post.tags?.forEach((tag) => allTags.add(tag))
   })
   const availableTags = Array.from(allTags).sort()
-
-  // Format relative time
-  function formatRelativeTime(dateString: string): string {
-    const date = new Date(dateString)
-    const now = new Date()
-    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000)
-
-    if (diffInSeconds < 60) return "just now"
-    if (diffInSeconds < 3600)
-      return `${Math.floor(diffInSeconds / 60)} min ago`
-    if (diffInSeconds < 86400)
-      return `${Math.floor(diffInSeconds / 3600)} hours ago`
-    if (diffInSeconds < 604800)
-      return `${Math.floor(diffInSeconds / 86400)} days ago`
-    return date.toLocaleDateString()
-  }
 
   return (
     <main className="min-h-screen bg-slate-50">
@@ -280,8 +264,6 @@ export default async function CommunityPage({
           </div>
         </div>
       </section>
-
-      <Footer />
     </main>
   )
 }

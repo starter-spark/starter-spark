@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Footer } from "@/components/layout/Footer"
 import { Button } from "@/components/ui/button"
 import { useCartStore, selectCartTotal, selectCartCount } from "@/store/cart"
 import {
@@ -89,7 +88,6 @@ export default function CartPage() {
             </div>
           </div>
         </section>
-        <Footer />
       </main>
     )
   }
@@ -315,8 +313,6 @@ export default function CartPage() {
           </div>
         </section>
       )}
-
-      <Footer />
     </main>
   )
 }

@@ -1,7 +1,7 @@
 "use client"
 
 import { Card, CardContent } from "@/components/ui/card"
-import { Github, Linkedin } from "lucide-react"
+import { GithubIcon, LinkedinIcon } from "@/components/icons/brand-icons"
 import { motion } from "motion/react"
 import Link from "next/link"
 
@@ -104,7 +104,7 @@ export function AboutTeam() {
                           className="p-2 text-slate-500 hover:text-cyan-700 transition-colors"
                           aria-label={`${member.name}'s GitHub profile`}
                         >
-                          <Github className="w-4 h-4" aria-hidden="true" />
+                          <GithubIcon className="w-4 h-4" aria-hidden="true" />
                         </Link>
                       )}
                       {member.linkedin && (
@@ -115,7 +115,7 @@ export function AboutTeam() {
                           className="p-2 text-slate-500 hover:text-cyan-700 transition-colors"
                           aria-label={`${member.name}'s LinkedIn profile`}
                         >
-                          <Linkedin className="w-4 h-4" aria-hidden="true" />
+                          <LinkedinIcon className="w-4 h-4" aria-hidden="true" />
                         </Link>
                       )}
                     </div>

@@ -1,5 +1,4 @@
 import { stripe } from "@/lib/stripe"
-import { Footer } from "@/components/layout/Footer"
 import { CheckCircle, Package, Mail, ArrowRight } from "lucide-react"
 import Link from "next/link"
 import { redirect } from "next/navigation"
@@ -36,10 +35,23 @@ export default async function CheckoutSuccessPage({
 
   const customerEmail = session.customer_details?.email
 
+  // Extract items for analytics tracking
+  const lineItems = session.line_items?.data || []
+  const orderItems = lineItems.map((item) => ({
+    id: item.price?.product as string || "",
+    name: item.description || "Product",
+    quantity: item.quantity || 1,
+    price: Math.round((item.amount_total || 0) / (item.quantity || 1) / 100),
+  }))
+
   return (
     <main className="min-h-screen bg-slate-50">
-      {/* Clear cart on client side */}
-      <ClearCart />
+      {/* Clear cart and track purchase on client side */}
+      <ClearCart
+        orderId={session.id}
+        total={Math.round((session.amount_total || 0) / 100)}
+        items={orderItems}
+      />
 
       <section className="pt-32 pb-24 px-6 lg:px-20">
         <div className="max-w-2xl mx-auto">
@@ -151,8 +163,6 @@ export default async function CheckoutSuccessPage({
           </div>
         </div>
       </section>
-
-      <Footer />
     </main>
   )
 }

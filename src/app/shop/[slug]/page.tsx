@@ -1,5 +1,4 @@
 import { createClient } from "@/lib/supabase/server"
-import { Footer } from "@/components/layout/Footer"
 import { ProductGallery, BuyBox, ProductTabs } from "@/components/commerce"
 import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
@@ -106,6 +105,7 @@ export default async function ProductDetailPage({
             {/* Right - Buy Box (40%) */}
             <div className="w-full lg:w-2/5">
               <BuyBox
+                id={product.id}
                 slug={slug}
                 name={product.name}
                 price={price}
@@ -127,8 +127,6 @@ export default async function ProductDetailPage({
           />
         </div>
       </section>
-
-      <Footer />
     </main>
   )
 }

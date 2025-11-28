@@ -2,30 +2,8 @@ import { stripe } from "@/lib/stripe"
 import { supabaseAdmin } from "@/lib/supabase/admin"
 import { NextResponse } from "next/server"
 import Stripe from "stripe"
-import crypto from "crypto"
-
-// Generate a unique license code (format: XXXX-XXXX-XXXX-XXXX)
-function generateLicenseCode(): string {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789" // Removed ambiguous characters
-  const segments = 4
-  const segmentLength = 4
-
-  const parts: string[] = []
-  for (let i = 0; i < segments; i++) {
-    let segment = ""
-    for (let j = 0; j < segmentLength; j++) {
-      segment += chars.charAt(Math.floor(Math.random() * chars.length))
-    }
-    parts.push(segment)
-  }
-
-  return parts.join("-")
-}
-
-// Generate a secure claim token
-function generateClaimToken(): string {
-  return crypto.randomBytes(32).toString("hex")
-}
+import { generateLicenseCode, generateClaimToken, formatPrice } from "@/lib/validation"
+import { sendPurchaseConfirmation } from "@/lib/email/send"
 
 export async function POST(request: Request) {
   const body = await request.text()
@@ -192,14 +170,32 @@ export async function POST(request: Request) {
 
       console.log(`Created ${createdLicenses.length} licenses for session ${session.id}`)
 
-      // TODO: Send email with license codes and claim links
-      // For now, log the claim links for testing
-      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
+      // Send purchase confirmation email
+      const isGuestPurchase = !ownerId
+      const orderTotal = formatPrice(session.amount_total || 0)
 
-      for (const license of createdLicenses) {
-        if (license.claim_token) {
-          console.log(`Claim link for ${license.code}: ${siteUrl}/claim/${license.claim_token}`)
+      // Build license info for email
+      const licenseInfoForEmail = createdLicenses.map((license) => {
+        const product = products.find((p) => p.id === license.product_id)
+        return {
+          code: license.code,
+          productName: product?.name || "StarterSpark Kit",
+          claimToken: license.claim_token,
         }
+      })
+
+      try {
+        await sendPurchaseConfirmation({
+          to: customerEmail,
+          customerName: session.customer_details?.name || undefined,
+          orderTotal,
+          licenses: licenseInfoForEmail,
+          isGuestPurchase,
+        })
+        console.log(`Purchase confirmation email sent to ${customerEmail}`)
+      } catch (emailError) {
+        // Log email error but don't fail the webhook
+        console.error("Failed to send purchase confirmation email:", emailError)
       }
 
       // If customer already has account, licenses are auto-claimed

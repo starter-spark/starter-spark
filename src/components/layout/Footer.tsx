@@ -1,9 +1,10 @@
 import { Button } from "@/components/ui/button"
-import { TechInput } from "@/components/ui/TechInput"
-import { Github, Instagram, Youtube, Heart } from "lucide-react"
+import { GithubIcon, InstagramIcon, YoutubeIcon } from "@/components/icons/brand-icons"
+import { Heart } from "lucide-react"
 import Link from "next/link"
+import { NewsletterForm } from "./NewsletterForm"
 
-// Custom X (Twitter) icon since lucide doesn't have it
+// Custom X (Twitter) icon since simple-icons doesn't have it as "X"
 function XIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" className={className} fill="currentColor">
@@ -39,7 +40,7 @@ export function Footer() {
             <div className="flex gap-3">
               <Link href="https://github.com/normalday843812" target="_blank" rel="noopener noreferrer">
                 <Button variant="ghost" size="icon" aria-label="GitHub" className="text-slate-500 hover:text-cyan-700 hover:bg-slate-100">
-                  <Github className="w-4 h-4" />
+                  <GithubIcon className="w-4 h-4" />
                 </Button>
               </Link>
               <Link href="https://x.com/AlQaholic00" target="_blank" rel="noopener noreferrer">
@@ -49,15 +50,15 @@ export function Footer() {
               </Link>
               <div className="relative group">
                 <Button variant="ghost" size="icon" aria-label="Instagram" className="text-slate-500 cursor-not-allowed" disabled>
-                  <Instagram className="w-4 h-4" />
+                  <InstagramIcon className="w-4 h-4" />
                 </Button>
                 <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] text-slate-500 font-mono whitespace-nowrap">
-                  PLACEHOLDER
+                  Coming Soon
                 </span>
               </div>
               <Link href="https://www.youtube.com/@CrustySofa" target="_blank" rel="noopener noreferrer">
                 <Button variant="ghost" size="icon" aria-label="YouTube" className="text-slate-500 hover:text-cyan-700 hover:bg-slate-100">
-                  <Youtube className="w-4 h-4" />
+                  <YoutubeIcon className="w-4 h-4" />
                 </Button>
               </Link>
             </div>
@@ -113,12 +114,7 @@ export function Footer() {
             <p className="text-sm text-slate-600 mb-4">
               Get notified about new kits and workshops.
             </p>
-            <div className="space-y-3">
-              <TechInput placeholder="your@email.com" className="h-10 bg-slate-50 text-sm" />
-              <Button className="w-full bg-cyan-700 hover:bg-cyan-600 text-white font-mono text-sm">
-                Subscribe
-              </Button>
-            </div>
+            <NewsletterForm />
           </div>
         </div>
       </div>

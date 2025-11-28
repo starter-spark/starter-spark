@@ -1,4 +1,3 @@
-import { Footer } from "@/components/layout/Footer"
 import {
   AboutHero,
   AboutStory,
@@ -20,7 +19,6 @@ export default function AboutPage() {
       <AboutStory />
       <AboutTeam />
       <AboutGallery />
-      <Footer />
     </main>
   )
 }

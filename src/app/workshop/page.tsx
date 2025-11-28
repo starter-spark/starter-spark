@@ -1,18 +1,10 @@
 import { createClient } from "@/lib/supabase/server"
-import { Footer } from "@/components/layout/Footer"
 import { Button } from "@/components/ui/button"
-import {
-  Package,
-  Key,
-  Calculator,
-  Cpu,
-  Award,
-  LogIn,
-  BookOpen,
-} from "lucide-react"
+import { Package, Key, Award, LogIn } from "lucide-react"
 import Link from "next/link"
 import { ClaimCodeForm } from "./ClaimCodeForm"
 import { KitCard } from "./KitCard"
+import { QuickTools } from "./QuickTools"
 
 export default async function WorkshopPage() {
   const supabase = await createClient()
@@ -172,49 +164,7 @@ export default async function WorkshopPage() {
                 </div>
 
                 {/* Quick Tools */}
-                <div className="bg-white rounded border border-slate-200 p-6">
-                  <h3 className="font-mono text-lg text-slate-900 mb-4">
-                    Quick Tools
-                  </h3>
-                  <div className="space-y-3">
-                    <button className="w-full flex items-center gap-3 p-3 rounded border border-slate-200 hover:border-cyan-700 hover:bg-slate-50 transition-colors text-left">
-                      <Calculator className="w-5 h-5 text-cyan-700" />
-                      <div>
-                        <p className="text-sm font-medium text-slate-900">
-                          Servo Calculator
-                        </p>
-                        <p className="text-xs text-slate-500">
-                          Angle to pulse width
-                        </p>
-                      </div>
-                    </button>
-                    <button className="w-full flex items-center gap-3 p-3 rounded border border-slate-200 hover:border-cyan-700 hover:bg-slate-50 transition-colors text-left">
-                      <Cpu className="w-5 h-5 text-cyan-700" />
-                      <div>
-                        <p className="text-sm font-medium text-slate-900">
-                          Arduino Pinout
-                        </p>
-                        <p className="text-xs text-slate-500">
-                          Quick reference
-                        </p>
-                      </div>
-                    </button>
-                    <Link
-                      href="/learn"
-                      className="w-full flex items-center gap-3 p-3 rounded border border-slate-200 hover:border-cyan-700 hover:bg-slate-50 transition-colors text-left"
-                    >
-                      <BookOpen className="w-5 h-5 text-cyan-700" />
-                      <div>
-                        <p className="text-sm font-medium text-slate-900">
-                          Documentation
-                        </p>
-                        <p className="text-xs text-slate-500">
-                          Guides & tutorials
-                        </p>
-                      </div>
-                    </Link>
-                  </div>
-                </div>
+                <QuickTools />
 
                 {/* Achievements Preview */}
                 <div className="bg-white rounded border border-slate-200 p-6">
@@ -255,8 +205,6 @@ export default async function WorkshopPage() {
           </div>
         </section>
       )}
-
-      <Footer />
     </main>
   )
 }

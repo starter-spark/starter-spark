@@ -1,5 +1,4 @@
 import { createClient } from "@/lib/supabase/server"
-import { Footer } from "@/components/layout/Footer"
 import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
 import { redirect } from "next/navigation"
@@ -57,8 +56,6 @@ export default async function NewQuestionPage() {
           <NewQuestionForm products={products || []} />
         </div>
       </section>
-
-      <Footer />
     </main>
   )
 }

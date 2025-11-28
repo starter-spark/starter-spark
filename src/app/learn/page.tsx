@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
-import { Footer } from "@/components/layout/Footer"
+import { formatDuration } from "@/lib/utils"
 import { BookOpen, Clock, Target, ChevronRight, Lock } from "lucide-react"
 import Link from "next/link"
 
@@ -35,8 +35,9 @@ export default async function LearnPage() {
     console.error("Error fetching courses:", error)
   }
 
-  // Get user's owned product IDs
+  // Get user's owned product IDs and completed lessons
   let ownedProductIds: string[] = []
+  let completedLessonIds: string[] = []
   if (user) {
     const { data: licenses } = await supabase
       .from("licenses")
@@ -46,14 +47,16 @@ export default async function LearnPage() {
     if (licenses) {
       ownedProductIds = licenses.map((l) => l.product_id)
     }
-  }
 
-  // Format duration for display
-  const formatDuration = (minutes: number) => {
-    if (minutes < 60) return `${minutes} min`
-    const hours = Math.floor(minutes / 60)
-    const mins = minutes % 60
-    return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`
+    // Fetch user's completed lessons
+    const { data: progress } = await supabase
+      .from("lesson_progress")
+      .select("lesson_id")
+      .eq("user_id", user.id)
+
+    if (progress) {
+      completedLessonIds = progress.map((p) => p.lesson_id)
+    }
   }
 
   return (
@@ -89,10 +92,20 @@ export default async function LearnPage() {
               {courses.map((course) => {
                 const product = course.product as { id: string; slug: string; name: string } | null
                 const isOwned = product ? ownedProductIds.includes(product.id) : false
-                const totalLessons = course.modules?.reduce(
-                  (acc, mod) => acc + (mod.lessons?.length || 0),
-                  0
-                ) || 0
+
+                // Get all lesson IDs for this course
+                const courseLessonIds = course.modules?.flatMap(
+                  (mod) => mod.lessons?.map((l) => l.id) || []
+                ) || []
+                const totalLessons = courseLessonIds.length
+
+                // Calculate completed lessons for this course
+                const completedInCourse = courseLessonIds.filter(
+                  (id) => completedLessonIds.includes(id)
+                ).length
+                const progressPercent = totalLessons > 0
+                  ? Math.round((completedInCourse / totalLessons) * 100)
+                  : 0
 
                 return (
                   <div
@@ -146,12 +159,12 @@ export default async function LearnPage() {
                         <div className="mb-4">
                           <div className="flex items-center justify-between text-xs mb-1">
                             <span className="text-slate-500">Progress</span>
-                            <span className="font-mono text-slate-700">0%</span>
+                            <span className="font-mono text-slate-700">{progressPercent}%</span>
                           </div>
                           <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
                             <div
                               className="h-full bg-cyan-700 rounded-full transition-all"
-                              style={{ width: "0%" }}
+                              style={{ width: `${progressPercent}%` }}
                             />
                           </div>
                         </div>
@@ -203,8 +216,6 @@ export default async function LearnPage() {
           )}
         </div>
       </section>
-
-      <Footer />
     </main>
   )
 }

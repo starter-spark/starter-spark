@@ -1,5 +1,4 @@
 import { createClient } from "@/lib/supabase/server"
-import { Footer } from "@/components/layout/Footer"
 import { ProductCard } from "@/components/commerce"
 import { ShopFilters } from "./ShopFilters"
 
@@ -76,8 +75,6 @@ export default async function ShopPage() {
           </div>
         </div>
       </section>
-
-      <Footer />
     </main>
   )
 }
