@@ -3,17 +3,12 @@
 import { motion, useInView } from "motion/react"
 import { useRef, useEffect, useState } from "react"
 
-interface Stat {
+export interface Stat {
+  key: string
   value: number
-  suffix: string
   label: string
+  suffix: string
 }
-
-const stats: Stat[] = [
-  { value: 0, suffix: "", label: "Kits Deployed" },
-  { value: 1, suffix: "", label: "Schools Supported" },
-  { value: 0, suffix: "", label: "Workshops Hosted" },
-]
 
 function AnimatedCounter({ value, suffix }: { value: number; suffix: string }) {
   const [count, setCount] = useState(0)
@@ -49,7 +44,11 @@ function AnimatedCounter({ value, suffix }: { value: number; suffix: string }) {
   )
 }
 
-export function MissionImpactSection() {
+interface MissionImpactSectionProps {
+  stats: Stat[]
+}
+
+export function MissionImpactSection({ stats }: MissionImpactSectionProps) {
   return (
     <section className="py-24 px-6 lg:px-20 bg-slate-50">
       <div className="max-w-7xl mx-auto">
@@ -111,10 +110,10 @@ export function MissionImpactSection() {
               </p>
             </div>
 
-            {/* Impact Stats */}
+            {/* Impact Stats - Dynamic from database */}
             <div className="grid grid-cols-3 gap-6">
               {stats.map((stat) => (
-                <div key={stat.label} className="text-center">
+                <div key={stat.key} className="text-center">
                   <div className="text-4xl font-mono text-cyan-700 mb-1">
                     <AnimatedCounter value={stat.value} suffix={stat.suffix} />
                   </div>

@@ -13,6 +13,7 @@ interface Product {
   inStock: boolean
   badge?: string
   category: string
+  status: "active" | "coming_soon" | "draft"
 }
 
 interface ShopFiltersProps {
@@ -93,6 +94,7 @@ export function ShopFilters({ products }: ShopFiltersProps) {
                   price={product.price}
                   inStock={product.inStock}
                   badge={product.badge}
+                  status={product.status}
                 />
               ))}
             </div>

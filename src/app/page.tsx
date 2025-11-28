@@ -3,8 +3,8 @@ import {
   DifferentiatorsSection,
   FeaturedProduct,
   LearningPreviewSection,
-  MissionImpactSection,
-  EventsPreviewSection,
+  MissionImpact,
+  EventsPreview,
 } from "@/components/marketing"
 import { getOrganizationSchema, getWebsiteSchema } from "@/lib/structured-data"
 
@@ -27,8 +27,8 @@ export default function Home() {
       <DifferentiatorsSection />
       <FeaturedProduct />
       <LearningPreviewSection />
-      <MissionImpactSection />
-      <EventsPreviewSection />
+      <MissionImpact />
+      <EventsPreview />
     </div>
   )
 }
