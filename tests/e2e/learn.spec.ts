@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test"
+import { test, expect } from "@chromatic-com/playwright"
 
 /**
  * E2E Tests for Learning Platform

@@ -13,8 +13,8 @@ test.describe("API Route Health Checks", () => {
       data: { items: [] },
     })
 
-    // Should return 400 for empty items, not 404 or 500
-    expect(response.status()).toBe(400)
+    // Should return 400 for empty items, or 429 if rate limited. Not 404 or 500.
+    expect([400, 429]).toContain(response.status())
   })
 
   test("should respond to /api/claim-license POST", async ({ request }) => {

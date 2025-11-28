@@ -9,7 +9,8 @@
     "lint": "eslint",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "test:run": "vitest run"
+    "test:run": "vitest run",
+    "chromatic": "dotenv -e .env.local -- chromatic --exit-zero-on-changes --playwright"
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.1.11",
@@ -58,7 +59,9 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitest/ui": "^4.0.14",
+    "baseline-browser-mapping": "^2.8.32",
     "chromatic": "^13.3.4",
+    "dotenv-cli": "^11.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.0.4",
     "tailwindcss": "^4",
