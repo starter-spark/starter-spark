@@ -80,13 +80,16 @@ test.describe("Community Page - Question Detail", () => {
     await page.goto("/community")
     await page.waitForLoadState("networkidle")
 
-    // Find question links (excluding /community/new)
-    const questionLinks = page.locator('a[href^="/community/"]:not([href="/community/new"])')
+    // Find question links (excluding /community/new) - be more specific to target post links
+    const questionLinks = page.locator('article a[href^="/community/"]:not([href="/community/new"])')
     const count = await questionLinks.count()
 
     if (count > 0) {
-      await questionLinks.first().click()
-      await page.waitForLoadState("networkidle")
+      // Wait for navigation after click
+      await Promise.all([
+        page.waitForURL(/\/community\/.+/),
+        questionLinks.first().click()
+      ])
 
       // Should be on a question detail page
       const url = page.url()
@@ -99,14 +102,16 @@ test.describe("Community Page - Question Detail", () => {
     await page.goto("/community")
     await page.waitForLoadState("networkidle")
 
-    const questionLinks = page
-      .locator('a[href^="/community/"]')
-      .filter({ hasNot: page.locator('[href*="/new"]') })
+    // Use more specific selector targeting article links
+    const questionLinks = page.locator('article a[href^="/community/"]:not([href="/community/new"])')
     const count = await questionLinks.count()
 
     if (count > 0) {
-      await questionLinks.first().click()
-      await page.waitForLoadState("networkidle")
+      // Wait for navigation after click
+      await Promise.all([
+        page.waitForURL(/\/community\/.+/),
+        questionLinks.first().click()
+      ])
 
       // Should have question heading
       const heading = page.getByRole("heading", { level: 1 })
@@ -118,14 +123,16 @@ test.describe("Community Page - Question Detail", () => {
     await page.goto("/community")
     await page.waitForLoadState("networkidle")
 
-    const questionLinks = page
-      .locator('a[href^="/community/"]')
-      .filter({ hasNot: page.locator('[href*="/new"]') })
+    // Use more specific selector targeting article links
+    const questionLinks = page.locator('article a[href^="/community/"]:not([href="/community/new"])')
     const count = await questionLinks.count()
 
     if (count > 0) {
-      await questionLinks.first().click()
-      await page.waitForLoadState("networkidle")
+      // Wait for navigation after click
+      await Promise.all([
+        page.waitForURL(/\/community\/.+/),
+        questionLinks.first().click()
+      ])
 
       // Page should have content
       await expect(page.locator("body")).toBeVisible()
@@ -141,14 +148,16 @@ test.describe("Community Page - Question Detail", () => {
     await page.goto("/community")
     await page.waitForLoadState("networkidle")
 
-    const questionLinks = page
-      .locator('a[href^="/community/"]')
-      .filter({ hasNot: page.locator('[href*="/new"]') })
+    // Use more specific selector targeting article links
+    const questionLinks = page.locator('article a[href^="/community/"]:not([href="/community/new"])')
     const count = await questionLinks.count()
 
     if (count > 0) {
-      await questionLinks.first().click()
-      await page.waitForLoadState("networkidle")
+      // Wait for navigation after click
+      await Promise.all([
+        page.waitForURL(/\/community\/.+/),
+        questionLinks.first().click()
+      ])
 
       // Voting buttons may be present (arrows or vote icons)
       const voteButtons = page.getByRole("button", { name: /vote|upvote|downvote/i })
@@ -160,14 +169,16 @@ test.describe("Community Page - Question Detail", () => {
     await page.goto("/community")
     await page.waitForLoadState("networkidle")
 
-    const questionLinks = page
-      .locator('a[href^="/community/"]')
-      .filter({ hasNot: page.locator('[href*="/new"]') })
+    // Use more specific selector targeting article links
+    const questionLinks = page.locator('article a[href^="/community/"]:not([href="/community/new"])')
     const count = await questionLinks.count()
 
     if (count > 0) {
-      await questionLinks.first().click()
-      await page.waitForLoadState("networkidle")
+      // Wait for navigation after click
+      await Promise.all([
+        page.waitForURL(/\/community\/.+/),
+        questionLinks.first().click()
+      ])
 
       // Author info may be displayed
       const authorText = page.getByText(/asked by|posted by|author/i)

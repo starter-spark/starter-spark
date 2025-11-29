@@ -42,7 +42,7 @@ export function ProductSpotlightSection({ product }: ProductSpotlightProps) {
     ? Object.entries(product.specs).map(([label, value]) => ({ label, value }))
     : defaultSpecs
 
-  const priceDisplay = Math.floor(product.priceCents / 100)
+  const priceDisplay = (product.priceCents / 100).toFixed(2)
 
   return (
     <section className="py-24 px-6 lg:px-20 bg-slate-50">

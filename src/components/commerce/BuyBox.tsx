@@ -72,10 +72,10 @@ export function BuyBox({
 
       {/* Price */}
       <div className="flex items-baseline gap-3">
-        <span className="text-4xl font-mono text-amber-600">${price}</span>
+        <span className="text-4xl font-mono text-amber-600">${price.toFixed(2)}</span>
         {originalPrice && originalPrice > price && (
           <span className="text-xl font-mono text-slate-500 line-through">
-            ${originalPrice}
+            ${originalPrice.toFixed(2)}
           </span>
         )}
       </div>

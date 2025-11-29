@@ -74,7 +74,7 @@ export default async function ProductDetailPage({
   const learningOutcomes = specs?.learningOutcomes || []
   const includedItems = specs?.includedItems || []
   const technicalSpecs = specs?.technicalSpecs || []
-  const price = Math.round(product.price_cents / 100)
+  const price = product.price_cents / 100
 
   // Generate structured data for SEO
   const productSchema = getProductSchema({

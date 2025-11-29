@@ -100,8 +100,9 @@ export function NewQuestionForm({ products }: NewQuestionFormProps) {
         return
       }
 
-      // Redirect to the new question
-      router.push(`/community/${post.slug || post.id}`)
+      // Redirect to the new question - always use ID if slug is empty/null
+      const redirectPath = post.slug && post.slug.trim() ? post.slug : post.id
+      router.push(`/community/${redirectPath}`)
     } catch (err) {
       console.error("Error:", err)
       setError("An unexpected error occurred. Please try again.")

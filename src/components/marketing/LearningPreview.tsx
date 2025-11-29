@@ -186,9 +186,6 @@ void loop() {
                 <span className="text-sm font-mono text-slate-600">
                   The Lab - Community Q&A
                 </span>
-                <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded font-mono">
-                  342 Online - replace
-                </span>
               </div>
               {/* Fake Question */}
               <div className="p-4 border-b border-slate-100">
@@ -197,7 +194,7 @@ void loop() {
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-sm font-medium text-slate-900">
-                        @robotbuilder42
+                        @robotenthusiast
                       </span>
                       <span className="text-xs text-slate-500">2 hours ago</span>
                     </div>

@@ -92,7 +92,8 @@ test.describe("Login Page", () => {
     await loginPage.submitForm()
 
     // Wait for either success state or error state (API might fail in test environment)
-    const successOrError = page.locator("text=/check your email|failed to send/i").first()
+    // Include rate limit message "please wait" as valid error state
+    const successOrError = page.locator("text=/check your email|failed to send|please wait/i").first()
     await expect(successOrError).toBeVisible({ timeout: 10000 })
   })
 
@@ -105,7 +106,8 @@ test.describe("Login Page", () => {
 
     // Wait for either success or error state
     const successMessage = loginPage.successMessage
-    const errorMessage = page.locator("text=/failed to send/i")
+    // Include rate limit message "please wait" as valid error state
+    const errorMessage = page.locator("text=/failed to send|please wait/i")
 
     // Check for success - if success, test the different email flow
     try {
@@ -117,7 +119,7 @@ test.describe("Login Page", () => {
       // Should show form again
       await expect(loginPage.emailInput).toBeVisible()
     } catch {
-      // If Supabase API failed, just verify error is shown and form still works
+      // If Supabase API failed or rate limited, just verify error is shown and form still works
       const hasError = await errorMessage.isVisible().catch(() => false)
       if (hasError) {
         // Form should still be visible after error

@@ -185,7 +185,7 @@ export default function CartPage() {
                           </div>
 
                           <p className="text-amber-600 font-mono mb-4">
-                            ${item.price}
+                            ${item.price.toFixed(2)}
                           </p>
 
                           {/* Quantity Controls */}

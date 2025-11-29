@@ -2,9 +2,9 @@
 
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Search, Filter, X } from "lucide-react"
+import { Search, X, Loader2 } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { useState, useCallback } from "react"
+import { useState, useCallback, useTransition, useOptimistic } from "react"
 
 interface Product {
   id: string
@@ -18,6 +18,7 @@ interface ForumFiltersProps {
   currentStatus?: string
   currentTag?: string
   currentProduct?: string
+  currentSearch?: string
 }
 
 export function ForumFilters({
@@ -26,10 +27,23 @@ export function ForumFilters({
   currentStatus,
   currentTag,
   currentProduct,
+  currentSearch,
 }: ForumFiltersProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [search, setSearch] = useState("")
+  const [search, setSearch] = useState(currentSearch || "")
+  const [isPending, startTransition] = useTransition()
+
+  // Optimistic state for immediate UI feedback
+  const [optimisticFilters, setOptimisticFilters] = useOptimistic(
+    { status: currentStatus, tag: currentTag, product: currentProduct },
+    (state, update: { key: string; value: string | null }) => {
+      if (update.key === "status") return { ...state, status: update.value || undefined }
+      if (update.key === "tag") return { ...state, tag: update.value || undefined }
+      if (update.key === "product") return { ...state, product: update.value || undefined }
+      return state
+    }
+  )
 
   const updateFilter = useCallback(
     (key: string, value: string | null) => {
@@ -39,20 +53,42 @@ export function ForumFilters({
       } else {
         params.delete(key)
       }
-      router.push(`/community?${params.toString()}`)
+
+      // Optimistic update for instant feedback
+      setOptimisticFilters({ key, value })
+
+      // Navigate with transition to avoid blocking UI
+      startTransition(() => {
+        router.push(`/community?${params.toString()}`, { scroll: false })
+      })
     },
-    [router, searchParams]
+    [router, searchParams, setOptimisticFilters]
   )
 
   const clearFilters = () => {
-    router.push("/community")
+    setSearch("")
+    startTransition(() => {
+      router.push("/community", { scroll: false })
+    })
   }
 
-  const hasActiveFilters =
-    currentStatus || currentTag || currentProduct
+  // Use optimistic values for instant UI feedback
+  const activeStatus = optimisticFilters.status
+  const activeTag = optimisticFilters.tag
+  const activeProduct = optimisticFilters.product
+
+  const hasActiveFilters = activeStatus || activeTag || activeProduct || currentSearch
 
   return (
     <div className="space-y-6">
+      {/* Loading indicator */}
+      {isPending && (
+        <div className="flex items-center gap-2 text-sm text-cyan-700">
+          <Loader2 className="w-4 h-4 animate-spin" />
+          <span className="font-mono">Loading...</span>
+        </div>
+      )}
+
       {/* Search */}
       <div>
         <label className="block text-sm font-mono text-slate-600 mb-2">
@@ -66,13 +102,27 @@ export function ForumFilters({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter" && search.trim()) {
-                updateFilter("q", search.trim())
+              if (e.key === "Enter") {
+                updateFilter("q", search.trim() || null)
               }
             }}
-            className="pl-10 bg-white border-slate-200 focus:border-cyan-700"
+            className="pl-10 pr-8 bg-white border-slate-200 focus:border-cyan-700"
           />
+          {search && (
+            <button
+              type="button"
+              onClick={() => {
+                setSearch("")
+                updateFilter("q", null)
+              }}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+              aria-label="Clear search"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
         </div>
+        <p className="mt-1 text-xs text-slate-500">Press Enter to search</p>
       </div>
 
       {/* Status Filter */}
@@ -81,25 +131,27 @@ export function ForumFilters({
           Status
         </label>
         <div className="flex flex-wrap gap-2">
-          {["all", "open", "solved"].map((status) => (
-            <Button
-              key={status}
-              variant={
-                (currentStatus || "all") === status ? "default" : "outline"
-              }
-              size="sm"
-              onClick={() => updateFilter("status", status)}
-              className={
-                (currentStatus || "all") === status
-                  ? "bg-cyan-700 hover:bg-cyan-600 text-white font-mono"
-                  : "border-slate-200 hover:border-cyan-700 text-slate-600 hover:text-cyan-700 font-mono"
-              }
-            >
-              {status === "all"
-                ? "All"
-                : status.charAt(0).toUpperCase() + status.slice(1)}
-            </Button>
-          ))}
+          {["all", "open", "solved"].map((status) => {
+            const isActive = (activeStatus || "all") === status
+            return (
+              <Button
+                key={status}
+                variant={isActive ? "default" : "outline"}
+                size="sm"
+                onClick={() => updateFilter("status", status)}
+                disabled={isPending}
+                className={
+                  isActive
+                    ? "bg-cyan-700 hover:bg-cyan-600 text-white font-mono cursor-pointer"
+                    : "border-slate-200 hover:border-cyan-700 text-slate-600 hover:text-cyan-700 font-mono cursor-pointer"
+                }
+              >
+                {status === "all"
+                  ? "All"
+                  : status.charAt(0).toUpperCase() + status.slice(1)}
+              </Button>
+            )
+          })}
         </div>
       </div>
 
@@ -110,23 +162,27 @@ export function ForumFilters({
             Tags
           </label>
           <div className="flex flex-wrap gap-2">
-            {availableTags.slice(0, 10).map((tag) => (
-              <Button
-                key={tag}
-                variant={currentTag === tag ? "default" : "outline"}
-                size="sm"
-                onClick={() =>
-                  updateFilter("tag", currentTag === tag ? null : tag)
-                }
-                className={
-                  currentTag === tag
-                    ? "bg-cyan-700 hover:bg-cyan-600 text-white font-mono text-xs"
-                    : "border-slate-200 hover:border-cyan-700 text-slate-600 hover:text-cyan-700 font-mono text-xs"
-                }
-              >
-                #{tag}
-              </Button>
-            ))}
+            {availableTags.slice(0, 10).map((tag) => {
+              const isActive = activeTag === tag
+              return (
+                <Button
+                  key={tag}
+                  variant={isActive ? "default" : "outline"}
+                  size="sm"
+                  onClick={() =>
+                    updateFilter("tag", activeTag === tag ? null : tag)
+                  }
+                  disabled={isPending}
+                  className={
+                    isActive
+                      ? "bg-cyan-700 hover:bg-cyan-600 text-white font-mono text-xs cursor-pointer"
+                      : "border-slate-200 hover:border-cyan-700 text-slate-600 hover:text-cyan-700 font-mono text-xs cursor-pointer"
+                  }
+                >
+                  #{tag}
+                </Button>
+              )
+            })}
           </div>
         </div>
       )}
@@ -141,9 +197,10 @@ export function ForumFilters({
             id="product-filter"
             name="product-filter"
             aria-label="Product"
-            value={currentProduct || ""}
+            value={activeProduct || ""}
             onChange={(e) => updateFilter("product", e.target.value || null)}
-            className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm text-slate-700 focus:border-cyan-700 focus:outline-none"
+            disabled={isPending}
+            className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm text-slate-700 focus:border-cyan-700 focus:outline-none cursor-pointer disabled:opacity-50"
           >
             <option value="">All Products</option>
             {products.map((product) => (
@@ -161,7 +218,8 @@ export function ForumFilters({
           variant="ghost"
           size="sm"
           onClick={clearFilters}
-          className="w-full text-slate-500 hover:text-cyan-700"
+          disabled={isPending}
+          className="w-full text-slate-500 hover:text-cyan-700 cursor-pointer"
         >
           <X className="w-4 h-4 mr-2" />
           Clear Filters

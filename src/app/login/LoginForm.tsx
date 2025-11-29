@@ -62,7 +62,19 @@ export function LoginForm({ redirectTo, claimToken }: LoginFormProps) {
       setIsSent(true)
     } catch (err) {
       console.error("Login error:", err)
-      setError("Failed to send magic link. Please try again.")
+
+      // Handle rate limit error with user-friendly message
+      const errorMessage = err instanceof Error ? err.message : String(err)
+      if (errorMessage.includes("after")) {
+        const seconds = errorMessage.match(/after (\d+) seconds?/)?.[1]
+        if (seconds) {
+          setError(`Please wait ${seconds} seconds before requesting another link.`)
+        } else {
+          setError("Please wait a moment before requesting another link.")
+        }
+      } else {
+        setError("Failed to send magic link. Please try again.")
+      }
     } finally {
       setIsLoading(false)
     }

@@ -104,7 +104,7 @@ export function ProductCard({
             {isComingSoon ? (
               <p className="text-lg font-mono text-slate-400">Price TBD</p>
             ) : (
-              <p className="text-2xl font-mono text-amber-600">${price}</p>
+              <p className="text-2xl font-mono text-amber-600">${price.toFixed(2)}</p>
             )}
           </div>
         </CardContent>

@@ -67,7 +67,7 @@ export function CartSheet() {
                       {item.name}
                     </h4>
                     <p className="text-amber-600 font-mono text-sm mt-1">
-                      ${item.price}
+                      ${item.price.toFixed(2)}
                     </p>
 
                     {/* Quantity Controls */}

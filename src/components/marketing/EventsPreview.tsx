@@ -189,20 +189,15 @@ export function EventsPreviewSection({
               </Link>
             </div>
 
-            {/* Stats Bar - Dynamic */}
-            <div className="flex items-center gap-6 mb-4 p-3 bg-white rounded border border-slate-200">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                <span className="text-sm text-slate-600">
-                  Community Active
-                </span>
-              </div>
-              <div className="text-sm text-slate-600">
-                <span className="font-mono text-slate-900">{communityStats.totalMembers}</span> members
-              </div>
-              <div className="text-sm text-slate-600">
-                <span className="font-mono text-slate-900">{communityStats.totalDiscussions}</span> discussions
-              </div>
+            {/* Stats Bar - Clean and minimal */}
+            <div className="flex items-center gap-4 mb-4 text-sm text-slate-600">
+              <span>
+                <span className="font-mono text-slate-900">{communityStats.totalMembers}</span> Members
+              </span>
+              <span className="text-slate-300">•</span>
+              <span>
+                <span className="font-mono text-slate-900">{communityStats.totalDiscussions}</span> Discussions
+              </span>
             </div>
 
             {hasDiscussions ? (

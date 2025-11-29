@@ -28,7 +28,7 @@ export default async function ShopPage() {
     return {
       slug: product.slug,
       name: product.name,
-      price: Math.round(product.price_cents / 100),
+      price: product.price_cents / 100,
       inStock: specs?.inStock ?? true,
       badge: specs?.badge || undefined,
       category: specs?.category || "kit",

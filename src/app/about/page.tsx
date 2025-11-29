@@ -2,8 +2,9 @@ import {
   AboutHero,
   AboutStory,
   AboutTeam,
-  AboutGallery,
+  AboutGalleryWrapper,
 } from "@/components/about"
+import { Suspense } from "react"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
@@ -18,7 +19,9 @@ export default function AboutPage() {
       <AboutHero />
       <AboutStory />
       <AboutTeam />
-      <AboutGallery />
+      <Suspense fallback={<div className="py-24 px-6 lg:px-20 bg-white"><div className="max-w-7xl mx-auto animate-pulse bg-slate-100 rounded h-96" /></div>}>
+        <AboutGalleryWrapper />
+      </Suspense>
     </div>
   )
 }

@@ -2,6 +2,15 @@
 
 import { motion } from "motion/react"
 
+export interface AboutStat {
+  value: string
+  label: string
+}
+
+interface AboutGalleryProps {
+  stats?: AboutStat[]
+}
+
 interface GalleryImage {
   label: string
   caption: string
@@ -36,7 +45,14 @@ const galleryImages: GalleryImage[] = [
   },
 ]
 
-export function AboutGallery() {
+const defaultStats: AboutStat[] = [
+  { value: "0", label: "Workshops Hosted" },
+  { value: "0", label: "Students Reached" },
+  { value: "0", label: "Partner Schools" },
+  { value: "70%", label: "Donated to STEM" },
+]
+
+export function AboutGallery({ stats = defaultStats }: AboutGalleryProps) {
   return (
     <section className="py-24 px-6 lg:px-20 bg-white">
       <div className="max-w-7xl mx-auto">
@@ -118,12 +134,7 @@ export function AboutGallery() {
           viewport={{ once: true }}
           className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-8 p-8 bg-slate-50 rounded border border-slate-200"
         >
-          {[
-            { value: "0", label: "Workshops Hosted" },
-            { value: "0", label: "Students Reached" },
-            { value: "0", label: "Partner Schools" },
-            { value: "70%", label: "Donated to STEM" },
-          ].map((stat) => (
+          {stats.map((stat) => (
             <div key={stat.label} className="text-center">
               <p className="text-3xl lg:text-4xl font-mono text-cyan-700 mb-1">
                 {stat.value}
