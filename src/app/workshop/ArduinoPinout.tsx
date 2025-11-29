@@ -47,17 +47,27 @@ export function ArduinoPinout({ isOpen, onClose }: ArduinoPinoutProps) {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg border border-slate-200 w-full max-w-2xl shadow-xl max-h-[90vh] overflow-hidden flex flex-col">
+    <div
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="arduino-pinout-title"
+    >
+      <div
+        className="bg-white rounded-lg border border-slate-200 w-full max-w-2xl shadow-xl max-h-[90vh] overflow-hidden flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-slate-200">
           <div className="flex items-center gap-2">
             <Cpu className="w-5 h-5 text-cyan-700" />
-            <h2 className="font-mono text-lg text-slate-900">Arduino Uno Pinout</h2>
+            <h2 id="arduino-pinout-title" className="font-mono text-lg text-slate-900">Arduino Uno Pinout</h2>
           </div>
           <button
             onClick={onClose}
-            className="p-1 hover:bg-slate-100 rounded transition-colors"
+            className="cursor-pointer p-1 hover:bg-slate-100 rounded transition-colors"
+            aria-label="Close pinout reference"
           >
             <X className="w-5 h-5 text-slate-500" />
           </button>

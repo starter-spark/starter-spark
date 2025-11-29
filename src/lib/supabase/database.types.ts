@@ -494,6 +494,7 @@ export type Database = {
           price_cents: number
           slug: string
           specs: Json | null
+          status: Database["public"]["Enums"]["product_status"]
           stripe_price_id: string | null
         }
         Insert: {
@@ -505,6 +506,7 @@ export type Database = {
           price_cents: number
           slug: string
           specs?: Json | null
+          status?: Database["public"]["Enums"]["product_status"]
           stripe_price_id?: string | null
         }
         Update: {
@@ -516,6 +518,7 @@ export type Database = {
           price_cents?: number
           slug?: string
           specs?: Json | null
+          status?: Database["public"]["Enums"]["product_status"]
           stripe_price_id?: string | null
         }
         Relationships: []
@@ -547,6 +550,45 @@ export type Database = {
         }
         Relationships: []
       }
+      site_stats: {
+        Row: {
+          id: string
+          key: string
+          value: number
+          label: string
+          suffix: string | null
+          description: string | null
+          is_auto_calculated: boolean | null
+          sort_order: number | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          key: string
+          value?: number
+          label: string
+          suffix?: string | null
+          description?: string | null
+          is_auto_calculated?: boolean | null
+          sort_order?: number | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          key?: string
+          value?: number
+          label?: string
+          suffix?: string | null
+          description?: string | null
+          is_auto_calculated?: boolean | null
+          sort_order?: number | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -556,10 +598,20 @@ export type Database = {
         Args: { p_course_id: string; p_user_id: string }
         Returns: number
       }
+      get_site_stats: {
+        Args: Record<string, never>
+        Returns: {
+          key: string
+          value: number
+          label: string
+          suffix: string
+        }[]
+      }
       is_admin: { Args: Record<string, never>; Returns: boolean }
       user_owns_product: { Args: { p_product_id: string }; Returns: boolean }
     }
     Enums: {
+      product_status: "active" | "coming_soon" | "draft"
       user_role: "admin" | "staff" | "user"
     }
     CompositeTypes: {

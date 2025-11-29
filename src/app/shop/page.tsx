@@ -1,14 +1,16 @@
 import { createClient } from "@/lib/supabase/server"
-import { ProductCard } from "@/components/commerce"
 import { ShopFilters } from "./ShopFilters"
+import { Package } from "lucide-react"
+import Link from "next/link"
 
 export default async function ShopPage() {
   const supabase = await createClient()
 
-  // Fetch all products from database
+  // Fetch active and coming_soon products (not drafts)
   const { data: products, error } = await supabase
     .from("products")
-    .select("id, slug, name, price_cents, specs")
+    .select("id, slug, name, price_cents, specs, status")
+    .in("status", ["active", "coming_soon"])
     .order("created_at", { ascending: true })
 
   if (error) {
@@ -30,8 +32,11 @@ export default async function ShopPage() {
       inStock: specs?.inStock ?? true,
       badge: specs?.badge || undefined,
       category: specs?.category || "kit",
+      status: (product.status || "active") as "active" | "coming_soon" | "draft",
     }
   })
+
+  const hasProducts = transformedProducts.length > 0
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -52,8 +57,34 @@ export default async function ShopPage() {
       {/* Visually hidden h2 for proper heading hierarchy - must be in server component for axe */}
       <h2 className="sr-only">Available Products</h2>
 
-      {/* Client-side filters and product grid */}
-      <ShopFilters products={transformedProducts} />
+      {hasProducts ? (
+        /* Client-side filters and product grid */
+        <ShopFilters products={transformedProducts} />
+      ) : (
+        /* Empty state when no products exist */
+        <section className="py-16 px-6 lg:px-20">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex flex-col items-center justify-center p-12 bg-white rounded border border-slate-200 text-center">
+              <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-6">
+                <Package className="w-8 h-8 text-slate-400" />
+              </div>
+              <h3 className="font-mono text-xl text-slate-900 mb-3">
+                Products Coming Soon
+              </h3>
+              <p className="text-slate-600 max-w-md mb-6">
+                We&apos;re working on new robotics kits. Sign up for our newsletter
+                to be the first to know when they&apos;re available.
+              </p>
+              <Link
+                href="/#newsletter"
+                className="inline-block px-6 py-3 bg-cyan-700 hover:bg-cyan-600 text-white font-mono rounded transition-colors"
+              >
+                Get Notified
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Educator CTA */}
       <section className="pb-24 px-6 lg:px-20">

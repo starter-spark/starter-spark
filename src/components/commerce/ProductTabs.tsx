@@ -37,19 +37,19 @@ export function ProductTabs({
       <TabsList className="w-full justify-start border-b border-slate-200 bg-transparent h-auto p-0 rounded-none">
         <TabsTrigger
           value="overview"
-          className="font-mono text-sm data-[state=active]:text-cyan-700 data-[state=active]:border-b-2 data-[state=active]:border-cyan-700 rounded-none px-6 py-3 data-[state=active]:shadow-none"
+          className="cursor-pointer font-mono text-sm data-[state=active]:text-cyan-700 data-[state=active]:border-b-2 data-[state=active]:border-cyan-700 rounded-none px-6 py-3 data-[state=active]:shadow-none"
         >
           Overview
         </TabsTrigger>
         <TabsTrigger
           value="included"
-          className="font-mono text-sm data-[state=active]:text-cyan-700 data-[state=active]:border-b-2 data-[state=active]:border-cyan-700 rounded-none px-6 py-3 data-[state=active]:shadow-none"
+          className="cursor-pointer font-mono text-sm data-[state=active]:text-cyan-700 data-[state=active]:border-b-2 data-[state=active]:border-cyan-700 rounded-none px-6 py-3 data-[state=active]:shadow-none"
         >
           What&apos;s Included
         </TabsTrigger>
         <TabsTrigger
           value="specs"
-          className="font-mono text-sm data-[state=active]:text-cyan-700 data-[state=active]:border-b-2 data-[state=active]:border-cyan-700 rounded-none px-6 py-3 data-[state=active]:shadow-none"
+          className="cursor-pointer font-mono text-sm data-[state=active]:text-cyan-700 data-[state=active]:border-b-2 data-[state=active]:border-cyan-700 rounded-none px-6 py-3 data-[state=active]:shadow-none"
         >
           Technical Specs
         </TabsTrigger>

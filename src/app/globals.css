@@ -165,6 +165,26 @@ body {
     @apply border-border outline-ring/50;
   }
 
+  /* Interactive elements should always show pointer cursor */
+  button,
+  [role="button"],
+  a,
+  input[type="checkbox"],
+  input[type="radio"],
+  select,
+  label[for],
+  .interactive,
+  [data-interactive="true"] {
+    cursor: pointer;
+  }
+
+  /* Disabled states should show not-allowed cursor */
+  button:disabled,
+  [aria-disabled="true"],
+  .disabled {
+    cursor: not-allowed;
+  }
+
   /* Global focus-visible styles for accessibility */
   a:focus-visible {
     @apply outline-none ring-2 ring-cyan-700 ring-offset-2 rounded;

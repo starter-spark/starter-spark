@@ -86,7 +86,10 @@ function EventCard({ event, isPast = false }: { event: Event; isPast?: boolean }
   const eventDate = new Date(event.event_date)
 
   return (
-    <div className={`relative pl-8 pb-12 last:pb-0 ${isPast ? "opacity-60" : ""}`}>
+    <div
+      id={event.slug}
+      className={`relative pl-8 pb-12 last:pb-0 scroll-mt-32 ${isPast ? "opacity-60" : ""}`}
+    >
       {/* Timeline line */}
       <div
         className={`absolute left-0 top-2 bottom-0 w-px ${

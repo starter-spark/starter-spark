@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Database, CreditCard, Mail, Shield, ExternalLink } from "lucide-react"
+import { SiteStatsManager } from "./SiteStatsManager"
 
 export const metadata = {
   title: "Settings | Admin",
@@ -29,8 +30,27 @@ async function getSystemInfo() {
   }
 }
 
+async function getSiteStats() {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .from("site_stats")
+    .select("id, key, value, label, suffix, is_auto_calculated")
+    .order("sort_order", { ascending: true })
+
+  if (error) {
+    console.error("Error fetching site stats:", error)
+    return []
+  }
+
+  return data
+}
+
 export default async function SettingsPage() {
-  const systemInfo = await getSystemInfo()
+  const [systemInfo, siteStats] = await Promise.all([
+    getSystemInfo(),
+    getSiteStats(),
+  ])
 
   const integrations = [
     {
@@ -58,7 +78,7 @@ export default async function SettingsPage() {
       name: "Sentry",
       description: "Error tracking",
       icon: Shield,
-      status: process.env.SENTRY_DSN ? "connected" : "not configured",
+      status: process.env.NEXT_PUBLIC_SENTRY_DSN ? "connected" : "not configured",
       url: "https://sentry.io",
     },
   ]
@@ -112,6 +132,9 @@ export default async function SettingsPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Site Stats Management */}
+      <SiteStatsManager stats={siteStats} />
 
       {/* Integrations */}
       <Card>

@@ -148,7 +148,7 @@ export default function CartPage() {
                     <button
                       type="button"
                       onClick={clearCart}
-                      className="text-sm text-slate-500 hover:text-red-600 transition-colors"
+                      className="cursor-pointer text-sm text-slate-500 hover:text-red-600 transition-colors"
                     >
                       Clear Cart
                     </button>
@@ -177,7 +177,7 @@ export default function CartPage() {
                             <button
                               type="button"
                               onClick={() => removeItem(item.slug)}
-                              className="p-1 text-slate-500 hover:text-red-600 transition-colors"
+                              className="cursor-pointer p-1 text-slate-500 hover:text-red-600 transition-colors"
                               aria-label="Remove item"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -196,7 +196,7 @@ export default function CartPage() {
                                 onClick={() =>
                                   updateQuantity(item.slug, item.quantity - 1)
                                 }
-                                className="w-8 h-8 rounded border border-slate-200 flex items-center justify-center hover:border-slate-300 transition-colors"
+                                className="cursor-pointer w-8 h-8 rounded border border-slate-200 flex items-center justify-center hover:border-slate-300 transition-colors"
                                 aria-label="Decrease quantity"
                               >
                                 <Minus className="w-3 h-3 text-slate-600" />
@@ -209,7 +209,7 @@ export default function CartPage() {
                                 onClick={() =>
                                   updateQuantity(item.slug, item.quantity + 1)
                                 }
-                                className="w-8 h-8 rounded border border-slate-200 flex items-center justify-center hover:border-slate-300 transition-colors"
+                                className="cursor-pointer w-8 h-8 rounded border border-slate-200 flex items-center justify-center hover:border-slate-300 transition-colors"
                                 aria-label="Increase quantity"
                               >
                                 <Plus className="w-3 h-3 text-slate-600" />

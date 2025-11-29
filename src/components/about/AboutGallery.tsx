@@ -100,7 +100,7 @@ export function AboutGallery() {
                 </div>
               </div>
 
-              {/* Uncomment when you have actual images */}
+              {/* Uncomment when we have actual images */}
               {/* <Image
                 src={`/assets/images/gallery/${idx + 1}.jpg`}
                 alt={image.label}

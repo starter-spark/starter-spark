@@ -17,7 +17,7 @@ export function QuickTools() {
         <div className="space-y-3">
           <button
             onClick={() => setShowServoCalc(true)}
-            className="w-full flex items-center gap-3 p-3 rounded border border-slate-200 hover:border-cyan-700 hover:bg-slate-50 transition-colors text-left"
+            className="cursor-pointer w-full flex items-center gap-3 p-3 rounded border border-slate-200 hover:border-cyan-700 hover:bg-slate-50 transition-colors text-left"
           >
             <Calculator className="w-5 h-5 text-cyan-700" />
             <div>
@@ -29,7 +29,7 @@ export function QuickTools() {
           </button>
           <button
             onClick={() => setShowPinout(true)}
-            className="w-full flex items-center gap-3 p-3 rounded border border-slate-200 hover:border-cyan-700 hover:bg-slate-50 transition-colors text-left"
+            className="cursor-pointer w-full flex items-center gap-3 p-3 rounded border border-slate-200 hover:border-cyan-700 hover:bg-slate-50 transition-colors text-left"
           >
             <Cpu className="w-5 h-5 text-cyan-700" />
             <div>

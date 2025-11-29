@@ -16,25 +16,25 @@ const differentiators: Differentiator[] = [
     icon: Package,
     title: "Complete Package",
     description:
-      "Everything you need in one box. No soldering, no specialized tools, no hunting for parts. Unbox and start building.",
+      "add",
   },
   {
     icon: GraduationCap,
     title: "Interactive Curriculum",
     description:
-      "Step-by-step digital guides, wiring simulators, and video tutorials. Learn at your own pace with real feedback.",
+      "add",
   },
   {
     icon: Users,
-    title: "Community Support",
+    title: "Support for Schools and Clubs",
     description:
-      'Join "The Lab" — our Q&A community. Get help from staff, share projects, and connect with other builders.',
+      'We offer bulk discounts and classroom-ready kits to help educators bring hands-on STEM learning to their students. Whether you\'re running a robotics club, teaching a STEM unit, or hosting a workshop, StarterSpark provides guidance, resources, and affordable tools to make it happen. ',
   },
   {
     icon: MapPin,
     title: "Hawaii Roots",
     description:
-      "Designed by students in Honolulu. Every purchase supports local STEM education and robotics programs.",
+      "ee",
   },
 ]
 

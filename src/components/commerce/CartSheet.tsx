@@ -76,7 +76,7 @@ export function CartSheet() {
                         onClick={() =>
                           updateQuantity(item.slug, item.quantity - 1)
                         }
-                        className="w-7 h-7 rounded border border-slate-200 flex items-center justify-center hover:border-slate-300 transition-colors"
+                        className="cursor-pointer w-7 h-7 rounded border border-slate-200 flex items-center justify-center hover:border-slate-300 transition-colors"
                         aria-label="Decrease quantity"
                       >
                         <Minus className="w-3 h-3 text-slate-600" />
@@ -88,14 +88,14 @@ export function CartSheet() {
                         onClick={() =>
                           updateQuantity(item.slug, item.quantity + 1)
                         }
-                        className="w-7 h-7 rounded border border-slate-200 flex items-center justify-center hover:border-slate-300 transition-colors"
+                        className="cursor-pointer w-7 h-7 rounded border border-slate-200 flex items-center justify-center hover:border-slate-300 transition-colors"
                         aria-label="Increase quantity"
                       >
                         <Plus className="w-3 h-3 text-slate-600" />
                       </button>
                       <button
                         onClick={() => removeItem(item.slug)}
-                        className="ml-auto p-1.5 text-slate-500 hover:text-red-600 transition-colors"
+                        className="cursor-pointer ml-auto p-1.5 text-slate-500 hover:text-red-600 transition-colors"
                         aria-label="Remove item"
                       >
                         <Trash2 className="w-4 h-4" />

@@ -49,13 +49,14 @@ export function HeroSection() {
           </p>
 
           <h1 className="font-mono text-5xl lg:text-7xl font-bold tracking-tighter text-slate-900 mb-6 leading-[1.1]">
-            Learn Engineering<br />
-            <span className="text-cyan-700">By Building</span>
+            Early Access to<br />
+            <span className="text-cyan-700">Real Tech Skills</span>
           </h1>
 
           <p className="text-lg text-slate-600 max-w-lg leading-relaxed font-sans mb-4">
-            Complete robotics kits with step-by-step guides, wiring simulators,
-            and community support. No prior experience needed—just curiosity.
+            With components like Arduino and more advanced boards, servos, and code, 
+            students get exposure to real tools engineers use every day, 
+            all in a way that’s beginner-friendly and rewarding.
           </p>
 
           <p className="text-sm text-slate-500 font-mono">

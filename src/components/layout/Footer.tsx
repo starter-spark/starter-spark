@@ -3,6 +3,7 @@ import { GithubIcon, InstagramIcon, YoutubeIcon } from "@/components/icons/brand
 import { Heart } from "lucide-react"
 import Link from "next/link"
 import { NewsletterForm } from "./NewsletterForm"
+import { createClient } from "@/lib/supabase/server"
 
 // Custom X (Twitter) icon since simple-icons doesn't have it as "X"
 function XIcon({ className }: { className?: string }) {
@@ -13,7 +14,28 @@ function XIcon({ className }: { className?: string }) {
   )
 }
 
-export function Footer() {
+interface FooterProduct {
+  slug: string
+  name: string
+  status: string
+}
+
+export async function Footer() {
+  const supabase = await createClient()
+
+  // Fetch active products for the footer links
+  const { data: products, error } = await supabase
+    .from("products")
+    .select("slug, name, status")
+    .in("status", ["active", "coming_soon"])
+    .order("created_at", { ascending: true })
+    .limit(5)
+
+  if (error) {
+    console.error("Failed to fetch products for footer:", error.message)
+  }
+
+  const footerProducts: FooterProduct[] = products || []
   return (
     <footer className="bg-white border-t border-slate-200">
       {/* Charity Banner */}
@@ -68,19 +90,28 @@ export function Footer() {
           <nav aria-label="Products">
             <p className="font-mono text-sm text-cyan-700 mb-4 uppercase tracking-wider">Products</p>
             <ul className="space-y-3 text-sm text-slate-600">
-              <li>
-                <Link href="/shop/4dof-arm" className="hover:text-slate-900 transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-700 focus-visible:ring-offset-2">
-                  4DOF Robotic Arm
-                </Link>
-              </li>
+              {footerProducts.map((product) => (
+                <li key={product.slug}>
+                  {product.status === "coming_soon" ? (
+                    <span className="text-slate-400 flex items-center gap-2">
+                      {product.name}
+                      <span className="text-[10px] font-mono text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
+                        Soon
+                      </span>
+                    </span>
+                  ) : (
+                    <Link
+                      href={`/shop/${product.slug}`}
+                      className="hover:text-slate-900 transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-700 focus-visible:ring-offset-2"
+                    >
+                      {product.name}
+                    </Link>
+                  )}
+                </li>
+              ))}
               <li>
                 <Link href="/shop" className="hover:text-slate-900 transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-700 focus-visible:ring-offset-2">
                   All Kits
-                </Link>
-              </li>
-              <li>
-                <Link href="/shop/spare-parts" className="hover:text-slate-900 transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-700 focus-visible:ring-offset-2">
-                  Spare Parts
                 </Link>
               </li>
             </ul>

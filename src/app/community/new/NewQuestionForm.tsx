@@ -197,7 +197,7 @@ export function NewQuestionForm({ products }: NewQuestionFormProps) {
               key={tag}
               type="button"
               onClick={() => toggleTag(tag)}
-              className={`px-3 py-1 text-sm font-mono rounded transition-colors ${
+              className={`cursor-pointer px-3 py-1 text-sm font-mono rounded transition-colors ${
                 selectedTags.includes(tag)
                   ? "bg-cyan-700 text-white"
                   : "bg-slate-100 text-slate-600 hover:bg-cyan-100 hover:text-cyan-700"
@@ -223,7 +223,7 @@ export function NewQuestionForm({ products }: NewQuestionFormProps) {
           <button
             type="button"
             onClick={() => insertFormatting("**", "**")}
-            className="p-2 text-slate-500 hover:text-cyan-700 hover:bg-white rounded transition-colors"
+            className="cursor-pointer p-2 text-slate-500 hover:text-cyan-700 hover:bg-white rounded transition-colors"
             title="Bold"
           >
             <Bold className="w-4 h-4" />
@@ -231,7 +231,7 @@ export function NewQuestionForm({ products }: NewQuestionFormProps) {
           <button
             type="button"
             onClick={() => insertFormatting("*", "*")}
-            className="p-2 text-slate-500 hover:text-cyan-700 hover:bg-white rounded transition-colors"
+            className="cursor-pointer p-2 text-slate-500 hover:text-cyan-700 hover:bg-white rounded transition-colors"
             title="Italic"
           >
             <Italic className="w-4 h-4" />
@@ -239,7 +239,7 @@ export function NewQuestionForm({ products }: NewQuestionFormProps) {
           <button
             type="button"
             onClick={() => insertFormatting("`", "`")}
-            className="p-2 text-slate-500 hover:text-cyan-700 hover:bg-white rounded transition-colors"
+            className="cursor-pointer p-2 text-slate-500 hover:text-cyan-700 hover:bg-white rounded transition-colors"
             title="Inline Code"
           >
             <Code className="w-4 h-4" />
@@ -247,7 +247,7 @@ export function NewQuestionForm({ products }: NewQuestionFormProps) {
           <button
             type="button"
             onClick={() => insertFormatting("\n```cpp\n", "\n```\n")}
-            className="p-2 text-slate-500 hover:text-cyan-700 hover:bg-white rounded transition-colors text-xs font-mono"
+            className="cursor-pointer p-2 text-slate-500 hover:text-cyan-700 hover:bg-white rounded transition-colors text-xs font-mono"
             title="Code Block"
           >
             {"</>"}
@@ -255,7 +255,7 @@ export function NewQuestionForm({ products }: NewQuestionFormProps) {
           <button
             type="button"
             onClick={() => insertFormatting("[", "](url)")}
-            className="p-2 text-slate-500 hover:text-cyan-700 hover:bg-white rounded transition-colors"
+            className="cursor-pointer p-2 text-slate-500 hover:text-cyan-700 hover:bg-white rounded transition-colors"
             title="Link"
           >
             <LinkIcon className="w-4 h-4" />

@@ -16,8 +16,6 @@ export async function FeaturedProduct() {
     .single()
 
   if (error || !product) {
-    // No featured product found - don't render anything
-    // Following "fail fast" - no fallbacks or placeholders
     console.error("Failed to fetch featured product:", error?.message)
     return null
   }

@@ -3,17 +3,12 @@
 import { motion, useInView } from "motion/react"
 import { useRef, useEffect, useState } from "react"
 
-interface Stat {
+export interface Stat {
+  key: string
   value: number
-  suffix: string
   label: string
+  suffix: string
 }
-
-const stats: Stat[] = [
-  { value: 0, suffix: "", label: "Kits Deployed" },
-  { value: 1, suffix: "", label: "Schools Supported" },
-  { value: 0, suffix: "", label: "Workshops Hosted" },
-]
 
 function AnimatedCounter({ value, suffix }: { value: number; suffix: string }) {
   const [count, setCount] = useState(0)
@@ -49,7 +44,11 @@ function AnimatedCounter({ value, suffix }: { value: number; suffix: string }) {
   )
 }
 
-export function MissionImpactSection() {
+interface MissionImpactSectionProps {
+  stats: Stat[]
+}
+
+export function MissionImpactSection({ stats }: MissionImpactSectionProps) {
   return (
     <section className="py-24 px-6 lg:px-20 bg-slate-50">
       <div className="max-w-7xl mx-auto">
@@ -78,16 +77,10 @@ export function MissionImpactSection() {
             {/* The Story */}
             <div className="space-y-4 text-slate-600 leading-relaxed">
               <p>
-                StarterSpark was born in the robotics lab at Punahou School. As
-                members of the FTC team, we saw firsthand how robotics could
-                transform a student&apos;s relationship with engineering—but we also
-                saw the barriers: expensive kits, confusing documentation, and a
-                steep learning curve.
+                Description
               </p>
               <p>
-                We built the kit we wished existed when we started: affordable,
-                complete, and designed from day one for learning. Real components,
-                real code, real skills—not just toys.
+                Description
               </p>
             </div>
 
@@ -111,10 +104,10 @@ export function MissionImpactSection() {
               </p>
             </div>
 
-            {/* Impact Stats */}
+            {/* Impact Stats - Dynamic from database */}
             <div className="grid grid-cols-3 gap-6">
               {stats.map((stat) => (
-                <div key={stat.label} className="text-center">
+                <div key={stat.key} className="text-center">
                   <div className="text-4xl font-mono text-cyan-700 mb-1">
                     <AnimatedCounter value={stat.value} suffix={stat.suffix} />
                   </div>
@@ -169,7 +162,7 @@ export function MissionImpactSection() {
                       </p>
                     </div>
                   </div>
-                  {/* Uncomment when you have actual images */}
+                  {/* Uncomment when we have actual images */}
                   {/* <Image
                     src={`/assets/images/outreach-${idx + 1}.jpg`}
                     alt={label}

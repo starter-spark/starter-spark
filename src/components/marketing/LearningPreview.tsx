@@ -128,14 +128,10 @@ void loop() {
               Step-by-Step Digital Guides
             </h3>
             <p className="text-slate-600 mb-4 leading-relaxed">
-              Each lesson breaks down complex concepts into manageable steps.
-              Follow along with annotated diagrams, copy-paste code snippets, and
-              check your work with interactive wiring simulators.
+              Description
             </p>
             <p className="text-slate-600 leading-relaxed mb-6">
-              No prior programming experience? No problem. We start from the
-              basics and build up to advanced projects like object tracking and
-              gesture control.
+              Description
             </p>
             <Link href="/shop">
               <Button className="bg-cyan-700 hover:bg-cyan-600 text-white font-mono">
@@ -161,12 +157,10 @@ void loop() {
               Expert Support When You Need It
             </h3>
             <p className="text-slate-600 mb-4 leading-relaxed">
-              Stuck on a step? Post in The Lab and get help from our staff and
-              community. Every question gets answered—usually within hours.
+              Description
             </p>
             <p className="text-slate-600 mb-6 leading-relaxed">
-              Search existing solutions, share your own discoveries, and connect
-              with builders around the world. Learning is better together.
+              Description
             </p>
             <Link href="/community">
               <Button
@@ -190,10 +184,10 @@ void loop() {
               {/* Fake Forum Header */}
               <div className="h-12 bg-slate-50 border-b border-slate-200 flex items-center justify-between px-4">
                 <span className="text-sm font-mono text-slate-600">
-                  The Lab — Community Q&A
+                  The Lab - Community Q&A
                 </span>
                 <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded font-mono">
-                  342 Online
+                  342 Online - replace
                 </span>
               </div>
               {/* Fake Question */}
@@ -231,7 +225,7 @@ void loop() {
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-sm font-medium text-slate-900">
-                        @kai_stewart
+                        @username
                       </span>
                       <span className="text-xs px-1.5 py-0.5 bg-cyan-100 text-cyan-700 rounded font-mono">
                         Staff
