@@ -67,6 +67,8 @@ export async function POST(request: Request) {
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
 
     // Create Stripe Checkout Session
+    // Note: Item info is stored in each line_item's product_data.metadata.slug
+    // The webhook retrieves line_items directly from Stripe to avoid metadata size limits
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       line_items: lineItems,
@@ -78,15 +80,6 @@ export async function POST(request: Request) {
       billing_address_collection: "required",
       phone_number_collection: {
         enabled: true,
-      },
-      metadata: {
-        // Store cart items for webhook processing
-        items: JSON.stringify(
-          items.map((item) => ({
-            slug: item.slug,
-            quantity: item.quantity,
-          }))
-        ),
       },
       // Allow guest checkout - no customer_email required
       // Stripe will collect email during checkout

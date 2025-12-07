@@ -62,29 +62,25 @@ export async function POST(request: Request) {
         )
       }
 
-      // Parse items from metadata
-      const itemsJson = session.metadata?.items
-      if (!itemsJson) {
-        console.error("No items metadata in session")
-        return NextResponse.json(
-          { error: "No items metadata" },
-          { status: 400 }
-        )
-      }
+      // Retrieve line items from Stripe (avoids metadata size limits)
+      const lineItems = await stripe.checkout.sessions.listLineItems(session.id, {
+        expand: ["data.price.product"],
+      })
 
-      let items: { slug: string; quantity: number }[]
-      try {
-        items = JSON.parse(itemsJson)
-      } catch {
-        console.error("Failed to parse items metadata")
-        return NextResponse.json(
-          { error: "Invalid items metadata" },
-          { status: 400 }
-        )
-      }
+      // Extract items from line items, filtering out shipping
+      const productItems: { slug: string; quantity: number }[] = []
+      for (const lineItem of lineItems.data) {
+        const product = lineItem.price?.product as Stripe.Product | undefined
+        const slug = product?.metadata?.slug
 
-      // Filter out shipping item
-      const productItems = items.filter(item => item.slug !== "shipping")
+        // Skip shipping or items without slug
+        if (!slug || slug === "shipping") continue
+
+        productItems.push({
+          slug,
+          quantity: lineItem.quantity || 1,
+        })
+      }
 
       // Look up products by slug
       const slugs = productItems.map(item => item.slug)
