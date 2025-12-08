@@ -13,7 +13,6 @@ interface ProductData {
   price_cents: number
   stripe_price_id: string | null
   specs: Record<string, string> | null
-  is_featured: boolean
   // Discount fields (Phase 14.3)
   discount_percent: number | null
   discount_expires_at: string | null
@@ -52,15 +51,6 @@ export async function updateProduct(
     return { error: "Unauthorized" }
   }
 
-  // If setting as featured, unset any existing featured product first
-  if (data.is_featured) {
-    await supabase
-      .from("products")
-      .update({ is_featured: false })
-      .neq("id", id)
-      .eq("is_featured", true)
-  }
-
   const { error } = await supabase
     .from("products")
     .update({
@@ -70,7 +60,6 @@ export async function updateProduct(
       price_cents: data.price_cents,
       stripe_price_id: data.stripe_price_id,
       specs: data.specs,
-      is_featured: data.is_featured,
       // Discount fields (Phase 14.3)
       discount_percent: data.discount_percent,
       discount_expires_at: data.discount_expires_at,
@@ -158,14 +147,6 @@ export async function createProduct(
     return { error: "Unauthorized", id: null }
   }
 
-  // If setting as featured, unset any existing featured product first
-  if (data.is_featured) {
-    await supabase
-      .from("products")
-      .update({ is_featured: false })
-      .eq("is_featured", true)
-  }
-
   const { data: product, error } = await supabase
     .from("products")
     .insert({
@@ -175,7 +156,6 @@ export async function createProduct(
       price_cents: data.price_cents,
       stripe_price_id: data.stripe_price_id,
       specs: data.specs,
-      is_featured: data.is_featured,
       // Discount fields (Phase 14.3)
       discount_percent: data.discount_percent,
       discount_expires_at: data.discount_expires_at,

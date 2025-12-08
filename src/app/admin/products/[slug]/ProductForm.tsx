@@ -13,13 +13,14 @@ import { Database } from "@/lib/supabase/database.types"
 type ProductTagType = Database["public"]["Enums"]["product_tag_type"]
 
 const ALL_TAGS: { type: ProductTagType; label: string; description: string }[] = [
-  { type: "featured", label: "Featured", description: "Highlights product in the shop" },
-  { type: "new", label: "New", description: "Recently added product" },
+  { type: "featured", label: "Featured", description: "Highlights in shop + homepage (highest priority = homepage)" },
   { type: "bestseller", label: "Bestseller", description: "Top selling product" },
-  { type: "discount", label: "Discount", description: "Product is on sale" },
-  { type: "limited", label: "Limited", description: "Limited availability" },
   { type: "bundle", label: "Bundle", description: "Product bundle/kit" },
-  { type: "out_of_stock", label: "Out of Stock", description: "Currently unavailable" },
+  // Automated tags - managed by system:
+  { type: "new", label: "New", description: "Auto-added for new products (expires after 7 days)" },
+  { type: "limited", label: "Limited", description: "Auto-managed by inventory (low stock)" },
+  { type: "out_of_stock", label: "Out of Stock", description: "Auto-managed by inventory (0 stock)" },
+  // Note: "discount" tag is auto-managed by the "On Sale" toggle in Pricing section
 ]
 
 interface TagState {
@@ -28,8 +29,8 @@ interface TagState {
   discount_percent: number | null
 }
 
-// Automated tags that are managed by database triggers
-const AUTOMATED_TAGS: ProductTagType[] = ["out_of_stock", "limited", "new"]
+// Automated tags that are managed by database triggers or system
+const AUTOMATED_TAGS: ProductTagType[] = ["out_of_stock", "limited", "new", "discount"]
 
 interface ProductFormProps {
   product: {
@@ -40,7 +41,6 @@ interface ProductFormProps {
     price_cents: number
     stripe_price_id: string | null
     specs: unknown
-    is_featured: boolean | null
     // Discount fields (Phase 14.3)
     discount_percent: number | null
     discount_expires_at: string | null
@@ -64,7 +64,6 @@ export function ProductForm({ product, initialTags = [] }: ProductFormProps) {
   const [slug, setSlug] = useState(product.slug)
   const [description, setDescription] = useState(product.description || "")
   const [stripePriceId, setStripePriceId] = useState(product.stripe_price_id || "")
-  const [isFeatured, setIsFeatured] = useState(product.is_featured || false)
 
   // Pricing state (Phase 14.3) - simple: enter price, optionally toggle sale
   const [priceCents, setPriceCents] = useState(
@@ -170,7 +169,6 @@ export function ProductForm({ product, initialTags = [] }: ProductFormProps) {
         price_cents: isOnSale && discountPercent ? salePriceCents : priceCents,
         stripe_price_id: stripePriceId || null,
         specs: Object.keys(specsObject).length > 0 ? specsObject : null,
-        is_featured: isFeatured,
         // Discount fields (Phase 14.3) - only set if on sale
         discount_percent: isOnSale ? discountPercent : null,
         discount_expires_at: isOnSale && discountExpiresAt ? discountExpiresAt : null,
@@ -382,21 +380,6 @@ export function ProductForm({ product, initialTags = [] }: ProductFormProps) {
             )}
           </div>
 
-          {/* Featured Toggle */}
-          <div className="border-t border-slate-200 pt-4">
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="featured"
-                checked={isFeatured}
-                onChange={(e) => setIsFeatured(e.target.checked)}
-                className="h-4 w-4 rounded border-slate-300 text-cyan-700 focus:ring-cyan-700"
-              />
-              <label htmlFor="featured" className="text-sm text-slate-900">
-                Featured product (shown on homepage)
-              </label>
-            </div>
-          </div>
         </CardContent>
       </Card>
 
@@ -571,26 +554,9 @@ export function ProductForm({ product, initialTags = [] }: ProductFormProps) {
                           }
                           className="w-20 h-7 text-xs"
                         />
-                      </div>
-                    )}
-
-                    {/* Show discount percentage when discount tag is selected */}
-                    {tagInfo.type === "discount" && isTagSelected("discount") && (
-                      <div className="mt-2 flex items-center gap-2">
-                        <label className="text-xs text-slate-600">Discount %:</label>
-                        <Input
-                          type="number"
-                          min="1"
-                          max="99"
-                          value={getDiscountPercent() ?? ""}
-                          onChange={(e) =>
-                            updateDiscountPercent(
-                              e.target.value ? parseInt(e.target.value) : null
-                            )
-                          }
-                          placeholder="e.g., 20"
-                          className="w-20 h-7 text-xs"
-                        />
+                        {tagInfo.type === "featured" && (
+                          <span className="text-xs text-slate-500">(highest = homepage)</span>
+                        )}
                       </div>
                     )}
                   </div>
@@ -599,7 +565,7 @@ export function ProductForm({ product, initialTags = [] }: ProductFormProps) {
             })}
           </div>
           <p className="text-xs text-slate-500">
-            Higher priority tags are shown first. Tags marked &quot;(auto)&quot; are managed by inventory tracking when enabled.
+            Higher priority Featured tag = shown on homepage. Tags marked &quot;(auto)&quot; are managed automatically. Discount tag is controlled by the &quot;On Sale&quot; toggle in Pricing.
           </p>
         </CardContent>
       </Card>

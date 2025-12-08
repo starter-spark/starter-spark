@@ -4,20 +4,38 @@ import { getProductSchema } from "@/lib/structured-data"
 
 /**
  * Server component that fetches the featured product and renders ProductSpotlight
+ * Uses the product with the highest-priority "featured" tag
  * Also generates Product schema JSON-LD for SEO
  */
 export async function FeaturedProduct() {
   const supabase = await createClient()
 
-  const { data: product, error } = await supabase
-    .from("products")
-    .select("id, name, slug, description, price_cents, specs, is_featured")
-    .eq("is_featured", true)
+  // Get products with "featured" tag, sorted by priority (highest first)
+  const { data: featuredTags, error: tagsError } = await supabase
+    .from("product_tags")
+    .select(`
+      priority,
+      products (
+        id, name, slug, description, price_cents, specs
+      )
+    `)
+    .eq("tag", "featured")
+    .order("priority", { ascending: false, nullsFirst: false })
+    .limit(1)
     .single()
 
-  if (error || !product) {
-    console.error("Failed to fetch featured product:", error?.message)
+  if (tagsError || !featuredTags?.products) {
+    console.error("Failed to fetch featured product:", tagsError?.message)
     return null
+  }
+
+  const product = featuredTags.products as {
+    id: string
+    name: string
+    slug: string
+    description: string | null
+    price_cents: number
+    specs: Record<string, string> | null
   }
 
   const productSchema = getProductSchema({

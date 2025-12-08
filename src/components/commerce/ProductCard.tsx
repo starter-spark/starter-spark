@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { motion } from "motion/react"
 import Link from "next/link"
+import { Star } from "lucide-react"
 import { Database } from "@/lib/supabase/database.types"
 
 type ProductTagType = Database["public"]["Enums"]["product_tag_type"]
@@ -68,6 +69,9 @@ export function ProductCard({
   // Check if out of stock via tags
   const hasOutOfStockTag = tags.some(t => t.tag === "out_of_stock")
   const effectiveInStock = !hasOutOfStockTag && inStock
+
+  // Check if featured
+  const isFeatured = tags.some(t => t.tag === "featured")
 
   const cardContent = (
     <motion.div
@@ -163,9 +167,14 @@ export function ProductCard({
 
           {/* Content */}
           <div className="p-4">
-            <h3 className="font-mono text-lg text-slate-900 mb-2 line-clamp-2">
-              {name}
-            </h3>
+            <div className="flex items-start gap-2 mb-2">
+              <h3 className="font-mono text-lg text-slate-900 line-clamp-2 flex-1">
+                {name}
+              </h3>
+              {isFeatured && (
+                <Star className="h-5 w-5 fill-amber-400 text-amber-400 flex-shrink-0 mt-0.5" />
+              )}
+            </div>
             {isComingSoon ? (
               <p className="text-lg font-mono text-slate-400">Price TBD</p>
             ) : hasActiveDiscount ? (

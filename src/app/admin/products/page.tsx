@@ -21,7 +21,10 @@ async function getProducts() {
   const supabase = await createClient()
   const { data, error } = await supabase
     .from("products")
-    .select("*")
+    .select(`
+      *,
+      product_tags (tag, priority)
+    `)
     .order("created_at", { ascending: false })
 
   if (error) {
@@ -74,44 +77,48 @@ export default async function ProductsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {products.map((product) => (
-                <TableRow key={product.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium text-slate-900">
-                        {product.name}
-                      </span>
-                      {product.is_featured && (
-                        <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+              {products.map((product) => {
+                const tags = (product.product_tags || []) as { tag: string; priority: number | null }[]
+                const hasFeaturedTag = tags.some((t) => t.tag === "featured")
+                return (
+                  <TableRow key={product.id}>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-slate-900">
+                          {product.name}
+                        </span>
+                        {hasFeaturedTag && (
+                          <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <code className="rounded bg-slate-100 px-2 py-1 font-mono text-xs">
+                        {product.slug}
+                      </code>
+                    </TableCell>
+                    <TableCell className="font-mono">
+                      {formatPrice(product.price_cents)}
+                    </TableCell>
+                    <TableCell>
+                      {hasFeaturedTag ? (
+                        <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100">
+                          Featured
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline">Active</Badge>
                       )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <code className="rounded bg-slate-100 px-2 py-1 font-mono text-xs">
-                      {product.slug}
-                    </code>
-                  </TableCell>
-                  <TableCell className="font-mono">
-                    {formatPrice(product.price_cents)}
-                  </TableCell>
-                  <TableCell>
-                    {product.is_featured ? (
-                      <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100">
-                        Featured
-                      </Badge>
-                    ) : (
-                      <Badge variant="outline">Active</Badge>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Link href={`/admin/products/${product.slug}`}>
-                      <Button variant="ghost" size="sm">
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                    </Link>
-                  </TableCell>
-                </TableRow>
-              ))}
+                    </TableCell>
+                    <TableCell>
+                      <Link href={`/admin/products/${product.slug}`}>
+                        <Button variant="ghost" size="sm">
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                    </TableCell>
+                  </TableRow>
+                )
+              })}
             </TableBody>
           </Table>
         </div>

@@ -20,7 +20,6 @@ export function NewProductForm() {
   const [description, setDescription] = useState("")
   const [priceCents, setPriceCents] = useState(0)
   const [stripePriceId, setStripePriceId] = useState("")
-  const [isFeatured, setIsFeatured] = useState(false)
   const [specs, setSpecs] = useState<{ key: string; value: string }[]>([])
 
   // Auto-generate slug from name
@@ -73,7 +72,6 @@ export function NewProductForm() {
         price_cents: priceCents,
         stripe_price_id: stripePriceId || null,
         specs: Object.keys(specsObject).length > 0 ? specsObject : null,
-        is_featured: isFeatured,
         // Discount fields (Phase 14.3) - null for new products
         discount_percent: null,
         discount_expires_at: null,
@@ -183,18 +181,6 @@ export function NewProductForm() {
                 placeholder="price_..."
               />
             </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="featured"
-              checked={isFeatured}
-              onChange={(e) => setIsFeatured(e.target.checked)}
-              className="h-4 w-4 rounded border-slate-300 text-cyan-700 focus:ring-cyan-700"
-            />
-            <label htmlFor="featured" className="text-sm text-slate-900">
-              Featured product (shown on homepage)
-            </label>
           </div>
         </CardContent>
       </Card>

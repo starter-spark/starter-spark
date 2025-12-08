@@ -27,7 +27,8 @@ export default async function ShopPage() {
       product_tags (
         tag,
         priority,
-        discount_percent
+        discount_percent,
+        expires_at
       )
     `)
     .in("status", ["active", "coming_soon"])
@@ -44,7 +45,14 @@ export default async function ShopPage() {
       inStock?: boolean
     } | null
 
-    const tags: ProductTag[] = (product.product_tags || []).map((t) => ({
+    // Filter out expired tags
+    const now = new Date()
+    const validTags = (product.product_tags || []).filter((t) => {
+      if (!t.expires_at) return true // No expiration = always valid
+      return new Date(t.expires_at) > now
+    })
+
+    const tags: ProductTag[] = validTags.map((t) => ({
       tag: t.tag as ProductTagType,
       priority: t.priority,
       discount_percent: t.discount_percent,
