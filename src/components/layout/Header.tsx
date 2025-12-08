@@ -4,26 +4,25 @@ import { useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-} from "@/components/ui/navigation-menu"
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Menu, X, ShoppingCart, ChevronDown, Lock } from "lucide-react"
 import { useCartStore, selectCartCount } from "@/store/cart"
 import { documentationNav, communityNav, type NavItem } from "@/config/navigation"
 import { cn } from "@/lib/utils"
 
-function NavDropdownItem({ item }: { item: NavItem }) {
+function NavDropdownItem({ item, onSelect }: { item: NavItem; onSelect?: () => void }) {
   const Icon = item.icon
 
   return (
-    <NavigationMenuLink asChild>
+    <DropdownMenuItem asChild className="p-0 focus:bg-transparent">
       <Link
         href={item.href}
-        className="flex items-start gap-3 rounded-md p-3 hover:bg-slate-50 transition-colors group"
+        onClick={onSelect}
+        className="flex items-start gap-3 rounded-md p-3 hover:bg-slate-50 transition-colors group w-full"
       >
         {Icon && (
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-slate-100 group-hover:bg-cyan-100 transition-colors">
@@ -46,7 +45,7 @@ function NavDropdownItem({ item }: { item: NavItem }) {
           )}
         </div>
       </Link>
-    </NavigationMenuLink>
+    </DropdownMenuItem>
   )
 }
 
@@ -140,46 +139,41 @@ export function Header() {
           </Link>
 
           {/* Desktop Navigation */}
-          <NavigationMenu className="hidden md:flex">
-            <NavigationMenuList className="gap-1">
-              {/* Documentation Dropdown */}
-              <NavigationMenuItem>
-                <NavigationMenuTrigger className="font-mono text-sm text-slate-600 hover:text-cyan-700 bg-transparent hover:bg-slate-100 data-[state=open]:bg-slate-100">
-                  {documentationNav.title}
-                </NavigationMenuTrigger>
-                <NavigationMenuContent className="bg-white border border-slate-200 shadow-lg rounded-lg">
-                  <div className="w-[320px] p-2">
-                    {documentationNav.items.map((item) => (
-                      <NavDropdownItem key={item.href + item.title} item={item} />
-                    ))}
-                  </div>
-                </NavigationMenuContent>
-              </NavigationMenuItem>
+          <nav className="hidden md:flex items-center gap-1">
+            {/* Documentation Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger className="font-mono text-sm text-slate-600 hover:text-cyan-700 bg-transparent hover:bg-slate-100 data-[state=open]:bg-slate-100 px-4 py-2 rounded-md transition-colors inline-flex items-center gap-1 outline-none">
+                {documentationNav.title}
+                <ChevronDown className="h-4 w-4 transition-transform duration-200 [[data-state=open]>&]:rotate-180" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-[320px] bg-white border border-slate-200 shadow-lg p-1">
+                {documentationNav.items.map((item) => (
+                  <NavDropdownItem key={item.href + item.title} item={item} />
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
 
-              {/* Community Dropdown */}
-              <NavigationMenuItem>
-                <NavigationMenuTrigger className="font-mono text-sm text-slate-600 hover:text-cyan-700 bg-transparent hover:bg-slate-100 data-[state=open]:bg-slate-100">
-                  {communityNav.title}
-                </NavigationMenuTrigger>
-                <NavigationMenuContent className="bg-white border border-slate-200 shadow-lg rounded-lg">
-                  <div className="w-[280px] p-2">
-                    {communityNav.items.map((item) => (
-                      <NavDropdownItem key={item.href + item.title} item={item} />
-                    ))}
-                  </div>
-                </NavigationMenuContent>
-              </NavigationMenuItem>
+            {/* Community Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger className="font-mono text-sm text-slate-600 hover:text-cyan-700 bg-transparent hover:bg-slate-100 data-[state=open]:bg-slate-100 px-4 py-2 rounded-md transition-colors inline-flex items-center gap-1 outline-none">
+                {communityNav.title}
+                <ChevronDown className="h-4 w-4 transition-transform duration-200 [[data-state=open]>&]:rotate-180" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-[280px] bg-white border border-slate-200 shadow-lg p-1">
+                {communityNav.items.map((item) => (
+                  <NavDropdownItem key={item.href + item.title} item={item} />
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
 
-              {/* Workshop Link (no dropdown) */}
-              <NavigationMenuItem>
-                <Link href="/workshop" legacyBehavior passHref>
-                  <NavigationMenuLink className="font-mono text-sm text-slate-600 hover:text-cyan-700 px-4 py-2 rounded-md hover:bg-slate-100 transition-colors inline-flex items-center">
-                    Workshop
-                  </NavigationMenuLink>
-                </Link>
-              </NavigationMenuItem>
-            </NavigationMenuList>
-          </NavigationMenu>
+            {/* Workshop Link (no dropdown) */}
+            <Link
+              href="/workshop"
+              className="font-mono text-sm text-slate-600 hover:text-cyan-700 px-4 py-2 rounded-md hover:bg-slate-100 transition-colors inline-flex items-center"
+            >
+              Workshop
+            </Link>
+          </nav>
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center gap-3">
