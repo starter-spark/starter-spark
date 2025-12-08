@@ -10,7 +10,7 @@ type ProductTagType = Database["public"]["Enums"]["product_tag_type"]
 
 export interface ProductTag {
   tag: ProductTagType
-  priority: number
+  priority: number | null
   discount_percent?: number | null
 }
 
@@ -62,7 +62,7 @@ export function ProductCard({
 
   // Sort tags by priority (higher = first) and limit to 3
   const sortedTags = [...tags]
-    .sort((a, b) => b.priority - a.priority)
+    .sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0))
     .slice(0, 3)
 
   // Check if out of stock via tags

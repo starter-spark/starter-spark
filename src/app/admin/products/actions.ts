@@ -18,11 +18,15 @@ interface ProductData {
   discount_percent: number | null
   discount_expires_at: string | null
   original_price_cents: number | null
+  // Inventory fields (Phase 14.4)
+  track_inventory: boolean
+  stock_quantity: number | null
+  low_stock_threshold: number | null
 }
 
 interface TagData {
   tag: ProductTagType
-  priority: number
+  priority: number | null
   discount_percent: number | null
 }
 
@@ -71,6 +75,10 @@ export async function updateProduct(
       discount_percent: data.discount_percent,
       discount_expires_at: data.discount_expires_at,
       original_price_cents: data.original_price_cents,
+      // Inventory fields (Phase 14.4)
+      track_inventory: data.track_inventory,
+      stock_quantity: data.stock_quantity,
+      low_stock_threshold: data.low_stock_threshold,
     })
     .eq("id", id)
 
@@ -172,6 +180,10 @@ export async function createProduct(
       discount_percent: data.discount_percent,
       discount_expires_at: data.discount_expires_at,
       original_price_cents: data.original_price_cents,
+      // Inventory fields (Phase 14.4)
+      track_inventory: data.track_inventory,
+      stock_quantity: data.stock_quantity,
+      low_stock_threshold: data.low_stock_threshold,
     })
     .select("id")
     .single()

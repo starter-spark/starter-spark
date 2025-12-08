@@ -55,10 +55,13 @@ export default async function ProductDetailPage({
   const { slug } = await params
   const supabase = await createClient()
 
-  // Fetch product from database
+  // Fetch product from database with tags
   const { data: product, error } = await supabase
     .from("products")
-    .select("*")
+    .select(`
+      *,
+      product_tags (tag)
+    `)
     .eq("slug", slug)
     .single()
 
@@ -67,10 +70,19 @@ export default async function ProductDetailPage({
   }
 
   const specs = product.specs as ProductSpecs | null
+  const tags = (product.product_tags || []).map((t: { tag: string }) => t.tag)
+
+  // Determine stock status from inventory tracking or tags
+  const hasOutOfStockTag = tags.includes("out_of_stock")
+  const hasLimitedTag = tags.includes("limited")
+
+  // inStock: check inventory tracking first, then fall back to specs
+  const inStock = product.track_inventory
+    ? (product.stock_quantity ?? 0) > 0
+    : !hasOutOfStockTag && (specs?.inStock ?? true)
 
   // Extract data from specs with defaults
   const modelPath = specs?.modelPath
-  const inStock = specs?.inStock ?? true
   const learningOutcomes = specs?.learningOutcomes || []
   const includedItems = specs?.includedItems || []
   const technicalSpecs = specs?.technicalSpecs || []
@@ -141,6 +153,8 @@ export default async function ProductDetailPage({
                 originalPrice={originalPrice}
                 discountPercent={discountPercent}
                 discountExpiresAt={discountExpiresAt}
+                stockQuantity={product.track_inventory ? product.stock_quantity : null}
+                isLimitedStock={hasLimitedTag}
               />
             </div>
           </div>

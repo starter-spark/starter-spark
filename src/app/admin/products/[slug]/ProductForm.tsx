@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import { Loader2, Save, Trash2, Plus, X } from "lucide-react"
+import { Loader2, Save, Trash2, Plus, X, Package, AlertTriangle } from "lucide-react"
 import { updateProduct, deleteProduct, updateProductTags } from "../actions"
 import { Database } from "@/lib/supabase/database.types"
 
@@ -24,9 +24,12 @@ const ALL_TAGS: { type: ProductTagType; label: string; description: string }[] =
 
 interface TagState {
   tag: ProductTagType
-  priority: number
+  priority: number | null
   discount_percent: number | null
 }
+
+// Automated tags that are managed by database triggers
+const AUTOMATED_TAGS: ProductTagType[] = ["out_of_stock", "limited", "new"]
 
 interface ProductFormProps {
   product: {
@@ -42,6 +45,10 @@ interface ProductFormProps {
     discount_percent: number | null
     discount_expires_at: string | null
     original_price_cents: number | null
+    // Inventory fields (Phase 14.4)
+    track_inventory: boolean | null
+    stock_quantity: number | null
+    low_stock_threshold: number | null
   }
   initialTags?: TagState[]
 }
@@ -73,6 +80,12 @@ export function ProductForm({ product, initialTags = [] }: ProductFormProps) {
   const salePriceCents = isOnSale && discountPercent
     ? Math.round(priceCents * (1 - discountPercent / 100))
     : priceCents
+
+  // Inventory state (Phase 14.4)
+  const [trackInventory, setTrackInventory] = useState(product.track_inventory || false)
+  const [stockQuantity, setStockQuantity] = useState<number | null>(product.stock_quantity)
+  const [lowStockThreshold, setLowStockThreshold] = useState(product.low_stock_threshold || 10)
+
   const [specs, setSpecs] = useState<{ key: string; value: string }[]>(() => {
     if (product.specs && typeof product.specs === "object" && !Array.isArray(product.specs)) {
       return Object.entries(product.specs as Record<string, unknown>).map(([key, value]) => ({
@@ -117,6 +130,10 @@ export function ProductForm({ product, initialTags = [] }: ProductFormProps) {
   const getDiscountPercent = () =>
     selectedTags.find((t) => t.tag === "discount")?.discount_percent ?? null
 
+  // Check if a tag is automated (managed by database triggers)
+  const isAutomatedTag = (tagType: ProductTagType) =>
+    AUTOMATED_TAGS.includes(tagType)
+
   const handleAddSpec = () => {
     setSpecs([...specs, { key: "", value: "" }])
   }
@@ -158,6 +175,10 @@ export function ProductForm({ product, initialTags = [] }: ProductFormProps) {
         discount_percent: isOnSale ? discountPercent : null,
         discount_expires_at: isOnSale && discountExpiresAt ? discountExpiresAt : null,
         original_price_cents: isOnSale && discountPercent ? priceCents : null,
+        // Inventory fields (Phase 14.4)
+        track_inventory: trackInventory,
+        stock_quantity: trackInventory ? stockQuantity : null,
+        low_stock_threshold: trackInventory ? lowStockThreshold : null,
       })
 
       if (result.error) {
@@ -379,6 +400,112 @@ export function ProductForm({ product, initialTags = [] }: ProductFormProps) {
         </CardContent>
       </Card>
 
+      {/* Inventory */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Package className="h-5 w-5" />
+            Inventory
+          </CardTitle>
+          <CardDescription>Track stock levels and automate availability tags</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Track Inventory Toggle */}
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="trackInventory"
+              checked={trackInventory}
+              onChange={(e) => {
+                setTrackInventory(e.target.checked)
+                if (!e.target.checked) {
+                  setStockQuantity(null)
+                }
+              }}
+              className="h-4 w-4 rounded border-slate-300 text-cyan-700 focus:ring-cyan-700"
+            />
+            <label htmlFor="trackInventory" className="text-sm font-medium text-slate-900">
+              Track Inventory
+            </label>
+          </div>
+          <p className="text-xs text-slate-500">
+            When enabled, stock tags (Out of Stock, Limited) are automatically managed based on quantity.
+          </p>
+
+          {/* Inventory Fields (shown when tracking is enabled) */}
+          {trackInventory && (
+            <div className="mt-4 p-4 bg-slate-50 rounded-md border border-slate-200 space-y-4">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <label htmlFor="stockQuantity" className="text-sm font-medium text-slate-900">
+                    Stock Quantity
+                  </label>
+                  <Input
+                    id="stockQuantity"
+                    type="number"
+                    min="0"
+                    value={stockQuantity ?? ""}
+                    onChange={(e) => setStockQuantity(e.target.value ? parseInt(e.target.value) : null)}
+                    placeholder="e.g., 50"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="lowStockThreshold" className="text-sm font-medium text-slate-900">
+                    Low Stock Threshold
+                  </label>
+                  <Input
+                    id="lowStockThreshold"
+                    type="number"
+                    min="1"
+                    value={lowStockThreshold}
+                    onChange={(e) => setLowStockThreshold(parseInt(e.target.value) || 10)}
+                  />
+                  <p className="text-xs text-slate-500">
+                    Product shows &quot;Limited&quot; when stock falls to or below this number
+                  </p>
+                </div>
+              </div>
+
+              {/* Stock Status Preview */}
+              {stockQuantity !== null && (
+                <div className={`p-3 rounded border ${
+                  stockQuantity <= 0
+                    ? "bg-red-50 border-red-200"
+                    : stockQuantity <= lowStockThreshold
+                    ? "bg-amber-50 border-amber-200"
+                    : "bg-green-50 border-green-200"
+                }`}>
+                  <div className="flex items-center gap-2">
+                    {stockQuantity <= 0 ? (
+                      <>
+                        <AlertTriangle className="h-4 w-4 text-red-600" />
+                        <span className="text-sm font-medium text-red-600">Out of Stock</span>
+                        <span className="text-xs text-red-500">(auto-tagged)</span>
+                      </>
+                    ) : stockQuantity <= lowStockThreshold ? (
+                      <>
+                        <AlertTriangle className="h-4 w-4 text-amber-600" />
+                        <span className="text-sm font-medium text-amber-600">
+                          Low Stock ({stockQuantity} remaining)
+                        </span>
+                        <span className="text-xs text-amber-500">(auto-tagged as &quot;Limited&quot;)</span>
+                      </>
+                    ) : (
+                      <>
+                        <Package className="h-4 w-4 text-green-600" />
+                        <span className="text-sm font-medium text-green-600">
+                          In Stock ({stockQuantity} available)
+                        </span>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Tags */}
       <Card>
         <CardHeader>
@@ -387,73 +514,92 @@ export function ProductForm({ product, initialTags = [] }: ProductFormProps) {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
-            {ALL_TAGS.map((tagInfo) => (
-              <div
-                key={tagInfo.type}
-                className={`flex items-start gap-3 p-3 rounded-md border transition-colors ${
-                  isTagSelected(tagInfo.type)
-                    ? "border-cyan-700 bg-cyan-50"
-                    : "border-slate-200 hover:border-slate-300"
-                }`}
-              >
-                <input
-                  type="checkbox"
-                  id={`tag-${tagInfo.type}`}
-                  checked={isTagSelected(tagInfo.type)}
-                  onChange={() => toggleTag(tagInfo.type)}
-                  className="mt-1 h-4 w-4 rounded border-slate-300 text-cyan-700 focus:ring-cyan-700"
-                />
-                <div className="flex-1">
-                  <label
-                    htmlFor={`tag-${tagInfo.type}`}
-                    className="block text-sm font-medium text-slate-900 cursor-pointer"
-                  >
-                    {tagInfo.label}
-                  </label>
-                  <p className="text-xs text-slate-500">{tagInfo.description}</p>
+            {ALL_TAGS.map((tagInfo) => {
+              const isAuto = isAutomatedTag(tagInfo.type)
+              const isDisabled = isAuto && trackInventory
+              return (
+                <div
+                  key={tagInfo.type}
+                  className={`flex items-start gap-3 p-3 rounded-md border transition-colors ${
+                    isTagSelected(tagInfo.type)
+                      ? isDisabled
+                        ? "border-slate-300 bg-slate-100"
+                        : "border-cyan-700 bg-cyan-50"
+                      : "border-slate-200 hover:border-slate-300"
+                  } ${isDisabled ? "opacity-60" : ""}`}
+                >
+                  <input
+                    type="checkbox"
+                    id={`tag-${tagInfo.type}`}
+                    checked={isTagSelected(tagInfo.type)}
+                    onChange={() => !isDisabled && toggleTag(tagInfo.type)}
+                    disabled={isDisabled}
+                    className="mt-1 h-4 w-4 rounded border-slate-300 text-cyan-700 focus:ring-cyan-700 disabled:cursor-not-allowed"
+                  />
+                  <div className="flex-1">
+                    <label
+                      htmlFor={`tag-${tagInfo.type}`}
+                      className={`block text-sm font-medium cursor-pointer ${
+                        isDisabled ? "text-slate-500" : "text-slate-900"
+                      }`}
+                    >
+                      {tagInfo.label}
+                      {isAuto && (
+                        <span className="ml-2 text-xs font-normal text-slate-400">
+                          (auto)
+                        </span>
+                      )}
+                    </label>
+                    <p className="text-xs text-slate-500">{tagInfo.description}</p>
+                    {isDisabled && (
+                      <p className="text-xs text-amber-600 mt-1">
+                        Managed automatically by inventory tracking
+                      </p>
+                    )}
 
-                  {/* Show priority input when selected */}
-                  {isTagSelected(tagInfo.type) && (
-                    <div className="mt-2 flex items-center gap-2">
-                      <label className="text-xs text-slate-600">Priority:</label>
-                      <Input
-                        type="number"
-                        min="0"
-                        max="100"
-                        value={getTagPriority(tagInfo.type)}
-                        onChange={(e) =>
-                          updateTagPriority(tagInfo.type, parseInt(e.target.value) || 0)
-                        }
-                        className="w-20 h-7 text-xs"
-                      />
-                    </div>
-                  )}
+                    {/* Show priority input when selected and not automated */}
+                    {isTagSelected(tagInfo.type) && !isDisabled && (
+                      <div className="mt-2 flex items-center gap-2">
+                        <label className="text-xs text-slate-600">Priority:</label>
+                        <Input
+                          type="number"
+                          min="0"
+                          max="100"
+                          value={getTagPriority(tagInfo.type)}
+                          onChange={(e) =>
+                            updateTagPriority(tagInfo.type, parseInt(e.target.value) || 0)
+                          }
+                          className="w-20 h-7 text-xs"
+                        />
+                      </div>
+                    )}
 
-                  {/* Show discount percentage when discount tag is selected */}
-                  {tagInfo.type === "discount" && isTagSelected("discount") && (
-                    <div className="mt-2 flex items-center gap-2">
-                      <label className="text-xs text-slate-600">Discount %:</label>
-                      <Input
-                        type="number"
-                        min="1"
-                        max="99"
-                        value={getDiscountPercent() ?? ""}
-                        onChange={(e) =>
-                          updateDiscountPercent(
-                            e.target.value ? parseInt(e.target.value) : null
-                          )
-                        }
-                        placeholder="e.g., 20"
-                        className="w-20 h-7 text-xs"
-                      />
-                    </div>
-                  )}
+                    {/* Show discount percentage when discount tag is selected */}
+                    {tagInfo.type === "discount" && isTagSelected("discount") && (
+                      <div className="mt-2 flex items-center gap-2">
+                        <label className="text-xs text-slate-600">Discount %:</label>
+                        <Input
+                          type="number"
+                          min="1"
+                          max="99"
+                          value={getDiscountPercent() ?? ""}
+                          onChange={(e) =>
+                            updateDiscountPercent(
+                              e.target.value ? parseInt(e.target.value) : null
+                            )
+                          }
+                          placeholder="e.g., 20"
+                          className="w-20 h-7 text-xs"
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
           <p className="text-xs text-slate-500">
-            Higher priority tags are shown first. Tags are sorted by priority when displayed.
+            Higher priority tags are shown first. Tags marked &quot;(auto)&quot; are managed by inventory tracking when enabled.
           </p>
         </CardContent>
       </Card>

@@ -25,6 +25,9 @@ interface BuyBoxProps {
   // Discount fields (Phase 14.3)
   discountPercent?: number | null
   discountExpiresAt?: string | null
+  // Inventory fields (Phase 14.4)
+  stockQuantity?: number | null
+  isLimitedStock?: boolean
 }
 
 export function BuyBox({
@@ -37,6 +40,8 @@ export function BuyBox({
   image,
   discountPercent,
   discountExpiresAt,
+  stockQuantity,
+  isLimitedStock,
 }: BuyBoxProps) {
   const [quantity, setQuantity] = useState(1)
   const addItem = useCartStore((state) => state.addItem)
@@ -92,12 +97,18 @@ export function BuyBox({
         <Badge
           variant="outline"
           className={`font-mono text-xs ${
-            inStock
-              ? "bg-green-50 text-green-700 border-green-200"
-              : "bg-amber-50 text-amber-700 border-amber-200"
+            !inStock
+              ? "bg-red-50 text-red-700 border-red-200"
+              : isLimitedStock
+              ? "bg-amber-50 text-amber-700 border-amber-200"
+              : "bg-green-50 text-green-700 border-green-200"
           }`}
         >
-          {inStock ? "In Stock" : "Pre-Order"}
+          {!inStock
+            ? "Out of Stock"
+            : isLimitedStock && stockQuantity !== null && stockQuantity !== undefined
+            ? `Only ${stockQuantity} left`
+            : "In Stock"}
         </Badge>
       </div>
 
@@ -153,10 +164,15 @@ export function BuyBox({
       {/* Add to Cart */}
       <Button
         onClick={handleAddToCart}
-        className="w-full h-14 bg-cyan-700 hover:bg-cyan-600 text-white font-mono text-lg"
+        disabled={!inStock}
+        className={`w-full h-14 font-mono text-lg ${
+          inStock
+            ? "bg-cyan-700 hover:bg-cyan-600 text-white"
+            : "bg-slate-200 text-slate-500 cursor-not-allowed"
+        }`}
       >
         <ShoppingCart className="w-5 h-5 mr-2" />
-        Add to Cart
+        {inStock ? "Add to Cart" : "Out of Stock"}
       </Button>
 
       {/* Trust Signals */}

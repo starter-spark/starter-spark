@@ -88,8 +88,8 @@ export default async function ShopPage() {
     if (!aHasFeatured && bHasFeatured) return 1
 
     // By priority sum
-    const aPriority = a.tags.reduce((sum, t) => sum + t.priority, 0)
-    const bPriority = b.tags.reduce((sum, t) => sum + t.priority, 0)
+    const aPriority = a.tags.reduce((sum, t) => sum + (t.priority ?? 0), 0)
+    const bPriority = b.tags.reduce((sum, t) => sum + (t.priority ?? 0), 0)
     if (aPriority !== bPriority) return bPriority - aPriority
 
     // By date (newest first)

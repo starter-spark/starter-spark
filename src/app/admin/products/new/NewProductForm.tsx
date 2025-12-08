@@ -78,6 +78,10 @@ export function NewProductForm() {
         discount_percent: null,
         discount_expires_at: null,
         original_price_cents: null,
+        // Inventory fields (Phase 14.4) - disabled by default for new products
+        track_inventory: false,
+        stock_quantity: null,
+        low_stock_threshold: null,
       })
 
       if (result.error) {

@@ -7,30 +7,10 @@ export type Json =
   | Json[]
 
 export type Database = {
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "13.0.5"
   }
   public: {
     Tables: {
@@ -96,12 +76,14 @@ export type Database = {
           {
             foreignKeyName: "comment_votes_comment_id_fkey"
             columns: ["comment_id"]
+            isOneToOne: false
             referencedRelation: "comments"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "comment_votes_user_id_fkey"
             columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -148,18 +130,21 @@ export type Database = {
           {
             foreignKeyName: "comments_author_id_fkey"
             columns: ["author_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "comments_parent_id_fkey"
             columns: ["parent_id"]
+            isOneToOne: false
             referencedRelation: "comments"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "comments_post_id_fkey"
             columns: ["post_id"]
+            isOneToOne: false
             referencedRelation: "posts"
             referencedColumns: ["id"]
           },
@@ -200,6 +185,7 @@ export type Database = {
           {
             foreignKeyName: "courses_product_id_fkey"
             columns: ["product_id"]
+            isOneToOne: false
             referencedRelation: "products"
             referencedColumns: ["id"]
           },
@@ -282,12 +268,14 @@ export type Database = {
           {
             foreignKeyName: "lesson_progress_lesson_id_fkey"
             columns: ["lesson_id"]
+            isOneToOne: false
             referencedRelation: "lessons"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "lesson_progress_user_id_fkey"
             columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -334,6 +322,7 @@ export type Database = {
           {
             foreignKeyName: "lessons_module_id_fkey"
             columns: ["module_id"]
+            isOneToOne: false
             referencedRelation: "modules"
             referencedColumns: ["id"]
           },
@@ -380,12 +369,14 @@ export type Database = {
           {
             foreignKeyName: "licenses_owner_id_fkey"
             columns: ["owner_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "licenses_product_id_fkey"
             columns: ["product_id"]
+            isOneToOne: false
             referencedRelation: "products"
             referencedColumns: ["id"]
           },
@@ -420,6 +411,7 @@ export type Database = {
           {
             foreignKeyName: "modules_course_id_fkey"
             columns: ["course_id"]
+            isOneToOne: false
             referencedRelation: "courses"
             referencedColumns: ["id"]
           },
@@ -451,12 +443,14 @@ export type Database = {
           {
             foreignKeyName: "post_votes_post_id_fkey"
             columns: ["post_id"]
+            isOneToOne: false
             referencedRelation: "posts"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "post_votes_user_id_fkey"
             columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -509,12 +503,49 @@ export type Database = {
           {
             foreignKeyName: "posts_author_id_fkey"
             columns: ["author_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "posts_product_id_fkey"
             columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_tags: {
+        Row: {
+          created_at: string | null
+          discount_percent: number | null
+          id: string
+          priority: number | null
+          product_id: string
+          tag: Database["public"]["Enums"]["product_tag_type"]
+        }
+        Insert: {
+          created_at?: string | null
+          discount_percent?: number | null
+          id?: string
+          priority?: number | null
+          product_id: string
+          tag: Database["public"]["Enums"]["product_tag_type"]
+        }
+        Update: {
+          created_at?: string | null
+          discount_percent?: number | null
+          id?: string
+          priority?: number | null
+          product_id?: string
+          tag?: Database["public"]["Enums"]["product_tag_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_tags_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
             referencedRelation: "products"
             referencedColumns: ["id"]
           },
@@ -528,13 +559,16 @@ export type Database = {
           discount_percent: number | null
           id: string
           is_featured: boolean | null
+          low_stock_threshold: number | null
           name: string
           original_price_cents: number | null
           price_cents: number
           slug: string
           specs: Json | null
           status: Database["public"]["Enums"]["product_status"]
+          stock_quantity: number | null
           stripe_price_id: string | null
+          track_inventory: boolean | null
         }
         Insert: {
           created_at?: string | null
@@ -543,13 +577,16 @@ export type Database = {
           discount_percent?: number | null
           id?: string
           is_featured?: boolean | null
+          low_stock_threshold?: number | null
           name: string
           original_price_cents?: number | null
           price_cents: number
           slug: string
           specs?: Json | null
           status?: Database["public"]["Enums"]["product_status"]
+          stock_quantity?: number | null
           stripe_price_id?: string | null
+          track_inventory?: boolean | null
         }
         Update: {
           created_at?: string | null
@@ -558,49 +595,18 @@ export type Database = {
           discount_percent?: number | null
           id?: string
           is_featured?: boolean | null
+          low_stock_threshold?: number | null
           name?: string
           original_price_cents?: number | null
           price_cents?: number
           slug?: string
           specs?: Json | null
           status?: Database["public"]["Enums"]["product_status"]
+          stock_quantity?: number | null
           stripe_price_id?: string | null
+          track_inventory?: boolean | null
         }
         Relationships: []
-      }
-      product_tags: {
-        Row: {
-          id: string
-          product_id: string
-          tag: Database["public"]["Enums"]["product_tag_type"]
-          priority: number
-          discount_percent: number | null
-          created_at: string | null
-        }
-        Insert: {
-          id?: string
-          product_id: string
-          tag: Database["public"]["Enums"]["product_tag_type"]
-          priority?: number
-          discount_percent?: number | null
-          created_at?: string | null
-        }
-        Update: {
-          id?: string
-          product_id?: string
-          tag?: Database["public"]["Enums"]["product_tag_type"]
-          priority?: number
-          discount_percent?: number | null
-          created_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "product_tags_product_id_fkey"
-            columns: ["product_id"]
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          }
-        ]
       }
       profiles: {
         Row: {
@@ -634,43 +640,43 @@ export type Database = {
       }
       site_stats: {
         Row: {
-          id: string
-          key: string
-          value: number
-          label: string
-          suffix: string | null
-          description: string | null
-          is_auto_calculated: boolean | null
           auto_source: string | null
-          sort_order: number | null
           created_at: string | null
+          description: string | null
+          id: string
+          is_auto_calculated: boolean | null
+          key: string
+          label: string
+          sort_order: number | null
+          suffix: string | null
           updated_at: string | null
+          value: number
         }
         Insert: {
-          id?: string
-          key: string
-          value?: number
-          label: string
-          suffix?: string | null
-          description?: string | null
-          is_auto_calculated?: boolean | null
           auto_source?: string | null
-          sort_order?: number | null
           created_at?: string | null
+          description?: string | null
+          id?: string
+          is_auto_calculated?: boolean | null
+          key: string
+          label: string
+          sort_order?: number | null
+          suffix?: string | null
           updated_at?: string | null
+          value?: number
         }
         Update: {
-          id?: string
-          key?: string
-          value?: number
-          label?: string
-          suffix?: string | null
-          description?: string | null
-          is_auto_calculated?: boolean | null
           auto_source?: string | null
-          sort_order?: number | null
           created_at?: string | null
+          description?: string | null
+          id?: string
+          is_auto_calculated?: boolean | null
+          key?: string
+          label?: string
+          sort_order?: number | null
+          suffix?: string | null
           updated_at?: string | null
+          value?: number
         }
         Relationships: []
       }
@@ -684,20 +690,35 @@ export type Database = {
         Returns: number
       }
       get_site_stats: {
-        Args: Record<string, never>
+        Args: never
         Returns: {
           key: string
-          value: number
           label: string
           suffix: string
+          value: number
         }[]
       }
-      is_admin: { Args: Record<string, never>; Returns: boolean }
+      is_admin:
+        | { Args: { user_id: string }; Returns: boolean }
+        | { Args: never; Returns: boolean }
+      is_staff: { Args: { user_id: string }; Returns: boolean }
+      update_comment_upvotes: {
+        Args: { p_comment_id: string }
+        Returns: undefined
+      }
+      update_post_upvotes: { Args: { p_post_id: string }; Returns: undefined }
       user_owns_product: { Args: { p_product_id: string }; Returns: boolean }
     }
     Enums: {
       product_status: "active" | "coming_soon" | "draft"
-      product_tag_type: "featured" | "discount" | "new" | "bestseller" | "limited" | "bundle" | "out_of_stock"
+      product_tag_type:
+        | "featured"
+        | "discount"
+        | "new"
+        | "bestseller"
+        | "limited"
+        | "bundle"
+        | "out_of_stock"
       user_role: "admin" | "staff" | "user"
     }
     CompositeTypes: {
@@ -706,23 +727,25 @@ export type Database = {
   }
 }
 
-type DefaultSchema = Database[Extract<keyof Database, "public">]
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-        Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof Database
+  schema: keyof DatabaseWithoutInternals
 }
-  ? (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
@@ -740,16 +763,16 @@ export type Tables<
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof Database
+  schema: keyof DatabaseWithoutInternals
 }
-  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
@@ -765,16 +788,16 @@ export type TablesInsert<
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof Database
+  schema: keyof DatabaseWithoutInternals
 }
-  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
@@ -790,16 +813,51 @@ export type TablesUpdate<
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
 > = DefaultSchemaEnumNameOrOptions extends {
-  schema: keyof Database
+  schema: keyof DatabaseWithoutInternals
 }
-  ? Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
     ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {
+      product_status: ["active", "coming_soon", "draft"],
+      product_tag_type: [
+        "featured",
+        "discount",
+        "new",
+        "bestseller",
+        "limited",
+        "bundle",
+        "out_of_stock",
+      ],
+      user_role: ["admin", "staff", "user"],
+    },
+  },
+} as const
