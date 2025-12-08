@@ -4,7 +4,7 @@ import { Heart } from "lucide-react"
 import Link from "next/link"
 import { NewsletterForm } from "./NewsletterForm"
 import { createClient } from "@/lib/supabase/server"
-import { getContent } from "@/lib/content"
+import { getContents } from "@/lib/content"
 
 // Custom X (Twitter) icon since simple-icons doesn't have it as "X"
 function XIcon({ className }: { className?: string }) {
@@ -25,9 +25,23 @@ export async function Footer() {
   const supabase = await createClient()
 
   // Fetch dynamic content
-  const copyrightText = await getContent(
-    "footer.copyright",
-    "© 2025 StarterSpark Robotics. All rights reserved."
+  const content = await getContents(
+    [
+      "footer.copyright",
+      "footer.charity.percentage",
+      "footer.charity.text",
+      "footer.brand.tagline",
+      "footer.newsletter.title",
+      "footer.newsletter.description",
+    ],
+    {
+      "footer.copyright": "© 2025 StarterSpark Robotics. All rights reserved.",
+      "footer.charity.percentage": "70%",
+      "footer.charity.text": "of every purchase goes directly to Hawaii STEM charities",
+      "footer.brand.tagline": "Open-source robotics education designed by students, for students. Building the next generation of Hawaii's engineers.",
+      "footer.newsletter.title": "Stay Updated",
+      "footer.newsletter.description": "Get notified about new kits and workshops.",
+    }
   )
 
   // Fetch active products for the footer links
@@ -50,7 +64,7 @@ export async function Footer() {
         <div className="max-w-7xl mx-auto flex items-center justify-center gap-2 text-sm">
           <Heart className="w-4 h-4 text-amber-600" />
           <span className="text-slate-600">
-            <span className="font-mono text-amber-700 font-semibold">70%</span> of every purchase goes directly to Hawaii STEM charities
+            <span className="font-mono text-amber-700 font-semibold">{content["footer.charity.percentage"]}</span> {content["footer.charity.text"]}
           </span>
         </div>
       </div>
@@ -63,8 +77,7 @@ export async function Footer() {
               STARTER<span className="text-cyan-700">SPARK</span>
             </p>
             <p className="text-slate-600 max-w-sm mb-6 leading-relaxed text-sm">
-              Open-source robotics education designed by students, for students.
-              Building the next generation of Hawaii&apos;s engineers.
+              {content["footer.brand.tagline"]}
             </p>
             <div className="flex gap-3">
               <Link href="https://github.com/normalday843812" target="_blank" rel="noopener noreferrer">
@@ -148,9 +161,9 @@ export async function Footer() {
 
           {/* Newsletter Column */}
           <div>
-            <p className="font-mono text-sm text-cyan-700 mb-4 uppercase tracking-wider">Stay Updated</p>
+            <p className="font-mono text-sm text-cyan-700 mb-4 uppercase tracking-wider">{content["footer.newsletter.title"]}</p>
             <p className="text-sm text-slate-600 mb-4">
-              Get notified about new kits and workshops.
+              {content["footer.newsletter.description"]}
             </p>
             <NewsletterForm />
           </div>
@@ -160,7 +173,7 @@ export async function Footer() {
       {/* Bottom Bar */}
       <div className="border-t border-slate-200 py-6 px-6 lg:px-20">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-slate-500">
-          <p className="font-mono">{copyrightText}</p>
+          <p className="font-mono">{content["footer.copyright"]}</p>
           <nav aria-label="Legal">
             <div className="flex gap-6">
               <Link href="/privacy" className="hover:text-slate-900 transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-700 focus-visible:ring-offset-2">
