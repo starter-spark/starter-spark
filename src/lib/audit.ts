@@ -1,0 +1,143 @@
+import { headers } from 'next/headers'
+import { supabaseAdmin } from '@/lib/supabase/admin'
+import type { Json } from '@/lib/supabase/database.types'
+
+/**
+ * Audit action types for admin operations
+ */
+export type AuditAction =
+  // User management
+  | 'user.role_changed'
+  | 'user.deleted'
+  // Product management
+  | 'product.created'
+  | 'product.updated'
+  | 'product.deleted'
+  // License management
+  | 'license.created'
+  | 'license.revoked'
+  | 'license.transferred'
+  // Event management
+  | 'event.created'
+  | 'event.updated'
+  | 'event.deleted'
+  // Community moderation
+  | 'post.deleted'
+  | 'post.status_changed'
+  | 'comment.deleted'
+  | 'comment.verified'
+  // Site settings
+  | 'settings.updated'
+  | 'stats.updated'
+
+/**
+ * Resource types that can be audited
+ */
+export type AuditResourceType =
+  | 'user'
+  | 'product'
+  | 'license'
+  | 'event'
+  | 'post'
+  | 'comment'
+  | 'settings'
+  | 'stats'
+
+interface AuditLogParams {
+  userId: string
+  action: AuditAction
+  resourceType: AuditResourceType
+  resourceId?: string
+  details?: Record<string, unknown>
+}
+
+/**
+ * Log an admin action to the audit log
+ *
+ * @example
+ * await logAuditEvent({
+ *   userId: adminUser.id,
+ *   action: 'user.role_changed',
+ *   resourceType: 'user',
+ *   resourceId: targetUserId,
+ *   details: { oldRole: 'user', newRole: 'staff' }
+ * })
+ */
+export async function logAuditEvent({
+  userId,
+  action,
+  resourceType,
+  resourceId,
+  details,
+}: AuditLogParams): Promise<void> {
+  try {
+    // Get request headers for IP and user agent
+    const headersList = await headers()
+    const ipAddress =
+      headersList.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+      headersList.get('x-real-ip') ||
+      null
+    const userAgent = headersList.get('user-agent') || null
+
+    const { error } = await supabaseAdmin.from('admin_audit_log').insert({
+      user_id: userId,
+      action,
+      resource_type: resourceType,
+      resource_id: resourceId || null,
+      details: (details as Json) || null,
+      ip_address: ipAddress,
+      user_agent: userAgent,
+    })
+
+    if (error) {
+      // Log error but don't throw - audit logging should not break the main operation
+      console.error('[Audit] Failed to log event:', error.message)
+    }
+  } catch (err) {
+    // Silently fail - audit logging should never break the main operation
+    console.error('[Audit] Unexpected error:', err)
+  }
+}
+
+/**
+ * Fetch audit logs with optional filters
+ * Only admins can access this function (enforced by RLS)
+ */
+export async function getAuditLogs(options?: {
+  userId?: string
+  action?: AuditAction
+  resourceType?: AuditResourceType
+  resourceId?: string
+  limit?: number
+  offset?: number
+}) {
+  const { userId, action, resourceType, resourceId, limit = 50, offset = 0 } = options || {}
+
+  let query = supabaseAdmin
+    .from('admin_audit_log')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .range(offset, offset + limit - 1)
+
+  if (userId) {
+    query = query.eq('user_id', userId)
+  }
+  if (action) {
+    query = query.eq('action', action)
+  }
+  if (resourceType) {
+    query = query.eq('resource_type', resourceType)
+  }
+  if (resourceId) {
+    query = query.eq('resource_id', resourceId)
+  }
+
+  const { data, error } = await query
+
+  if (error) {
+    console.error('[Audit] Failed to fetch logs:', error.message)
+    return []
+  }
+
+  return data
+}

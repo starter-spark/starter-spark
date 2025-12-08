@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache"
 import { createClient } from "@/lib/supabase/server"
 import { supabaseAdmin } from "@/lib/supabase/admin"
+import { logAuditEvent } from "@/lib/audit"
+import { rateLimitAction } from "@/lib/rate-limit"
 
 export async function updateUserRole(
   userId: string,
@@ -14,6 +16,12 @@ export async function updateUserRole(
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
     return { error: "Unauthorized" }
+  }
+
+  // Rate limit admin actions
+  const rateLimitResult = await rateLimitAction(user.id, "adminMutation")
+  if (!rateLimitResult.success) {
+    return { error: rateLimitResult.error || "Rate limited" }
   }
 
   const { data: profile } = await supabase
@@ -37,6 +45,15 @@ export async function updateUserRole(
     return { error: "Invalid role" }
   }
 
+  // Get the target user's current role for audit log
+  const { data: targetProfile } = await supabaseAdmin
+    .from("profiles")
+    .select("role, email")
+    .eq("id", userId)
+    .single()
+
+  const oldRole = targetProfile?.role || "unknown"
+
   const { error } = await supabaseAdmin
     .from("profiles")
     .update({ role })
@@ -46,6 +63,19 @@ export async function updateUserRole(
     console.error("Error updating user role:", error)
     return { error: error.message }
   }
+
+  // Log the role change to audit log
+  await logAuditEvent({
+    userId: user.id,
+    action: "user.role_changed",
+    resourceType: "user",
+    resourceId: userId,
+    details: {
+      targetEmail: targetProfile?.email,
+      oldRole,
+      newRole: role,
+    },
+  })
 
   revalidatePath("/admin/users")
 

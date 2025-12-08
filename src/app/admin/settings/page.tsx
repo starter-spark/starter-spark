@@ -1,8 +1,10 @@
 import { createClient } from "@/lib/supabase/server"
+import { supabaseAdmin } from "@/lib/supabase/admin"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Database, CreditCard, Mail, Shield, ExternalLink } from "lucide-react"
 import { SiteStatsManager } from "./SiteStatsManager"
+import { AuditLogViewer } from "./AuditLogViewer"
 
 export const metadata = {
   title: "Settings | Admin",
@@ -46,10 +48,43 @@ async function getSiteStats() {
   return data
 }
 
+async function getAuditLogs() {
+  // Use admin client to fetch audit logs (RLS requires admin role)
+  const { data: logs, error } = await supabaseAdmin
+    .from("admin_audit_log")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(50)
+
+  if (error) {
+    console.error("Error fetching audit logs:", error)
+    return []
+  }
+
+  // Fetch user emails for display
+  if (logs && logs.length > 0) {
+    const userIds = [...new Set(logs.map(log => log.user_id).filter(Boolean))]
+    const { data: profiles } = await supabaseAdmin
+      .from("profiles")
+      .select("id, email")
+      .in("id", userIds as string[])
+
+    const emailMap = new Map(profiles?.map(p => [p.id, p.email]) || [])
+
+    return logs.map(log => ({
+      ...log,
+      user_email: log.user_id ? emailMap.get(log.user_id) : undefined,
+    }))
+  }
+
+  return logs || []
+}
+
 export default async function SettingsPage() {
-  const [systemInfo, siteStats] = await Promise.all([
+  const [systemInfo, siteStats, auditLogs] = await Promise.all([
     getSystemInfo(),
     getSiteStats(),
+    getAuditLogs(),
   ])
 
   const integrations = [
@@ -135,6 +170,9 @@ export default async function SettingsPage() {
 
       {/* Site Stats Management */}
       <SiteStatsManager stats={siteStats} />
+
+      {/* Audit Log */}
+      <AuditLogViewer logs={auditLogs} />
 
       {/* Integrations */}
       <Card>

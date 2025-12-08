@@ -39,6 +39,8 @@ export const rateLimitConfigs = {
   claimLicense: { requests: 5 * multiplier, window: "1 m" as const },
   claimByToken: { requests: 5 * multiplier, window: "1 m" as const },
   checkout: { requests: 10 * multiplier, window: "1 m" as const },
+  // Admin actions - moderate limits
+  adminMutation: { requests: 20 * multiplier, window: "1 m" as const },
   // General API - more permissive
   default: { requests: 30 * multiplier, window: "1 m" as const },
 }
@@ -103,5 +105,41 @@ export function rateLimitHeaders(configKey: RateLimitConfig = "default"): Header
   const config = rateLimitConfigs[configKey]
   return {
     "X-RateLimit-Limit": config.requests.toString(),
+  }
+}
+
+/**
+ * Rate limit for server actions (without Request object)
+ * @param identifier - Unique identifier (e.g., user ID)
+ * @param configKey - Which rate limit config to use
+ * @returns Object with success boolean and error message if rate limited
+ */
+export async function rateLimitAction(
+  identifier: string,
+  configKey: RateLimitConfig = "adminMutation"
+): Promise<{ success: boolean; error?: string }> {
+  // Skip rate limiting if Upstash is not configured
+  if (!ratelimit) {
+    return { success: true }
+  }
+
+  const key = `${configKey}:${identifier}`
+
+  try {
+    const { success, reset } = await ratelimit.limit(key)
+
+    if (!success) {
+      const retryAfter = Math.ceil((reset - Date.now()) / 1000)
+      return {
+        success: false,
+        error: `Too many requests. Please try again in ${retryAfter} seconds.`,
+      }
+    }
+
+    return { success: true }
+  } catch (error) {
+    // If rate limiting fails, allow the request but log the error
+    console.error("Rate limiting error:", error)
+    return { success: true }
   }
 }
