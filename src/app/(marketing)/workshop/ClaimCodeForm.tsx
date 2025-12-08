@@ -6,12 +6,27 @@ import { Input } from "@/components/ui/input"
 import { Loader2, CheckCircle, AlertCircle } from "lucide-react"
 import { useRouter } from "next/navigation"
 
+// Format code as XXXX-XXXX-XXXX-XXXX
+function formatCode(value: string): string {
+  // Strip everything except alphanumeric, convert to uppercase
+  const stripped = value.replace(/[^A-Za-z0-9]/g, "").toUpperCase()
+  // Limit to 16 characters (4 groups of 4)
+  const limited = stripped.slice(0, 16)
+  // Add dashes every 4 characters
+  const parts = limited.match(/.{1,4}/g) || []
+  return parts.join("-")
+}
+
 export function ClaimCodeForm() {
   const [code, setCode] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle")
   const [message, setMessage] = useState("")
   const router = useRouter()
+
+  const handleCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCode(formatCode(e.target.value))
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -55,9 +70,9 @@ export function ClaimCodeForm() {
     <form onSubmit={handleSubmit} className="space-y-3">
       <Input
         type="text"
-        placeholder="Enter kit code"
+        placeholder="XXXX-XXXX-XXXX-XXXX"
         value={code}
-        onChange={(e) => setCode(e.target.value.toUpperCase())}
+        onChange={handleCodeChange}
         className="font-mono text-center tracking-widest uppercase bg-slate-50 border-slate-200 focus:border-cyan-700"
         maxLength={19}
         disabled={isLoading}
