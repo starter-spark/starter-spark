@@ -56,14 +56,23 @@ export function ProductForm({ product, initialTags = [] }: ProductFormProps) {
   const [name, setName] = useState(product.name)
   const [slug, setSlug] = useState(product.slug)
   const [description, setDescription] = useState(product.description || "")
-  const [priceCents, setPriceCents] = useState(product.price_cents)
   const [stripePriceId, setStripePriceId] = useState(product.stripe_price_id || "")
   const [isFeatured, setIsFeatured] = useState(product.is_featured || false)
 
-  // Discount state (Phase 14.3)
+  // Pricing state (Phase 14.3) - simple: enter price, optionally toggle sale
+  const [priceCents, setPriceCents] = useState(
+    product.original_price_cents || product.price_cents
+  )
+  const [isOnSale, setIsOnSale] = useState(
+    !!(product.discount_percent && product.original_price_cents)
+  )
   const [discountPercent, setDiscountPercent] = useState<number | null>(product.discount_percent)
   const [discountExpiresAt, setDiscountExpiresAt] = useState(product.discount_expires_at || "")
-  const [originalPriceCents, setOriginalPriceCents] = useState<number | null>(product.original_price_cents)
+
+  // Calculate sale price from price and discount
+  const salePriceCents = isOnSale && discountPercent
+    ? Math.round(priceCents * (1 - discountPercent / 100))
+    : priceCents
   const [specs, setSpecs] = useState<{ key: string; value: string }[]>(() => {
     if (product.specs && typeof product.specs === "object" && !Array.isArray(product.specs)) {
       return Object.entries(product.specs as Record<string, unknown>).map(([key, value]) => ({
@@ -140,14 +149,15 @@ export function ProductForm({ product, initialTags = [] }: ProductFormProps) {
         name,
         slug,
         description: description || null,
-        price_cents: priceCents,
+        // If on sale, price_cents is the calculated sale price, otherwise it's the full price
+        price_cents: isOnSale && discountPercent ? salePriceCents : priceCents,
         stripe_price_id: stripePriceId || null,
         specs: Object.keys(specsObject).length > 0 ? specsObject : null,
         is_featured: isFeatured,
-        // Discount fields (Phase 14.3)
-        discount_percent: discountPercent,
-        discount_expires_at: discountExpiresAt || null,
-        original_price_cents: originalPriceCents,
+        // Discount fields (Phase 14.3) - only set if on sale
+        discount_percent: isOnSale ? discountPercent : null,
+        discount_expires_at: isOnSale && discountExpiresAt ? discountExpiresAt : null,
+        original_price_cents: isOnSale && discountPercent ? priceCents : null,
       })
 
       if (result.error) {
@@ -245,7 +255,8 @@ export function ProductForm({ product, initialTags = [] }: ProductFormProps) {
           <CardTitle>Pricing</CardTitle>
           <CardDescription>Price and Stripe configuration</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-6">
+          {/* Price */}
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <label htmlFor="price" className="text-sm font-medium text-slate-900">
@@ -260,7 +271,7 @@ export function ProductForm({ product, initialTags = [] }: ProductFormProps) {
                 required
               />
               <p className="text-xs text-slate-500">
-                Display price: ${(priceCents / 100).toFixed(2)}
+                ${(priceCents / 100).toFixed(2)}
               </p>
             </div>
             <div className="space-y-2">
@@ -275,87 +286,96 @@ export function ProductForm({ product, initialTags = [] }: ProductFormProps) {
               />
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="featured"
-              checked={isFeatured}
-              onChange={(e) => setIsFeatured(e.target.checked)}
-              className="h-4 w-4 rounded border-slate-300 text-cyan-700 focus:ring-cyan-700"
-            />
-            <label htmlFor="featured" className="text-sm text-slate-900">
-              Featured product (shown on homepage)
-            </label>
-          </div>
-        </CardContent>
-      </Card>
 
-      {/* Discount */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Discount Settings</CardTitle>
-          <CardDescription>Configure time-limited discounts for this product</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-3">
-            <div className="space-y-2">
-              <label htmlFor="discountPercent" className="text-sm font-medium text-slate-900">
-                Discount %
-              </label>
-              <Input
-                id="discountPercent"
-                type="number"
-                min="1"
-                max="99"
-                value={discountPercent ?? ""}
-                onChange={(e) => setDiscountPercent(e.target.value ? parseInt(e.target.value) : null)}
-                placeholder="e.g., 20"
+          {/* Sale Toggle */}
+          <div className="border-t border-slate-200 pt-4">
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="onSale"
+                checked={isOnSale}
+                onChange={(e) => {
+                  setIsOnSale(e.target.checked)
+                  if (!e.target.checked) {
+                    setDiscountPercent(null)
+                    setDiscountExpiresAt("")
+                  }
+                }}
+                className="h-4 w-4 rounded border-slate-300 text-cyan-700 focus:ring-cyan-700"
               />
+              <label htmlFor="onSale" className="text-sm font-medium text-slate-900">
+                On Sale
+              </label>
             </div>
-            <div className="space-y-2">
-              <label htmlFor="originalPrice" className="text-sm font-medium text-slate-900">
-                Original Price (cents)
-              </label>
-              <Input
-                id="originalPrice"
-                type="number"
-                min="0"
-                value={originalPriceCents ?? ""}
-                onChange={(e) => setOriginalPriceCents(e.target.value ? parseInt(e.target.value) : null)}
-                placeholder="e.g., 9999"
+
+            {/* Sale Options (shown when On Sale is checked) */}
+            {isOnSale && (
+              <div className="mt-4 p-4 bg-amber-50 rounded-md border border-amber-200 space-y-4">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <label htmlFor="discountPercent" className="text-sm font-medium text-slate-900">
+                      Discount %
+                    </label>
+                    <Input
+                      id="discountPercent"
+                      type="number"
+                      min="1"
+                      max="99"
+                      value={discountPercent ?? ""}
+                      onChange={(e) => setDiscountPercent(e.target.value ? parseInt(e.target.value) : null)}
+                      placeholder="e.g., 20"
+                      className="bg-white"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label htmlFor="discountExpires" className="text-sm font-medium text-slate-900">
+                      Expires At (optional)
+                    </label>
+                    <Input
+                      id="discountExpires"
+                      type="datetime-local"
+                      value={discountExpiresAt ? discountExpiresAt.slice(0, 16) : ""}
+                      onChange={(e) => setDiscountExpiresAt(e.target.value ? new Date(e.target.value).toISOString() : "")}
+                      className="bg-white"
+                    />
+                  </div>
+                </div>
+
+                {/* Sale Preview */}
+                {discountPercent && (
+                  <div className="p-3 bg-white rounded border border-amber-300">
+                    <p className="text-sm">
+                      <span className="line-through text-slate-400">${(priceCents / 100).toFixed(2)}</span>
+                      <span className="mx-2">→</span>
+                      <span className="font-mono font-semibold text-amber-600 text-lg">${(salePriceCents / 100).toFixed(2)}</span>
+                      <span className="ml-2 px-2 py-0.5 bg-red-500 text-white text-xs font-mono rounded">
+                        {discountPercent}% OFF
+                      </span>
+                      <span className="text-green-600 ml-2 text-sm">
+                        (saves ${((priceCents - salePriceCents) / 100).toFixed(2)})
+                      </span>
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Featured Toggle */}
+          <div className="border-t border-slate-200 pt-4">
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="featured"
+                checked={isFeatured}
+                onChange={(e) => setIsFeatured(e.target.checked)}
+                className="h-4 w-4 rounded border-slate-300 text-cyan-700 focus:ring-cyan-700"
               />
-              {originalPriceCents && (
-                <p className="text-xs text-slate-500">
-                  Display: ${(originalPriceCents / 100).toFixed(2)}
-                </p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <label htmlFor="discountExpires" className="text-sm font-medium text-slate-900">
-                Expires At
+              <label htmlFor="featured" className="text-sm text-slate-900">
+                Featured product (shown on homepage)
               </label>
-              <Input
-                id="discountExpires"
-                type="datetime-local"
-                value={discountExpiresAt ? discountExpiresAt.slice(0, 16) : ""}
-                onChange={(e) => setDiscountExpiresAt(e.target.value ? new Date(e.target.value).toISOString() : "")}
-              />
             </div>
           </div>
-          {discountPercent && originalPriceCents && (
-            <div className="p-3 bg-green-50 rounded border border-green-200">
-              <p className="text-sm text-green-700">
-                <span className="font-mono font-semibold">{discountPercent}%</span> discount:
-                <span className="line-through text-slate-500 mx-2">${(originalPriceCents / 100).toFixed(2)}</span>
-                → <span className="font-mono font-semibold">${(priceCents / 100).toFixed(2)}</span>
-                <span className="text-green-600 ml-2">(saves ${((originalPriceCents - priceCents) / 100).toFixed(2)})</span>
-              </p>
-            </div>
-          )}
-          <p className="text-xs text-slate-500">
-            Set all three fields to enable a discount. Current price should be the discounted price.
-            {!discountExpiresAt && discountPercent && " Leave 'Expires At' empty for no expiration."}
-          </p>
         </CardContent>
       </Card>
 

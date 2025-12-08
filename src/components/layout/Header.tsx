@@ -141,7 +141,7 @@ export function Header() {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-1">
             {/* Documentation Dropdown */}
-            <DropdownMenu>
+            <DropdownMenu modal={false}>
               <DropdownMenuTrigger className="font-mono text-sm text-slate-600 hover:text-cyan-700 bg-transparent hover:bg-slate-100 data-[state=open]:bg-slate-100 px-4 py-2 rounded-md transition-colors inline-flex items-center gap-1 outline-none">
                 {documentationNav.title}
                 <ChevronDown className="h-4 w-4 transition-transform duration-200 [[data-state=open]>&]:rotate-180" />
@@ -154,7 +154,7 @@ export function Header() {
             </DropdownMenu>
 
             {/* Community Dropdown */}
-            <DropdownMenu>
+            <DropdownMenu modal={false}>
               <DropdownMenuTrigger className="font-mono text-sm text-slate-600 hover:text-cyan-700 bg-transparent hover:bg-slate-100 data-[state=open]:bg-slate-100 px-4 py-2 rounded-md transition-colors inline-flex items-center gap-1 outline-none">
                 {communityNav.title}
                 <ChevronDown className="h-4 w-4 transition-transform duration-200 [[data-state=open]>&]:rotate-180" />
