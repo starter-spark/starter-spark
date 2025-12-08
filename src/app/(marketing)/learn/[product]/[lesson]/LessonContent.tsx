@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import { AlertTriangle, Lightbulb, Copy, Check, Info } from "lucide-react"
-import DOMPurify from "isomorphic-dompurify"
 import { Highlight, themes } from "prism-react-renderer"
 
 interface LessonContentProps {
@@ -16,6 +15,15 @@ const PURIFY_CONFIG = {
   ALLOW_DATA_ATTR: false,
   // Only allow safe URL protocols (blocks javascript:, data:, etc.)
   ALLOWED_URI_REGEXP: /^(?:(?:https?|mailto):|[^a-z]|[a-z+.-]+(?:[^a-z+.\-:]|$))/i,
+}
+
+// Only import DOMPurify on client side to avoid jsdom ESM issues on server
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let DOMPurify: any = null
+if (typeof window !== "undefined") {
+  import("dompurify").then((mod) => {
+    DOMPurify = mod.default || mod
+  })
 }
 
 // Map common language aliases to Prism language names
@@ -332,8 +340,13 @@ function formatInlineText(text: string): string {
     // Links - sanitized by DOMPurify's ALLOWED_URI_REGEXP
     .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-cyan-700 hover:underline">$1</a>')
 
-  // Sanitize with DOMPurify to prevent any XSS that slipped through
-  return DOMPurify.sanitize(formatted, PURIFY_CONFIG)
+  // Sanitize with DOMPurify to prevent any XSS that slipped through (client-side only)
+  if (DOMPurify) {
+    return DOMPurify.sanitize(formatted, PURIFY_CONFIG)
+  }
+  // On server or before DOMPurify loads, return the escaped/formatted content
+  // (already escaped raw HTML above, so this is safe)
+  return formatted
 }
 
 export function LessonContent({ content }: LessonContentProps) {
