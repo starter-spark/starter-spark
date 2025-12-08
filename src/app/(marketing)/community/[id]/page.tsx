@@ -3,34 +3,32 @@ import { formatRelativeTime } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
   CheckCircle2,
-  ChevronUp,
-  ChevronDown,
   MessageSquare,
   ArrowLeft,
-  Share2,
-  Bookmark,
-  Flag,
 } from "lucide-react"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import type { Metadata } from "next"
 import { AnswerForm } from "./AnswerForm"
 import { MarkdownContent } from "./MarkdownContent"
+import { VoteButtons } from "./VoteButtons"
+import { PostActions } from "./PostActions"
 
-type PageParams = Promise<{ slug: string }>
+type PageParams = Promise<{ id: string }>
 
 export async function generateMetadata({
   params,
 }: {
   params: PageParams
 }): Promise<Metadata> {
-  const { slug } = await params
+  const { id } = await params
   const supabase = await createClient()
 
+  // Try ID first, then fallback to slug for backwards compatibility
   const { data: post } = await supabase
     .from("posts")
     .select("title")
-    .or(`slug.eq.${slug},id.eq.${slug}`)
+    .or(`id.eq.${id},slug.eq.${id}`)
     .single()
 
   if (!post) {
@@ -48,10 +46,11 @@ export default async function QuestionDetailPage({
 }: {
   params: PageParams
 }) {
-  const { slug } = await params
+  const { id } = await params
   const supabase = await createClient()
 
   // Fetch the post with author and comments
+  // Try ID first, then fallback to slug for backwards compatibility
   const { data: post, error } = await supabase
     .from("posts")
     .select(
@@ -80,7 +79,7 @@ export default async function QuestionDetailPage({
       )
     `
     )
-    .or(`slug.eq.${slug},id.eq.${slug}`)
+    .or(`id.eq.${id},slug.eq.${id}`)
     .single()
 
   if (error || !post) {
@@ -117,6 +116,40 @@ export default async function QuestionDetailPage({
   const {
     data: { user },
   } = await supabase.auth.getUser()
+
+  // Get user's votes on post and comments
+  let userPostVote: 1 | -1 | null = null
+  const userCommentVotes: Record<string, 1 | -1> = {}
+
+  if (user) {
+    // Fetch post vote
+    const { data: postVoteData } = await supabase
+      .from("post_votes")
+      .select("vote_type")
+      .eq("post_id", post.id)
+      .eq("user_id", user.id)
+      .single()
+
+    if (postVoteData) {
+      userPostVote = postVoteData.vote_type as 1 | -1
+    }
+
+    // Fetch comment votes
+    if (comments && comments.length > 0) {
+      const commentIds = comments.map((c) => c.id)
+      const { data: commentVotesData } = await supabase
+        .from("comment_votes")
+        .select("comment_id, vote_type")
+        .eq("user_id", user.id)
+        .in("comment_id", commentIds)
+
+      if (commentVotesData) {
+        for (const vote of commentVotesData) {
+          userCommentVotes[vote.comment_id] = vote.vote_type as 1 | -1
+        }
+      }
+    }
+  }
 
   // Increment view count (fire and forget)
   supabase
@@ -163,16 +196,14 @@ export default async function QuestionDetailPage({
             {/* Header */}
             <div className="flex items-start gap-4 mb-6">
               {/* Vote Column */}
-              <div className="flex flex-col items-center gap-1 min-w-[40px]">
-                <button className="p-1 text-slate-500 hover:text-cyan-700 transition-colors">
-                  <ChevronUp className="w-6 h-6" />
-                </button>
-                <span className="font-mono text-lg text-slate-700">
-                  {post.upvotes || 0}
-                </span>
-                <button className="p-1 text-slate-500 hover:text-slate-600 transition-colors">
-                  <ChevronDown className="w-6 h-6" />
-                </button>
+              <div className="min-w-[40px]">
+                <VoteButtons
+                  type="post"
+                  id={post.id}
+                  initialVotes={post.upvotes || 0}
+                  userVote={userPostVote}
+                  isAuthenticated={!!user}
+                />
               </div>
 
               {/* Content */}
@@ -250,19 +281,8 @@ export default async function QuestionDetailPage({
             </div>
 
             {/* Actions */}
-            <div className="flex items-center gap-4 mt-6 pl-14 pt-4 border-t border-slate-100">
-              <button className="flex items-center gap-2 text-sm text-slate-500 hover:text-cyan-700 transition-colors">
-                <Share2 className="w-4 h-4" />
-                Share
-              </button>
-              <button className="flex items-center gap-2 text-sm text-slate-500 hover:text-cyan-700 transition-colors">
-                <Bookmark className="w-4 h-4" />
-                Save
-              </button>
-              <button className="flex items-center gap-2 text-sm text-slate-500 hover:text-slate-600 transition-colors">
-                <Flag className="w-4 h-4" />
-                Report
-              </button>
+            <div className="mt-6 pl-14 pt-4 border-t border-slate-100">
+              <PostActions postId={post.id} isAuthenticated={!!user} />
             </div>
           </article>
         </div>
@@ -285,7 +305,12 @@ export default async function QuestionDetailPage({
                     Verified Solution
                   </span>
                 </div>
-                <AnswerCard answer={verifiedAnswer} formatRelativeTime={formatRelativeTime} />
+                <AnswerCard
+                  answer={verifiedAnswer}
+                  formatRelativeTime={formatRelativeTime}
+                  isAuthenticated={!!user}
+                  userVote={userCommentVotes[verifiedAnswer.id] ?? null}
+                />
               </div>
             </div>
           )}
@@ -299,7 +324,12 @@ export default async function QuestionDetailPage({
                   key={comment.id}
                   className="bg-white border border-slate-200 rounded p-6"
                 >
-                  <AnswerCard answer={comment} formatRelativeTime={formatRelativeTime} />
+                  <AnswerCard
+                    answer={comment}
+                    formatRelativeTime={formatRelativeTime}
+                    isAuthenticated={!!user}
+                    userVote={userCommentVotes[comment.id] ?? null}
+                  />
                 </div>
               ))}
           </div>
@@ -345,6 +375,8 @@ export default async function QuestionDetailPage({
 function AnswerCard({
   answer,
   formatRelativeTime,
+  isAuthenticated,
+  userVote,
 }: {
   answer: {
     id: string
@@ -361,22 +393,23 @@ function AnswerCard({
     } | null
   }
   formatRelativeTime: (date: string) => string
+  isAuthenticated: boolean
+  userVote: 1 | -1 | null
 }) {
   const author = answer.author
 
   return (
     <div className="flex gap-4">
       {/* Vote Column */}
-      <div className="flex flex-col items-center gap-1 min-w-[40px]">
-        <button className="p-1 text-slate-500 hover:text-cyan-700 transition-colors">
-          <ChevronUp className="w-5 h-5" />
-        </button>
-        <span className="font-mono text-sm text-slate-600">
-          {answer.upvotes || 0}
-        </span>
-        <button className="p-1 text-slate-500 hover:text-slate-600 transition-colors">
-          <ChevronDown className="w-5 h-5" />
-        </button>
+      <div className="min-w-[40px]">
+        <VoteButtons
+          type="comment"
+          id={answer.id}
+          initialVotes={answer.upvotes || 0}
+          userVote={userVote}
+          isAuthenticated={isAuthenticated}
+          size="small"
+        />
       </div>
 
       {/* Content */}

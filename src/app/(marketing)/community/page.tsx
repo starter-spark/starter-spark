@@ -157,7 +157,7 @@ export default async function CommunityPage({
                     return (
                       <Link
                         key={post.id}
-                        href={`/community/${post.slug || post.id}`}
+                        href={`/community/${post.id}`}
                         className="block"
                       >
                         <article className="bg-white border border-slate-200 rounded p-6 hover:border-cyan-300 transition-colors">
