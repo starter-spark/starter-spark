@@ -1,5 +1,7 @@
 export { AboutHero } from "./AboutHero"
+export { AboutHeroWrapper } from "./AboutHeroWrapper"
 export { AboutStory } from "./AboutStory"
+export { AboutStoryWrapper } from "./AboutStoryWrapper"
 export { AboutTeam } from "./AboutTeam"
 export { AboutTeamWrapper } from "./AboutTeamWrapper"
 export { AboutGallery } from "./AboutGallery"

@@ -26,6 +26,15 @@ interface ContentEditorProps {
   page: PageContent
 }
 
+// Map page_key to actual live URL
+// About page sections don't have their own URLs - they appear on /about
+const PAGE_URL_MAP: Record<string, { url: string; label: string } | null> = {
+  privacy: { url: "/privacy", label: "This page is live at" },
+  terms: { url: "/terms", label: "This page is live at" },
+  about_hero: { url: "/about", label: "This content appears on" },
+  about_story: { url: "/about", label: "This content appears on" },
+}
+
 export function ContentEditor({ page }: ContentEditorProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -35,6 +44,36 @@ export function ContentEditor({ page }: ContentEditorProps) {
   const [title, setTitle] = useState(page.title)
   const [content, setContent] = useState(page.content)
   const [activeTab, setActiveTab] = useState<string>("edit")
+
+  // Parse about_hero JSON content for structured editing
+  const isAboutHero = page.page_key === "about_hero"
+  const [heroHeadline, setHeroHeadline] = useState(() => {
+    if (isAboutHero) {
+      try {
+        const parsed = JSON.parse(page.content)
+        return parsed.headline || ""
+      } catch {
+        return ""
+      }
+    }
+    return ""
+  })
+  const [heroDescription, setHeroDescription] = useState(() => {
+    if (isAboutHero) {
+      try {
+        const parsed = JSON.parse(page.content)
+        return parsed.description || ""
+      } catch {
+        return ""
+      }
+    }
+    return ""
+  })
+
+  // Update content when hero fields change
+  const updateHeroContent = (headline: string, description: string) => {
+    setContent(JSON.stringify({ headline, description }, null, 2))
+  }
 
   const isPublished = !!page.published_at
 
@@ -133,9 +172,11 @@ export function ContentEditor({ page }: ContentEditorProps) {
       {/* Editor */}
       <Card className="bg-white border-slate-200">
         <CardHeader>
-          <CardTitle>Page Content</CardTitle>
+          <CardTitle>{isAboutHero ? "About Page Hero" : "Page Content"}</CardTitle>
           <CardDescription>
-            Edit the content using Markdown. Use the Preview tab to see how it will look.
+            {isAboutHero
+              ? "Edit the headline and description that appear at the top of the About page."
+              : "Edit the content using Markdown. Use the Preview tab to see how it will look."}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -152,32 +193,88 @@ export function ContentEditor({ page }: ContentEditorProps) {
             />
           </div>
 
-          {/* Content Editor with Tabs */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-900">Content (Markdown)</label>
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList>
-                <TabsTrigger value="edit">Edit</TabsTrigger>
-                <TabsTrigger value="preview">
-                  <Eye className="h-4 w-4 mr-2" />
-                  Preview
-                </TabsTrigger>
-              </TabsList>
-              <TabsContent value="edit" className="mt-2">
-                <textarea
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  className="w-full h-[500px] font-mono text-sm p-4 border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-700 focus:ring-offset-2"
-                  placeholder="Enter Markdown content..."
+          {/* Structured form for about_hero */}
+          {isAboutHero ? (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label htmlFor="hero-headline" className="text-sm font-medium text-slate-900">
+                  Headline
+                </label>
+                <p className="text-xs text-slate-500">
+                  Use a colon (:) to split the headline. Text after the colon will be highlighted in cyan.
+                  <br />
+                  Example: &quot;Our Mission: Ignite STEM Curiosity&quot;
+                </p>
+                <Input
+                  id="hero-headline"
+                  value={heroHeadline}
+                  onChange={(e) => {
+                    setHeroHeadline(e.target.value)
+                    updateHeroContent(e.target.value, heroDescription)
+                  }}
+                  placeholder="e.g., Making Robotics Education: Accessible to Everyone"
                 />
-              </TabsContent>
-              <TabsContent value="preview" className="mt-2">
-                <div className="w-full min-h-[500px] p-6 border border-slate-200 rounded-md bg-slate-50 prose prose-slate max-w-none">
-                  <ReactMarkdown>{content}</ReactMarkdown>
-                </div>
-              </TabsContent>
-            </Tabs>
-          </div>
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="hero-description" className="text-sm font-medium text-slate-900">
+                  Description
+                </label>
+                <textarea
+                  id="hero-description"
+                  value={heroDescription}
+                  onChange={(e) => {
+                    setHeroDescription(e.target.value)
+                    updateHeroContent(heroHeadline, e.target.value)
+                  }}
+                  className="w-full h-32 font-mono text-sm p-4 border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-700 focus:ring-offset-2"
+                  placeholder="Enter a brief description of your mission..."
+                />
+              </div>
+              {/* Preview */}
+              <div className="p-6 bg-slate-50 rounded border border-slate-200">
+                <p className="text-xs text-slate-500 mb-4">Preview:</p>
+                <p className="text-sm font-mono text-cyan-700 mb-2">Our Mission</p>
+                <h1 className="font-mono text-2xl font-bold text-slate-900 mb-4">
+                  {heroHeadline.includes(":") ? (
+                    <>
+                      {heroHeadline.split(":")[0]}:
+                      <span className="text-cyan-700"> {heroHeadline.split(":").slice(1).join(":").trim()}</span>
+                    </>
+                  ) : (
+                    heroHeadline || "Your headline here"
+                  )}
+                </h1>
+                <p className="text-slate-600">{heroDescription || "Your description here"}</p>
+              </div>
+            </div>
+          ) : (
+            /* Content Editor with Tabs for markdown pages */
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-900">Content (Markdown)</label>
+              <Tabs value={activeTab} onValueChange={setActiveTab}>
+                <TabsList>
+                  <TabsTrigger value="edit">Edit</TabsTrigger>
+                  <TabsTrigger value="preview">
+                    <Eye className="h-4 w-4 mr-2" />
+                    Preview
+                  </TabsTrigger>
+                </TabsList>
+                <TabsContent value="edit" className="mt-2">
+                  <textarea
+                    value={content}
+                    onChange={(e) => setContent(e.target.value)}
+                    className="w-full h-[500px] font-mono text-sm p-4 border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-700 focus:ring-offset-2"
+                    placeholder="Enter Markdown content..."
+                  />
+                </TabsContent>
+                <TabsContent value="preview" className="mt-2">
+                  <div className="w-full min-h-[500px] p-6 border border-slate-200 rounded-md bg-slate-50 prose prose-slate max-w-none">
+                    <ReactMarkdown>{content}</ReactMarkdown>
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -228,18 +325,18 @@ export function ContentEditor({ page }: ContentEditorProps) {
       </div>
 
       {/* Preview Link */}
-      {isPublished && (
+      {isPublished && PAGE_URL_MAP[page.page_key] && (
         <Card className="bg-slate-50 border-slate-200">
           <CardContent className="py-4">
             <p className="text-sm text-slate-600">
-              This page is live at:{" "}
+              {PAGE_URL_MAP[page.page_key]!.label}:{" "}
               <a
-                href={`/${page.page_key}`}
+                href={PAGE_URL_MAP[page.page_key]!.url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-cyan-700 hover:underline"
               >
-                /{page.page_key}
+                {PAGE_URL_MAP[page.page_key]!.url}
               </a>
             </p>
           </CardContent>
