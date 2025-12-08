@@ -417,6 +417,54 @@ export type Database = {
           },
         ]
       }
+      page_content: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          is_custom_page: boolean | null
+          last_updated_by: string | null
+          page_key: string
+          published_at: string | null
+          seo_description: string | null
+          seo_title: string | null
+          slug: string | null
+          title: string
+          updated_at: string | null
+          version: number | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          is_custom_page?: boolean | null
+          last_updated_by?: string | null
+          page_key: string
+          published_at?: string | null
+          seo_description?: string | null
+          seo_title?: string | null
+          slug?: string | null
+          title: string
+          updated_at?: string | null
+          version?: number | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          is_custom_page?: boolean | null
+          last_updated_by?: string | null
+          page_key?: string
+          published_at?: string | null
+          seo_description?: string | null
+          seo_title?: string | null
+          slug?: string | null
+          title?: string
+          updated_at?: string | null
+          version?: number | null
+        }
+        Relationships: []
+      }
       post_votes: {
         Row: {
           created_at: string | null
@@ -578,42 +626,98 @@ export type Database = {
           },
         ]
       }
+      product_tags: {
+        Row: {
+          created_at: string | null
+          discount_percent: number | null
+          expires_at: string | null
+          id: string
+          priority: number | null
+          product_id: string
+          tag: Database["public"]["Enums"]["product_tag_type"]
+        }
+        Insert: {
+          created_at?: string | null
+          discount_percent?: number | null
+          expires_at?: string | null
+          id?: string
+          priority?: number | null
+          product_id: string
+          tag: Database["public"]["Enums"]["product_tag_type"]
+        }
+        Update: {
+          created_at?: string | null
+          discount_percent?: number | null
+          expires_at?: string | null
+          id?: string
+          priority?: number | null
+          product_id?: string
+          tag?: Database["public"]["Enums"]["product_tag_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_tags_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           created_at: string | null
           description: string | null
+          discount_expires_at: string | null
+          discount_percent: number | null
           id: string
           is_featured: boolean | null
+          low_stock_threshold: number | null
           name: string
+          original_price_cents: number | null
           price_cents: number
           slug: string
           specs: Json | null
           status: Database["public"]["Enums"]["product_status"]
+          stock_quantity: number | null
           stripe_price_id: string | null
+          track_inventory: boolean | null
         }
         Insert: {
           created_at?: string | null
           description?: string | null
+          discount_expires_at?: string | null
+          discount_percent?: number | null
           id?: string
           is_featured?: boolean | null
+          low_stock_threshold?: number | null
           name: string
+          original_price_cents?: number | null
           price_cents: number
           slug: string
           specs?: Json | null
           status?: Database["public"]["Enums"]["product_status"]
+          stock_quantity?: number | null
           stripe_price_id?: string | null
+          track_inventory?: boolean | null
         }
         Update: {
           created_at?: string | null
           description?: string | null
+          discount_expires_at?: string | null
+          discount_percent?: number | null
           id?: string
           is_featured?: boolean | null
+          low_stock_threshold?: number | null
           name?: string
+          original_price_cents?: number | null
           price_cents?: number
           slug?: string
           specs?: Json | null
           status?: Database["public"]["Enums"]["product_status"]
+          stock_quantity?: number | null
           stripe_price_id?: string | null
+          track_inventory?: boolean | null
         }
         Relationships: []
       }
@@ -647,8 +751,108 @@ export type Database = {
         }
         Relationships: []
       }
+      site_banners: {
+        Row: {
+          color_scheme: string | null
+          created_at: string | null
+          created_by: string | null
+          dismiss_duration_hours: number | null
+          ends_at: string | null
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          is_dismissible: boolean | null
+          link_text: string | null
+          link_url: string | null
+          message: string
+          pages: string[] | null
+          sort_order: number | null
+          starts_at: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          color_scheme?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          dismiss_duration_hours?: number | null
+          ends_at?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_dismissible?: boolean | null
+          link_text?: string | null
+          link_url?: string | null
+          message: string
+          pages?: string[] | null
+          sort_order?: number | null
+          starts_at?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          color_scheme?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          dismiss_duration_hours?: number | null
+          ends_at?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_dismissible?: boolean | null
+          link_text?: string | null
+          link_url?: string | null
+          message?: string
+          pages?: string[] | null
+          sort_order?: number | null
+          starts_at?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      site_content: {
+        Row: {
+          category: string
+          content: string
+          content_key: string
+          content_type: string
+          default_value: string | null
+          description: string | null
+          id: string
+          last_updated_by: string | null
+          sort_order: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          category: string
+          content: string
+          content_key: string
+          content_type?: string
+          default_value?: string | null
+          description?: string | null
+          id?: string
+          last_updated_by?: string | null
+          sort_order?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string
+          content?: string
+          content_key?: string
+          content_type?: string
+          default_value?: string | null
+          description?: string | null
+          id?: string
+          last_updated_by?: string | null
+          sort_order?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       site_stats: {
         Row: {
+          auto_source: string | null
           created_at: string | null
           description: string | null
           id: string
@@ -661,6 +865,7 @@ export type Database = {
           value: number
         }
         Insert: {
+          auto_source?: string | null
           created_at?: string | null
           description?: string | null
           id?: string
@@ -673,6 +878,7 @@ export type Database = {
           value?: number
         }
         Update: {
+          auto_source?: string | null
           created_at?: string | null
           description?: string | null
           id?: string
@@ -686,11 +892,51 @@ export type Database = {
         }
         Relationships: []
       }
+      team_members: {
+        Row: {
+          bio: string | null
+          created_at: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          name: string
+          role: string
+          social_links: Json | null
+          sort_order: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          name: string
+          role: string
+          social_links?: Json | null
+          sort_order?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          name?: string
+          role?: string
+          social_links?: Json | null
+          sort_order?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      cleanup_expired_tags: { Args: never; Returns: undefined }
       get_course_progress: {
         Args: { p_course_id: string; p_user_id: string }
         Returns: number
@@ -708,6 +954,11 @@ export type Database = {
         | { Args: { user_id: string }; Returns: boolean }
         | { Args: never; Returns: boolean }
       is_staff: { Args: { user_id: string }; Returns: boolean }
+      update_comment_upvotes: {
+        Args: { p_comment_id: string }
+        Returns: undefined
+      }
+      update_post_upvotes: { Args: { p_post_id: string }; Returns: undefined }
       user_owns_product: { Args: { p_product_id: string }; Returns: boolean }
     }
     Enums: {
@@ -719,6 +970,14 @@ export type Database = {
         | "packaging"
         | "other"
       product_status: "active" | "coming_soon" | "draft"
+      product_tag_type:
+        | "featured"
+        | "discount"
+        | "new"
+        | "bestseller"
+        | "limited"
+        | "bundle"
+        | "out_of_stock"
       user_role: "admin" | "staff" | "user"
     }
     CompositeTypes: {
@@ -856,6 +1115,15 @@ export const Constants = {
         "other",
       ],
       product_status: ["active", "coming_soon", "draft"],
+      product_tag_type: [
+        "featured",
+        "discount",
+        "new",
+        "bestseller",
+        "limited",
+        "bundle",
+        "out_of_stock",
+      ],
       user_role: ["admin", "staff", "user"],
     },
   },
