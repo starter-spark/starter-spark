@@ -63,6 +63,7 @@ export default async function ProductDetailPage({
       product_tags (tag),
       product_media (
         id,
+        type,
         url,
         alt_text,
         is_primary,
@@ -89,8 +90,7 @@ export default async function ProductDetailPage({
     ? (product.stock_quantity ?? 0) > 0
     : !hasOutOfStockTag && (specs?.inStock ?? true)
 
-  // Extract data from specs with defaults
-  const modelPath = specs?.modelPath
+  // Extract data from specs with defaults (modelPath now handled after media extraction)
   const learningOutcomes = specs?.learningOutcomes || []
   const includedItems = specs?.includedItems || []
   const technicalSpecs = specs?.technicalSpecs || []
@@ -99,11 +99,20 @@ export default async function ProductDetailPage({
   const discountPercent = product.discount_percent
   const discountExpiresAt = product.discount_expires_at
 
-  // Extract images from product_media, sorted by sort_order
-  const media = (product.product_media || [])
-    .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
-  const images = media.map(m => m.url)
-  const primaryImage = media.find(m => m.is_primary)?.url || images[0]
+  // Extract images and 3D models from product_media, sorted by sort_order
+  const allMedia = (product.product_media || [])
+    .sort((a: { sort_order?: number | null }) => (a.sort_order ?? 0))
+
+  // Filter images only (exclude 3D models, videos, documents)
+  const imageMedia = allMedia.filter((m: { type?: string }) => m.type === 'image' || !m.type)
+  const images = imageMedia.map((m: { url: string }) => m.url)
+  const primaryImage = imageMedia.find((m: { is_primary?: boolean | null }) => m.is_primary)?.url || images[0]
+
+  // Get 3D model if available (from product_media or specs)
+  const modelMedia = allMedia.find((m: { type?: string }) => m.type === '3d_model')
+  const modelPathFromMedia = modelMedia?.url
+  const modelPathFromSpecs = specs?.modelPath
+  const finalModelPath = modelPathFromMedia || modelPathFromSpecs
 
   // Generate structured data for SEO
   const productSchema = getProductSchema({
@@ -152,7 +161,7 @@ export default async function ProductDetailPage({
             <div className="w-full lg:w-3/5">
               <ProductGallery
                 images={images}
-                modelPath={modelPath}
+                modelPath={finalModelPath}
                 modelPreviewUrl={primaryImage}
                 productName={product.name}
               />

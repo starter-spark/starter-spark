@@ -97,7 +97,8 @@ export function ProductCard({
                 alt={name}
                 fill
                 className="object-cover"
-                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
+                quality={85}
               />
             ) : (
               <div className="absolute inset-0 flex flex-col items-center justify-center">

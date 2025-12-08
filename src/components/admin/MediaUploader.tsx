@@ -69,6 +69,13 @@ function getMediaType(mimeType: string): MediaItem["type"] {
   return "image"
 }
 
+function formatFileSize(bytes: number | undefined | null): string {
+  if (!bytes || bytes <= 0) return "Size unknown"
+  if (bytes >= 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)} MB`
+  if (bytes >= 1024) return `${(bytes / 1024).toFixed(0)} KB`
+  return `${bytes} bytes`
+}
+
 export function MediaUploader({ productId, media, onChange, bucket = "products" }: MediaUploaderProps) {
   const [isDragging, setIsDragging] = useState(false)
   const [uploading, setUploading] = useState<string[]>([])
@@ -388,7 +395,7 @@ export function MediaUploader({ productId, media, onChange, bucket = "products" 
                           {item.filename}
                         </p>
                         <p className="text-xs text-slate-500">
-                          {item.file_size ? `${(item.file_size / 1024 / 1024).toFixed(1)} MB` : ""}
+                          {formatFileSize(item.file_size)}
                         </p>
                       </div>
                       <Button
@@ -429,7 +436,7 @@ export function MediaUploader({ productId, media, onChange, bucket = "products" 
                           {item.filename}
                         </p>
                         <p className="text-xs text-slate-500">
-                          {item.file_size ? `${(item.file_size / 1024 / 1024).toFixed(1)} MB` : ""}
+                          {formatFileSize(item.file_size)}
                         </p>
                       </div>
                       <Button
@@ -470,7 +477,7 @@ export function MediaUploader({ productId, media, onChange, bucket = "products" 
                           {item.filename}
                         </p>
                         <p className="text-xs text-slate-500">
-                          {item.file_size ? `${(item.file_size / 1024 / 1024).toFixed(1)} MB` : ""}
+                          {formatFileSize(item.file_size)}
                         </p>
                       </div>
                       <Button

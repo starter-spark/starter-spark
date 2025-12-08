@@ -70,7 +70,9 @@ export function ProductSpotlightSection({ product }: ProductSpotlightProps) {
                   alt={`${product.name} - Image ${selectedImage + 1}`}
                   fill
                   className="object-cover"
-                  sizes="(max-width: 1024px) 100vw, 60vw"
+                  sizes="(max-width: 1024px) 100vw, 800px"
+                  quality={90}
+                  priority
                 />
               ) : (
                 <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
@@ -117,6 +119,7 @@ export function ProductSpotlightSection({ product }: ProductSpotlightProps) {
                       fill
                       className="object-cover"
                       sizes="80px"
+                      quality={75}
                     />
                   </button>
                 ))}

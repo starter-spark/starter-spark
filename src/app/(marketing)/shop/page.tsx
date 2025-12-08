@@ -42,6 +42,7 @@ export default async function ShopPage() {
         expires_at
       ),
       product_media (
+        type,
         url,
         is_primary,
         image_type,
@@ -75,11 +76,12 @@ export default async function ShopPage() {
       discount_percent: t.discount_percent,
     }))
 
-    // Get primary image or first hero image or first image
-    const media = product.product_media || []
+    // Get primary image or first hero image or first image (filter out 3D models)
+    const media = (product.product_media || []).filter((m) => m.type === 'image' || !m.type)
     const primaryImage = media.find((m) => m.is_primary)
     const heroImage = media.find((m) => m.image_type === "hero")
-    const firstImage = media.sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))[0]
+    const sortedMedia = [...media].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+    const firstImage = sortedMedia[0]
     const image = primaryImage?.url || heroImage?.url || firstImage?.url || undefined
 
     return {

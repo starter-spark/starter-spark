@@ -18,6 +18,7 @@ export async function FeaturedProduct() {
       products (
         id, name, slug, description, price_cents, specs,
         product_media (
+          type,
           url,
           is_primary,
           image_type,
@@ -43,6 +44,7 @@ export async function FeaturedProduct() {
     price_cents: number
     specs: Record<string, string> | null
     product_media: Array<{
+      type: string
       url: string
       is_primary: boolean | null
       image_type: string | null
@@ -50,10 +52,11 @@ export async function FeaturedProduct() {
     }>
   }
 
-  // Extract images from product_media
-  const media = (product.product_media || [])
+  // Extract only images from product_media (filter out 3D models, videos, documents)
+  const images = (product.product_media || [])
+    .filter((m) => m.type === 'image')
     .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
-  const images = media.map(m => m.url)
+    .map(m => m.url)
 
   const productSchema = getProductSchema({
     name: product.name,
