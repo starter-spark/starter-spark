@@ -43,7 +43,7 @@ const defaultTeam: TeamMember[] = [
   {
     name: "Kai Stewart",
     role: "Web Development",
-    bio: "Founder and lead developer.",
+    bio: "lead developer.",
     github: "https://github.com/normalday843812",
     linkedin: "https://www.linkedin.com/in/kai-stewart-b88841395/",
   }

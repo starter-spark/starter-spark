@@ -21,12 +21,34 @@ export default async function WorkshopPage() {
       "workshop.header.description",
       "workshop.header.description_signed_out",
       "workshop.no_kits",
+      "workshop.signIn.title",
+      "workshop.signIn.description",
+      "workshop.signIn.button",
+      "workshop.signIn.shopButton",
+      "workshop.kits.title",
+      "workshop.kits.empty.subtitle",
+      "workshop.kits.empty.cta",
+      "workshop.claim.title",
+      "workshop.claim.description",
+      "workshop.achievements.title",
+      "workshop.achievements.hint",
     ],
     {
       "workshop.header.title": "Workshop",
       "workshop.header.description": "Manage your kits, track progress, and access learning materials.",
       "workshop.header.description_signed_out": "Sign in to access your kits and learning materials.",
       "workshop.no_kits": "You don't have any kits yet.",
+      "workshop.signIn.title": "Sign In Required",
+      "workshop.signIn.description": "Sign in to view your kits, track your learning progress, and claim new kit codes.",
+      "workshop.signIn.button": "Sign In",
+      "workshop.signIn.shopButton": "Shop Kits",
+      "workshop.kits.title": "My Kits",
+      "workshop.kits.empty.subtitle": "Purchase a kit or enter a code to get started.",
+      "workshop.kits.empty.cta": "Browse Kits",
+      "workshop.claim.title": "Claim a Kit",
+      "workshop.claim.description": "Have a kit code? Enter it below to activate your kit.",
+      "workshop.achievements.title": "Achievements",
+      "workshop.achievements.hint": "Complete lessons to unlock badges",
     }
   )
 
@@ -118,17 +140,16 @@ export default async function WorkshopPage() {
                 <LogIn className="w-10 h-10 text-slate-500" />
               </div>
               <h2 className="font-mono text-2xl text-slate-900 mb-2">
-                Sign In Required
+                {content["workshop.signIn.title"]}
               </h2>
               <p className="text-slate-600 mb-8 max-w-md mx-auto">
-                Sign in to view your kits, track your learning progress, and
-                claim new kit codes.
+                {content["workshop.signIn.description"]}
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link href="/login">
                   <Button className="bg-cyan-700 hover:bg-cyan-600 text-white font-mono">
                     <LogIn className="w-4 h-4 mr-2" />
-                    Sign In
+                    {content["workshop.signIn.button"]}
                   </Button>
                 </Link>
                 <Link href="/shop">
@@ -137,7 +158,7 @@ export default async function WorkshopPage() {
                     className="border-slate-200 hover:border-cyan-700 text-slate-600 hover:text-cyan-700 font-mono"
                   >
                     <Package className="w-4 h-4 mr-2" />
-                    Shop Kits
+                    {content["workshop.signIn.shopButton"]}
                   </Button>
                 </Link>
               </div>
@@ -154,7 +175,7 @@ export default async function WorkshopPage() {
                 <div className="bg-white rounded border border-slate-200 p-6">
                   <div className="flex items-center justify-between mb-6">
                     <h2 className="font-mono text-xl text-slate-900">
-                      My Kits
+                      {content["workshop.kits.title"]}
                     </h2>
                     <span className="text-sm text-slate-500 font-mono">
                       {totalLicenses}{" "}
@@ -174,11 +195,11 @@ export default async function WorkshopPage() {
                         {content["workshop.no_kits"]}
                       </p>
                       <p className="text-sm text-slate-500 mb-6">
-                        Purchase a kit or enter a code to get started.
+                        {content["workshop.kits.empty.subtitle"]}
                       </p>
                       <Link href="/shop">
                         <Button className="bg-cyan-700 hover:bg-cyan-600 text-white font-mono">
-                          Browse Kits
+                          {content["workshop.kits.empty.cta"]}
                         </Button>
                       </Link>
                     </div>
@@ -206,11 +227,11 @@ export default async function WorkshopPage() {
                   <div className="flex items-center gap-2 mb-4">
                     <Key className="w-5 h-5 text-cyan-700" />
                     <h3 className="font-mono text-lg text-slate-900">
-                      Claim a Kit
+                      {content["workshop.claim.title"]}
                     </h3>
                   </div>
                   <p className="text-sm text-slate-600 mb-4">
-                    Have a kit code? Enter it below to activate your kit.
+                    {content["workshop.claim.description"]}
                   </p>
                   <ClaimCodeForm />
                 </div>
@@ -223,7 +244,7 @@ export default async function WorkshopPage() {
                   <div className="flex items-center gap-2 mb-4">
                     <Award className="w-5 h-5 text-amber-500" />
                     <h3 className="font-mono text-lg text-slate-900">
-                      Achievements
+                      {content["workshop.achievements.title"]}
                     </h3>
                   </div>
                   <div className="grid grid-cols-4 gap-2">
@@ -249,7 +270,7 @@ export default async function WorkshopPage() {
                     )}
                   </div>
                   <p className="text-xs text-slate-500 mt-3 text-center">
-                    Complete lessons to unlock badges
+                    {content["workshop.achievements.hint"]}
                   </p>
                 </div>
               </div>

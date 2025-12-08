@@ -24,7 +24,27 @@ export interface Discussion {
   tags: string[] | null
 }
 
-interface EventsPreviewSectionProps {
+export interface EventsPreviewContentProps {
+  title?: string
+  description?: string
+  workshopsTitle?: string
+  workshopsViewAll?: string
+  workshopsEmptyTitle?: string
+  workshopsEmptyDescription?: string
+  workshopsEmptyCta?: string
+  workshopsCta?: string
+  workshopsCtaEmpty?: string
+  labTitle?: string
+  labJoinNow?: string
+  labMembersLabel?: string
+  labDiscussionsLabel?: string
+  labEmptyTitle?: string
+  labEmptyDescription?: string
+  labEmptyCta?: string
+  labCta?: string
+}
+
+interface EventsPreviewSectionProps extends EventsPreviewContentProps {
   workshops: Workshop[]
   discussions: Discussion[]
   communityStats: {
@@ -46,6 +66,23 @@ export function EventsPreviewSection({
   workshops,
   discussions,
   communityStats,
+  title = "Join the Community",
+  description = "Learn together at our workshops or connect with builders in The Lab.",
+  workshopsTitle = "Upcoming Workshops",
+  workshopsViewAll = "View All",
+  workshopsEmptyTitle = "No Upcoming Events",
+  workshopsEmptyDescription = "Check back soon for new workshops and events in your area.",
+  workshopsEmptyCta = "View Past Events",
+  workshopsCta = "Register for a Workshop",
+  workshopsCtaEmpty = "View All Events",
+  labTitle = "The Lab",
+  labJoinNow = "Join Now",
+  labMembersLabel = "Members",
+  labDiscussionsLabel = "Discussions",
+  labEmptyTitle = "Be the First to Ask",
+  labEmptyDescription = "Start a discussion and help build our community of makers.",
+  labEmptyCta = "Ask a Question",
+  labCta = "Join The Lab",
 }: EventsPreviewSectionProps) {
   const hasWorkshops = workshops.length > 0
   const hasDiscussions = discussions.length > 0
@@ -60,10 +97,10 @@ export function EventsPreviewSection({
           className="text-center mb-16"
         >
           <h2 className="font-mono text-3xl lg:text-4xl text-slate-900 mb-4">
-            Join the Community
+            {title}
           </h2>
           <p className="text-slate-600 max-w-2xl mx-auto">
-            Learn together at our workshops or connect with builders in The Lab.
+            {description}
           </p>
         </motion.div>
 
@@ -78,7 +115,7 @@ export function EventsPreviewSection({
             <div className="flex items-center justify-between mb-6">
               <h3 className="font-mono text-xl text-slate-900 flex items-center gap-2">
                 <Calendar className="w-5 h-5 text-cyan-700" />
-                Upcoming Workshops
+                {workshopsTitle}
               </h3>
               <Link href="/events">
                 <Button
@@ -86,7 +123,7 @@ export function EventsPreviewSection({
                   size="sm"
                   className="text-cyan-700 hover:text-cyan-600 font-mono"
                 >
-                  View All
+                  {workshopsViewAll}
                   <ArrowRight className="w-4 h-4 ml-1" />
                 </Button>
               </Link>
@@ -141,14 +178,14 @@ export function EventsPreviewSection({
                   <Calendar className="w-6 h-6 text-slate-400" />
                 </div>
                 <h4 className="font-medium text-slate-900 mb-2">
-                  No Upcoming Events
+                  {workshopsEmptyTitle}
                 </h4>
                 <p className="text-sm text-slate-500 mb-4">
-                  Check back soon for new workshops and events in your area.
+                  {workshopsEmptyDescription}
                 </p>
                 <Link href="/events">
                   <Button variant="outline" size="sm" className="font-mono">
-                    View Past Events
+                    {workshopsEmptyCta}
                   </Button>
                 </Link>
               </div>
@@ -159,7 +196,7 @@ export function EventsPreviewSection({
                 variant="outline"
                 className="w-full border-slate-200 hover:border-cyan-700 text-slate-600 hover:text-cyan-700 font-mono"
               >
-                {hasWorkshops ? "Register for a Workshop" : "View All Events"}
+                {hasWorkshops ? workshopsCta : workshopsCtaEmpty}
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </Link>
@@ -175,7 +212,7 @@ export function EventsPreviewSection({
             <div className="flex items-center justify-between mb-6">
               <h3 className="font-mono text-xl text-slate-900 flex items-center gap-2">
                 <Users className="w-5 h-5 text-cyan-700" />
-                The Lab
+                {labTitle}
               </h3>
               <Link href="/community">
                 <Button
@@ -183,7 +220,7 @@ export function EventsPreviewSection({
                   size="sm"
                   className="text-cyan-700 hover:text-cyan-600 font-mono"
                 >
-                  Join Now
+                  {labJoinNow}
                   <ArrowRight className="w-4 h-4 ml-1" />
                 </Button>
               </Link>
@@ -192,11 +229,11 @@ export function EventsPreviewSection({
             {/* Stats Bar - Clean and minimal */}
             <div className="flex items-center gap-4 mb-4 text-sm text-slate-600">
               <span>
-                <span className="font-mono text-slate-900">{communityStats.totalMembers}</span> Members
+                <span className="font-mono text-slate-900">{communityStats.totalMembers}</span> {labMembersLabel}
               </span>
               <span className="text-slate-300">•</span>
               <span>
-                <span className="font-mono text-slate-900">{communityStats.totalDiscussions}</span> Discussions
+                <span className="font-mono text-slate-900">{communityStats.totalDiscussions}</span> {labDiscussionsLabel}
               </span>
             </div>
 
@@ -242,14 +279,14 @@ export function EventsPreviewSection({
                   <PlusCircle className="w-6 h-6 text-cyan-600" />
                 </div>
                 <h4 className="font-medium text-slate-900 mb-2">
-                  Be the First to Ask
+                  {labEmptyTitle}
                 </h4>
                 <p className="text-sm text-slate-500 mb-4">
-                  Start a discussion and help build our community of makers.
+                  {labEmptyDescription}
                 </p>
                 <Link href="/community/new">
                   <Button size="sm" className="bg-cyan-700 hover:bg-cyan-600 font-mono">
-                    Ask a Question
+                    {labEmptyCta}
                   </Button>
                 </Link>
               </div>
@@ -257,7 +294,7 @@ export function EventsPreviewSection({
 
             <Link href="/community" className="block mt-auto pt-6">
               <Button className="w-full bg-cyan-700 hover:bg-cyan-600 text-white font-mono">
-                Join The Lab
+                {labCta}
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </Link>
