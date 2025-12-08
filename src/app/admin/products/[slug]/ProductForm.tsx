@@ -252,7 +252,7 @@ export function ProductForm({ product, initialTags = [], initialMedia = [] }: Pr
                 value={slug}
                 onChange={(e) => setSlug(e.target.value)}
                 required
-                pattern="[a-z0-9-]+"
+                pattern="[a-z0-9\-]+"
                 title="Lowercase letters, numbers, and hyphens only"
               />
             </div>
