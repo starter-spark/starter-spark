@@ -4,14 +4,8 @@ import { Button } from "@/components/ui/button"
 import { ArrowRight } from "lucide-react"
 import { motion } from "motion/react"
 import Link from "next/link"
+import Image from "next/image"
 import { useState } from "react"
-
-const thumbnails = [
-  { id: "knolling", label: "Knolling Photo", description: "All components laid flat" },
-  { id: "assembled", label: "Assembled", description: "Complete build" },
-  { id: "electronics", label: "Electronics", description: "Wiring detail" },
-  { id: "action", label: "In Action", description: "Working demo" },
-]
 
 // Default specs shown when product.specs is not available
 const defaultSpecs = [
@@ -30,12 +24,14 @@ interface ProductSpotlightProps {
     description: string | null
     priceCents: number
     specs: Record<string, string> | null
+    images?: string[]
   }
 }
 
 export function ProductSpotlightSection({ product }: ProductSpotlightProps) {
   const [selectedImage, setSelectedImage] = useState(0)
-  const currentThumb = thumbnails[selectedImage]
+  const images = product.images || []
+  const hasImages = images.length > 0
 
   // Convert specs object to array format, or use defaults
   const specs = product.specs
@@ -68,56 +64,64 @@ export function ProductSpotlightSection({ product }: ProductSpotlightProps) {
             className="w-full lg:w-3/5"
           >
             <div className="relative aspect-[4/3] bg-white rounded border border-slate-200 shadow-sm overflow-hidden">
-              {/* Dynamic placeholder based on selection */}
-              <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
-                <div className="text-center p-8">
-                  <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-cyan-50 flex items-center justify-center">
-                    <svg
-                      className="w-12 h-12 text-cyan-700"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={1.5}
-                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                      />
-                    </svg>
+              {hasImages ? (
+                <Image
+                  src={images[selectedImage]}
+                  alt={`${product.name} - Image ${selectedImage + 1}`}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 1024px) 100vw, 60vw"
+                />
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
+                  <div className="text-center p-8">
+                    <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-cyan-50 flex items-center justify-center">
+                      <svg
+                        className="w-12 h-12 text-cyan-700"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={1.5}
+                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        />
+                      </svg>
+                    </div>
+                    <p className="text-slate-500 font-mono text-sm">
+                      {product.name}
+                    </p>
                   </div>
-                  <p className="text-slate-500 font-mono text-sm">
-                    {currentThumb.label}
-                  </p>
-                  <p className="text-slate-500 text-xs mt-1">
-                    {currentThumb.description}
-                  </p>
                 </div>
-              </div>
+              )}
             </div>
 
-            {/* Thumbnail strip - clickable */}
-            <div className="flex gap-2 mt-4">
-              {thumbnails.map((thumb, idx) => (
-                <button
-                  key={thumb.id}
-                  onClick={() => setSelectedImage(idx)}
-                  className={`flex-1 aspect-square rounded border flex items-center justify-center transition-all cursor-pointer ${
-                    selectedImage === idx
-                      ? "bg-cyan-50 border-cyan-700 ring-2 ring-cyan-700/20"
-                      : "bg-white border-slate-200 hover:border-slate-300"
-                  }`}
-                >
-                  <span
-                    className={`text-[10px] font-mono ${
-                      selectedImage === idx ? "text-cyan-700" : "text-slate-500"
+            {/* Thumbnail strip - only show if we have multiple images */}
+            {images.length > 1 && (
+              <div className="flex gap-2 mt-4">
+                {images.map((imageUrl, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setSelectedImage(idx)}
+                    className={`flex-1 max-w-[80px] aspect-square rounded border overflow-hidden transition-all cursor-pointer relative ${
+                      selectedImage === idx
+                        ? "border-cyan-700 ring-2 ring-cyan-700/20"
+                        : "border-slate-200 hover:border-slate-300"
                     }`}
                   >
-                    {thumb.label.split(" ")[0]}
-                  </span>
-                </button>
-              ))}
-            </div>
+                    <Image
+                      src={imageUrl}
+                      alt={`${product.name} thumbnail ${idx + 1}`}
+                      fill
+                      className="object-cover"
+                      sizes="80px"
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
           </motion.div>
 
           {/* Right - Content (40%) */}

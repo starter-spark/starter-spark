@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { Box, Image as ImageIcon } from "lucide-react"
 import dynamic from "next/dynamic"
+import Image from "next/image"
 import { useState } from "react"
 
 // Lazy load the 3D component
@@ -32,17 +33,14 @@ export function ProductGallery({
   const [view, setView] = useState<"3d" | "images">(modelPath ? "3d" : "images")
   const [selectedImage, setSelectedImage] = useState(0)
 
-  // Placeholder thumbnails if no images provided
-  const thumbnails = images.length
-    ? images
-    : ["Assembled", "Components", "Electronics", "In Action"]
+  const hasImages = images.length > 0
 
   return (
     <div className="space-y-4">
       {/* Main Display */}
       <div className="relative aspect-square bg-white rounded border border-slate-200 overflow-hidden">
-        {/* View Toggle */}
-        {modelPath && (
+        {/* View Toggle - only show if we have both 3D model AND images */}
+        {modelPath && hasImages && (
           <div className="absolute top-4 right-4 z-10 flex gap-2">
             <Button
               variant={view === "3d" ? "default" : "outline"}
@@ -80,6 +78,14 @@ export function ProductGallery({
             previewUrl={modelPreviewUrl || images[0]}
             previewAlt={`${productName} preview`}
           />
+        ) : hasImages ? (
+          <Image
+            src={images[selectedImage]}
+            alt={`${productName} - Image ${selectedImage + 1}`}
+            fill
+            className="object-cover"
+            sizes="(max-width: 1024px) 100vw, 60vw"
+          />
         ) : (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
             <div className="w-24 h-24 mb-4 rounded-full bg-slate-200 flex items-center justify-center">
@@ -98,57 +104,56 @@ export function ProductGallery({
               </svg>
             </div>
             <p className="text-slate-500 font-mono text-sm">{productName}</p>
-            <p className="text-slate-500 text-xs mt-1">
-              {typeof thumbnails[selectedImage] === "string"
-                ? thumbnails[selectedImage]
-                : `View ${selectedImage + 1}`}
-            </p>
           </div>
         )}
       </div>
 
-      {/* Thumbnail Strip */}
-      <div className="flex gap-2">
-        {/* 3D Thumbnail (if model available) */}
-        {modelPath && (
-          <button
-            onClick={() => setView("3d")}
-            className={`flex-1 aspect-square rounded border overflow-hidden transition-all cursor-pointer ${
-              view === "3d"
-                ? "border-cyan-700 ring-2 ring-cyan-700/20 bg-cyan-50"
-                : "border-slate-200 hover:border-slate-300 bg-slate-50"
-            }`}
-          >
-            <div className="w-full h-full flex flex-col items-center justify-center">
-              <Box className={`w-4 h-4 mb-0.5 ${view === "3d" ? "text-cyan-700" : "text-slate-500"}`} />
-              <span className={`text-[10px] font-mono ${view === "3d" ? "text-cyan-700" : "text-slate-500"}`}>
-                3D
-              </span>
-            </div>
-          </button>
-        )}
-        {/* Image Thumbnails */}
-        {thumbnails.map((thumb, idx) => (
-          <button
-            key={idx}
-            onClick={() => {
-              setSelectedImage(idx)
-              setView("images")
-            }}
-            className={`flex-1 aspect-square rounded border overflow-hidden transition-all cursor-pointer ${
-              selectedImage === idx && view === "images"
-                ? "border-cyan-700 ring-2 ring-cyan-700/20"
-                : "border-slate-200 hover:border-slate-300"
-            }`}
-          >
-            <div className="w-full h-full flex items-center justify-center bg-slate-50">
-              <span className="text-slate-500 text-[10px] font-mono">
-                {typeof thumb === "string" ? thumb : `View ${idx + 1}`}
-              </span>
-            </div>
-          </button>
-        ))}
-      </div>
+      {/* Thumbnail Strip - only show if we have images or 3D model */}
+      {(hasImages || modelPath) && (
+        <div className="flex gap-2">
+          {/* 3D Thumbnail (if model available) */}
+          {modelPath && (
+            <button
+              onClick={() => setView("3d")}
+              className={`flex-1 max-w-[80px] aspect-square rounded border overflow-hidden transition-all cursor-pointer ${
+                view === "3d"
+                  ? "border-cyan-700 ring-2 ring-cyan-700/20 bg-cyan-50"
+                  : "border-slate-200 hover:border-slate-300 bg-slate-50"
+              }`}
+            >
+              <div className="w-full h-full flex flex-col items-center justify-center">
+                <Box className={`w-4 h-4 mb-0.5 ${view === "3d" ? "text-cyan-700" : "text-slate-500"}`} />
+                <span className={`text-[10px] font-mono ${view === "3d" ? "text-cyan-700" : "text-slate-500"}`}>
+                  3D
+                </span>
+              </div>
+            </button>
+          )}
+          {/* Image Thumbnails */}
+          {images.map((imageUrl, idx) => (
+            <button
+              key={idx}
+              onClick={() => {
+                setSelectedImage(idx)
+                setView("images")
+              }}
+              className={`flex-1 max-w-[80px] aspect-square rounded border overflow-hidden transition-all cursor-pointer relative ${
+                selectedImage === idx && view === "images"
+                  ? "border-cyan-700 ring-2 ring-cyan-700/20"
+                  : "border-slate-200 hover:border-slate-300"
+              }`}
+            >
+              <Image
+                src={imageUrl}
+                alt={`${productName} thumbnail ${idx + 1}`}
+                fill
+                className="object-cover"
+                sizes="80px"
+              />
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

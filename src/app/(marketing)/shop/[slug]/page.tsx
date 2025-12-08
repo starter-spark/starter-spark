@@ -55,12 +55,20 @@ export default async function ProductDetailPage({
   const { slug } = await params
   const supabase = await createClient()
 
-  // Fetch product from database with tags
+  // Fetch product from database with tags and media
   const { data: product, error } = await supabase
     .from("products")
     .select(`
       *,
-      product_tags (tag)
+      product_tags (tag),
+      product_media (
+        id,
+        url,
+        alt_text,
+        is_primary,
+        image_type,
+        sort_order
+      )
     `)
     .eq("slug", slug)
     .single()
@@ -90,6 +98,12 @@ export default async function ProductDetailPage({
   const originalPrice = product.original_price_cents ? product.original_price_cents / 100 : null
   const discountPercent = product.discount_percent
   const discountExpiresAt = product.discount_expires_at
+
+  // Extract images from product_media, sorted by sort_order
+  const media = (product.product_media || [])
+    .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+  const images = media.map(m => m.url)
+  const primaryImage = media.find(m => m.is_primary)?.url || images[0]
 
   // Generate structured data for SEO
   const productSchema = getProductSchema({
@@ -137,7 +151,9 @@ export default async function ProductDetailPage({
             {/* Left - Gallery (60%) */}
             <div className="w-full lg:w-3/5">
               <ProductGallery
+                images={images}
                 modelPath={modelPath}
+                modelPreviewUrl={primaryImage}
                 productName={product.name}
               />
             </div>

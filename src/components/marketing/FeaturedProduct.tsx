@@ -16,7 +16,13 @@ export async function FeaturedProduct() {
     .select(`
       priority,
       products (
-        id, name, slug, description, price_cents, specs
+        id, name, slug, description, price_cents, specs,
+        product_media (
+          url,
+          is_primary,
+          image_type,
+          sort_order
+        )
       )
     `)
     .eq("tag", "featured")
@@ -36,7 +42,18 @@ export async function FeaturedProduct() {
     description: string | null
     price_cents: number
     specs: Record<string, string> | null
+    product_media: Array<{
+      url: string
+      is_primary: boolean | null
+      image_type: string | null
+      sort_order: number | null
+    }>
   }
+
+  // Extract images from product_media
+  const media = (product.product_media || [])
+    .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+  const images = media.map(m => m.url)
 
   const productSchema = getProductSchema({
     name: product.name,
@@ -61,6 +78,7 @@ export async function FeaturedProduct() {
           description: product.description,
           priceCents: product.price_cents,
           specs: product.specs as Record<string, string> | null,
+          images,
         }}
       />
     </>
