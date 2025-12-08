@@ -43,6 +43,13 @@ export type AuditAction =
   // Site content
   | 'site_content.updated'
   | 'site_content.reset'
+  // Banner management
+  | 'banner.created'
+  | 'banner.updated'
+  | 'banner.deleted'
+  | 'banner.duplicated'
+  | 'banner.activated'
+  | 'banner.deactivated'
 
 /**
  * Resource types that can be audited
@@ -58,6 +65,7 @@ export type AuditResourceType =
   | 'settings'
   | 'stats'
   | 'site_content'
+  | 'banner'
 
 interface AuditLogParams {
   userId: string

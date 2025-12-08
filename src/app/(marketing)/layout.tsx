@@ -1,6 +1,7 @@
 import { Header } from "@/components/layout/Header"
 import { Footer } from "@/components/layout/Footer"
 import { CartSheet } from "@/components/commerce"
+import { SiteBanner } from "@/components/layout/SiteBanner"
 
 export default function MarketingLayout({
   children,
@@ -16,6 +17,7 @@ export default function MarketingLayout({
       >
         Skip to main content
       </a>
+      <SiteBanner />
       <Header />
       <main id="main-content" tabIndex={-1} className="outline-none">
         {children}

@@ -714,6 +714,66 @@ export type Database = {
         }
         Relationships: []
       }
+      site_banners: {
+        Row: {
+          color_scheme: string | null
+          created_at: string | null
+          created_by: string | null
+          dismiss_duration_hours: number | null
+          ends_at: string | null
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          is_dismissible: boolean | null
+          link_text: string | null
+          link_url: string | null
+          message: string
+          pages: string[] | null
+          sort_order: number | null
+          starts_at: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          color_scheme?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          dismiss_duration_hours?: number | null
+          ends_at?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_dismissible?: boolean | null
+          link_text?: string | null
+          link_url?: string | null
+          message: string
+          pages?: string[] | null
+          sort_order?: number | null
+          starts_at?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          color_scheme?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          dismiss_duration_hours?: number | null
+          ends_at?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_dismissible?: boolean | null
+          link_text?: string | null
+          link_url?: string | null
+          message?: string
+          pages?: string[] | null
+          sort_order?: number | null
+          starts_at?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       site_content: {
         Row: {
           category: string
