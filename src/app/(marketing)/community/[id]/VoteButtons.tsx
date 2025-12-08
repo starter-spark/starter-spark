@@ -26,7 +26,7 @@ export function VoteButtons({
   const router = useRouter()
   const [votes, setVotes] = useState(initialVotes)
   const [currentVote, setCurrentVote] = useState<1 | -1 | null>(userVote ?? null)
-  const [isLoading, setIsLoading] = useState(false)
+  const [loadingVote, setLoadingVote] = useState<1 | -1 | null>(null)
 
   const handleVote = async (voteType: 1 | -1) => {
     if (!isAuthenticated) {
@@ -34,7 +34,7 @@ export function VoteButtons({
       return
     }
 
-    setIsLoading(true)
+    setLoadingVote(voteType)
 
     // Optimistic update
     const previousVote = currentVote
@@ -67,11 +67,12 @@ export function VoteButtons({
       }
     }
 
-    setIsLoading(false)
+    setLoadingVote(null)
   }
 
   const iconSize = size === "small" ? "w-5 h-5" : "w-6 h-6"
   const textSize = size === "small" ? "text-sm" : "text-lg"
+  const isLoading = loadingVote !== null
 
   return (
     <div className="flex flex-col items-center gap-1">
@@ -86,7 +87,7 @@ export function VoteButtons({
         )}
         aria-label="Upvote"
       >
-        {isLoading ? (
+        {loadingVote === 1 ? (
           <Loader2 className={cn(iconSize, "animate-spin")} />
         ) : (
           <ChevronUp className={iconSize} />
@@ -104,7 +105,11 @@ export function VoteButtons({
         )}
         aria-label="Downvote"
       >
-        <ChevronDown className={iconSize} />
+        {loadingVote === -1 ? (
+          <Loader2 className={cn(iconSize, "animate-spin")} />
+        ) : (
+          <ChevronDown className={iconSize} />
+        )}
       </button>
     </div>
   )
