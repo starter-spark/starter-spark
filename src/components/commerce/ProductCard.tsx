@@ -4,9 +4,9 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { motion } from "motion/react"
 import Link from "next/link"
-import Image from "next/image"
-import { Star } from "lucide-react"
+import { Star, ImageIcon } from "lucide-react"
 import { Database } from "@/lib/supabase/database.types"
+import { ProductImage } from "@/components/ui/optimized-image"
 
 type ProductTagType = Database["public"]["Enums"]["product_tag_type"]
 
@@ -90,34 +90,29 @@ export function ProductCard({
         <CardContent className="p-0">
           {/* Image Area */}
           <div className="relative aspect-square bg-gradient-to-br from-slate-50 to-slate-100 overflow-hidden">
-            {/* Product Image or Placeholder */}
+            {/* Product Image with loading skeleton, or Placeholder */}
             {image ? (
-              <Image
+              <ProductImage
                 src={image}
                 alt={name}
-                fill
-                className="object-cover"
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
                 quality={85}
+                wrapperClassName="absolute inset-0"
+                fallback={
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
+                    <div className="w-16 h-16 mb-3 rounded-full bg-slate-200 flex items-center justify-center">
+                      <ImageIcon className="w-8 h-8 text-slate-400" />
+                    </div>
+                    <p className="text-slate-400 font-mono text-xs">Failed to load</p>
+                  </div>
+                }
               />
             ) : (
               <div className="absolute inset-0 flex flex-col items-center justify-center">
                 <div className="w-16 h-16 mb-3 rounded-full bg-slate-200 flex items-center justify-center">
-                  <svg
-                    className="w-8 h-8 text-slate-500"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.5}
-                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                    />
-                  </svg>
+                  <ImageIcon className="w-8 h-8 text-slate-400" />
                 </div>
-                <p className="text-slate-500 font-mono text-xs">Product Image</p>
+                <p className="text-slate-400 font-mono text-xs">No image</p>
               </div>
             )}
 
@@ -194,7 +189,7 @@ export function ProductCard({
               <div className="flex items-center gap-2 flex-wrap">
                 <p className="text-2xl font-mono text-amber-600">${price.toFixed(2)}</p>
                 <p className="text-lg font-mono text-slate-400 line-through">
-                  ${originalPrice!.toFixed(2)}
+                  ${originalPrice.toFixed(2)}
                 </p>
                 <span className="px-1.5 py-0.5 bg-red-500 text-white text-xs font-mono rounded">
                   {discountPercent}% OFF

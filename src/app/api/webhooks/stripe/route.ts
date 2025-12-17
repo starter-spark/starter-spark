@@ -37,7 +37,7 @@ export async function POST(request: Request) {
   // Handle the event
   switch (event.type) {
     case "checkout.session.completed": {
-      const session = event.data.object as Stripe.Checkout.Session
+      const session = event.data.object
 
       // Idempotency check: See if we already processed this session
       // Note: A session can have multiple licenses (for quantity > 1), so we check for ANY
@@ -187,7 +187,7 @@ export async function POST(request: Request) {
             .eq("id", product.id)
 
           if (stockError) {
-            console.error(`Failed to decrement stock for ${item.slug}:`, stockError)
+            console.error("Failed to decrement stock for product:", item.slug, stockError)
             // Don't fail the webhook, just log the error
           } else {
             console.log(`Decremented stock for ${item.slug}: ${product.stock_quantity} -> ${newQuantity}`)

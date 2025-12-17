@@ -1,11 +1,12 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { ArrowRight } from "lucide-react"
+import { ArrowRight, ImageIcon } from "lucide-react"
 import { motion } from "motion/react"
 import Link from "next/link"
-import Image from "next/image"
-import { useState } from "react"
+import { useState, useCallback } from "react"
+import { ProductImage, ThumbnailImage } from "@/components/ui/optimized-image"
+import { cn } from "@/lib/utils"
 
 // Default specs shown when product.specs is not available
 const defaultSpecs = [
@@ -32,6 +33,10 @@ export function ProductSpotlightSection({ product }: ProductSpotlightProps) {
   const [selectedImage, setSelectedImage] = useState(0)
   const images = product.images || []
   const hasImages = images.length > 0
+
+  const handleSelectImage = useCallback((idx: number) => {
+    setSelectedImage(idx)
+  }, [])
 
   // Convert specs object to array format, or use defaults
   const specs = product.specs
@@ -65,32 +70,31 @@ export function ProductSpotlightSection({ product }: ProductSpotlightProps) {
           >
             <div className="relative aspect-[4/3] bg-white rounded border border-slate-200 shadow-sm overflow-hidden">
               {hasImages ? (
-                <Image
+                <ProductImage
                   src={images[selectedImage]}
                   alt={`${product.name} - Image ${selectedImage + 1}`}
-                  fill
-                  className="object-cover"
                   sizes="(max-width: 1024px) 100vw, 800px"
                   quality={90}
                   priority
+                  wrapperClassName="absolute inset-0"
+                  fallback={
+                    <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
+                      <div className="text-center p-8">
+                        <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
+                          <ImageIcon className="w-12 h-12 text-slate-400" />
+                        </div>
+                        <p className="text-slate-400 font-mono text-sm">
+                          Failed to load image
+                        </p>
+                      </div>
+                    </div>
+                  }
                 />
               ) : (
                 <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
                   <div className="text-center p-8">
                     <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-cyan-50 flex items-center justify-center">
-                      <svg
-                        className="w-12 h-12 text-cyan-700"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={1.5}
-                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                        />
-                      </svg>
+                      <ImageIcon className="w-12 h-12 text-cyan-700" />
                     </div>
                     <p className="text-slate-500 font-mono text-sm">
                       {product.name}
@@ -106,20 +110,19 @@ export function ProductSpotlightSection({ product }: ProductSpotlightProps) {
                 {images.map((imageUrl, idx) => (
                   <button
                     key={idx}
-                    onClick={() => setSelectedImage(idx)}
-                    className={`flex-1 max-w-[80px] aspect-square rounded border overflow-hidden transition-all cursor-pointer relative ${
+                    onClick={() => handleSelectImage(idx)}
+                    className={cn(
+                      "flex-1 max-w-[80px] aspect-square rounded border overflow-hidden transition-all cursor-pointer relative",
                       selectedImage === idx
                         ? "border-cyan-700 ring-2 ring-cyan-700/20"
                         : "border-slate-200 hover:border-slate-300"
-                    }`}
+                    )}
                   >
-                    <Image
+                    <ThumbnailImage
                       src={imageUrl}
                       alt={`${product.name} thumbnail ${idx + 1}`}
-                      fill
-                      className="object-cover"
-                      sizes="80px"
-                      quality={75}
+                      size={80}
+                      wrapperClassName="absolute inset-0"
                     />
                   </button>
                 ))}

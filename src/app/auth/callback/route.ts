@@ -77,7 +77,21 @@ export async function GET(request: Request) {
     }
 
     // Redirect to the requested page or default to workshop
-    const destination = redirectTo || "/workshop"
+    // Validate redirect to prevent open redirect attacks
+    let destination = "/workshop"
+    if (redirectTo) {
+      // Only allow relative paths starting with / and no protocol/host manipulation
+      const isValidRedirect =
+        redirectTo.startsWith("/") &&
+        !redirectTo.startsWith("//") &&
+        !redirectTo.includes(":\\") &&
+        !redirectTo.includes(":/") &&
+        !/^\/[\\@]/.test(redirectTo)
+
+      if (isValidRedirect) {
+        destination = redirectTo
+      }
+    }
     return NextResponse.redirect(`${origin}${destination}`)
   }
 

@@ -3,27 +3,15 @@
 import { useState } from "react"
 import { AlertTriangle, Lightbulb, Copy, Check, Info } from "lucide-react"
 import { Highlight, themes } from "prism-react-renderer"
+import ReactMarkdown from "react-markdown"
+import remarkGfm from "remark-gfm"
+import remarkDirective from "remark-directive"
+import { visit } from "unist-util-visit"
+import type { Plugin } from "unified"
+import type { Root } from "mdast"
 
 interface LessonContentProps {
   content: string
-}
-
-// DOMPurify configuration - only allow safe tags and attributes
-const PURIFY_CONFIG = {
-  ALLOWED_TAGS: ["strong", "em", "code", "a", "br"],
-  ALLOWED_ATTR: ["href", "class", "target", "rel"],
-  ALLOW_DATA_ATTR: false,
-  // Only allow safe URL protocols (blocks javascript:, data:, etc.)
-  ALLOWED_URI_REGEXP: /^(?:(?:https?|mailto):|[^a-z]|[a-z+.-]+(?:[^a-z+.\-:]|$))/i,
-}
-
-// Only import DOMPurify on client side to avoid jsdom ESM issues on server
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let DOMPurify: any = null
-if (typeof window !== "undefined") {
-  import("dompurify").then((mod) => {
-    DOMPurify = mod.default || mod
-  })
 }
 
 // Map common language aliases to Prism language names
@@ -39,7 +27,7 @@ function getPrismLanguage(lang: string): string {
     python: "python",
     py: "python",
     java: "java",
-    arduino: "cpp", // Arduino is C++ based
+    arduino: "cpp",
     ino: "cpp",
     bash: "bash",
     sh: "bash",
@@ -52,6 +40,28 @@ function getPrismLanguage(lang: string): string {
     plain: "plain",
   }
   return languageMap[lang.toLowerCase()] || "plain"
+}
+
+// Custom remark plugin to transform callout directives into custom elements
+const remarkCallouts: Plugin<[], Root> = () => {
+  return (tree) => {
+    visit(tree, (node) => {
+      if (
+        node.type === "containerDirective" ||
+        node.type === "leafDirective" ||
+        node.type === "textDirective"
+      ) {
+        const directive = node as { name: string; data?: { hName?: string; hProperties?: Record<string, string> }; children?: unknown[] }
+        if (["tip", "warning", "info"].includes(directive.name)) {
+          const data = directive.data || (directive.data = {})
+          data.hName = "div"
+          data.hProperties = {
+            "data-callout": directive.name,
+          }
+        }
+      }
+    })
+  }
 }
 
 // Code block component with copy button and syntax highlighting
@@ -68,7 +78,7 @@ function CodeBlock({
   const prismLanguage = getPrismLanguage(language)
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(code)
+    void navigator.clipboard.writeText(code)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
@@ -124,11 +134,9 @@ function CodeBlock({
 // Callout component for tips, warnings, etc.
 function Callout({
   type,
-  title,
   children,
 }: {
   type: "tip" | "warning" | "info"
-  title?: string
   children: React.ReactNode
 }) {
   const styles = {
@@ -136,19 +144,19 @@ function Callout({
       bg: "bg-cyan-50",
       border: "border-cyan-200",
       icon: <Lightbulb className="w-5 h-5 text-cyan-700" />,
-      title: title || "Tip",
+      title: "Tip",
     },
     warning: {
       bg: "bg-amber-50",
       border: "border-amber-200",
       icon: <AlertTriangle className="w-5 h-5 text-amber-600" />,
-      title: title || "Warning",
+      title: "Warning",
     },
     info: {
       bg: "bg-blue-50",
       border: "border-blue-200",
       icon: <Info className="w-5 h-5 text-blue-600" />,
-      title: title || "Note",
+      title: "Note",
     },
   }
 
@@ -165,196 +173,77 @@ function Callout({
   )
 }
 
-// Parse and render markdown/HTML content from database
-function parseContent(content: string): React.ReactNode[] {
-  const elements: React.ReactNode[] = []
-
-  // Split content into blocks (by double newlines or special markers)
-  const lines = content.split('\n')
-  let currentBlock: string[] = []
-  let inCodeBlock = false
-  let codeLanguage = ''
-  let codeFilename = ''
-  let key = 0
-
-  const flushBlock = () => {
-    if (currentBlock.length === 0) return
-
-    const blockText = currentBlock.join('\n').trim()
-    if (!blockText) {
-      currentBlock = []
-      return
-    }
-
-    // Check for callouts (:::tip, :::warning, :::info)
-    const calloutMatch = blockText.match(/^:::(tip|warning|info)\s*(.*?)\n([\s\S]*?):::$/m)
-    if (calloutMatch) {
-      const [, type, title, body] = calloutMatch
-      elements.push(
-        <Callout key={key++} type={type as "tip" | "warning" | "info"} title={title || undefined}>
-          {body.trim()}
-        </Callout>
-      )
-      currentBlock = []
-      return
-    }
-
-    // Check for headers
-    if (blockText.startsWith('## ')) {
-      elements.push(
-        <h2 key={key++} className="font-mono text-2xl text-slate-900 mt-8 mb-4">
-          {blockText.slice(3)}
-        </h2>
-      )
-      currentBlock = []
-      return
-    }
-
-    if (blockText.startsWith('### ')) {
-      elements.push(
-        <h3 key={key++} className="font-mono text-xl text-slate-900 mt-6 mb-3">
-          {blockText.slice(4)}
-        </h3>
-      )
-      currentBlock = []
-      return
-    }
-
-    // Check for unordered lists
-    if (blockText.match(/^[-*]\s/m)) {
-      const items = blockText.split(/\n/).filter(line => line.match(/^[-*]\s/))
-      elements.push(
-        <ul key={key++} className="list-disc list-inside space-y-2 text-slate-600 mb-6">
-          {items.map((item, i) => (
-            <li key={i} dangerouslySetInnerHTML={{ __html: formatInlineText(item.replace(/^[-*]\s/, '')) }} />
-          ))}
-        </ul>
-      )
-      currentBlock = []
-      return
-    }
-
-    // Check for ordered lists
-    if (blockText.match(/^\d+\.\s/m)) {
-      const items = blockText.split(/\n/).filter(line => line.match(/^\d+\.\s/))
-      elements.push(
-        <ol key={key++} className="list-decimal list-inside space-y-2 text-slate-600 mb-6">
-          {items.map((item, i) => (
-            <li key={i} dangerouslySetInnerHTML={{ __html: formatInlineText(item.replace(/^\d+\.\s/, '')) }} />
-          ))}
-        </ol>
-      )
-      currentBlock = []
-      return
-    }
-
-    // Default: paragraph
-    elements.push(
-      <p key={key++} className="text-slate-600 mb-4" dangerouslySetInnerHTML={{ __html: formatInlineText(blockText) }} />
-    )
-    currentBlock = []
-  }
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i]
-
-    // Code block start
-    if (line.startsWith('```')) {
-      if (!inCodeBlock) {
-        flushBlock()
-        inCodeBlock = true
-        const match = line.match(/```(\w+)?\s*(.*)/)
-        codeLanguage = match?.[1] || 'text'
-        codeFilename = match?.[2] || ''
-      } else {
-        // End of code block
-        const code = currentBlock.join('\n')
-        elements.push(
-          <CodeBlock
-            key={key++}
-            code={code}
-            language={codeLanguage}
-            filename={codeFilename || undefined}
-          />
-        )
-        currentBlock = []
-        inCodeBlock = false
-        codeLanguage = ''
-        codeFilename = ''
-      }
-      continue
-    }
-
-    if (inCodeBlock) {
-      currentBlock.push(line)
-      continue
-    }
-
-    // Callout blocks
-    if (line.startsWith(':::')) {
-      if (currentBlock.length > 0 && !currentBlock[0].startsWith(':::')) {
-        flushBlock()
-      }
-      currentBlock.push(line)
-      if (line.match(/^:::(tip|warning|info)/) && !line.endsWith(':::')) {
-        // Multi-line callout, continue collecting
-        continue
-      }
-      if (line === ':::' && currentBlock.length > 1) {
-        flushBlock()
-      }
-      continue
-    }
-
-    // Empty line - flush current block
-    if (line.trim() === '') {
-      flushBlock()
-      continue
-    }
-
-    currentBlock.push(line)
-  }
-
-  // Flush any remaining content
-  flushBlock()
-
-  return elements
-}
-
-// Format inline text (bold, italic, code, links) with XSS protection
-function formatInlineText(text: string): string {
-  // First, escape any raw HTML to prevent injection
-  const escaped = text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-
-  // Then apply markdown formatting
-  const formatted = escaped
-    // Bold
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    // Italic
-    .replace(/\*(.*?)\*/g, '<em>$1</em>')
-    // Inline code
-    .replace(/`([^`]+)`/g, '<code class="bg-slate-100 px-1.5 py-0.5 rounded font-mono text-sm">$1</code>')
-    // Links - sanitized by DOMPurify's ALLOWED_URI_REGEXP
-    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-cyan-700 hover:underline">$1</a>')
-
-  // Sanitize with DOMPurify to prevent any XSS that slipped through (client-side only)
-  if (DOMPurify) {
-    return DOMPurify.sanitize(formatted, PURIFY_CONFIG)
-  }
-  // On server or before DOMPurify loads, return the escaped/formatted content
-  // (already escaped raw HTML above, so this is safe)
-  return formatted
-}
-
 export function LessonContent({ content }: LessonContentProps) {
-  const parsedContent = parseContent(content)
-
   return (
     <article className="prose prose-slate max-w-none">
-      {parsedContent}
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm, remarkDirective, remarkCallouts]}
+        components={{
+          h2: ({ children }) => (
+            <h2 className="font-mono text-2xl text-slate-900 mt-8 mb-4">{children}</h2>
+          ),
+          h3: ({ children }) => (
+            <h3 className="font-mono text-xl text-slate-900 mt-6 mb-3">{children}</h3>
+          ),
+          p: ({ children }) => (
+            <p className="text-slate-600 mb-4">{children}</p>
+          ),
+          ul: ({ children }) => (
+            <ul className="list-disc list-inside space-y-2 text-slate-600 mb-6">{children}</ul>
+          ),
+          ol: ({ children }) => (
+            <ol className="list-decimal list-inside space-y-2 text-slate-600 mb-6">{children}</ol>
+          ),
+          li: ({ children }) => (
+            <li className="text-slate-600">{children}</li>
+          ),
+          a: ({ href, children }) => (
+            <a
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-cyan-700 hover:underline"
+            >
+              {children}
+            </a>
+          ),
+          strong: ({ children }) => <strong>{children}</strong>,
+          em: ({ children }) => <em>{children}</em>,
+          // Handle callout divs from remark-directive
+          div: ({ children, ...props }) => {
+            const calloutType = (props as { "data-callout"?: string })["data-callout"]
+            if (calloutType && ["tip", "warning", "info"].includes(calloutType)) {
+              return <Callout type={calloutType as "tip" | "warning" | "info"}>{children}</Callout>
+            }
+            return <div {...props}>{children}</div>
+          },
+          // Handle code blocks with syntax highlighting
+          code: ({ className, children }) => {
+            const match = (className || "").match(/language-(\w+)/)
+            const isInline = !match
+
+            if (isInline) {
+              return (
+                <code className="bg-slate-100 px-1.5 py-0.5 rounded font-mono text-sm">
+                  {children}
+                </code>
+              )
+            }
+
+            const language = match ? match[1] : "text"
+            // Extract text content from children safely
+            const codeText = typeof children === "string"
+              ? children
+              : Array.isArray(children)
+                ? children.join("")
+                : ""
+            return <CodeBlock code={codeText.replace(/\n$/, "")} language={language} />
+          },
+          pre: ({ children }) => <>{children}</>,
+        }}
+      >
+        {content}
+      </ReactMarkdown>
     </article>
   )
 }

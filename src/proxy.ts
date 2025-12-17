@@ -15,8 +15,9 @@ export async function proxy(request: NextRequest) {
           return request.cookies.getAll()
         },
         setAll(cookiesToSet) {
+          // This is Next.js RequestCookies API, not Koa. SameSite is handled by Supabase auth options.
           cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
+            request.cookies.set(name, value) // nosemgrep: cookies-default-koa
           )
           supabaseResponse = NextResponse.next({
             request,

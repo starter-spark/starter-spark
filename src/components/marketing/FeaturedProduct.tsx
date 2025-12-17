@@ -80,7 +80,7 @@ export async function FeaturedProduct() {
           slug: product.slug,
           description: product.description,
           priceCents: product.price_cents,
-          specs: product.specs as Record<string, string> | null,
+          specs: product.specs,
           images,
         }}
       />

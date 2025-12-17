@@ -51,7 +51,7 @@ export default function ProductViewer3D({
             src={previewUrl}
             alt={previewAlt}
             fill
-            className="object-contain"
+            className="object-cover"
             priority
           />
         </div>

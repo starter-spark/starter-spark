@@ -2,158 +2,11 @@
 
 import { useState } from "react"
 import { Copy, Check } from "lucide-react"
+import ReactMarkdown from "react-markdown"
+import remarkGfm from "remark-gfm"
 
 interface MarkdownContentProps {
   content: string
-}
-
-// DOMPurify configuration - only allow safe tags and attributes
-const PURIFY_CONFIG = {
-  ALLOWED_TAGS: ["strong", "em", "code", "a", "br"],
-  ALLOWED_ATTR: ["href", "class", "target", "rel"],
-  ALLOW_DATA_ATTR: false,
-  // Only allow safe URL protocols (blocks javascript:, data:, etc.)
-  ALLOWED_URI_REGEXP: /^(?:(?:https?|mailto):|[^a-z]|[a-z+.-]+(?:[^a-z+.\-:]|$))/i,
-}
-
-// Only import DOMPurify on client side to avoid jsdom ESM issues on server
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let DOMPurify: any = null
-if (typeof window !== "undefined") {
-  import("dompurify").then((mod) => {
-    DOMPurify = mod.default || mod
-  })
-}
-
-// Simple markdown renderer
-function parseMarkdown(text: string): React.ReactNode[] {
-  const elements: React.ReactNode[] = []
-  const lines = text.split("\n")
-  let inCodeBlock = false
-  let codeLines: string[] = []
-  let codeLanguage = ""
-  let key = 0
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i]
-
-    // Code block handling
-    if (line.startsWith("```")) {
-      if (!inCodeBlock) {
-        inCodeBlock = true
-        codeLanguage = line.slice(3).trim()
-        codeLines = []
-      } else {
-        elements.push(
-          <CodeBlock key={key++} code={codeLines.join("\n")} language={codeLanguage} />
-        )
-        inCodeBlock = false
-        codeLines = []
-        codeLanguage = ""
-      }
-      continue
-    }
-
-    if (inCodeBlock) {
-      codeLines.push(line)
-      continue
-    }
-
-    // Headers
-    if (line.startsWith("### ")) {
-      elements.push(
-        <h3 key={key++} className="font-mono text-lg text-slate-900 mt-6 mb-2">
-          {line.slice(4)}
-        </h3>
-      )
-      continue
-    }
-
-    if (line.startsWith("## ")) {
-      elements.push(
-        <h2 key={key++} className="font-mono text-xl text-slate-900 mt-6 mb-3">
-          {line.slice(3)}
-        </h2>
-      )
-      continue
-    }
-
-    // Lists
-    if (line.match(/^[-*]\s/)) {
-      elements.push(
-        <li
-          key={key++}
-          className="text-slate-600 ml-4"
-          dangerouslySetInnerHTML={{ __html: formatInline(line.slice(2)) }}
-        />
-      )
-      continue
-    }
-
-    if (line.match(/^\d+\.\s/)) {
-      elements.push(
-        <li
-          key={key++}
-          className="text-slate-600 ml-4 list-decimal"
-          dangerouslySetInnerHTML={{
-            __html: formatInline(line.replace(/^\d+\.\s/, "")),
-          }}
-        />
-      )
-      continue
-    }
-
-    // Empty line = paragraph break
-    if (line.trim() === "") {
-      elements.push(<br key={key++} />)
-      continue
-    }
-
-    // Regular paragraph
-    elements.push(
-      <p
-        key={key++}
-        className="text-slate-600 mb-3"
-        dangerouslySetInnerHTML={{ __html: formatInline(line) }}
-      />
-    )
-  }
-
-  return elements
-}
-
-// Format inline elements (bold, italic, code, links) with XSS protection
-function formatInline(text: string): string {
-  // First, escape any raw HTML to prevent injection
-  const escaped = text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-
-  // Then apply markdown formatting
-  const formatted = escaped
-    // Bold
-    .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-slate-900">$1</strong>')
-    // Italic
-    .replace(/\*(.*?)\*/g, "<em>$1</em>")
-    // Inline code
-    .replace(
-      /`([^`]+)`/g,
-      '<code class="bg-slate-100 px-1.5 py-0.5 rounded font-mono text-sm text-slate-800">$1</code>'
-    )
-    // Links - sanitized by DOMPurify's ALLOWED_URI_REGEXP
-    .replace(
-      /\[([^\]]+)\]\(([^)]+)\)/g,
-      '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-cyan-700 hover:underline">$1</a>'
-    )
-
-  // Sanitize with DOMPurify to prevent any XSS that slipped through (client-side only)
-  if (DOMPurify) {
-    return DOMPurify.sanitize(formatted, PURIFY_CONFIG)
-  }
-  // On server or before DOMPurify loads, return the escaped/formatted content
-  // (already escaped raw HTML above, so this is safe)
-  return formatted
 }
 
 // Code block with copy button
@@ -161,7 +14,7 @@ function CodeBlock({ code, language }: { code: string; language: string }) {
   const [copied, setCopied] = useState(false)
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(code)
+    void navigator.clipboard.writeText(code)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
@@ -191,7 +44,69 @@ function CodeBlock({ code, language }: { code: string; language: string }) {
 }
 
 export function MarkdownContent({ content }: MarkdownContentProps) {
-  const elements = parseMarkdown(content)
+  return (
+    <div className="prose prose-slate max-w-none">
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={{
+          h2: ({ children }) => (
+            <h2 className="font-mono text-xl text-slate-900 mt-6 mb-3">{children}</h2>
+          ),
+          h3: ({ children }) => (
+            <h3 className="font-mono text-lg text-slate-900 mt-6 mb-2">{children}</h3>
+          ),
+          p: ({ children }) => (
+            <p className="text-slate-600 mb-3">{children}</p>
+          ),
+          ul: ({ children }) => (
+            <ul className="list-disc list-inside text-slate-600 mb-3">{children}</ul>
+          ),
+          ol: ({ children }) => (
+            <ol className="list-decimal list-inside text-slate-600 mb-3">{children}</ol>
+          ),
+          li: ({ children }) => (
+            <li className="text-slate-600 ml-4">{children}</li>
+          ),
+          a: ({ href, children }) => (
+            <a
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-cyan-700 hover:underline"
+            >
+              {children}
+            </a>
+          ),
+          code: ({ className, children }) => {
+            const match = (className || "").match(/language-(\w+)/)
+            const isInline = !match
 
-  return <div className="prose prose-slate max-w-none">{elements}</div>
+            if (isInline) {
+              return (
+                <code className="bg-slate-100 px-1.5 py-0.5 rounded font-mono text-sm text-slate-800">
+                  {children}
+                </code>
+              )
+            }
+
+            const language = match ? match[1] : ""
+            // Extract text content from children safely
+            const codeText = typeof children === "string"
+              ? children
+              : Array.isArray(children)
+                ? children.join("")
+                : ""
+            return <CodeBlock code={codeText.replace(/\n$/, "")} language={language} />
+          },
+          pre: ({ children }) => <>{children}</>,
+          strong: ({ children }) => (
+            <strong className="font-semibold text-slate-900">{children}</strong>
+          ),
+          em: ({ children }) => <em>{children}</em>,
+        }}
+      >
+        {content}
+      </ReactMarkdown>
+    </div>
+  )
 }

@@ -58,7 +58,7 @@ export default async function EditProductPage({
 
   // Transform tags for the form
   const tags = (product.product_tags || []).map((t) => ({
-    tag: t.tag as ProductTagType,
+    tag: t.tag,
     priority: t.priority,
     discount_percent: t.discount_percent,
   }))

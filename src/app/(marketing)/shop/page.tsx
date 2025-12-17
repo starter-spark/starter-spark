@@ -71,7 +71,7 @@ export default async function ShopPage() {
     })
 
     const tags: ProductTag[] = validTags.map((t) => ({
-      tag: t.tag as ProductTagType,
+      tag: t.tag,
       priority: t.priority,
       discount_percent: t.discount_percent,
     }))
@@ -92,7 +92,7 @@ export default async function ShopPage() {
       inStock: specs?.inStock ?? true,
       badge: specs?.badge || undefined,
       category: specs?.category || "kit",
-      status: (product.status || "active") as "active" | "coming_soon" | "draft",
+      status: (product.status || "active"),
       tags,
       createdAt: product.created_at,
       image,

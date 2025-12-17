@@ -1,10 +1,11 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Box, Image as ImageIcon } from "lucide-react"
+import { Box, ImageIcon } from "lucide-react"
 import dynamic from "next/dynamic"
-import Image from "next/image"
-import { useState } from "react"
+import { useState, useCallback } from "react"
+import { ProductImage, ThumbnailImage } from "@/components/ui/optimized-image"
+import { cn } from "@/lib/utils"
 
 // Lazy load the 3D component
 const ProductViewer3D = dynamic(() => import("./ProductViewer3D"), {
@@ -34,6 +35,12 @@ export function ProductGallery({
   const [selectedImage, setSelectedImage] = useState(0)
 
   const hasImages = images.length > 0
+
+  // Handle image selection from thumbnail
+  const handleSelectImage = useCallback((idx: number) => {
+    setSelectedImage(idx)
+    setView("images")
+  }, [])
 
   return (
     <div className="space-y-4">
@@ -79,33 +86,28 @@ export function ProductGallery({
             previewAlt={`${productName} preview`}
           />
         ) : hasImages ? (
-          <Image
+          <ProductImage
             src={images[selectedImage]}
             alt={`${productName} - Image ${selectedImage + 1}`}
-            fill
-            className="object-cover"
-            sizes="(max-width: 1024px) 100vw, 800px"
+            sizes="(max-width: 1024px) 100vw, 60vw"
             quality={90}
             priority
+            wrapperClassName="absolute inset-0"
+            fallback={
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
+                <div className="w-24 h-24 mb-4 rounded-full bg-slate-200 flex items-center justify-center">
+                  <ImageIcon className="w-12 h-12 text-slate-400" />
+                </div>
+                <p className="text-slate-400 font-mono text-sm">Failed to load image</p>
+              </div>
+            }
           />
         ) : (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
             <div className="w-24 h-24 mb-4 rounded-full bg-slate-200 flex items-center justify-center">
-              <svg
-                className="w-12 h-12 text-slate-500"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                />
-              </svg>
+              <ImageIcon className="w-12 h-12 text-slate-400" />
             </div>
-            <p className="text-slate-500 font-mono text-sm">{productName}</p>
+            <p className="text-slate-400 font-mono text-sm">{productName}</p>
           </div>
         )}
       </div>
@@ -135,23 +137,19 @@ export function ProductGallery({
           {images.map((imageUrl, idx) => (
             <button
               key={idx}
-              onClick={() => {
-                setSelectedImage(idx)
-                setView("images")
-              }}
-              className={`flex-1 max-w-[80px] aspect-square rounded border overflow-hidden transition-all cursor-pointer relative ${
+              onClick={() => handleSelectImage(idx)}
+              className={cn(
+                "flex-1 max-w-[80px] aspect-square rounded border overflow-hidden transition-all cursor-pointer relative",
                 selectedImage === idx && view === "images"
                   ? "border-cyan-700 ring-2 ring-cyan-700/20"
                   : "border-slate-200 hover:border-slate-300"
-              }`}
+              )}
             >
-              <Image
+              <ThumbnailImage
                 src={imageUrl}
                 alt={`${productName} thumbnail ${idx + 1}`}
-                fill
-                className="object-cover"
-                sizes="80px"
-                quality={75}
+                size={80}
+                wrapperClassName="absolute inset-0"
               />
             </button>
           ))}
