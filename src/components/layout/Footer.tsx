@@ -70,7 +70,7 @@ export async function Footer() {
       </div>
 
       <div className="py-16 px-6 lg:px-20">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-12">
           {/* Brand Column */}
           <div className="lg:col-span-2">
             <p className="text-2xl font-bold text-slate-900 mb-4 tracking-tighter font-mono">
@@ -156,6 +156,33 @@ export async function Footer() {
                   Workshops
                 </Link>
               </li>
+              <li>
+                <Link href="/support" className="hover:text-slate-900 transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-700 focus-visible:ring-offset-2">
+                  Troubleshooting
+                </Link>
+              </li>
+            </ul>
+          </nav>
+
+          {/* Company Column */}
+          <nav aria-label="Company">
+            <p className="font-mono text-sm text-cyan-700 mb-4 uppercase tracking-wider">Company</p>
+            <ul className="space-y-3 text-sm text-slate-600">
+              <li>
+                <Link href="/about" className="hover:text-slate-900 transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-700 focus-visible:ring-offset-2">
+                  About Us
+                </Link>
+              </li>
+              <li>
+                <Link href="/contact" className="hover:text-slate-900 transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-700 focus-visible:ring-offset-2">
+                  Contact
+                </Link>
+              </li>
+              <li>
+                <a href="mailto:kstewart27@punahou.edu" className="hover:text-slate-900 transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-700 focus-visible:ring-offset-2">
+                  kstewart27@punahou.edu
+                </a>
+              </li>
             </ul>
           </nav>
 
@@ -182,8 +209,8 @@ export async function Footer() {
               <Link href="/terms" className="hover:text-slate-900 transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-700 focus-visible:ring-offset-2">
                 Terms
               </Link>
-              <Link href="/about" className="hover:text-slate-900 transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-700 focus-visible:ring-offset-2">
-                About
+              <Link href="/contact" className="hover:text-slate-900 transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-700 focus-visible:ring-offset-2">
+                Contact
               </Link>
             </div>
           </nav>

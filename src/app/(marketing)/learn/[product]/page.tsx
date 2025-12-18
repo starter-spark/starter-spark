@@ -59,13 +59,21 @@ export default async function CoursePage({
     notFound()
   }
 
-  const product = course.product as { id: string; slug: string; name: string } | null
+  const product = course.product as unknown as { id: string; slug: string; name: string } | null
   if (!product) {
     notFound()
   }
 
   // Sort modules and lessons by sort_order
-  const sortedModules = course.modules
+  type ModuleWithLessons = {
+    id: string
+    title: string
+    description: string | null
+    sort_order: number
+    lessons: { id: string; slug: string; title: string; description: string | null; duration_minutes: number; sort_order: number }[] | null
+  }
+  const modules = course.modules as unknown as ModuleWithLessons[] | null
+  const sortedModules = modules
     ?.sort((a, b) => a.sort_order - b.sort_order)
     .map((mod) => ({
       ...mod,
@@ -139,19 +147,13 @@ export default async function CoursePage({
     { name: course.title, url: `/learn/${product.slug}` },
   ])
 
-  return (
-    <div className="min-h-screen bg-slate-50">
-      {/* JSON-LD Structured Data for SEO */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(courseSchema) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
-      />
-      {/* Header */}
-      <section className="pt-32 pb-8 px-6 lg:px-20 bg-white border-b border-slate-200">
+	  return (
+	    <div className="min-h-screen bg-slate-50">
+	      {/* JSON-LD Structured Data for SEO */}
+	      <script type="application/ld+json">{JSON.stringify(courseSchema)}</script>
+	      <script type="application/ld+json">{JSON.stringify(breadcrumbSchema)}</script>
+	      {/* Header */}
+	      <section className="pt-32 pb-8 px-6 lg:px-20 bg-white border-b border-slate-200">
         <div className="max-w-7xl mx-auto">
           <Link
             href="/learn"

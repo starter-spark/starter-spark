@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { useState, useTransition, type ChangeEvent } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -49,6 +49,24 @@ const PAGE_URL_MAP: Record<string, { url: string; label: string } | null> = {
   about_story: { url: "/about", label: "This content appears on" },
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null
+}
+
+function parseAboutHeroContent(rawContent: string): { headline: string; description: string } {
+  try {
+    const parsed: unknown = JSON.parse(rawContent)
+    if (!isRecord(parsed)) return { headline: "", description: "" }
+
+    return {
+      headline: typeof parsed.headline === "string" ? parsed.headline : "",
+      description: typeof parsed.description === "string" ? parsed.description : "",
+    }
+  } catch {
+    return { headline: "", description: "" }
+  }
+}
+
 export function ContentEditor({ page }: ContentEditorProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -66,28 +84,9 @@ export function ContentEditor({ page }: ContentEditorProps) {
 
   // Parse about_hero JSON content for structured editing
   const isAboutHero = page.page_key === "about_hero"
-  const [heroHeadline, setHeroHeadline] = useState(() => {
-    if (isAboutHero) {
-      try {
-        const parsed = JSON.parse(page.content)
-        return parsed.headline || ""
-      } catch {
-        return ""
-      }
-    }
-    return ""
-  })
-  const [heroDescription, setHeroDescription] = useState(() => {
-    if (isAboutHero) {
-      try {
-        const parsed = JSON.parse(page.content)
-        return parsed.description || ""
-      } catch {
-        return ""
-      }
-    }
-    return ""
-  })
+  const aboutHeroInitial = isAboutHero ? parseAboutHeroContent(page.content) : null
+  const [heroHeadline, setHeroHeadline] = useState<string>(aboutHeroInitial?.headline ?? "")
+  const [heroDescription, setHeroDescription] = useState<string>(aboutHeroInitial?.description ?? "")
 
   // Update content when hero fields change
   const updateHeroContent = (headline: string, description: string) => {
@@ -250,7 +249,7 @@ export function ContentEditor({ page }: ContentEditorProps) {
                 <Input
                   id="hero-headline"
                   value={heroHeadline}
-                  onChange={(e) => {
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => {
                     setHeroHeadline(e.target.value)
                     updateHeroContent(e.target.value, heroDescription)
                   }}
@@ -264,7 +263,7 @@ export function ContentEditor({ page }: ContentEditorProps) {
                 <textarea
                   id="hero-description"
                   value={heroDescription}
-                  onChange={(e) => {
+                  onChange={(e: ChangeEvent<HTMLTextAreaElement>) => {
                     setHeroDescription(e.target.value)
                     updateHeroContent(heroHeadline, e.target.value)
                   }}

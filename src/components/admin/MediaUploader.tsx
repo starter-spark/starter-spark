@@ -79,8 +79,6 @@ function formatFileSize(bytes: number | undefined | null): string {
 export function MediaUploader({ productId, media, onChange, bucket = "products" }: MediaUploaderProps) {
   const [isDragging, setIsDragging] = useState(false)
   const [uploading, setUploading] = useState<string[]>([])
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({}) // For future progress UI
 
   const supabase = createClient()
 
@@ -97,7 +95,6 @@ export function MediaUploader({ productId, media, onChange, bucket = "products" 
   const uploadFile = useCallback(async (file: File): Promise<MediaItem | null> => {
     const fileId = `${file.name}-${Date.now()}`
     setUploading((prev) => [...prev, fileId])
-    setUploadProgress((prev) => ({ ...prev, [fileId]: 0 }))
 
     try {
       // Generate unique filename
@@ -127,8 +124,6 @@ export function MediaUploader({ productId, media, onChange, bucket = "products" 
         mediaType = "3d_model"
       }
 
-      setUploadProgress((prev) => ({ ...prev, [fileId]: 100 }))
-
       return {
         type: mediaType,
         url: urlData.publicUrl,
@@ -146,11 +141,6 @@ export function MediaUploader({ productId, media, onChange, bucket = "products" 
       return null
     } finally {
       setUploading((prev) => prev.filter((id) => id !== fileId))
-      setUploadProgress((prev) => {
-        const next = { ...prev }
-        delete next[fileId]
-        return next
-      })
     }
   }, [productId, bucket, supabase.storage, media.length])
 
@@ -199,7 +189,8 @@ export function MediaUploader({ productId, media, onChange, bucket = "products" 
   }
 
   const handleRemove = async (index: number) => {
-    const item = media[index]
+    const item = media.at(index)
+    if (!item) return
 
     // If it was uploaded to storage, delete it
     if (item.storage_path) {
@@ -210,15 +201,21 @@ export function MediaUploader({ productId, media, onChange, bucket = "products" 
 
     // If we removed the primary image, set a new one
     if (item.is_primary && item.type === "image") {
-      const firstImage = newMedia.find((m) => m.type === "image")
-      if (firstImage) firstImage.is_primary = true
+      const firstImageIndex = newMedia.findIndex((m) => m.type === "image")
+      if (firstImageIndex >= 0) {
+        onChange(
+          newMedia.map((m, i) => (i === firstImageIndex ? { ...m, is_primary: true } : m))
+        )
+        return
+      }
     }
 
     onChange(newMedia)
   }
 
   const handleSetPrimary = (index: number) => {
-    const item = media[index]
+    const item = media.at(index)
+    if (!item) return
     if (item.type !== "image") return
 
     const newMedia = media.map((m, i) => ({
@@ -229,27 +226,11 @@ export function MediaUploader({ productId, media, onChange, bucket = "products" 
   }
 
   const handleAltTextChange = (index: number, altText: string) => {
-    const newMedia = [...media]
-    newMedia[index] = { ...newMedia[index], alt_text: altText }
-    onChange(newMedia)
+    onChange(media.map((m, i) => (i === index ? { ...m, alt_text: altText } : m)))
   }
 
   const handleImageTypeChange = (index: number, imageType: ImageType) => {
-    const newMedia = [...media]
-    newMedia[index] = { ...newMedia[index], image_type: imageType }
-    onChange(newMedia)
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleReorder = (fromIndex: number, toIndex: number) => {
-    // For future drag-and-drop reordering
-    const newMedia = [...media]
-    const [moved] = newMedia.splice(fromIndex, 1)
-    newMedia.splice(toIndex, 0, moved)
-    newMedia.forEach((m, i) => {
-      m.sort_order = i
-    })
-    onChange(newMedia)
+    onChange(media.map((m, i) => (i === index ? { ...m, image_type: imageType } : m)))
   }
 
   const images = media.filter((m) => m.type === "image")

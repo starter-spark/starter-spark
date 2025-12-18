@@ -66,70 +66,70 @@ interface AuditLogTableProps {
   }
 }
 
-const resourceIcons: Record<string, typeof User> = {
-  user: User,
-  product: Package,
-  license: FileText,
-  event: Calendar,
-  post: MessageSquare,
-  comment: MessageSquare,
-  content: FileText,
-  settings: Settings,
-  stats: Settings,
-  page_content: FileText,
-  site_content: FileText,
-}
+const resourceIcons = new Map<string, typeof User>([
+  ["user", User],
+  ["product", Package],
+  ["license", FileText],
+  ["event", Calendar],
+  ["post", MessageSquare],
+  ["comment", MessageSquare],
+  ["content", FileText],
+  ["settings", Settings],
+  ["stats", Settings],
+  ["page_content", FileText],
+  ["site_content", FileText],
+])
 
-const actionDescriptions: Record<string, { label: string; verb: string; color: string }> = {
+const actionDescriptions = new Map<string, { label: string; verb: string; color: string }>([
   // User management
-  "user.role_changed": { label: "Role Changed", verb: "changed the role of", color: "bg-purple-100 text-purple-700 border-purple-200" },
-  "user.deleted": { label: "User Deleted", verb: "deleted user", color: "bg-red-100 text-red-700 border-red-200" },
+  ["user.role_changed", { label: "Role Changed", verb: "changed the role of", color: "bg-purple-100 text-purple-700 border-purple-200" }],
+  ["user.deleted", { label: "User Deleted", verb: "deleted user", color: "bg-red-100 text-red-700 border-red-200" }],
   // Product management
-  "product.created": { label: "Product Created", verb: "created product", color: "bg-green-100 text-green-700 border-green-200" },
-  "product.updated": { label: "Product Updated", verb: "updated product", color: "bg-blue-100 text-blue-700 border-blue-200" },
-  "product.deleted": { label: "Product Deleted", verb: "deleted product", color: "bg-red-100 text-red-700 border-red-200" },
-  "product.tags_updated": { label: "Tags Updated", verb: "updated tags on product", color: "bg-blue-100 text-blue-700 border-blue-200" },
+  ["product.created", { label: "Product Created", verb: "created product", color: "bg-green-100 text-green-700 border-green-200" }],
+  ["product.updated", { label: "Product Updated", verb: "updated product", color: "bg-blue-100 text-blue-700 border-blue-200" }],
+  ["product.deleted", { label: "Product Deleted", verb: "deleted product", color: "bg-red-100 text-red-700 border-red-200" }],
+  ["product.tags_updated", { label: "Tags Updated", verb: "updated tags on product", color: "bg-blue-100 text-blue-700 border-blue-200" }],
   // License management
-  "license.created": { label: "License Created", verb: "created license", color: "bg-green-100 text-green-700 border-green-200" },
-  "license.bulk_created": { label: "Bulk Licenses", verb: "bulk generated licenses for", color: "bg-green-100 text-green-700 border-green-200" },
-  "license.revoked": { label: "License Revoked", verb: "revoked license", color: "bg-red-100 text-red-700 border-red-200" },
-  "license.assigned": { label: "License Assigned", verb: "manually assigned license", color: "bg-cyan-100 text-cyan-700 border-cyan-200" },
-  "license.transferred": { label: "License Transferred", verb: "transferred license", color: "bg-amber-100 text-amber-700 border-amber-200" },
+  ["license.created", { label: "License Created", verb: "created license", color: "bg-green-100 text-green-700 border-green-200" }],
+  ["license.bulk_created", { label: "Bulk Licenses", verb: "bulk generated licenses for", color: "bg-green-100 text-green-700 border-green-200" }],
+  ["license.revoked", { label: "License Revoked", verb: "revoked license", color: "bg-red-100 text-red-700 border-red-200" }],
+  ["license.assigned", { label: "License Assigned", verb: "manually assigned license", color: "bg-cyan-100 text-cyan-700 border-cyan-200" }],
+  ["license.transferred", { label: "License Transferred", verb: "transferred license", color: "bg-amber-100 text-amber-700 border-amber-200" }],
   // Event management
-  "event.created": { label: "Event Created", verb: "created event", color: "bg-green-100 text-green-700 border-green-200" },
-  "event.updated": { label: "Event Updated", verb: "updated event", color: "bg-blue-100 text-blue-700 border-blue-200" },
-  "event.deleted": { label: "Event Deleted", verb: "deleted event", color: "bg-red-100 text-red-700 border-red-200" },
+  ["event.created", { label: "Event Created", verb: "created event", color: "bg-green-100 text-green-700 border-green-200" }],
+  ["event.updated", { label: "Event Updated", verb: "updated event", color: "bg-blue-100 text-blue-700 border-blue-200" }],
+  ["event.deleted", { label: "Event Deleted", verb: "deleted event", color: "bg-red-100 text-red-700 border-red-200" }],
   // Community moderation
-  "post.deleted": { label: "Post Deleted", verb: "deleted post", color: "bg-red-100 text-red-700 border-red-200" },
-  "post.status_changed": { label: "Post Status Changed", verb: "changed status of post", color: "bg-amber-100 text-amber-700 border-amber-200" },
-  "comment.deleted": { label: "Comment Deleted", verb: "deleted comment", color: "bg-red-100 text-red-700 border-red-200" },
-  "comment.verified": { label: "Comment Verified", verb: "verified comment as answer on", color: "bg-green-100 text-green-700 border-green-200" },
+  ["post.deleted", { label: "Post Deleted", verb: "deleted post", color: "bg-red-100 text-red-700 border-red-200" }],
+  ["post.status_changed", { label: "Post Status Changed", verb: "changed status of post", color: "bg-amber-100 text-amber-700 border-amber-200" }],
+  ["comment.deleted", { label: "Comment Deleted", verb: "deleted comment", color: "bg-red-100 text-red-700 border-red-200" }],
+  ["comment.verified", { label: "Comment Verified", verb: "verified comment as answer on", color: "bg-green-100 text-green-700 border-green-200" }],
   // Content management
-  "content.created": { label: "Page Created", verb: "created page", color: "bg-green-100 text-green-700 border-green-200" },
-  "content.updated": { label: "Page Updated", verb: "updated page", color: "bg-blue-100 text-blue-700 border-blue-200" },
-  "content.published": { label: "Page Published", verb: "published page", color: "bg-green-100 text-green-700 border-green-200" },
-  "content.unpublished": { label: "Page Unpublished", verb: "unpublished page", color: "bg-amber-100 text-amber-700 border-amber-200" },
-  "content.deleted": { label: "Page Deleted", verb: "deleted page", color: "bg-red-100 text-red-700 border-red-200" },
+  ["content.created", { label: "Page Created", verb: "created page", color: "bg-green-100 text-green-700 border-green-200" }],
+  ["content.updated", { label: "Page Updated", verb: "updated page", color: "bg-blue-100 text-blue-700 border-blue-200" }],
+  ["content.published", { label: "Page Published", verb: "published page", color: "bg-green-100 text-green-700 border-green-200" }],
+  ["content.unpublished", { label: "Page Unpublished", verb: "unpublished page", color: "bg-amber-100 text-amber-700 border-amber-200" }],
+  ["content.deleted", { label: "Page Deleted", verb: "deleted page", color: "bg-red-100 text-red-700 border-red-200" }],
   // Site settings
-  "settings.updated": { label: "Settings Updated", verb: "updated settings", color: "bg-blue-100 text-blue-700 border-blue-200" },
-  "stats.created": { label: "Stat Created", verb: "created site stat", color: "bg-green-100 text-green-700 border-green-200" },
-  "stats.updated": { label: "Stat Updated", verb: "updated site stat", color: "bg-blue-100 text-blue-700 border-blue-200" },
-  "stats.deleted": { label: "Stat Deleted", verb: "deleted site stat", color: "bg-red-100 text-red-700 border-red-200" },
+  ["settings.updated", { label: "Settings Updated", verb: "updated settings", color: "bg-blue-100 text-blue-700 border-blue-200" }],
+  ["stats.created", { label: "Stat Created", verb: "created site stat", color: "bg-green-100 text-green-700 border-green-200" }],
+  ["stats.updated", { label: "Stat Updated", verb: "updated site stat", color: "bg-blue-100 text-blue-700 border-blue-200" }],
+  ["stats.deleted", { label: "Stat Deleted", verb: "deleted site stat", color: "bg-red-100 text-red-700 border-red-200" }],
   // Site content
-  "site_content.updated": { label: "Site Content Updated", verb: "updated site content", color: "bg-blue-100 text-blue-700 border-blue-200" },
-  "site_content.reset": { label: "Site Content Reset", verb: "reset site content to default", color: "bg-amber-100 text-amber-700 border-amber-200" },
-}
+  ["site_content.updated", { label: "Site Content Updated", verb: "updated site content", color: "bg-blue-100 text-blue-700 border-blue-200" }],
+  ["site_content.reset", { label: "Site Content Reset", verb: "reset site content to default", color: "bg-amber-100 text-amber-700 border-amber-200" }],
+])
 
-const resourceLinks: Record<string, (id: string) => string> = {
-  user: (id) => `/admin/users?search=${id}`,
-  product: (id) => `/admin/products/${id}`,
-  license: (id) => `/admin/licenses?search=${id}`,
-  event: (id) => `/admin/events/${id}`,
-  post: (id) => `/admin/community?search=${id}`,
-  comment: () => `/admin/community`,
-  content: (id) => `/admin/content/${id}`,
-  site_content: () => `/admin/content/site`,
-}
+const resourceLinks = new Map<string, (id: string) => string>([
+  ["user", (id) => `/admin/users?search=${id}`],
+  ["product", (id) => `/admin/products/${id}`],
+  ["license", (id) => `/admin/licenses?search=${id}`],
+  ["event", (id) => `/admin/events/${id}`],
+  ["post", (id) => `/admin/community?search=${id}`],
+  ["comment", () => `/admin/community`],
+  ["content", (id) => `/admin/content/${id}`],
+  ["site_content", () => `/admin/content/site`],
+])
 
 function formatDate(dateStr: string | null): string {
   if (!dateStr) return "Unknown"
@@ -222,6 +222,9 @@ function DetailsSection({ details }: { details: Json | null }) {
     }
 
     if (pairs.length > 0) {
+      const excluded = new Set(["old", "new", "oldRole", "newRole", "oldStatus", "newStatus"])
+      const remainingEntries = Object.entries(detailsObj).filter(([key]) => !excluded.has(key))
+
       return (
         <div className="space-y-2">
           {pairs.map((pair, i) => (
@@ -233,11 +236,11 @@ function DetailsSection({ details }: { details: Json | null }) {
             </div>
           ))}
           {/* Show remaining fields */}
-          {keys.filter(k => !["old", "new", "oldRole", "newRole", "oldStatus", "newStatus"].includes(k)).map((key) => (
+          {remainingEntries.map(([key, value]) => (
             <div key={key} className="flex items-start gap-2 text-sm">
               <span className="text-slate-500 w-16 capitalize">{key}:</span>
               <code className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-xs">
-                {formatValue(key, detailsObj[key])}
+                {formatValue(key, value)}
               </code>
             </div>
           ))}
@@ -249,11 +252,11 @@ function DetailsSection({ details }: { details: Json | null }) {
   // Default: show all fields
   return (
     <div className="space-y-1">
-      {keys.map((key) => (
+      {Object.entries(detailsObj).map(([key, value]) => (
         <div key={key} className="flex items-start gap-2 text-sm">
           <span className="text-slate-500 capitalize min-w-[80px]">{key.replace(/_/g, " ")}:</span>
           <code className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-xs break-all">
-            {formatValue(key, detailsObj[key])}
+            {formatValue(key, value)}
           </code>
         </div>
       ))}
@@ -331,11 +334,11 @@ export function AuditLogTable({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Actions</SelectItem>
-              {allActions.map((a) => (
-                <SelectItem key={a} value={a}>
-                  {actionDescriptions[a]?.label || a}
-                </SelectItem>
-              ))}
+	              {allActions.map((a) => (
+	                <SelectItem key={a} value={a}>
+	                  {actionDescriptions.get(a)?.label ?? a}
+	                </SelectItem>
+	              ))}
             </SelectContent>
           </Select>
         </div>
@@ -361,20 +364,19 @@ export function AuditLogTable({
                 </TableCell>
               </TableRow>
             ) : (
-              logs.map((log) => {
-                const Icon = resourceIcons[log.resource_type] || Settings
-                const actionInfo = actionDescriptions[log.action] || {
-                  label: log.action,
-                  verb: "performed action on",
-                  color: "bg-slate-100 text-slate-700 border-slate-200",
-                }
-                const isExpanded = expandedRows.has(log.id)
-                const hasDetails = log.details && typeof log.details === "object" && !Array.isArray(log.details) && Object.keys(log.details).length > 0
-                const resourceLink = log.resource_id && resourceLinks[log.resource_type]
-                  ? resourceLinks[log.resource_type](log.resource_id)
-                  : null
+	              logs.map((log) => {
+	                const Icon = resourceIcons.get(log.resource_type) ?? Settings
+	                const actionInfo = actionDescriptions.get(log.action) ?? {
+	                  label: log.action,
+	                  verb: "performed action on",
+	                  color: "bg-slate-100 text-slate-700 border-slate-200",
+	                }
+	                const isExpanded = expandedRows.has(log.id)
+	                const hasDetails = log.details && typeof log.details === "object" && !Array.isArray(log.details) && Object.keys(log.details).length > 0
+	                const resourceLinkBuilder = resourceLinks.get(log.resource_type)
+	                const resourceLink = log.resource_id && resourceLinkBuilder ? resourceLinkBuilder(log.resource_id) : null
 
-                return (
+	                return (
                   <Collapsible key={log.id} open={isExpanded} onOpenChange={() => toggleRow(log.id)} asChild>
                     <>
                       <TableRow className="hover:bg-slate-50">

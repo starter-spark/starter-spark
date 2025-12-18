@@ -47,10 +47,11 @@ export async function generateMetadata({
   }
 
   // Get primary image for OG
-  const media = product.product_media || []
+  type MediaItem = { url: string; is_primary?: boolean | null; type?: string }
+  const media = (product.product_media as unknown as MediaItem[] | null) || []
   const primaryImage = media.find(
-    (m: { is_primary?: boolean | null; type?: string }) => m.is_primary && m.type === "image"
-  )?.url || media.find((m: { type?: string }) => m.type === "image")?.url
+    (m) => m.is_primary && m.type === "image"
+  )?.url || media.find((m) => m.type === "image")?.url
 
   const title = product.name
   const description = product.description?.slice(0, 160) || ""
@@ -125,7 +126,8 @@ export default async function ProductDetailPage({
   }
 
   const specs = product.specs as ProductSpecs | null
-  const tags = (product.product_tags || []).map((t: { tag: string }) => t.tag)
+  type ProductTag = { tag: string }
+  const tags = ((product.product_tags as unknown as ProductTag[] | null) || []).map((t) => t.tag)
 
   // Determine stock status from inventory tracking or tags
   const hasOutOfStockTag = tags.includes("out_of_stock")
@@ -146,16 +148,17 @@ export default async function ProductDetailPage({
   const discountExpiresAt = product.discount_expires_at
 
   // Extract images and 3D models from product_media, sorted by sort_order
-  const allMedia = (product.product_media || [])
-    .sort((a: { sort_order?: number | null }) => (a.sort_order ?? 0))
+  type FullMediaItem = { url: string; is_primary?: boolean | null; type?: string; sort_order?: number | null }
+  const allMedia = ((product.product_media as unknown as FullMediaItem[] | null) || [])
+    .sort((a) => (a.sort_order ?? 0))
 
   // Filter images only (exclude 3D models, videos, documents)
-  const imageMedia = allMedia.filter((m: { type?: string }) => m.type === 'image' || !m.type)
-  const images = imageMedia.map((m: { url: string }) => m.url)
-  const primaryImage = imageMedia.find((m: { is_primary?: boolean | null }) => m.is_primary)?.url || images[0]
+  const imageMedia = allMedia.filter((m) => m.type === 'image' || !m.type)
+  const images = imageMedia.map((m) => m.url)
+  const primaryImage = imageMedia.find((m) => m.is_primary)?.url || images[0]
 
   // Get 3D model if available (from product_media or specs)
-  const modelMedia = allMedia.find((m: { type?: string }) => m.type === '3d_model')
+  const modelMedia = allMedia.find((m) => m.type === '3d_model')
   const modelPathFromMedia = modelMedia?.url
   const modelPathFromSpecs = specs?.modelPath
   const finalModelPath = modelPathFromMedia || modelPathFromSpecs
@@ -175,19 +178,13 @@ export default async function ProductDetailPage({
     { name: product.name, url: `/shop/${slug}` },
   ])
 
-  return (
-    <div className="min-h-screen bg-slate-50">
-      {/* JSON-LD Structured Data for SEO */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
-      />
-      {/* Breadcrumb */}
-      <section className="pt-24 pb-4 px-6 lg:px-20">
+	  return (
+	    <div className="min-h-screen bg-slate-50">
+	      {/* JSON-LD Structured Data for SEO */}
+	      <script type="application/ld+json">{JSON.stringify(productSchema)}</script>
+	      <script type="application/ld+json">{JSON.stringify(breadcrumbSchema)}</script>
+	      {/* Breadcrumb */}
+	      <section className="pt-24 pb-4 px-6 lg:px-20">
         <div className="max-w-7xl mx-auto">
           <Link
             href="/shop"

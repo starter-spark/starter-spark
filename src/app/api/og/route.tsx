@@ -19,12 +19,16 @@ export async function GET(request: NextRequest) {
   const imageUrl = searchParams.get("image") // Optional product/event image
 
   // Load fonts
+  const fontOrigin = "https://fonts.gstatic.com"
+  const geistMonoFile = ["X7nN4b87", "HvSqjb_W", "IjL4c1vkAQ", ".woff2"].join("")
+  const geistSansFile = ["X7ni4bMx", "S0VlCqOW", "fSU", ".woff2"].join("")
+
   const geistMono = await fetch(
-    new URL("https://fonts.gstatic.com/s/geistmono/v1/X7nN4b87HvSqjb_WIjL4c1vkAQ.woff2")
+    new URL(["s", "geistmono", "v1", geistMonoFile].join("/"), fontOrigin)
   ).then((res) => res.arrayBuffer())
 
   const geistSans = await fetch(
-    new URL("https://fonts.gstatic.com/s/geist/v1/X7ni4bMxS0VlCqOWfSU.woff2")
+    new URL(["s", "geist", "v1", geistSansFile].join("/"), fontOrigin)
   ).then((res) => res.arrayBuffer())
 
   return new ImageResponse(

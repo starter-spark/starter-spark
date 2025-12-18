@@ -30,7 +30,7 @@ export function getOrganizationSchema() {
     contactPoint: {
       "@type": "ContactPoint",
       contactType: "customer service",
-      email: "hello@starterspark.com",
+      email: "kstewart27@punahou.edu",
     },
   }
 }

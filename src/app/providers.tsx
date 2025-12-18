@@ -2,13 +2,17 @@
 
 import posthog from "posthog-js"
 import { PostHogProvider } from "posthog-js/react"
+import { ReactLenis } from "lenis/react"
 import { ReactNode, useEffect } from "react"
+import { useReducedMotion } from "@/hooks/use-reduced-motion"
 
 interface ProvidersProps {
   children: ReactNode
 }
 
 export function Providers({ children }: ProvidersProps) {
+  const prefersReducedMotion = useReducedMotion()
+
   useEffect(() => {
     // Only initialize PostHog if the key is available
     if (process.env.NEXT_PUBLIC_POSTHOG_KEY) {
@@ -32,10 +36,19 @@ export function Providers({ children }: ProvidersProps) {
     }
   }, [])
 
-  // If PostHog is not configured, just render children
+  // Wrap content with Lenis for smooth scrolling (respects reduced motion)
+  const content = prefersReducedMotion ? (
+    children
+  ) : (
+    <ReactLenis root options={{ lerp: 0.1, duration: 1.2 }}>
+      {children}
+    </ReactLenis>
+  )
+
+  // If PostHog is not configured, just render with Lenis
   if (!process.env.NEXT_PUBLIC_POSTHOG_KEY) {
-    return <>{children}</>
+    return <>{content}</>
   }
 
-  return <PostHogProvider client={posthog}>{children}</PostHogProvider>
+  return <PostHogProvider client={posthog}>{content}</PostHogProvider>
 }

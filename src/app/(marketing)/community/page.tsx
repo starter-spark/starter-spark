@@ -180,13 +180,13 @@ export default async function CommunityPage({
               {posts && posts.length > 0 ? (
                 <div className="space-y-4">
                   {posts.map((post) => {
-                    const author = post.author as {
+                    const author = post.author as unknown as {
                       id: string
                       full_name: string | null
                       email: string
                       role: string | null
                     } | null
-                    const commentCount = (post.comments as { id: string }[])
+                    const commentCount = (post.comments as unknown as { id: string }[])
                       ?.length || 0
 
                     return (

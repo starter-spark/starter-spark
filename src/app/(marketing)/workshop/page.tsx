@@ -1,11 +1,13 @@
 import { createClient } from "@/lib/supabase/server"
 import { Button } from "@/components/ui/button"
-import { Package, Key, Award, LogIn } from "lucide-react"
+import { Package, Key, LogIn } from "lucide-react"
 import Link from "next/link"
 import { ClaimCodeForm } from "./ClaimCodeForm"
 import { KitCard } from "./KitCard"
 import { QuickTools } from "./QuickTools"
+import { AchievementsPanel } from "./AchievementsPanel"
 import { getContents } from "@/lib/content"
+import { getUserAchievements } from "@/lib/achievements"
 
 export default async function WorkshopPage() {
   const supabase = await createClient()
@@ -86,7 +88,7 @@ export default async function WorkshopPage() {
       }>()
 
       for (const license of data) {
-        const product = license.product as { slug: string; name: string; description: string | null } | null
+        const product = license.product as unknown as { slug: string; name: string; description: string | null } | null
         if (!product) continue
 
         const existing = kitMap.get(product.slug)
@@ -113,6 +115,11 @@ export default async function WorkshopPage() {
 
   // Total license count for display
   const totalLicenses = groupedKits.reduce((sum, kit) => sum + kit.quantity, 0)
+
+  // Fetch achievements for logged in user
+  const achievementData = user
+    ? await getUserAchievements(user.id)
+    : { achievements: [], userAchievements: [], totalPoints: 0 }
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -239,40 +246,14 @@ export default async function WorkshopPage() {
                 {/* Quick Tools */}
                 <QuickTools />
 
-                {/* Achievements Preview */}
-                <div className="bg-white rounded border border-slate-200 p-6">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Award className="w-5 h-5 text-amber-500" />
-                    <h3 className="font-mono text-lg text-slate-900">
-                      {content["workshop.achievements.title"]}
-                    </h3>
-                  </div>
-                  <div className="grid grid-cols-4 gap-2">
-                    {/* Placeholder badges */}
-                    {["First Build", "Wiring Pro", "Code Ninja", "Helper"].map(
-                      (badge, i) => (
-                        <div
-                          key={badge}
-                          className={`aspect-square rounded border flex items-center justify-center ${
-                            i === 0
-                              ? "border-amber-300 bg-amber-50"
-                              : "border-slate-200 bg-slate-50 opacity-40"
-                          }`}
-                          title={badge}
-                        >
-                          <Award
-                            className={`w-6 h-6 ${
-                              i === 0 ? "text-amber-500" : "text-slate-500"
-                            }`}
-                          />
-                        </div>
-                      )
-                    )}
-                  </div>
-                  <p className="text-xs text-slate-500 mt-3 text-center">
-                    {content["workshop.achievements.hint"]}
-                  </p>
-                </div>
+                {/* Achievements */}
+                <AchievementsPanel
+                  achievements={achievementData.achievements}
+                  userAchievements={achievementData.userAchievements}
+                  totalPoints={achievementData.totalPoints}
+                  title={content["workshop.achievements.title"]}
+                  hint={content["workshop.achievements.hint"]}
+                />
               </div>
             </div>
           </div>

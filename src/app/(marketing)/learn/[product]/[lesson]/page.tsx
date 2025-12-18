@@ -53,7 +53,7 @@ export default async function LessonPage({
     notFound()
   }
 
-  const lessonModule = lesson.module as {
+  const lessonModule = lesson.module as unknown as {
     id: string
     title: string
     sort_order: number
@@ -97,7 +97,14 @@ export default async function LessonPage({
   }
 
   // Sort modules and lessons
-  const sortedModules = courseData.modules
+  type ModuleWithLessons = {
+    id: string
+    title: string
+    sort_order: number
+    lessons: { id: string; slug: string; title: string; sort_order: number }[] | null
+  }
+  const modules = courseData.modules as unknown as ModuleWithLessons[] | null
+  const sortedModules = modules
     ?.sort((a, b) => a.sort_order - b.sort_order)
     .map((mod) => ({
       ...mod,

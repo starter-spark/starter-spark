@@ -53,25 +53,32 @@ function formatDateRange(start: string, end: string | null): string {
 }
 
 function getEventTypeLabel(type: string): string {
-  const labels: Record<string, string> = {
-    workshop: "Workshop",
-    competition: "Competition",
-    meetup: "Meetup",
-    exhibition: "Exhibition",
-    other: "Event",
+  switch (type) {
+    case "workshop":
+      return "Workshop"
+    case "competition":
+      return "Competition"
+    case "meetup":
+      return "Meetup"
+    case "exhibition":
+      return "Exhibition"
+    case "other":
+      return "Event"
+    default:
+      return "Event"
   }
-  return labels[type] || "Event"
 }
 
 function getEventTypeColor(type: string): string {
-  const colors: Record<string, string> = {
-    workshop: "bg-slate-100 text-slate-600",
-    competition: "bg-slate-100 text-slate-600",
-    meetup: "bg-slate-100 text-slate-600",
-    exhibition: "bg-slate-100 text-slate-600",
-    other: "bg-slate-100 text-slate-600",
+  switch (type) {
+    case "workshop":
+    case "competition":
+    case "meetup":
+    case "exhibition":
+    case "other":
+    default:
+      return "bg-slate-100 text-slate-600"
   }
-  return colors[type] || "bg-slate-100 text-slate-600"
 }
 
 function PastEventCard({ event }: { event: Event }) {

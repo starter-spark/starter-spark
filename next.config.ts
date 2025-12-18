@@ -34,7 +34,7 @@ const nextConfig: NextConfig = {
   },
 
   // Headers for caching static assets and security
-  async headers() {
+  headers() {
     // Security headers applied to all routes
     const securityHeaders = [
       {
@@ -63,7 +63,7 @@ const nextConfig: NextConfig = {
       },
     ]
 
-    return [
+    return Promise.resolve([
       {
         // Apply security headers to all routes
         source: "/:path*",
@@ -99,7 +99,7 @@ const nextConfig: NextConfig = {
           },
         ],
       },
-    ]
+    ])
   },
 }
 

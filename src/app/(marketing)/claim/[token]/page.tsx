@@ -100,7 +100,7 @@ export default async function ClaimPage({ params }: ClaimPageProps) {
     )
   }
 
-  const product = license.product as { name: string; slug: string; description: string | null } | null
+  const product = license.product as unknown as { name: string; slug: string; description: string | null } | null
 
   // Not logged in - redirect to login with claim token
   if (!user) {

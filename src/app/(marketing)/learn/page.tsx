@@ -100,11 +100,18 @@ export default async function LearnPage() {
           {courses && courses.length > 0 ? (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {courses.map((course) => {
-                const product = course.product as { id: string; slug: string; name: string } | null
+                const product = course.product as unknown as { id: string; slug: string; name: string } | null
                 const isOwned = product ? ownedProductIds.includes(product.id) : false
 
+                type CourseModule = {
+                  id: string
+                  title: string
+                  lessons: { id: string }[] | null
+                }
+                const courseModules = course.modules as unknown as CourseModule[] | null
+
                 // Get all lesson IDs for this course
-                const courseLessonIds = course.modules?.flatMap(
+                const courseLessonIds = courseModules?.flatMap(
                   (mod) => mod.lessons?.map((l) => l.id) || []
                 ) || []
                 const totalLessons = courseLessonIds.length
@@ -181,9 +188,9 @@ export default async function LearnPage() {
                       )}
 
                       {/* Module List */}
-                      {course.modules && course.modules.length > 0 && (
+                      {courseModules && courseModules.length > 0 && (
                         <div className="space-y-2 mb-4">
-                          {course.modules.map((module) => (
+                          {courseModules.map((module) => (
                             <div
                               key={module.id}
                               className="flex items-center justify-between text-sm"

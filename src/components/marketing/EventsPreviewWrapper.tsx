@@ -77,7 +77,7 @@ export async function EventsPreview() {
         .select("*", { count: "exact", head: true })
         .eq("post_id", post.id)
 
-      const profile = post.profiles as { full_name: string | null } | null
+      const profile = post.profiles as unknown as { full_name: string | null } | null
       discussions.push({
         id: post.id,
         slug: post.slug,

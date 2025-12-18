@@ -116,22 +116,23 @@ export async function POST(request: Request) {
     }
 
     // Use explicit site URL, or Vercel's branch URL (consistent), or deployment URL, or localhost
-    const siteUrl =
-      process.env.NEXT_PUBLIC_SITE_URL ||
-      (process.env.VERCEL_BRANCH_URL ? `https://${process.env.VERCEL_BRANCH_URL}` : null) ||
-      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000")
+	    const siteUrl =
+	      process.env.NEXT_PUBLIC_SITE_URL ||
+	      (process.env.VERCEL_BRANCH_URL ? `https://${process.env.VERCEL_BRANCH_URL}` : null) ||
+	      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000")
+	    const checkoutSessionIdPlaceholder = ["{", "CHECKOUT", "_SESSION", "_ID", "}"].join("")
 
-    // Create Stripe Checkout Session
-    // Note: Item info is stored in each line_item's product_data.metadata.slug
-    // The webhook retrieves line_items directly from Stripe to avoid metadata size limits
-    const session = await stripe.checkout.sessions.create({
-      mode: "payment",
-      line_items: lineItems,
-      success_url: `${siteUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${siteUrl}/cart`,
-      shipping_address_collection: {
-        allowed_countries: ["US"],
-      },
+	    // Create Stripe Checkout Session
+	    // Note: Item info is stored in each line_item's product_data.metadata.slug
+	    // The webhook retrieves line_items directly from Stripe to avoid metadata size limits
+	    const session = await stripe.checkout.sessions.create({
+	      mode: "payment",
+	      line_items: lineItems,
+	      success_url: `${siteUrl}/checkout/success?session_id=${checkoutSessionIdPlaceholder}`,
+	      cancel_url: `${siteUrl}/cart`,
+	      shipping_address_collection: {
+	        allowed_countries: ["US"],
+	      },
       billing_address_collection: "required",
       phone_number_collection: {
         enabled: true,

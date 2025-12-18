@@ -158,9 +158,9 @@ function Callout({
       icon: <Info className="w-5 h-5 text-blue-600" />,
       title: "Note",
     },
-  }
+  } as const
 
-  const style = styles[type]
+  const style = type === "tip" ? styles.tip : type === "warning" ? styles.warning : styles.info
 
   return (
     <div className={`${style.bg} ${style.border} border rounded p-4 my-6`}>

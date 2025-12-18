@@ -44,7 +44,7 @@ export default async function OrdersPage() {
   const totalOrders = orders.length
   const claimedOrders = orders.filter((o) => o.owner_id !== null).length
   const totalRevenue = orders.reduce((sum, order) => {
-    const product = order.products as { name: string; price_cents: number } | null
+    const product = order.products as unknown as { name: string; price_cents: number } | null
     return sum + (product?.price_cents || 0)
   }, 0)
 
@@ -95,8 +95,8 @@ export default async function OrdersPage() {
             </TableHeader>
             <TableBody>
               {orders.map((order) => {
-                const product = order.products as { name: string; price_cents: number } | null
-                const owner = order.profiles as { email: string; full_name: string | null } | null
+                const product = order.products as unknown as { name: string; price_cents: number } | null
+                const owner = order.profiles as unknown as { email: string; full_name: string | null } | null
 
                 return (
                   <TableRow key={order.id}>

@@ -88,25 +88,37 @@ function formatDateRange(start: string, end: string | null): string {
 }
 
 function getEventTypeLabel(type: string): string {
-  const labels: Record<string, string> = {
-    workshop: "Workshop",
-    competition: "Competition",
-    meetup: "Meetup",
-    exhibition: "Exhibition",
-    other: "Event",
+  switch (type) {
+    case "workshop":
+      return "Workshop"
+    case "competition":
+      return "Competition"
+    case "meetup":
+      return "Meetup"
+    case "exhibition":
+      return "Exhibition"
+    case "other":
+      return "Event"
+    default:
+      return "Event"
   }
-  return labels[type] || "Event"
 }
 
 function getEventTypeColor(type: string): string {
-  const colors: Record<string, string> = {
-    workshop: "bg-cyan-100 text-cyan-700",
-    competition: "bg-amber-100 text-amber-700",
-    meetup: "bg-green-100 text-green-700",
-    exhibition: "bg-purple-100 text-purple-700",
-    other: "bg-slate-100 text-slate-600",
+  switch (type) {
+    case "workshop":
+      return "bg-cyan-100 text-cyan-700"
+    case "competition":
+      return "bg-amber-100 text-amber-700"
+    case "meetup":
+      return "bg-green-100 text-green-700"
+    case "exhibition":
+      return "bg-purple-100 text-purple-700"
+    case "other":
+      return "bg-slate-100 text-slate-600"
+    default:
+      return "bg-slate-100 text-slate-600"
   }
-  return colors[type] || "bg-slate-100 text-slate-600"
 }
 
 function EventCard({ event, isPast = false }: { event: Event; isPast?: boolean }) {
@@ -270,16 +282,11 @@ export default async function EventsPage() {
     <div className="min-h-screen bg-slate-50">
       {/* JSON-LD Structured Data for SEO */}
       {eventSchemas.map((schema, index) => (
-        <script
-          key={index}
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
-        />
+        <script key={index} type="application/ld+json">
+          {JSON.stringify(schema)}
+        </script>
       ))}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
-      />
+      <script type="application/ld+json">{JSON.stringify(breadcrumbSchema)}</script>
       {/* Hero */}
       <section className="pt-32 pb-16 px-6 lg:px-20">
         <div className="max-w-4xl mx-auto text-center">

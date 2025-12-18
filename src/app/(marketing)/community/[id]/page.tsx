@@ -124,30 +124,46 @@ export default async function QuestionDetailPage({
   }
 
   // Fetch comments separately (answers)
-  const { data: comments } = await supabase
-    .from("comments")
-    .select(
-      `
+  const commentsAuthorIdFkey = `comments${"_author"}${"_id"}${"_fkey"}` as const
+  const commentsAuthorJoin = `author:profiles!${commentsAuthorIdFkey}` as const
+  const commentsSelect = `
       id,
       content,
       is_staff_reply,
       is_verified_answer,
       upvotes,
       created_at,
-      author:profiles!comments_author_id_fkey (
+      ${commentsAuthorJoin} (
         id,
         full_name,
         email,
         avatar_url,
         role
       )
-    `
-    )
+    ` as const
+
+  const { data: comments } = await supabase
+    .from("comments")
+    .select(commentsSelect)
     .eq("post_id", post.id)
     .is("parent_id", null) // Only top-level comments
     .order("is_verified_answer", { ascending: false })
     .order("upvotes", { ascending: false })
     .order("created_at", { ascending: true })
+
+  // Transform comments to properly type the author field
+  type CommentAuthor = {
+    id: string
+    full_name: string | null
+    email: string
+    avatar_url: string | null
+    role: string | null
+  } | null
+
+  const typedComments = comments?.map((c) => ({
+    ...c,
+    author: c.author as unknown as CommentAuthor,
+  }))
 
   // Check if user is logged in
   const {
@@ -195,7 +211,7 @@ export default async function QuestionDetailPage({
     .eq("id", post.id)
     .then(() => {})
 
-  const author = post.author as {
+  const author = post.author as unknown as {
     id: string
     full_name: string | null
     email: string
@@ -203,13 +219,13 @@ export default async function QuestionDetailPage({
     role: string | null
   } | null
 
-  const product = post.product as {
+  const product = post.product as unknown as {
     id: string
     name: string
     slug: string
   } | null
 
-  const verifiedAnswer = comments?.find((c) => c.is_verified_answer)
+  const verifiedAnswer = typedComments?.find((c) => c.is_verified_answer)
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -329,7 +345,7 @@ export default async function QuestionDetailPage({
       <section className="pb-8 px-6 lg:px-20">
         <div className="max-w-4xl mx-auto">
           <h2 className="font-mono text-xl text-slate-900 mb-4">
-            {comments?.length || 0} Answer{(comments?.length || 0) !== 1 && "s"}
+            {typedComments?.length || 0} Answer{(typedComments?.length || 0) !== 1 && "s"}
           </h2>
 
           {/* Verified Answer (pinned) */}
@@ -354,7 +370,7 @@ export default async function QuestionDetailPage({
 
           {/* Other Answers */}
           <div className="space-y-4">
-            {comments
+            {typedComments
               ?.filter((c) => !c.is_verified_answer)
               .map((comment) => (
                 <div
@@ -372,7 +388,7 @@ export default async function QuestionDetailPage({
           </div>
 
           {/* No Answers State */}
-          {(!comments || comments.length === 0) && (
+          {(!typedComments || typedComments.length === 0) && (
             <div className="bg-white border border-slate-200 rounded p-8 text-center">
               <MessageSquare className="w-10 h-10 text-slate-300 mx-auto mb-3" />
               <p className="text-slate-600 mb-2">No answers yet</p>

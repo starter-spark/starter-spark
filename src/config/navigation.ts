@@ -6,6 +6,7 @@ import {
   Calendar,
   Users,
   Info,
+  Mail,
   type LucideIcon,
 } from "lucide-react"
 
@@ -46,7 +47,7 @@ export const documentationNav: NavGroup = {
     },
     {
       title: "Troubleshooting",
-      href: "/community?tag=troubleshooting",
+      href: "/support",
       description: "Common issues and solutions",
       icon: HelpCircle,
     },
@@ -74,6 +75,12 @@ export const communityNav: NavGroup = {
       description: "Our mission and team",
       icon: Info,
     },
+    {
+      title: "Contact",
+      href: "/contact",
+      description: "Get in touch with our team",
+      icon: Mail,
+    },
   ],
 }
 
@@ -90,10 +97,13 @@ export const footerNav = {
     { title: "Community", href: "/community" },
     { title: "Events", href: "/events" },
     { title: "About", href: "/about" },
+    { title: "Contact", href: "/contact" },
+    { title: "Support", href: "/support" },
   ],
   legal: [
     { title: "Privacy", href: "/privacy" },
     { title: "Terms", href: "/terms" },
+    { title: "Contact", href: "/contact" },
   ],
 } as const
 

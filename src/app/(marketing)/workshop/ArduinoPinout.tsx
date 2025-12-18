@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect, useRef } from "react"
 import { Cpu, X, Zap, Hash, Radio } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
@@ -44,6 +45,25 @@ const powerPins = [
 ]
 
 export function ArduinoPinout({ isOpen, onClose }: ArduinoPinoutProps) {
+  const dialogRef = useRef<HTMLDivElement>(null)
+
+  // Handle Escape key and focus trap
+  useEffect(() => {
+    if (!isOpen) return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose()
+      }
+    }
+
+    // Focus the dialog when opened
+    dialogRef.current?.focus()
+
+    document.addEventListener("keydown", handleKeyDown)
+    return () => document.removeEventListener("keydown", handleKeyDown)
+  }, [isOpen, onClose])
+
   if (!isOpen) return null
 
   return (
@@ -55,7 +75,9 @@ export function ArduinoPinout({ isOpen, onClose }: ArduinoPinoutProps) {
       aria-labelledby="arduino-pinout-title"
     >
       <div
-        className="bg-white rounded-lg border border-slate-200 w-full max-w-2xl shadow-xl max-h-[90vh] overflow-hidden flex flex-col"
+        ref={dialogRef}
+        tabIndex={-1}
+        className="bg-white rounded-lg border border-slate-200 w-full max-w-2xl shadow-xl max-h-[90vh] overflow-hidden flex flex-col outline-none"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

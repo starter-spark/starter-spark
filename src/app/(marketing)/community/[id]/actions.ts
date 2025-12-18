@@ -3,12 +3,6 @@
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 
-// Helper to call RPC functions that may not be in generated types yet
-// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-function callRpc(supabase: any, name: string, args: Record<string, unknown>) {
-  return supabase.rpc(name, args) as Promise<{ error: unknown }>
-}
-
 export async function voteOnPost(postId: string, voteType: 1 | -1) {
   const supabase = await createClient()
 
@@ -34,7 +28,7 @@ export async function voteOnPost(postId: string, voteType: 1 | -1) {
       await supabase.from("post_votes").delete().eq("id", existingVote.id)
 
       // Update post upvotes count
-      await callRpc(supabase, "update_post_upvotes", { p_post_id: postId })
+      await supabase.rpc("update_post_upvotes", { p_post_id: postId })
     } else {
       // Different vote - update it
       await supabase
@@ -43,7 +37,7 @@ export async function voteOnPost(postId: string, voteType: 1 | -1) {
         .eq("id", existingVote.id)
 
       // Update post upvotes count
-      await callRpc(supabase, "update_post_upvotes", { p_post_id: postId })
+      await supabase.rpc("update_post_upvotes", { p_post_id: postId })
     }
   } else {
     // No existing vote - create new
@@ -59,7 +53,7 @@ export async function voteOnPost(postId: string, voteType: 1 | -1) {
     }
 
     // Update post upvotes count
-    await callRpc(supabase, "update_post_upvotes", { p_post_id: postId })
+    await supabase.rpc("update_post_upvotes", { p_post_id: postId })
   }
 
   revalidatePath(`/community/${postId}`)
@@ -89,14 +83,14 @@ export async function voteOnComment(commentId: string, voteType: 1 | -1) {
     if (existingVote.vote_type === voteType) {
       // Same vote - remove it
       await supabase.from("comment_votes").delete().eq("id", existingVote.id)
-      await callRpc(supabase, "update_comment_upvotes", { p_comment_id: commentId })
+      await supabase.rpc("update_comment_upvotes", { p_comment_id: commentId })
     } else {
       // Different vote - update it
       await supabase
         .from("comment_votes")
         .update({ vote_type: voteType })
         .eq("id", existingVote.id)
-      await callRpc(supabase, "update_comment_upvotes", { p_comment_id: commentId })
+      await supabase.rpc("update_comment_upvotes", { p_comment_id: commentId })
     }
   } else {
     const { error } = await supabase.from("comment_votes").insert({
@@ -110,7 +104,7 @@ export async function voteOnComment(commentId: string, voteType: 1 | -1) {
       return { error: "Failed to vote. Please try again." }
     }
 
-    await callRpc(supabase, "update_comment_upvotes", { p_comment_id: commentId })
+    await supabase.rpc("update_comment_upvotes", { p_comment_id: commentId })
   }
 
   revalidatePath(`/community`)

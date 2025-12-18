@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server"
 import { supabaseAdmin } from "@/lib/supabase/admin"
 import { NextResponse } from "next/server"
 import { rateLimit } from "@/lib/rate-limit"
+import { checkKitClaimAchievements } from "@/lib/achievements"
 
 export async function POST(request: Request) {
   // Rate limit: 5 requests per minute
@@ -93,7 +94,12 @@ export async function POST(request: Request) {
     }
 
     const productName =
-      (claimedLicense.product as { name: string } | null)?.name || "Kit"
+      (claimedLicense.product as unknown as { name: string } | null)?.name || "Kit"
+
+    // Check and award kit-related achievements (non-blocking)
+    checkKitClaimAchievements(user.id).catch((err) =>
+      console.error("Error checking kit achievements:", err)
+    )
 
     return NextResponse.json({
       message: `${productName} claimed successfully!`,

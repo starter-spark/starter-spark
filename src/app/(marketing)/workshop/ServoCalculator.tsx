@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect, useRef } from "react"
 import { Calculator, X, RotateCcw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -14,6 +14,24 @@ export function ServoCalculator({ isOpen, onClose }: ServoCalculatorProps) {
   const [angle, setAngle] = useState<string>("90")
   const [minPulse, setMinPulse] = useState<string>("500")
   const [maxPulse, setMaxPulse] = useState<string>("2500")
+  const dialogRef = useRef<HTMLDivElement>(null)
+
+  // Handle Escape key and focus trap
+  useEffect(() => {
+    if (!isOpen) return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose()
+      }
+    }
+
+    // Focus the dialog when opened
+    dialogRef.current?.focus()
+
+    document.addEventListener("keydown", handleKeyDown)
+    return () => document.removeEventListener("keydown", handleKeyDown)
+  }, [isOpen, onClose])
 
   const calculatePulseWidth = useCallback(() => {
     const angleNum = parseFloat(angle) || 0
@@ -51,7 +69,9 @@ export function ServoCalculator({ isOpen, onClose }: ServoCalculatorProps) {
       aria-labelledby="servo-calculator-title"
     >
       <div
-        className="bg-white rounded-lg border border-slate-200 w-full max-w-md shadow-xl"
+        ref={dialogRef}
+        tabIndex={-1}
+        className="bg-white rounded-lg border border-slate-200 w-full max-w-md shadow-xl outline-none"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

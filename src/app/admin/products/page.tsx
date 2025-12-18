@@ -78,7 +78,7 @@ export default async function ProductsPage() {
             </TableHeader>
             <TableBody>
               {products.map((product) => {
-                const tags = (product.product_tags || []) as { tag: string; priority: number | null }[]
+                const tags = ((product.product_tags as unknown) || []) as { tag: string; priority: number | null }[]
                 const hasFeaturedTag = tags.some((t) => t.tag === "featured")
                 return (
                   <TableRow key={product.id}>

@@ -84,6 +84,9 @@ export default async function ShopPage() {
   }
 
   // Transform and sort products for display
+  type ProductTagItem = { tag: string; priority: number | null; discount_percent: number | null; expires_at: string | null }
+  type ProductMediaItem = { type: string | null; url: string; is_primary: boolean | null; image_type: string | null; sort_order: number | null }
+
   const transformedProducts = (products || []).map((product) => {
     const specs = product.specs as {
       category?: string
@@ -93,19 +96,21 @@ export default async function ShopPage() {
 
     // Filter out expired tags
     const now = new Date()
-    const validTags = (product.product_tags || []).filter((t) => {
+    const productTags = (product.product_tags as unknown as ProductTagItem[] | null) || []
+    const validTags = productTags.filter((t) => {
       if (!t.expires_at) return true // No expiration = always valid
       return new Date(t.expires_at) > now
     })
 
-    const tags: ProductTag[] = validTags.map((t) => ({
-      tag: t.tag,
+    const tags = validTags.map((t) => ({
+      tag: t.tag as ProductTag["tag"],
       priority: t.priority,
       discount_percent: t.discount_percent,
     }))
 
     // Get primary image or first hero image or first image (filter out 3D models)
-    const media = (product.product_media || []).filter((m) => m.type === 'image' || !m.type)
+    const productMedia = (product.product_media as unknown as ProductMediaItem[] | null) || []
+    const media = productMedia.filter((m) => m.type === 'image' || !m.type)
     const primaryImage = media.find((m) => m.is_primary)
     const heroImage = media.find((m) => m.image_type === "hero")
     const sortedMedia = [...media].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
@@ -221,10 +226,10 @@ export default async function ShopPage() {
               Contact us to learn about our education program.
             </p>
             <a
-              href="mailto:education@starterspark.com"
+              href="/contact?subject=educator"
               className="inline-block px-6 py-3 bg-cyan-700 hover:bg-cyan-600 text-white font-mono rounded transition-colors"
             >
-              Contact Us
+              Contact Us for Education Pricing
             </a>
           </div>
         </div>

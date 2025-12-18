@@ -54,14 +54,31 @@ export default async function EditProductPage({
   }
 
   // Transform tags for the form
-  const tags = (product.product_tags || []).map((t) => ({
-    tag: t.tag,
+  type ProductTagItem = { tag: string; priority: number | null; discount_percent: number | null }
+  type ProductTagType = "featured" | "discount" | "new" | "bestseller" | "limited" | "bundle" | "out_of_stock"
+  const productTags = (product.product_tags as unknown as ProductTagItem[] | null) || []
+  const tags = productTags.map((t) => ({
+    tag: t.tag as ProductTagType,
     priority: t.priority,
     discount_percent: t.discount_percent,
   }))
 
   // Transform media for the form
-  const media = (product.product_media || [])
+  type ProductMediaItem = {
+    id: string
+    type: string | null
+    url: string
+    storage_path: string | null
+    filename: string
+    file_size: number | null
+    mime_type: string | null
+    alt_text: string | null
+    is_primary: boolean | null
+    sort_order: number | null
+    image_type: string | null
+  }
+  const productMedia = (product.product_media as unknown as ProductMediaItem[] | null) || []
+  const media = productMedia
     .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
     .map((m) => ({
       id: m.id,

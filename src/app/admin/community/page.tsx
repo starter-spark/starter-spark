@@ -159,8 +159,8 @@ export default async function CommunityPage({
             </TableHeader>
             <TableBody>
               {posts.map((post) => {
-                const author = post.profiles as { email: string; full_name: string | null } | null
-                const product = post.products as { name: string } | null
+                const author = post.profiles as unknown as { email: string; full_name: string | null } | null
+                const product = post.products as unknown as { name: string } | null
 
                 return (
                   <TableRow key={post.id}>

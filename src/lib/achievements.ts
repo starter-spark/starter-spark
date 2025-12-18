@@ -1,0 +1,332 @@
+/**
+ * Achievements System
+ * Phase 20.1: Workshop Enhancements
+ *
+ * Server-side functions for awarding achievements to users.
+ * All functions use the service role client for secure database access.
+ */
+
+import { supabaseAdmin } from "@/lib/supabase/admin"
+import type { Database, Json } from "@/lib/supabase/database.types"
+
+export type AchievementKey =
+  | "first_kit"
+  | "early_adopter"
+  | "first_lesson"
+  | "five_lessons"
+  | "ten_lessons"
+  | "module_complete"
+  | "course_complete"
+  | "speed_learner"
+  | "night_owl"
+  | "first_question"
+  | "first_answer"
+  | "helpful_answer"
+  | "five_posts"
+  | "first_build"
+  | "wiring_pro"
+  | "code_ninja"
+  | "workshop_attendee"
+  | "bug_reporter"
+  | "perfectionist"
+
+export interface AwardResult {
+  success: boolean
+  alreadyEarned?: boolean
+  error?: string
+}
+
+/**
+ * Award an achievement to a user (idempotent - safe to call multiple times)
+ */
+export async function awardAchievement(
+  userId: string,
+  achievementKey: AchievementKey,
+  metadata?: Json
+): Promise<AwardResult> {
+  try {
+    const { data, error } = await supabaseAdmin.rpc("award_achievement", {
+      p_user_id: userId,
+      p_achievement_key: achievementKey,
+      p_metadata: metadata ?? null,
+    })
+
+    if (error) {
+      console.error("Error awarding achievement:", error)
+      return { success: false, error: error.message }
+    }
+
+    // data is boolean - true if newly awarded, false if already earned
+    return {
+      success: true,
+      alreadyEarned: !data,
+    }
+  } catch (err) {
+    console.error("Error awarding achievement:", err)
+    return { success: false, error: "Failed to award achievement" }
+  }
+}
+
+/**
+ * Check and award lesson-related achievements
+ * Call this after a user completes a lesson
+ */
+export async function checkLessonAchievements(
+  userId: string,
+  lessonId: string,
+  moduleId: string,
+  productSlug: string
+): Promise<AwardResult[]> {
+  const results: AwardResult[] = []
+
+  // Get user's lesson completion stats
+  const { data: stats } = await supabaseAdmin
+    .from("lesson_progress")
+    .select("id, completed_at")
+    .eq("user_id", userId)
+    .eq("completed", true)
+
+  const completedCount = stats?.length || 0
+
+  // First lesson achievement
+  if (completedCount === 1) {
+    results.push(await awardAchievement(userId, "first_lesson", { lesson_id: lessonId }))
+  }
+
+  // Five lessons achievement
+  if (completedCount === 5) {
+    results.push(await awardAchievement(userId, "five_lessons"))
+  }
+
+  // Ten lessons achievement
+  if (completedCount === 10) {
+    results.push(await awardAchievement(userId, "ten_lessons"))
+  }
+
+  // Check for speed learner (3 lessons in one day)
+  if (stats && stats.length >= 3) {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const todayStr = today.toISOString()
+
+    const lessonsToday = stats.filter(
+      (s) => s.completed_at && s.completed_at >= todayStr
+    ).length
+
+    if (lessonsToday >= 3) {
+      results.push(await awardAchievement(userId, "speed_learner"))
+    }
+  }
+
+  // Check for night owl (completed after midnight, before 5am)
+  const now = new Date()
+  const hour = now.getHours()
+  if (hour >= 0 && hour < 5) {
+    results.push(await awardAchievement(userId, "night_owl", { lesson_id: lessonId }))
+  }
+
+  // Check if module is complete
+  const { data: moduleData } = await supabaseAdmin
+    .from("lessons")
+    .select("id")
+    .eq("module_id", moduleId)
+
+  if (moduleData) {
+    const moduleCompletedLessons = stats?.filter((s) =>
+      moduleData.some((l) => l.id === s.id)
+    )
+
+    if (moduleCompletedLessons?.length === moduleData.length) {
+      results.push(await awardAchievement(userId, "module_complete", { module_id: moduleId }))
+    }
+  }
+
+  // Check if entire course is complete
+  const { data: allModules } = await supabaseAdmin
+    .from("modules")
+    .select("id, lessons(id)")
+    .eq("product_slug", productSlug)
+
+  if (allModules) {
+    const allLessonIds = allModules.flatMap((m) =>
+      (m.lessons as { id: string }[])?.map((l) => l.id) || []
+    )
+
+    const completedLessonIds = stats?.map((s) => s.id) || []
+    const courseComplete = allLessonIds.every((id) =>
+      completedLessonIds.includes(id)
+    )
+
+    if (courseComplete && allLessonIds.length > 0) {
+      results.push(await awardAchievement(userId, "course_complete", { product_slug: productSlug }))
+    }
+  }
+
+  return results
+}
+
+/**
+ * Award first kit achievement when user claims a kit
+ */
+export async function checkKitClaimAchievements(userId: string): Promise<AwardResult[]> {
+  const results: AwardResult[] = []
+
+  // Check if this is the user's first kit
+  const { data: licenses } = await supabaseAdmin
+    .from("licenses")
+    .select("id")
+    .eq("owner_id", userId)
+
+  if (licenses?.length === 1) {
+    results.push(await awardAchievement(userId, "first_kit"))
+  }
+
+  // Check for early adopter (first month of launch)
+  // You can adjust this date to your actual launch date
+  const launchDate = new Date("2025-01-01")
+  const oneMonthAfterLaunch = new Date(launchDate)
+  oneMonthAfterLaunch.setMonth(oneMonthAfterLaunch.getMonth() + 1)
+
+  if (new Date() <= oneMonthAfterLaunch) {
+    results.push(await awardAchievement(userId, "early_adopter"))
+  }
+
+  return results
+}
+
+/**
+ * Check and award community achievements
+ * Call this after a user creates a post or has their answer verified
+ */
+export async function checkCommunityAchievements(
+  userId: string,
+  action: "post" | "answer" | "verified_answer"
+): Promise<AwardResult[]> {
+  const results: AwardResult[] = []
+
+  if (action === "post") {
+    // Get user's post count
+    const { data: posts } = await supabaseAdmin
+      .from("posts")
+      .select("id")
+      .eq("author_id", userId)
+
+    const postCount = posts?.length || 0
+
+    // First question
+    if (postCount === 1) {
+      results.push(await awardAchievement(userId, "first_question"))
+    }
+
+    // Five posts
+    if (postCount === 5) {
+      results.push(await awardAchievement(userId, "five_posts"))
+    }
+  }
+
+  if (action === "answer") {
+    // Get user's answer count (comments on posts)
+    const { data: answers } = await supabaseAdmin
+      .from("comments")
+      .select("id")
+      .eq("author_id", userId)
+
+    if (answers?.length === 1) {
+      results.push(await awardAchievement(userId, "first_answer"))
+    }
+  }
+
+  if (action === "verified_answer") {
+    results.push(await awardAchievement(userId, "helpful_answer"))
+  }
+
+  return results
+}
+
+export interface Achievement {
+  id: string
+  key: string
+  name: string
+  description: string
+  icon: string
+  points: number
+  category: string
+  is_secret: boolean
+  sort_order: number
+}
+
+export interface UserAchievement {
+  achievement_id: string
+  earned_at: string
+  metadata: Json | null
+}
+
+export interface UserAchievementsResult {
+  achievements: Achievement[]
+  userAchievements: UserAchievement[]
+  totalPoints: number
+}
+
+type AchievementRow = Database["public"]["Tables"]["achievements"]["Row"]
+type UserAchievementRow = Database["public"]["Tables"]["user_achievements"]["Row"]
+
+/**
+ * Get all achievements with user's earned status
+ */
+export async function getUserAchievements(userId: string): Promise<UserAchievementsResult> {
+  // Get all achievements
+  const { data: achievementsData, error: achievementsError } = await supabaseAdmin
+    .from("achievements")
+    .select("id, key, name, description, icon, points, category, is_secret, sort_order")
+    .order("sort_order")
+
+  if (achievementsError) {
+    console.error("Error fetching achievements:", achievementsError)
+    return { achievements: [], userAchievements: [], totalPoints: 0 }
+  }
+
+  // Map to proper types
+  const achievementsRows = (achievementsData ?? []) as AchievementRow[]
+  const achievements: Achievement[] = achievementsRows.map((a) => ({
+    id: a.id,
+    key: a.key,
+    name: a.name,
+    description: a.description,
+    icon: a.icon,
+    points: a.points ?? 0,
+    category: a.category ?? "general",
+    is_secret: a.is_secret ?? false,
+    sort_order: a.sort_order ?? 0,
+  }))
+
+  // Get user's earned achievements
+  const { data: userAchievementsData, error: userError } = await supabaseAdmin
+    .from("user_achievements")
+    .select("achievement_id, earned_at, metadata")
+    .eq("user_id", userId)
+
+  if (userError) {
+    console.error("Error fetching user achievements:", userError)
+    return { achievements, userAchievements: [], totalPoints: 0 }
+  }
+
+  // Map to proper types
+  const userAchievementRows = (userAchievementsData ?? []) as UserAchievementRow[]
+  const userAchievements: UserAchievement[] = userAchievementRows.map((ua) => ({
+    achievement_id: ua.achievement_id,
+    earned_at: ua.earned_at ?? new Date().toISOString(),
+    metadata: ua.metadata,
+  }))
+
+  // Calculate total points
+  const earnedIds = new Set(userAchievements.map((ua) => ua.achievement_id))
+  const totalPoints = achievements
+    .filter((a) => earnedIds.has(a.id))
+    .reduce((sum, a) => sum + a.points, 0)
+
+  return {
+    achievements,
+    userAchievements,
+    totalPoints,
+  }
+}

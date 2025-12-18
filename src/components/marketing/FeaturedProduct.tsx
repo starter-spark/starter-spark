@@ -36,7 +36,7 @@ export async function FeaturedProduct() {
     return null
   }
 
-  const product = featuredTags.products as {
+  const product = featuredTags.products as unknown as {
     id: string
     name: string
     slug: string

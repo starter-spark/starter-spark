@@ -17,26 +17,50 @@ export const metadata = {
   title: "Banners | Admin",
 }
 
-const COLOR_SCHEME_ICONS: Record<string, typeof Info> = {
-  info: Info,
-  warning: AlertTriangle,
-  success: CheckCircle,
-  error: XCircle,
-  sale: Tag,
-  promo: Zap,
-  announcement: Megaphone,
-  gift: Gift,
+function getColorSchemeIcon(colorScheme: string): typeof Info {
+  switch (colorScheme) {
+    case "info":
+      return Info
+    case "warning":
+      return AlertTriangle
+    case "success":
+      return CheckCircle
+    case "error":
+      return XCircle
+    case "sale":
+      return Tag
+    case "promo":
+      return Zap
+    case "announcement":
+      return Megaphone
+    case "gift":
+      return Gift
+    default:
+      return Info
+  }
 }
 
-const COLOR_SCHEME_STYLES: Record<string, string> = {
-  info: "bg-cyan-100 text-cyan-700",
-  warning: "bg-amber-100 text-amber-700",
-  success: "bg-green-100 text-green-700",
-  error: "bg-red-100 text-red-700",
-  sale: "bg-rose-100 text-rose-700",
-  promo: "bg-violet-100 text-violet-700",
-  announcement: "bg-slate-200 text-slate-700",
-  gift: "bg-emerald-100 text-emerald-700",
+function getColorSchemeStyle(colorScheme: string): string {
+  switch (colorScheme) {
+    case "info":
+      return "bg-cyan-100 text-cyan-700"
+    case "warning":
+      return "bg-amber-100 text-amber-700"
+    case "success":
+      return "bg-green-100 text-green-700"
+    case "error":
+      return "bg-red-100 text-red-700"
+    case "sale":
+      return "bg-rose-100 text-rose-700"
+    case "promo":
+      return "bg-violet-100 text-violet-700"
+    case "announcement":
+      return "bg-slate-200 text-slate-700"
+    case "gift":
+      return "bg-emerald-100 text-emerald-700"
+    default:
+      return "bg-slate-100 text-slate-700"
+  }
 }
 
 async function getBanners() {
@@ -131,10 +155,10 @@ export default async function BannersPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {banners.map((banner) => {
-                const colorScheme = banner.color_scheme || "info"
-                const IconComponent = COLOR_SCHEME_ICONS[colorScheme] || Info
-                const colorStyle = COLOR_SCHEME_STYLES[colorScheme] || "bg-slate-100 text-slate-700"
+	              {banners.map((banner) => {
+	                const colorScheme = banner.color_scheme || "info"
+	                const IconComponent = getColorSchemeIcon(colorScheme)
+	                const colorStyle = getColorSchemeStyle(colorScheme)
 
                 const isActive =
                   banner.is_active &&

@@ -39,6 +39,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      achievements: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          description: string
+          icon: string
+          id: string
+          is_secret: boolean | null
+          key: string
+          name: string
+          points: number | null
+          sort_order: number | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          description: string
+          icon: string
+          id?: string
+          is_secret?: boolean | null
+          key: string
+          name: string
+          points?: number | null
+          sort_order?: number | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          description?: string
+          icon?: string
+          id?: string
+          is_secret?: boolean | null
+          key?: string
+          name?: string
+          points?: number | null
+          sort_order?: number | null
+        }
+        Relationships: []
+      }
       admin_audit_log: {
         Row: {
           action: string
@@ -174,6 +213,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      contact_submissions: {
+        Row: {
+          assigned_to: string | null
+          attachments: Json | null
+          created_at: string | null
+          email: string
+          id: string
+          internal_notes: string | null
+          message: string
+          name: string
+          resolved_at: string | null
+          status: string | null
+          subject: string
+          updated_at: string | null
+        }
+        Insert: {
+          assigned_to?: string | null
+          attachments?: Json | null
+          created_at?: string | null
+          email: string
+          id?: string
+          internal_notes?: string | null
+          message: string
+          name: string
+          resolved_at?: string | null
+          status?: string | null
+          subject: string
+          updated_at?: string | null
+        }
+        Update: {
+          assigned_to?: string | null
+          attachments?: Json | null
+          created_at?: string | null
+          email?: string
+          id?: string
+          internal_notes?: string | null
+          message?: string
+          name?: string
+          resolved_at?: string | null
+          status?: string | null
+          subject?: string
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       courses: {
         Row: {
@@ -959,11 +1043,105 @@ export type Database = {
         }
         Relationships: []
       }
+      troubleshooting_articles: {
+        Row: {
+          category: string
+          causes: string[] | null
+          created_at: string | null
+          helpful_count: number | null
+          id: string
+          is_published: boolean | null
+          not_helpful_count: number | null
+          problem: string
+          related_articles: string[] | null
+          slug: string
+          solutions: string
+          sort_order: number | null
+          title: string
+          updated_at: string | null
+          view_count: number | null
+        }
+        Insert: {
+          category: string
+          causes?: string[] | null
+          created_at?: string | null
+          helpful_count?: number | null
+          id?: string
+          is_published?: boolean | null
+          not_helpful_count?: number | null
+          problem: string
+          related_articles?: string[] | null
+          slug: string
+          solutions: string
+          sort_order?: number | null
+          title: string
+          updated_at?: string | null
+          view_count?: number | null
+        }
+        Update: {
+          category?: string
+          causes?: string[] | null
+          created_at?: string | null
+          helpful_count?: number | null
+          id?: string
+          is_published?: boolean | null
+          not_helpful_count?: number | null
+          problem?: string
+          related_articles?: string[] | null
+          slug?: string
+          solutions?: string
+          sort_order?: number | null
+          title?: string
+          updated_at?: string | null
+          view_count?: number | null
+        }
+        Relationships: []
+      }
+      user_achievements: {
+        Row: {
+          achievement_id: string
+          earned_at: string | null
+          id: string
+          metadata: Json | null
+          user_id: string
+        }
+        Insert: {
+          achievement_id: string
+          earned_at?: string | null
+          id?: string
+          metadata?: Json | null
+          user_id: string
+        }
+        Update: {
+          achievement_id?: string
+          earned_at?: string | null
+          id?: string
+          metadata?: Json | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_achievements_achievement_id_fkey"
+            columns: ["achievement_id"]
+            isOneToOne: false
+            referencedRelation: "achievements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      award_achievement: {
+        Args: {
+          p_achievement_key: string
+          p_metadata?: Json
+          p_user_id: string
+        }
+        Returns: boolean
+      }
       cleanup_expired_tags: { Args: never; Returns: undefined }
       get_course_progress: {
         Args: { p_course_id: string; p_user_id: string }
@@ -978,10 +1156,18 @@ export type Database = {
           value: number
         }[]
       }
+      increment_article_view: {
+        Args: { article_id: string }
+        Returns: undefined
+      }
       is_admin:
-        | { Args: { user_id: string }; Returns: boolean }
         | { Args: never; Returns: boolean }
+        | { Args: { user_id: string }; Returns: boolean }
       is_staff: { Args: { user_id: string }; Returns: boolean }
+      record_article_feedback: {
+        Args: { article_id: string; is_helpful: boolean }
+        Returns: undefined
+      }
       update_comment_upvotes: {
         Args: { p_comment_id: string }
         Returns: undefined

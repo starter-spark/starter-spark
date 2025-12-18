@@ -140,9 +140,12 @@ export function ProductForm({ product, initialTags = [], initialMedia = [] }: Pr
   }
 
   const handleSpecChange = (index: number, field: "key" | "value", value: string) => {
-    const newSpecs = [...specs]
-    newSpecs[index][field] = value
-    setSpecs(newSpecs)
+    setSpecs((prev) =>
+      prev.map((spec, i) => {
+        if (i !== index) return spec
+        return field === "key" ? { ...spec, key: value } : { ...spec, value }
+      })
+    )
   }
 
   const handleSubmit = (e: React.FormEvent) => {

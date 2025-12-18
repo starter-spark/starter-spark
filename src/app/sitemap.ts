@@ -82,7 +82,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .select("id, updated_at, products!inner(slug)")
 
   const coursePages: MetadataRoute.Sitemap = (courses || []).map((course) => {
-    const productSlug = (course.products as { slug: string })?.slug
+    const productSlug = (course.products as unknown as { slug: string })?.slug
     return {
       url: `${baseUrl}/learn/${productSlug}`,
       lastModified: course.updated_at ? new Date(course.updated_at) : new Date(),

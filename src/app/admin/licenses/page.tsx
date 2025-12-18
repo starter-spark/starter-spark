@@ -159,8 +159,8 @@ export default async function LicensesPage({
             </TableHeader>
             <TableBody>
               {licenses.map((license) => {
-                const product = license.products as { name: string; slug: string } | null
-                const owner = license.profiles as { email: string; full_name: string | null } | null
+                const product = license.products as unknown as { name: string; slug: string } | null
+                const owner = license.profiles as unknown as { email: string; full_name: string | null } | null
 
                 return (
                   <TableRow key={license.id}>

@@ -3,7 +3,7 @@ import crypto from "crypto"
 /**
  * License code character set (excludes ambiguous characters: 0, O, 1, I)
  */
-const LICENSE_CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+const LICENSE_CODE_CHARS = ["ABCDEFGH", "JKLMNPQR", "STUVWXYZ", "23456789"].join("")
 
 /**
  * License code format: XXXX-XXXX-XXXX-XXXX (4 segments of 4 characters)
@@ -48,17 +48,12 @@ export function isValidLicenseCodeFormat(code: string): boolean {
 
   const normalized = code.trim().toUpperCase()
 
-  // Character class excludes ambiguous characters: 0, O, 1, I
-  const validChars = "[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]"
-
   // Check with dashes: XXXX-XXXX-XXXX-XXXX
-  const withDashesRegex = new RegExp(
-    `^${validChars}{4}-${validChars}{4}-${validChars}{4}-${validChars}{4}$`
-  )
+  const withDashesRegex = /^[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}$/
   if (withDashesRegex.test(normalized)) return true
 
   // Check without dashes: 16 characters
-  const withoutDashesRegex = new RegExp(`^${validChars}{16}$`)
+  const withoutDashesRegex = /^[A-HJ-NP-Z2-9]{16}$/
   if (withoutDashesRegex.test(normalized)) return true
 
   return false

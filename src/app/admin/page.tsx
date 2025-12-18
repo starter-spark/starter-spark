@@ -182,7 +182,7 @@ export default async function AdminDashboard() {
                         {license.code.slice(0, 4)}****
                       </p>
                       <p className="text-xs text-slate-500">
-                        {(license.products as { name: string } | null)?.name || "Unknown product"}
+                        {(license.products as unknown as { name: string } | null)?.name || "Unknown product"}
                       </p>
                     </div>
                     <div className="text-right">
@@ -234,7 +234,7 @@ export default async function AdminDashboard() {
                           {question.title}
                         </p>
                         <p className="text-xs text-slate-500">
-                          by {(question.profiles as { full_name: string | null } | null)?.full_name || "Unknown"} •{" "}
+                          by {(question.profiles as unknown as { full_name: string | null } | null)?.full_name || "Unknown"} •{" "}
                           {question.created_at ? new Date(question.created_at).toLocaleDateString() : "-"}
                         </p>
                       </div>

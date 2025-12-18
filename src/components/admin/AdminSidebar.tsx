@@ -16,6 +16,7 @@ import {
   FileText,
   ScrollText,
   Megaphone,
+  LifeBuoy,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -27,6 +28,7 @@ const navItems = [
   { href: "/admin/products", label: "Products", icon: Package },
   { href: "/admin/licenses", label: "Licenses", icon: KeyRound },
   { href: "/admin/orders", label: "Orders", icon: CreditCard },
+  { href: "/admin/support", label: "Support", icon: LifeBuoy },
   { href: "/admin/community", label: "Community", icon: MessageSquare },
   { href: "/admin/events", label: "Events", icon: Calendar },
   { href: "/admin/content", label: "Content", icon: FileText },
