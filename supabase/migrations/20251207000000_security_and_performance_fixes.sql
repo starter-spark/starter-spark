@@ -19,7 +19,6 @@ AS $$
     WHERE id = user_id AND role = 'admin'
   );
 $$;
-
 -- Fix is_staff function (ensure it also has search_path)
 CREATE OR REPLACE FUNCTION public.is_staff(user_id uuid)
 RETURNS boolean
@@ -33,7 +32,6 @@ AS $$
     WHERE id = user_id AND role IN ('admin', 'staff')
   );
 $$;
-
 -- Fix get_site_stats function
 CREATE OR REPLACE FUNCTION public.get_site_stats()
 RETURNS TABLE(key text, value integer, label text, suffix text)
@@ -54,7 +52,6 @@ BEGIN
   ORDER BY ss.display_order;
 END;
 $$;
-
 -- Fix get_course_progress function (preserve existing signature, just add search_path)
 CREATE OR REPLACE FUNCTION public.get_course_progress(p_course_id uuid, p_user_id uuid)
 RETURNS integer
@@ -85,7 +82,6 @@ BEGIN
   RETURN ROUND((completed_lessons::NUMERIC / total_lessons::NUMERIC) * 100);
 END;
 $$;
-
 -- Fix generate_post_slug function
 CREATE OR REPLACE FUNCTION public.generate_post_slug()
 RETURNS trigger
@@ -126,7 +122,6 @@ BEGIN
   RETURN NEW;
 END;
 $$;
-
 -- Fix handle_new_user function
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger
@@ -151,7 +146,6 @@ BEGIN
   RETURN NEW;
 END;
 $$;
-
 -- Fix user_owns_product function (preserve existing signature)
 CREATE OR REPLACE FUNCTION public.user_owns_product(p_product_id uuid)
 RETURNS boolean
@@ -167,7 +161,6 @@ BEGIN
   );
 END;
 $$;
-
 -- Fix update_events_updated_at function
 CREATE OR REPLACE FUNCTION public.update_events_updated_at()
 RETURNS trigger
@@ -180,7 +173,6 @@ BEGIN
   RETURN NEW;
 END;
 $$;
-
 -- Fix update_post_status_on_verified_answer function
 CREATE OR REPLACE FUNCTION public.update_post_status_on_verified_answer()
 RETURNS trigger
@@ -197,7 +189,6 @@ BEGIN
   RETURN NEW;
 END;
 $$;
-
 -- Fix update_site_stats_updated_at function
 CREATE OR REPLACE FUNCTION public.update_site_stats_updated_at()
 RETURNS trigger
@@ -210,40 +201,32 @@ BEGIN
   RETURN NEW;
 END;
 $$;
-
 -- ============================================
 -- 2. FIX site_stats RLS POLICY WITH CHECK
 -- ============================================
 
 -- Drop existing policy and recreate with proper WITH CHECK
 DROP POLICY IF EXISTS "Admins can manage site stats" ON public.site_stats;
-
 CREATE POLICY "Admins can manage site stats"
 ON public.site_stats
 FOR ALL
 TO authenticated
 USING (is_admin(auth.uid()) OR is_staff(auth.uid()))
 WITH CHECK (is_admin(auth.uid()) OR is_staff(auth.uid()));
-
 -- ============================================
 -- 3. ADD INDEXES FOR UNINDEXED FOREIGN KEYS
 -- ============================================
 
 -- Index for comment_votes.user_id
 CREATE INDEX IF NOT EXISTS idx_comment_votes_user_id ON public.comment_votes(user_id);
-
 -- Index for comments.author_id
 CREATE INDEX IF NOT EXISTS idx_comments_author_id ON public.comments(author_id);
-
 -- Index for licenses.product_id
 CREATE INDEX IF NOT EXISTS idx_licenses_product_id ON public.licenses(product_id);
-
 -- Index for post_votes.user_id
 CREATE INDEX IF NOT EXISTS idx_post_votes_user_id ON public.post_votes(user_id);
-
 -- Index for posts.author_id
 CREATE INDEX IF NOT EXISTS idx_posts_author_id ON public.posts(author_id);
-
 -- ============================================
 -- 4. REMOVE DUPLICATE INDEX ON POSTS TABLE
 -- ============================================

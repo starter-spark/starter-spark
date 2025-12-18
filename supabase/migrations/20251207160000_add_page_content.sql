@@ -13,16 +13,13 @@ CREATE TABLE IF NOT EXISTS page_content (
   version integer DEFAULT 1,
   created_at timestamptz DEFAULT now()
 );
-
 -- Enable RLS
 ALTER TABLE page_content ENABLE ROW LEVEL SECURITY;
-
 -- Public can read published content
 CREATE POLICY "Public can read published page content"
   ON page_content
   FOR SELECT
   USING (published_at IS NOT NULL);
-
 -- Admin/staff can manage all content
 CREATE POLICY "Admin can manage page content"
   ON page_content
@@ -41,10 +38,8 @@ CREATE POLICY "Admin can manage page content"
       AND profiles.role IN ('admin', 'staff')
     )
   );
-
 -- Index for fast page lookups
 CREATE INDEX IF NOT EXISTS idx_page_content_page_key ON page_content(page_key);
-
 -- Seed initial content for Privacy and Terms pages
 INSERT INTO page_content (page_key, title, content, published_at)
 VALUES
@@ -179,7 +174,6 @@ For questions about these Terms, contact us at:
 
 We reserve the right to modify these Terms at any time. Continued use of our services after changes constitutes acceptance of the new Terms.', now())
 ON CONFLICT (page_key) DO NOTHING;
-
 -- Add comment for documentation
 COMMENT ON TABLE page_content IS 'Admin-editable page content for Privacy, Terms, and other static pages';
 COMMENT ON COLUMN page_content.page_key IS 'Unique identifier for the page (e.g., privacy, terms, about_hero)';

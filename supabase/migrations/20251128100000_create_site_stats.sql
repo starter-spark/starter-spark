@@ -13,14 +13,11 @@ CREATE TABLE IF NOT EXISTS site_stats (
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now()
 );
-
 -- Enable RLS
 ALTER TABLE site_stats ENABLE ROW LEVEL SECURITY;
-
 -- Public can read stats
 CREATE POLICY "Anyone can read site stats" ON site_stats
   FOR SELECT USING (true);
-
 -- Only admins can modify stats
 CREATE POLICY "Admins can manage site stats" ON site_stats
   FOR ALL USING (
@@ -30,13 +27,11 @@ CREATE POLICY "Admins can manage site stats" ON site_stats
       AND profiles.role IN ('admin', 'staff')
     )
   );
-
 -- Insert default stats
 INSERT INTO site_stats (key, value, label, suffix, description, is_auto_calculated, sort_order) VALUES
   ('kits_deployed', 0, 'Kits Deployed', '', 'Total number of kits sold/deployed (auto-calculated from claimed licenses)', true, 1),
   ('schools_supported', 1, 'Schools Supported', '', 'Number of schools we have supported with kits or workshops', false, 2),
   ('workshops_hosted', 0, 'Workshops Hosted', '', 'Total number of workshops hosted (auto-calculated from past events)', true, 3);
-
 -- Create a function to get calculated stats
 -- This allows us to derive stats from actual data when is_auto_calculated = true
 CREATE OR REPLACE FUNCTION get_site_stats()
@@ -66,10 +61,8 @@ BEGIN
   ORDER BY s.sort_order;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
-
 -- Grant execute permission to everyone (stats are public)
 GRANT EXECUTE ON FUNCTION get_site_stats() TO anon, authenticated;
-
 -- Create updated_at trigger
 CREATE OR REPLACE FUNCTION update_site_stats_updated_at()
 RETURNS TRIGGER AS $$
@@ -78,7 +71,6 @@ BEGIN
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-
 CREATE TRIGGER site_stats_updated_at
   BEFORE UPDATE ON site_stats
   FOR EACH ROW

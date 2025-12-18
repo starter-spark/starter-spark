@@ -2,10 +2,8 @@
 -- This allows admins to choose the source when is_auto_calculated is true
 
 ALTER TABLE site_stats ADD COLUMN IF NOT EXISTS auto_source text;
-
 -- Add comment explaining the column
 COMMENT ON COLUMN site_stats.auto_source IS 'The data source for auto-calculation: licenses_count, events_count, profiles_count, posts_count, comments_count';
-
 -- Update existing auto-calculated stats with their current source based on key
 UPDATE site_stats
 SET auto_source = CASE
@@ -14,7 +12,6 @@ SET auto_source = CASE
   ELSE NULL
 END
 WHERE is_auto_calculated = true;
-
 -- Update the get_site_stats function to use auto_source column
 CREATE OR REPLACE FUNCTION get_site_stats()
 RETURNS TABLE (
@@ -49,6 +46,5 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER
 SET search_path = '';
-
 -- Grant execute permission to everyone (stats are public)
 GRANT EXECUTE ON FUNCTION get_site_stats() TO anon, authenticated;

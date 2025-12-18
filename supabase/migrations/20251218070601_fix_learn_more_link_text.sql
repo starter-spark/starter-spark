@@ -4,5 +4,5 @@
 
 UPDATE site_content
 SET content = 'Explore Free Courses',
-    default_content = 'Explore Free Courses'
-WHERE key = 'home.hero.cta_secondary';
+    default_value = 'Explore Free Courses'
+WHERE content_key = 'home.hero.cta_secondary';

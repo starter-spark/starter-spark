@@ -18,14 +18,11 @@ CREATE TABLE site_banners (
   updated_at timestamptz DEFAULT now(),
   created_by uuid REFERENCES auth.users(id)
 );
-
 -- Create index for efficient querying of active banners
 CREATE INDEX idx_site_banners_active ON site_banners (is_active, starts_at, ends_at);
 CREATE INDEX idx_site_banners_sort ON site_banners (sort_order, created_at);
-
 -- Enable RLS
 ALTER TABLE site_banners ENABLE ROW LEVEL SECURITY;
-
 -- Public can read active banners within their scheduled time window
 CREATE POLICY "Public read active banners"
   ON site_banners FOR SELECT
@@ -34,12 +31,10 @@ CREATE POLICY "Public read active banners"
     AND (starts_at IS NULL OR starts_at <= now())
     AND (ends_at IS NULL OR ends_at > now())
   );
-
 -- Admins can do everything
 CREATE POLICY "Admin manage banners"
   ON site_banners FOR ALL
   USING (is_admin());
-
 -- Create updated_at trigger
 CREATE OR REPLACE FUNCTION update_site_banners_updated_at()
 RETURNS TRIGGER AS $$
@@ -48,12 +43,10 @@ BEGIN
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-
 CREATE TRIGGER site_banners_updated_at
   BEFORE UPDATE ON site_banners
   FOR EACH ROW
   EXECUTE FUNCTION update_site_banners_updated_at();
-
 -- Add comment
 COMMENT ON TABLE site_banners IS 'Site-wide announcement banners manageable by admins';
 COMMENT ON COLUMN site_banners.pages IS 'Array of page paths where banner shows. Use ["*"] for all pages.';

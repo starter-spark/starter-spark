@@ -18,7 +18,6 @@ VALUES (
     'application/pdf'
   ]
 ) ON CONFLICT (id) DO NOTHING;
-
 -- Enable public read access to the bucket
 DO $$
 BEGIN
@@ -29,7 +28,6 @@ BEGIN
       FOR SELECT USING (bucket_id = 'products');
   END IF;
 END $$;
-
 -- Allow authenticated admin/staff to upload
 DO $$
 BEGIN
@@ -47,7 +45,6 @@ BEGIN
       );
   END IF;
 END $$;
-
 -- Allow authenticated admin/staff to delete
 DO $$
 BEGIN

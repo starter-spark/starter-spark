@@ -13,24 +13,19 @@ CREATE TABLE site_content (
   last_updated_by uuid REFERENCES auth.users(id),
   updated_at timestamptz DEFAULT now()
 );
-
 -- RLS
 ALTER TABLE site_content ENABLE ROW LEVEL SECURITY;
-
 -- Public can read all content
 CREATE POLICY "Public can read site_content"
   ON site_content FOR SELECT
   USING (true);
-
 -- Admin can manage all content
 CREATE POLICY "Admin can manage site_content"
   ON site_content FOR ALL
   USING (is_admin());
-
 -- Create index for faster lookups
 CREATE INDEX idx_site_content_key ON site_content(content_key);
 CREATE INDEX idx_site_content_category ON site_content(category);
-
 -- Seed initial content values
 INSERT INTO site_content (content_key, content_type, content, default_value, description, category, sort_order) VALUES
 -- Global
