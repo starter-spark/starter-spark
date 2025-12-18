@@ -1,7 +1,6 @@
 -- Fix get_site_stats function to use correct column names and auto_source values
 -- Drop existing function first (return type changed)
 DROP FUNCTION IF EXISTS get_site_stats();
-
 CREATE OR REPLACE FUNCTION get_site_stats()
 RETURNS TABLE (
   key text,
@@ -50,5 +49,4 @@ BEGIN
   END LOOP;
 END;
 $$;
-
 COMMENT ON FUNCTION get_site_stats() IS 'Returns site stats with auto-calculated values where applicable';

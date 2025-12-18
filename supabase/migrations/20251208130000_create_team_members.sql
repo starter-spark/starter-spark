@@ -13,16 +13,13 @@ CREATE TABLE IF NOT EXISTS public.team_members (
   created_at timestamptz DEFAULT now(),
   updated_at timestamptz DEFAULT now()
 );
-
 -- Enable RLS
 ALTER TABLE public.team_members ENABLE ROW LEVEL SECURITY;
-
 -- Public can read active team members
 CREATE POLICY "Public can read active team members"
   ON public.team_members
   FOR SELECT
   USING (is_active = true);
-
 -- Admin/staff can manage team members
 CREATE POLICY "Admin can manage team members"
   ON public.team_members
@@ -42,10 +39,8 @@ CREATE POLICY "Admin can manage team members"
       AND profiles.role IN ('admin', 'staff')
     )
   );
-
 -- Index for sorting
 CREATE INDEX idx_team_members_sort ON public.team_members (sort_order, created_at);
-
 -- Add about page content entries to page_content table
 INSERT INTO public.page_content (page_key, title, content, published_at)
 VALUES
@@ -62,7 +57,6 @@ We believe the best way to learn is by doing. Our kits aren''t just tutorials—
 
 Since 2023, we''ve reached over 500 students across Hawaii, partnered with 12 schools, and donated over $125,000 to local STEM programs. But we''re just getting started.', now())
 ON CONFLICT (page_key) DO NOTHING;
-
 -- Seed initial team members (will be replaced with real data)
 INSERT INTO public.team_members (name, role, bio, sort_order, is_active)
 VALUES

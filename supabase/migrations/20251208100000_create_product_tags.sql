@@ -11,7 +11,6 @@ CREATE TYPE product_tag_type AS ENUM (
   'bundle',
   'out_of_stock'
 );
-
 -- Create product_tags table
 CREATE TABLE product_tags (
   id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -24,20 +23,16 @@ CREATE TABLE product_tags (
   -- Each product can only have one of each tag type
   UNIQUE(product_id, tag)
 );
-
 -- Create index for efficient querying
 CREATE INDEX idx_product_tags_product_id ON product_tags(product_id);
 CREATE INDEX idx_product_tags_tag ON product_tags(tag);
-
 -- Enable RLS
 ALTER TABLE product_tags ENABLE ROW LEVEL SECURITY;
-
 -- Public can read all tags
 CREATE POLICY "Public can read product tags"
   ON product_tags
   FOR SELECT
   USING (true);
-
 -- Only admins/staff can manage tags
 CREATE POLICY "Admins can manage product tags"
   ON product_tags
@@ -57,7 +52,6 @@ CREATE POLICY "Admins can manage product tags"
       AND profiles.role IN ('admin', 'staff')
     )
   );
-
 -- Comment on table
 COMMENT ON TABLE product_tags IS 'Tags for products (featured, discount, new, etc.)';
 COMMENT ON COLUMN product_tags.priority IS 'Higher priority = shown first. Used for tag ordering.';

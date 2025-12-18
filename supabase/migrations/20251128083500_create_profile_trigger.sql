@@ -12,7 +12,6 @@ BEGIN
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
-
 -- Trigger to call the function on new user signup
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
