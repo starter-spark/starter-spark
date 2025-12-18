@@ -67,7 +67,7 @@ test.describe("Claim Code Form - UI", () => {
 
     // The claim form may only be visible for authenticated users
     // or shown in a specific section
-    const claimInput = page.getByPlaceholder(/enter kit code|code/i)
+    const claimInput = page.getByPlaceholder(/xxxx-xxxx-xxxx-xxxx/i)
 
     if (await claimInput.isVisible()) {
       await expect(claimInput).toBeVisible()
@@ -89,7 +89,7 @@ test.describe("Claim Code Form - UI", () => {
   test("should uppercase input as user types", async ({ page }) => {
     await page.goto("/workshop")
 
-    const claimInput = page.getByPlaceholder(/enter kit code|code/i)
+    const claimInput = page.getByPlaceholder(/xxxx-xxxx-xxxx-xxxx/i)
 
     if (await claimInput.isVisible()) {
       await claimInput.fill("abcd-efgh")
@@ -102,15 +102,15 @@ test.describe("Claim Code Form - UI", () => {
   test("should limit input length", async ({ page }) => {
     await page.goto("/workshop")
 
-    const claimInput = page.getByPlaceholder(/enter kit code|code/i)
+    const claimInput = page.getByPlaceholder(/xxxx-xxxx-xxxx-xxxx/i)
 
     if (await claimInput.isVisible()) {
       // Try to enter more than max length
       await claimInput.fill("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
-      // Should be limited to maxLength
+      // Should be limited to maxLength (16 chars + 3 dashes = 19)
       const value = await claimInput.inputValue()
-      expect(value.length).toBeLessThanOrEqual(16)
+      expect(value.length).toBeLessThanOrEqual(19)
     }
   })
 
@@ -119,7 +119,7 @@ test.describe("Claim Code Form - UI", () => {
   }) => {
     await page.goto("/workshop")
 
-    const claimInput = page.getByPlaceholder(/enter kit code|code/i)
+    const claimInput = page.getByPlaceholder(/xxxx-xxxx-xxxx-xxxx/i)
     const activateBtn = page.getByRole("button", { name: /activate/i })
 
     if ((await claimInput.isVisible()) && (await activateBtn.isVisible())) {
@@ -136,7 +136,7 @@ test.describe("Claim Code Form - UI", () => {
   }) => {
     await page.goto("/workshop")
 
-    const claimInput = page.getByPlaceholder(/enter kit code|code/i)
+    const claimInput = page.getByPlaceholder(/xxxx-xxxx-xxxx-xxxx/i)
     const activateBtn = page.getByRole("button", { name: /activate/i })
 
     if ((await claimInput.isVisible()) && (await activateBtn.isVisible())) {

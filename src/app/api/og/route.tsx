@@ -13,7 +13,7 @@ const size = {
 function getAllowedImageHosts(): Set<string> {
   const allowed = new Set<string>(["images.unsplash.com"])
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
   if (supabaseUrl) {
     try {
       allowed.add(new URL(supabaseUrl).hostname)

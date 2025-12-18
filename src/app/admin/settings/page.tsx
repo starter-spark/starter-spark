@@ -93,7 +93,7 @@ export default async function SettingsPage() {
       description: "Database and authentication",
       icon: Database,
       status: "connected",
-      url: process.env.NEXT_PUBLIC_SUPABASE_URL,
+      url: process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL,
     },
     {
       name: "Stripe",
@@ -244,7 +244,7 @@ export default async function SettingsPage() {
             <div className="flex justify-between rounded bg-slate-50 px-3 py-2">
               <span className="text-sm text-slate-600">Supabase URL</span>
               <code className="max-w-[300px] truncate text-sm text-slate-900">
-                {process.env.NEXT_PUBLIC_SUPABASE_URL || "Not set"}
+                {process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "Not set"}
               </code>
             </div>
             <div className="flex justify-between rounded bg-slate-50 px-3 py-2">

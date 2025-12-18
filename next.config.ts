@@ -7,6 +7,12 @@ const nextConfig: NextConfig = {
   // Enable React strict mode for better development experience
   reactStrictMode: true,
 
+  // Expose non-secret config to the browser bundle
+  env: {
+    // Backwards compatible: prefer SUPABASE_URL, fallback to NEXT_PUBLIC_SUPABASE_URL
+    SUPABASE_URL: process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "",
+  },
+
   // Image optimization
   images: {
     // Enable modern image formats

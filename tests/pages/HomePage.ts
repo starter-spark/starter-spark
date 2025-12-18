@@ -11,6 +11,7 @@ export class HomePage {
   readonly header: Locator
   readonly logo: Locator
   readonly mobileMenuButton: Locator
+  readonly cartButton: Locator
   readonly footer: Locator
 
   // Hero section
@@ -32,6 +33,8 @@ export class HomePage {
     this.header = page.locator("header")
     this.logo = page.getByRole("link", { name: /starterspark/i })
     this.mobileMenuButton = page.getByLabel("Toggle menu")
+    // Cart is always available in the header (desktop + mobile)
+    this.cartButton = page.getByLabel(/^Shopping cart/i).first()
     this.footer = page.locator("footer")
 
     // Hero
@@ -55,6 +58,10 @@ export class HomePage {
     return viewportSize ? viewportSize.width < 768 : false
   }
 
+  private get mobileMenu(): Locator {
+    return this.page.locator("#mobile-menu")
+  }
+
   /**
    * Open mobile menu if in mobile viewport
    */
@@ -62,12 +69,9 @@ export class HomePage {
     if (await this.isMobileViewport()) {
       const isMobileMenuVisible = await this.mobileMenuButton.isVisible()
       if (isMobileMenuVisible) {
-        // Check if menu is already open by looking for the mobile nav
-        const mobileNav = this.page.locator(".md\\:hidden nav, nav.md\\:hidden")
-        if (!(await mobileNav.isVisible())) {
+        if (!(await this.mobileMenu.isVisible())) {
           await this.mobileMenuButton.click()
-          // Wait for menu to be visible instead of arbitrary timeout
-          await mobileNav.waitFor({ state: "visible", timeout: 3000 })
+          await this.mobileMenu.waitFor({ state: "visible", timeout: 3000 })
         }
       }
     }
@@ -85,43 +89,41 @@ export class HomePage {
   }
 
   /**
-   * Get the navigation link based on viewport
+   * Open a desktop dropdown and click a menu item (Radix DropdownMenu).
    */
-  private getNavLink(name: string): Locator {
-    return this.page.getByRole("link", { name, exact: true }).first()
+  private async clickDesktopMenuItem(
+    menu: "Documentation" | "Community",
+    itemName: string
+  ): Promise<void> {
+    const trigger = this.page
+      .locator("nav.hidden.md\\:flex")
+      .getByRole("button", { name: menu, exact: true })
+      .first()
+
+    await trigger.click()
+    const escaped = itemName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+    await this.page.getByRole("menuitem", { name: new RegExp(escaped, "i") }).click()
   }
 
   // Desktop-only locators (for visibility assertions)
-  get navShop(): Locator {
-    return this.page.locator("nav.hidden.md\\:flex").getByRole("link", { name: "Shop" })
+  get navDocumentation(): Locator {
+    return this.page
+      .locator("nav.hidden.md\\:flex")
+      .getByRole("button", { name: "Documentation", exact: true })
   }
 
-  get navLearn(): Locator {
-    return this.page.locator("nav.hidden.md\\:flex").getByRole("link", { name: "Learn" })
-  }
-
-  get navCommunity(): Locator {
-    return this.page.locator("nav.hidden.md\\:flex").getByRole("link", { name: "Community" })
-  }
-
-  get navAbout(): Locator {
-    return this.page.locator("nav.hidden.md\\:flex").getByRole("link", { name: "About" })
-  }
-
-  get navEvents(): Locator {
-    return this.page.locator("nav.hidden.md\\:flex").getByRole("link", { name: "Events" })
-  }
-
-  get cartButton(): Locator {
-    return this.page.getByLabel("Cart").first()
+  get navCommunityMenu(): Locator {
+    return this.page
+      .locator("nav.hidden.md\\:flex")
+      .getByRole("button", { name: "Community", exact: true })
   }
 
   get workshopButton(): Locator {
-    return this.page.getByRole("link", { name: "Workshop" }).first()
+    return this.page.locator("header").getByRole("link", { name: "Workshop", exact: true }).first()
   }
 
   get shopKitsButton(): Locator {
-    return this.page.getByRole("link", { name: "Shop Kits" }).first()
+    return this.page.locator("header").getByRole("link", { name: "Shop Kits", exact: true }).first()
   }
 
   async goto() {
@@ -134,32 +136,56 @@ export class HomePage {
   }
 
   async navigateToShop() {
-    await this.ensureMobileMenuOpen()
-    await this.getNavLink("Shop").click()
+    if (await this.isMobileViewport()) {
+      await this.ensureMobileMenuOpen()
+      await this.mobileMenu.getByRole("link", { name: "Shop Kits", exact: true }).click()
+    } else {
+      await this.page.locator("header").getByRole("link", { name: "Shop Kits", exact: true }).click()
+    }
     await this.page.waitForURL("**/shop")
   }
 
   async navigateToLearn() {
-    await this.ensureMobileMenuOpen()
-    await this.getNavLink("Learn").click()
+    if (await this.isMobileViewport()) {
+      await this.ensureMobileMenuOpen()
+      await this.mobileMenu.getByRole("button", { name: "Documentation", exact: true }).click()
+      await this.mobileMenu.getByRole("link", { name: "Getting Started", exact: true }).click()
+    } else {
+      await this.clickDesktopMenuItem("Documentation", "Getting Started")
+    }
     await this.page.waitForURL("**/learn")
   }
 
   async navigateToAbout() {
-    await this.ensureMobileMenuOpen()
-    await this.getNavLink("About").click()
+    if (await this.isMobileViewport()) {
+      await this.ensureMobileMenuOpen()
+      await this.mobileMenu.getByRole("button", { name: "Community", exact: true }).click()
+      await this.mobileMenu.getByRole("link", { name: "About Us", exact: true }).click()
+    } else {
+      await this.clickDesktopMenuItem("Community", "About Us")
+    }
     await this.page.waitForURL("**/about")
   }
 
   async navigateToEvents() {
-    await this.ensureMobileMenuOpen()
-    await this.getNavLink("Events").click()
+    if (await this.isMobileViewport()) {
+      await this.ensureMobileMenuOpen()
+      await this.mobileMenu.getByRole("button", { name: "Community", exact: true }).click()
+      await this.mobileMenu.getByRole("link", { name: "Events", exact: true }).click()
+    } else {
+      await this.clickDesktopMenuItem("Community", "Events")
+    }
     await this.page.waitForURL("**/events")
   }
 
   async navigateToCommunity() {
-    await this.ensureMobileMenuOpen()
-    await this.getNavLink("Community").click()
+    if (await this.isMobileViewport()) {
+      await this.ensureMobileMenuOpen()
+      await this.mobileMenu.getByRole("button", { name: "Community", exact: true }).click()
+      await this.mobileMenu.getByRole("link", { name: "The Lab", exact: true }).click()
+    } else {
+      await this.clickDesktopMenuItem("Community", "The Lab")
+    }
     await this.page.waitForURL("**/community")
   }
 
@@ -170,22 +196,16 @@ export class HomePage {
     if (await this.isMobileViewport()) {
       await this.ensureMobileMenuOpen()
       // On mobile, Workshop is inside the mobile menu
-      await this.page.locator(".md\\:hidden").getByRole("link", { name: "Workshop" }).click()
+      await this.mobileMenu.getByRole("link", { name: "Workshop", exact: true }).click()
     } else {
-      // On desktop, Workshop is in the header actions section
-      await this.page.locator("header").getByRole("link", { name: "Workshop" }).click()
+      // On desktop, Workshop is in the header nav
+      await this.page.locator("header").getByRole("link", { name: "Workshop", exact: true }).click()
     }
     await this.page.waitForURL("**/workshop")
   }
 
   async openCart() {
-    if (await this.isMobileViewport()) {
-      await this.ensureMobileMenuOpen()
-      // On mobile, cart is a button in the mobile menu
-      await this.page.getByRole("button", { name: /cart/i }).click()
-    } else {
-      await this.cartButton.click()
-    }
+    await this.cartButton.click()
   }
 
   async openMobileMenu() {

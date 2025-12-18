@@ -53,7 +53,7 @@ test.describe("POST /api/checkout", () => {
     if (response.status() === 200) {
       const body = await response.json()
       expect(body.url).toBeDefined()
-      expect(body.url).toContain("stripe.com") || expect(body.url).toContain("checkout")
+      expect(body.url).toMatch(/stripe\.com|checkout/i)
     } else {
       // 500 for Stripe config error, or 429 if rate limited
       expect([500, 429]).toContain(response.status())

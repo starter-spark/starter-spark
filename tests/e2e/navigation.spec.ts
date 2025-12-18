@@ -113,8 +113,11 @@ test.describe("Mobile Navigation", () => {
     // Mobile menu should be visible - verify the nav appears inside the mobile menu wrapper
     const mobileMenu = page.locator(".md\\:hidden.bg-white")
     await expect(mobileMenu.locator("nav")).toBeVisible()
-    // Verify a nav link is visible (use exact match for "Shop" text)
-    await expect(mobileMenu.getByRole("link", { name: "Shop", exact: true })).toBeVisible()
+    // Verify key mobile nav elements are visible
+    await expect(mobileMenu.getByRole("button", { name: "Documentation", exact: true })).toBeVisible()
+    await expect(mobileMenu.getByRole("button", { name: "Community", exact: true })).toBeVisible()
+    await expect(mobileMenu.getByRole("link", { name: "Workshop", exact: true })).toBeVisible()
+    await expect(mobileMenu.getByRole("link", { name: "Shop Kits", exact: true })).toBeVisible()
   })
 
   test("should close mobile menu after navigation", async ({ page }) => {
@@ -124,7 +127,7 @@ test.describe("Mobile Navigation", () => {
     await mobileMenuButton.click()
 
     // Click on a nav link
-    await page.getByRole("link", { name: "Shop" }).first().click()
+    await page.locator("#mobile-menu").getByRole("link", { name: "Shop Kits", exact: true }).click()
 
     // Should navigate to shop
     await expect(page).toHaveURL("/shop")
@@ -138,25 +141,26 @@ test.describe("Mobile Navigation", () => {
     // Open menu
     await mobileMenuButton.click()
 
-    // Verify menu is open - look for nav links
-    await expect(page.getByRole("link", { name: "Shop" }).first()).toBeVisible()
+    // Verify menu is open
+    await expect(page.locator("#mobile-menu")).toBeVisible()
+    await expect(page.locator("#mobile-menu").getByRole("link", { name: "Workshop", exact: true })).toBeVisible()
 
     // Close menu
     await mobileMenuButton.click()
 
-    // Verify menu is closed - nav links should be hidden (desktop nav is hidden on mobile)
-    await expect(page.locator(".md\\:hidden").locator("nav")).toBeHidden()
+    // Verify menu is closed
+    await expect(page.locator("#mobile-menu")).toBeHidden()
   })
 
-  test("should show cart button in mobile menu", async ({ page }) => {
+  test("should show cart button in mobile header", async ({ page }) => {
     await page.goto("/")
 
-    const mobileMenuButton = page.getByLabel("Toggle menu")
-    await mobileMenuButton.click()
+    const cartButton = page.getByLabel(/^Shopping cart/i).first()
+    await expect(cartButton).toBeVisible()
+    await cartButton.click()
 
-    // Cart option should be in mobile menu
-    const cartOption = page.getByText(/cart/i)
-    await expect(cartOption.first()).toBeVisible()
+    // Cart sheet should open
+    await expect(page.getByRole("dialog")).toBeVisible({ timeout: 3000 })
   })
 })
 

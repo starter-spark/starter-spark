@@ -22,17 +22,16 @@ test.describe("Homepage", () => {
     await expect(homePage.header).toBeVisible()
     await expect(homePage.logo).toBeVisible()
 
-    // On mobile, nav links are in the mobile menu. On desktop, they're visible in the header.
+    // On mobile, nav links are in the mobile menu. On desktop, they're in dropdowns + direct links.
     if (await homePage.isMobileViewport()) {
       // On mobile, verify the mobile menu button is visible
       await expect(homePage.mobileMenuButton).toBeVisible()
     } else {
-      // On desktop, verify nav links are visible
-      await expect(homePage.navShop).toBeVisible()
-      await expect(homePage.navLearn).toBeVisible()
-      await expect(homePage.navCommunity).toBeVisible()
-      await expect(homePage.navAbout).toBeVisible()
-      await expect(homePage.navEvents).toBeVisible()
+      // On desktop, verify header nav controls are visible
+      await expect(homePage.navDocumentation).toBeVisible()
+      await expect(homePage.navCommunityMenu).toBeVisible()
+      await expect(homePage.workshopButton).toBeVisible()
+      await expect(homePage.shopKitsButton).toBeVisible()
     }
   })
 
@@ -40,18 +39,14 @@ test.describe("Homepage", () => {
     const homePage = new HomePage(page)
     await homePage.goto()
 
-    // On mobile, these buttons are in the mobile menu
+    // Cart is always in the header; workshop/shop live in nav (desktop) or mobile menu (mobile).
+    await expect(homePage.cartButton).toBeVisible()
+
     if (await homePage.isMobileViewport()) {
-      // On mobile, open the menu first
-      await homePage.openMobileMenu()
-      // Cart is a button with text, workshop and shop are links
-      // Use .first() to handle multiple matches in mobile menu
-      await expect(page.getByRole("button", { name: /cart/i }).first()).toBeVisible()
-      await expect(page.getByRole("link", { name: "Workshop", exact: true }).first()).toBeVisible()
-      await expect(page.getByRole("link", { name: "Shop Kits", exact: true }).first()).toBeVisible()
+      await homePage.ensureMobileMenuOpen()
+      await expect(page.locator("#mobile-menu").getByRole("link", { name: "Workshop", exact: true })).toBeVisible()
+      await expect(page.locator("#mobile-menu").getByRole("link", { name: "Shop Kits", exact: true })).toBeVisible()
     } else {
-      // On desktop, verify buttons are visible in header
-      await expect(homePage.cartButton).toBeVisible()
       await expect(homePage.workshopButton).toBeVisible()
       await expect(homePage.shopKitsButton).toBeVisible()
     }

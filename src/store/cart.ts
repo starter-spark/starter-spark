@@ -1,5 +1,5 @@
 import { create } from "zustand"
-import { persist } from "zustand/middleware"
+import { createJSONStorage, persist, type StateStorage } from "zustand/middleware"
 
 export interface CartItem {
   slug: string
@@ -26,6 +26,25 @@ interface CartActions {
 }
 
 type CartStore = CartState & CartActions
+
+const memoryStorage = (() => {
+  const storage = new Map<string, string>()
+  const api: StateStorage = {
+    getItem: (name) => storage.get(name) ?? null,
+    setItem: (name, value) => {
+      storage.set(name, value)
+    },
+    removeItem: (name) => {
+      storage.delete(name)
+    },
+  }
+  return api
+})()
+
+const storage = createJSONStorage(() => {
+  if (typeof window === "undefined") return memoryStorage
+  return window.localStorage
+})
 
 export const useCartStore = create<CartStore>()(
   persist(
@@ -92,6 +111,7 @@ export const useCartStore = create<CartStore>()(
     }),
     {
       name: "starterspark-cart",
+      storage,
       // Only persist items, not the open/closed state
       partialize: (state) => ({ items: state.items }),
     }

@@ -50,7 +50,7 @@ export class WorkshopPage {
       has: page.locator('[class*="font-mono"]'),
     })
     this.claimSection = page.getByText(/claim a kit/i)
-    this.claimCodeInput = page.getByPlaceholder(/enter kit code/i)
+    this.claimCodeInput = page.getByPlaceholder(/xxxx-xxxx-xxxx-xxxx/i)
     this.activateButton = page.getByRole("button", { name: /activate/i })
     this.quickToolsSection = page.getByText(/quick tools/i)
     this.achievementsSection = page.getByText(/achievements/i)
