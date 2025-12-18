@@ -83,8 +83,11 @@ jobs:
       - name: Wait for Server
         run: npx wait-on http://localhost:3000 --timeout 60000
 
+      - name: Install Google chrome for playwright
+        run: npx playwright install --with-deps chrome
+
       - name: Run Playwright tests
-        run: npx playwright test
+        run: npx playwright test --project=chromium
         env:
           HOME: /root
           PLAYWRIGHT_SKIP_WEBSERVER: 1
@@ -147,8 +150,11 @@ jobs:
       - name: Wait for Server
         run: npx wait-on http://localhost:3000 --timeout 60000
 
+      - name: Install Google chrome for playwright
+        run: npx playwright install --with-deps chrome
+
       - name: Run Playwright tests (sharded)
-        run: npx playwright test --shard=${{ matrix.shard }}/${{ strategy.job-total }}
+        run: npx playwright test --project=chromium --shard=${{ matrix.shard }}/${{ strategy.job-total }}
         env:
           HOME: /root
           PLAYWRIGHT_SKIP_WEBSERVER: 1
