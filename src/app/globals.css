@@ -225,3 +225,9 @@ body {
     background: theme(colors.slate.100);
   }
 }
+
+/* PhotoSwipe: prevent image distortion when slide dimensions are unknown */
+.pswp__img {
+  object-fit: contain !important;
+  object-position: center !important;
+}

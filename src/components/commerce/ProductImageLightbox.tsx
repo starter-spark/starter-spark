@@ -152,7 +152,13 @@ export function ProductImageLightbox({
       return
     }
 
-    void ensureDimensions(displayIndex).then(() => {
+    const preloadIndexes = new Set<number>([displayIndex])
+    if (count > 1) {
+      preloadIndexes.add(wrapIndex(displayIndex - 1, count))
+      preloadIndexes.add(wrapIndex(displayIndex + 1, count))
+    }
+
+    void Promise.all(Array.from(preloadIndexes, ensureDimensions)).then(() => {
       if (!open) return
       if (!lightbox.pswp) {
         lightbox.loadAndOpen(displayIndex)
