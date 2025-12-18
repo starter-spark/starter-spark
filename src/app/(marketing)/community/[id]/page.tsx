@@ -13,6 +13,7 @@ import { AnswerForm } from "./AnswerForm"
 import { MarkdownContent } from "./MarkdownContent"
 import { VoteButtons } from "./VoteButtons"
 import { PostActions } from "./PostActions"
+import { siteConfig } from "@/config/site"
 
 type PageParams = Promise<{ id: string }>
 
@@ -29,7 +30,7 @@ export async function generateMetadata({
 
   const { data: post } = await supabase
     .from("posts")
-    .select("title")
+    .select("title, content")
     .eq(isUUID ? "id" : "slug", id)
     .single()
 
@@ -37,9 +38,41 @@ export async function generateMetadata({
     return { title: "Question Not Found" }
   }
 
+  const title = post.title
+  const description = post.content?.slice(0, 160) || post.title
+
+  // Build OG image URL with post info
+  const ogParams = new URLSearchParams({
+    title,
+    subtitle: "Community Question in The Lab",
+    type: "post",
+  })
+  const ogImageUrl = `/api/og?${ogParams.toString()}`
+
   return {
-    title: `${post.title} - The Lab`,
-    description: post.title,
+    title: `${title} - The Lab`,
+    description,
+    openGraph: {
+      title,
+      description,
+      url: `${siteConfig.url}/community/${id}`,
+      siteName: siteConfig.name,
+      images: [
+        {
+          url: ogImageUrl,
+          width: 1200,
+          height: 630,
+          alt: title,
+        },
+      ],
+      type: "article",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [ogImageUrl],
+    },
   }
 }
 

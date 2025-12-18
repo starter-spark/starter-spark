@@ -4,10 +4,36 @@ import Link from "next/link"
 import { EventsToggle } from "./EventsToggle"
 import { getEventSchema, getBreadcrumbSchema } from "@/lib/structured-data"
 import { getContents } from "@/lib/content"
+import type { Metadata } from "next"
+import { siteConfig } from "@/config/site"
 
-export const metadata = {
-  title: "Events - StarterSpark Robotics",
-  description: "Workshops, competitions, and community events in Hawaii. Learn robotics with hands-on experiences.",
+const pageTitle = "Events & Workshops"
+const pageDescription = "Workshops, competitions, and community events in Hawaii. Learn robotics with hands-on experiences."
+
+export const metadata: Metadata = {
+  title: pageTitle,
+  description: pageDescription,
+  openGraph: {
+    title: pageTitle,
+    description: pageDescription,
+    url: `${siteConfig.url}/events`,
+    siteName: siteConfig.name,
+    images: [
+      {
+        url: `/api/og?title=${encodeURIComponent(pageTitle)}&subtitle=${encodeURIComponent(pageDescription)}&type=event`,
+        width: 1200,
+        height: 630,
+        alt: pageTitle,
+      },
+    ],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: pageTitle,
+    description: pageDescription,
+    images: [`/api/og?title=${encodeURIComponent(pageTitle)}&subtitle=${encodeURIComponent(pageDescription)}&type=event`],
+  },
 }
 
 interface Event {

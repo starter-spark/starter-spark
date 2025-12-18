@@ -7,7 +7,7 @@ const DEFAULT_CONTENT = {
   "home.hero.subheadline": "With components like Arduino and more advanced boards, servos, and code, students get exposure to real tools engineers use every day, all in a way that's beginner-friendly and rewarding.",
   "home.hero.tagline_bottom": "v1.0 • Open Source Hardware • 70% to STEM Charities",
   "home.hero.cta_primary": "Shop Kits",
-  "home.hero.cta_secondary": "View Documentation",
+  "home.hero.cta_secondary": "Explore Free Courses",
 }
 
 export async function HeroWrapper() {

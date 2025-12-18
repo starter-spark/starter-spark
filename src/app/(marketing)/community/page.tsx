@@ -13,11 +13,36 @@ import Link from "next/link"
 import { ForumFilters } from "./ForumFilters"
 import { Suspense } from "react"
 import { getContents } from "@/lib/content"
+import type { Metadata } from "next"
+import { siteConfig } from "@/config/site"
 
-export const metadata = {
-  title: "The Lab - Community Q&A",
-  description:
-    "Get help from the StarterSpark community. Ask questions, share solutions, and connect with other builders.",
+const pageTitle = "The Lab - Community Q&A"
+const pageDescription = "Get help from the StarterSpark community. Ask questions, share solutions, and connect with other builders."
+
+export const metadata: Metadata = {
+  title: pageTitle,
+  description: pageDescription,
+  openGraph: {
+    title: pageTitle,
+    description: pageDescription,
+    url: `${siteConfig.url}/community`,
+    siteName: siteConfig.name,
+    images: [
+      {
+        url: `/api/og?title=${encodeURIComponent("The Lab")}&subtitle=${encodeURIComponent(pageDescription)}&type=post`,
+        width: 1200,
+        height: 630,
+        alt: pageTitle,
+      },
+    ],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: pageTitle,
+    description: pageDescription,
+    images: [`/api/og?title=${encodeURIComponent("The Lab")}&subtitle=${encodeURIComponent(pageDescription)}&type=post`],
+  },
 }
 
 export default async function CommunityPage({

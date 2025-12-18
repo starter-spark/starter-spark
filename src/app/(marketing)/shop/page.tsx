@@ -4,6 +4,37 @@ import { Package } from "lucide-react"
 import Link from "next/link"
 import { ProductTag } from "@/components/commerce"
 import { getContents } from "@/lib/content"
+import type { Metadata } from "next"
+import { siteConfig } from "@/config/site"
+
+const pageTitle = "Robotics Kits"
+const pageDescription = "Precision robotics kits for the next generation of engineers. Each kit includes components, tools, and full access to our learning platform."
+
+export const metadata: Metadata = {
+  title: pageTitle,
+  description: pageDescription,
+  openGraph: {
+    title: pageTitle,
+    description: pageDescription,
+    url: `${siteConfig.url}/shop`,
+    siteName: siteConfig.name,
+    images: [
+      {
+        url: `/api/og?title=${encodeURIComponent(pageTitle)}&subtitle=${encodeURIComponent(pageDescription)}`,
+        width: 1200,
+        height: 630,
+        alt: pageTitle,
+      },
+    ],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: pageTitle,
+    description: pageDescription,
+    images: [`/api/og?title=${encodeURIComponent(pageTitle)}&subtitle=${encodeURIComponent(pageDescription)}`],
+  },
+}
 
 export default async function ShopPage() {
   const supabase = await createClient()

@@ -5,6 +5,7 @@ import Link from "next/link"
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { getProductSchema, getBreadcrumbSchema } from "@/lib/structured-data"
+import { siteConfig } from "@/config/site"
 
 // Type for product specs JSONB
 interface ProductSpecs {
@@ -33,7 +34,11 @@ export async function generateMetadata({
 
   const { data: product } = await supabase
     .from("products")
-    .select("name, description")
+    .select(`
+      name,
+      description,
+      product_media (url, is_primary, type)
+    `)
     .eq("slug", slug)
     .single()
 
@@ -41,9 +46,50 @@ export async function generateMetadata({
     return { title: "Product Not Found" }
   }
 
+  // Get primary image for OG
+  const media = product.product_media || []
+  const primaryImage = media.find(
+    (m: { is_primary?: boolean | null; type?: string }) => m.is_primary && m.type === "image"
+  )?.url || media.find((m: { type?: string }) => m.type === "image")?.url
+
+  const title = product.name
+  const description = product.description?.slice(0, 160) || ""
+
+  // Build OG image URL with product info
+  const ogParams = new URLSearchParams({
+    title,
+    subtitle: description,
+    type: "product",
+  })
+  if (primaryImage) {
+    ogParams.set("image", primaryImage)
+  }
+  const ogImageUrl = `/api/og?${ogParams.toString()}`
+
   return {
-    title: product.name,
-    description: product.description?.slice(0, 160) || "",
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url: `${siteConfig.url}/shop/${slug}`,
+      siteName: siteConfig.name,
+      images: [
+        {
+          url: ogImageUrl,
+          width: 1200,
+          height: 630,
+          alt: title,
+        },
+      ],
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [ogImageUrl],
+    },
   }
 }
 

@@ -18,6 +18,10 @@ export function Providers({ children }: ProvidersProps) {
         capture_pageview: true,
         // Capture pageleaves to measure time on page
         capture_pageleave: true,
+        // Disable surveys to save ~30KB of JS
+        disable_surveys: true,
+        // Disable session recording to improve performance
+        disable_session_recording: true,
         // Only enable in production
         loaded: (posthog) => {
           if (process.env.NODE_ENV === "development") {
