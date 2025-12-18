@@ -19,7 +19,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { MoreHorizontal, Eye, Mail, CheckCircle, Clock, XCircle } from "lucide-react"
+import { MoreHorizontal, Eye, Mail, CheckCircle, Clock, XCircle, Paperclip, FileImage, FileVideo, ExternalLink } from "lucide-react"
+
+interface Attachment {
+  name: string
+  path: string
+  size: number
+  type: string
+}
 
 interface Submission {
   id: string
@@ -29,6 +36,7 @@ interface Submission {
   message: string
   status: string | null
   created_at: string | null
+  attachments: unknown // JSON from DB, we'll cast it
 }
 
 interface SupportActionsProps {
@@ -38,8 +46,47 @@ interface SupportActionsProps {
 export function SupportActions({ submission }: SupportActionsProps) {
   const [isViewOpen, setIsViewOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [signedUrls, setSignedUrls] = useState<Record<string, string>>({})
+  const [loadingUrls, setLoadingUrls] = useState(false)
   const router = useRouter()
   const supabase = createClient()
+
+  // Parse attachments from JSON
+  const attachments: Attachment[] = Array.isArray(submission.attachments)
+    ? (submission.attachments as Attachment[])
+    : []
+
+  // Fetch signed URLs when dialog opens
+  const handleViewOpen = async () => {
+    setIsViewOpen(true)
+
+    if (attachments.length > 0 && Object.keys(signedUrls).length === 0) {
+      setLoadingUrls(true)
+      try {
+        const urls: Record<string, string> = {}
+        for (const attachment of attachments) {
+          const { data } = await supabase.storage
+            .from("contact-attachments")
+            .createSignedUrl(attachment.path, 3600) // 1 hour expiry
+
+          if (data?.signedUrl) {
+            urls[attachment.path] = data.signedUrl
+          }
+        }
+        setSignedUrls(urls)
+      } catch (err) {
+        console.error("Failed to get signed URLs:", err)
+      } finally {
+        setLoadingUrls(false)
+      }
+    }
+  }
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+  }
 
   const updateStatus = async (newStatus: string) => {
     setIsLoading(true)
@@ -79,7 +126,7 @@ export function SupportActions({ submission }: SupportActionsProps) {
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => setIsViewOpen(true)}>
+          <DropdownMenuItem onClick={handleViewOpen}>
             <Eye className="mr-2 h-4 w-4" />
             View Details
           </DropdownMenuItem>
@@ -124,7 +171,7 @@ export function SupportActions({ submission }: SupportActionsProps) {
 
       {/* View Details Dialog */}
       <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Contact Submission</DialogTitle>
             <DialogDescription>
@@ -161,6 +208,84 @@ export function SupportActions({ submission }: SupportActionsProps) {
                 <p className="text-slate-700 whitespace-pre-wrap">{submission.message}</p>
               </div>
             </div>
+
+            {/* Attachments */}
+            {attachments.length > 0 && (
+              <div>
+                <p className="text-sm font-medium text-slate-500 mb-2 flex items-center gap-2">
+                  <Paperclip className="h-4 w-4" />
+                  Attachments ({attachments.length})
+                </p>
+                <div className="space-y-2">
+                  {loadingUrls ? (
+                    <p className="text-sm text-slate-500">Loading attachments...</p>
+                  ) : (
+                    attachments.map((attachment, index) => {
+                      const isImage = attachment.type.startsWith("image/")
+                      const isVideo = attachment.type.startsWith("video/")
+                      const signedUrl = signedUrls[attachment.path]
+
+                      return (
+                        <div
+                          key={index}
+                          className="rounded-lg border border-slate-200 bg-slate-50 overflow-hidden"
+                        >
+                          {/* Preview for images */}
+                          {isImage && signedUrl && (
+                            <div className="relative aspect-video bg-slate-100">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={signedUrl}
+                                alt={attachment.name}
+                                className="w-full h-full object-contain"
+                              />
+                            </div>
+                          )}
+
+                          {/* Video indicator */}
+                          {isVideo && (
+                            <div className="aspect-video bg-slate-100 flex items-center justify-center">
+                              <FileVideo className="h-12 w-12 text-slate-400" />
+                            </div>
+                          )}
+
+                          {/* File info */}
+                          <div className="p-3 flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-2 min-w-0">
+                              {isImage ? (
+                                <FileImage className="h-4 w-4 text-cyan-600 flex-shrink-0" />
+                              ) : (
+                                <FileVideo className="h-4 w-4 text-purple-600 flex-shrink-0" />
+                              )}
+                              <div className="min-w-0">
+                                <p className="text-sm font-medium text-slate-700 truncate">
+                                  {attachment.name}
+                                </p>
+                                <p className="text-xs text-slate-500">
+                                  {formatFileSize(attachment.size)} · {attachment.type}
+                                </p>
+                              </div>
+                            </div>
+                            {signedUrl && (
+                              <a
+                                href={signedUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-1 text-sm text-cyan-700 hover:text-cyan-800 flex-shrink-0"
+                              >
+                                <ExternalLink className="h-4 w-4" />
+                                Open
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      )
+                    })
+                  )}
+                </div>
+              </div>
+            )}
+
             <div className="flex justify-end">
               <Button asChild>
                 <a href={`mailto:${submission.email}?subject=Re: ${submission.subject}`}>

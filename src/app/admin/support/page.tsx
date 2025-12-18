@@ -8,7 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Mail, MessageSquare, Clock, CheckCircle } from "lucide-react"
+import { Mail, MessageSquare, Clock, CheckCircle, Paperclip } from "lucide-react"
 import { formatRelativeTime } from "@/lib/utils"
 import { SupportActions } from "./SupportActions"
 
@@ -117,6 +117,7 @@ export default async function SupportPage() {
                 <TableHead>From</TableHead>
                 <TableHead>Subject</TableHead>
                 <TableHead>Message</TableHead>
+                <TableHead className="w-[60px]">Files</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="w-[100px]">Actions</TableHead>
               </TableRow>
@@ -140,6 +141,16 @@ export default async function SupportPage() {
                   </TableCell>
                   <TableCell className="max-w-[300px]">
                     <p className="truncate text-sm text-slate-600">{submission.message}</p>
+                  </TableCell>
+                  <TableCell>
+                    {submission.attachments && Array.isArray(submission.attachments) && submission.attachments.length > 0 ? (
+                      <div className="flex items-center gap-1 text-slate-500">
+                        <Paperclip className="h-4 w-4" />
+                        <span className="text-sm">{submission.attachments.length}</span>
+                      </div>
+                    ) : (
+                      <span className="text-slate-300">—</span>
+                    )}
                   </TableCell>
                   <TableCell>
                     <Badge className={statusColors[submission.status || "pending"] || statusColors.pending}>
