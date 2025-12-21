@@ -1,4 +1,4 @@
-import { MetadataRoute } from "next"
+import { type MetadataRoute } from "next"
 import { createClient } from "@/lib/supabase/server"
 import { siteConfig } from "@/config/site"
 

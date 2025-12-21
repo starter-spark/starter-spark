@@ -3,49 +3,55 @@
 import { revalidatePath } from "next/cache"
 import { createClient } from "@/lib/supabase/server"
 import { supabaseAdmin } from "@/lib/supabase/admin"
-import { generateLicenseCode } from "@/lib/validation"
+import { generateLicenseCode, isValidEmail } from "@/lib/validation"
 import { logAuditEvent } from "@/lib/audit"
+import { requireAdmin, requireAdminOrStaff } from "@/lib/auth"
 
 export async function revokeLicense(
   licenseId: string
 ): Promise<{ error: string | null }> {
   const supabase = await createClient()
 
-  // Check if user is admin
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return { error: "Unauthorized" }
+  const guard = await requireAdmin(supabase)
+  if (!guard.ok) {
+    return { error: guard.user ? "Only admins can revoke licenses" : guard.error }
   }
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single()
-
-  if (!profile || profile.role !== "admin") {
-    return { error: "Only admins can revoke licenses" }
-  }
+  const user = guard.user
 
   // Get license info before revoking for audit log
-  const { data: license } = await supabaseAdmin
+  const { data: license, error: licenseError } = await supabaseAdmin
     .from("licenses")
     .select("code, owner_id, product_id")
     .eq("id", licenseId)
-    .single()
+    .maybeSingle()
+
+  if (licenseError) {
+    console.error("Error fetching license:", licenseError)
+    return { error: licenseError.message }
+  }
+
+  if (!license) {
+    return { error: "License not found" }
+  }
 
   // Use admin client to bypass RLS
-  const { error } = await supabaseAdmin
+  const { data: revoked, error: revokeError } = await supabaseAdmin
     .from("licenses")
     .update({
       owner_id: null,
       claimed_at: null,
     })
     .eq("id", licenseId)
+    .select("id")
+    .maybeSingle()
 
-  if (error) {
-    console.error("Error revoking license:", error)
-    return { error: error.message }
+  if (revokeError) {
+    console.error("Error revoking license:", revokeError)
+    return { error: revokeError.message }
+  }
+
+  if (!revoked) {
+    return { error: "License not found" }
   }
 
   // Log audit event
@@ -73,58 +79,58 @@ export async function generateLicenses(
 ): Promise<{ error: string | null; codes: string[] }> {
   const supabase = await createClient()
 
-  // Check if user is admin/staff
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return { error: "Unauthorized", codes: [] }
+  const guard = await requireAdminOrStaff(supabase)
+  if (!guard.ok) return { error: guard.error, codes: [] }
+  const user = guard.user
+
+  const safeQuantity = Number.isFinite(quantity) ? Math.trunc(quantity) : 0
+  if (safeQuantity < 1) {
+    return { error: "Quantity must be at least 1", codes: [] }
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single()
-
-  if (!profile || (profile.role !== "admin" && profile.role !== "staff")) {
-    return { error: "Unauthorized", codes: [] }
+  // Avoid accidental huge inserts from the UI.
+  if (safeQuantity > 500) {
+    return { error: "Quantity too large (max 500)", codes: [] }
   }
 
-  // Generate unique codes
-  const codes: string[] = []
-  const maxAttempts = quantity * 3
+  // Generate and insert codes in rounds using upsert(ignoreDuplicates) so we don't
+  // spam the DB with per-code existence checks.
+  const insertedCodes: string[] = []
+  const maxRounds = 10
 
-  for (let i = 0; i < maxAttempts && codes.length < quantity; i++) {
-    const code = generateLicenseCode()
+  for (let round = 0; round < maxRounds && insertedCodes.length < safeQuantity; round++) {
+    const remaining = safeQuantity - insertedCodes.length
+    const batchSize = Math.min(Math.max(remaining * 2, 10), 200)
+    const batch = new Set<string>()
+    while (batch.size < batchSize) batch.add(generateLicenseCode())
 
-    // Check if code already exists
-    const { data: existing } = await supabaseAdmin
+    const licensesToInsert = [...batch].map((code) => ({
+      code,
+      product_id: productId,
+      source,
+      owner_id: null,
+    }))
+
+    const { data: inserted, error: insertError } = await supabaseAdmin
       .from("licenses")
-      .select("id")
-      .eq("code", code)
-      .single()
+      .upsert(licensesToInsert, {
+        onConflict: "code",
+        ignoreDuplicates: true,
+      })
+      .select("code")
 
-    if (!existing) {
-      codes.push(code)
+    if (insertError) {
+      console.error("Error generating licenses:", insertError)
+      return { error: insertError.message, codes: [] }
+    }
+
+    if (inserted) {
+      insertedCodes.push(...inserted.map((row) => row.code))
     }
   }
 
-  if (codes.length < quantity) {
+  if (insertedCodes.length < safeQuantity) {
     return { error: "Could not generate enough unique codes", codes: [] }
-  }
-
-  // Insert licenses
-  const licensesToInsert = codes.map((code) => ({
-    code,
-    product_id: productId,
-    source,
-    owner_id: null,
-  }))
-
-  const { error } = await supabaseAdmin.from("licenses").insert(licensesToInsert)
-
-  if (error) {
-    console.error("Error generating licenses:", error)
-    return { error: error.message, codes: [] }
   }
 
   // Log audit event for bulk license creation
@@ -134,61 +140,52 @@ export async function generateLicenses(
     resourceType: 'license',
     resourceId: productId,
     details: {
-      quantity,
+      quantity: safeQuantity,
       source,
       productId,
       // Don't log all codes - could be sensitive
-      sampleCodes: codes.slice(0, 3),
+      sampleCodes: insertedCodes.slice(0, 3),
     },
   })
 
   revalidatePath("/admin/licenses")
 
-  return { error: null, codes }
+  return { error: null, codes: insertedCodes.slice(0, safeQuantity) }
 }
 
 export async function assignLicense(
   licenseId: string,
   userEmail: string
 ): Promise<{ error: string | null }> {
+  const normalizedEmail = userEmail.trim().toLowerCase()
+  if (!isValidEmail(normalizedEmail)) {
+    return { error: "Invalid email" }
+  }
+
   const supabase = await createClient()
 
-  // Check if user is admin/staff
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return { error: "Unauthorized" }
-  }
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single()
-
-  if (!profile || (profile.role !== "admin" && profile.role !== "staff")) {
-    return { error: "Unauthorized" }
-  }
+  const guard = await requireAdminOrStaff(supabase)
+  if (!guard.ok) return { error: guard.error }
+  const user = guard.user
 
   // Find user by email
-  const { data: targetUser } = await supabaseAdmin
+  const { data: targetUser, error: targetUserError } = await supabaseAdmin
     .from("profiles")
     .select("id")
-    .eq("email", userEmail)
-    .single()
+    .ilike("email", normalizedEmail)
+    .maybeSingle()
+
+  if (targetUserError) {
+    console.error("Error looking up user by email:", targetUserError)
+    return { error: targetUserError.message }
+  }
 
   if (!targetUser) {
     return { error: "User not found" }
   }
 
-  // Get license info for audit log
-  const { data: license } = await supabaseAdmin
-    .from("licenses")
-    .select("code, product_id")
-    .eq("id", licenseId)
-    .single()
-
   // Assign license
-  const { error } = await supabaseAdmin
+  const { data: updatedLicense, error: assignError } = await supabaseAdmin
     .from("licenses")
     .update({
       owner_id: targetUser.id,
@@ -196,10 +193,16 @@ export async function assignLicense(
     })
     .eq("id", licenseId)
     .is("owner_id", null) // Only if unclaimed
+    .select("id, code, product_id")
+    .maybeSingle()
 
-  if (error) {
-    console.error("Error assigning license:", error)
-    return { error: error.message }
+  if (assignError) {
+    console.error("Error assigning license:", assignError)
+    return { error: assignError.message }
+  }
+
+  if (!updatedLicense) {
+    return { error: "License not found or already claimed" }
   }
 
   // Log audit event
@@ -209,9 +212,9 @@ export async function assignLicense(
     resourceType: 'license',
     resourceId: licenseId,
     details: {
-      code: license?.code,
-      productId: license?.product_id,
-      assignedToEmail: userEmail,
+      code: updatedLicense.code,
+      productId: updatedLicense.product_id,
+      assignedToEmail: normalizedEmail,
       assignedToId: targetUser.id,
     },
   })

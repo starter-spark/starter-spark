@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { FlowEditor } from "@/components/learn/FlowEditor"
 import { generateArduinoCode, parseFlowState, type FlowState } from "@/components/learn/visual-programming"
 
-type VisualBlocksChallengeProps = {
+interface VisualBlocksChallengeProps {
   starterFlow: unknown
   solutionFlow?: unknown
 }

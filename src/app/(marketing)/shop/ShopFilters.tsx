@@ -1,6 +1,6 @@
 "use client"
 
-import { ProductCard, ProductTag } from "@/components/commerce"
+import { ProductCard, type ProductTag } from "@/components/commerce"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Search, Filter } from "lucide-react"
@@ -32,7 +32,7 @@ export function ShopFilters({ products }: ShopFiltersProps) {
   const [search, setSearch] = useState("")
   const [filter, setFilter] = useState<FilterOption>("all")
 
-  const filterOptions: Array<{ value: FilterOption; label: string }> = [
+  const filterOptions: { value: FilterOption; label: string }[] = [
     { value: "all", label: "All" },
     { value: "kit", label: "Kits" },
     { value: "bundle", label: "Bundles" },
@@ -62,7 +62,7 @@ export function ShopFilters({ products }: ShopFiltersProps) {
                 type="text"
                 placeholder="Search products..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => { setSearch(e.target.value); }}
                 className="pl-10 bg-white border-slate-200 focus:border-cyan-700"
               />
             </div>
@@ -75,7 +75,7 @@ export function ShopFilters({ products }: ShopFiltersProps) {
                   key={value}
                   variant={filter === value ? "default" : "outline"}
                   size="sm"
-                  onClick={() => setFilter(value)}
+                  onClick={() => { setFilter(value); }}
                   className={
                     filter === value
                       ? "bg-cyan-700 hover:bg-cyan-600 text-white font-mono"

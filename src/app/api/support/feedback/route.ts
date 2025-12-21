@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from "next/server"
+import { type NextRequest, NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase/admin"
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit"
+import { isUuid } from "@/lib/uuid"
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null
@@ -16,6 +17,13 @@ export async function POST(request: NextRequest) {
     const isHelpful = isRecord(body) && typeof body.isHelpful === "boolean" ? body.isHelpful : null
 
     if (!articleId || typeof isHelpful !== "boolean") {
+      return NextResponse.json(
+        { error: "Invalid request" },
+        { status: 400 }
+      )
+    }
+
+    if (!isUuid(articleId)) {
       return NextResponse.json(
         { error: "Invalid request" },
         { status: 400 }

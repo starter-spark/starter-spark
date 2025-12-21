@@ -77,12 +77,12 @@ function formatDateRange(start: string, end: string | null): string {
 
   // Same day event
   if (endDate && startDate.toDateString() === endDate.toDateString()) {
-    return `${formatEventTime(start)} - ${formatEventTime(end as string)}`
+    return `${formatEventTime(start)} - ${formatEventTime(end!)}`
   }
 
   // Multi-day event
   if (endDate) {
-    return `${formatEventDate(start)} - ${formatEventDate(end as string)}`
+    return `${formatEventDate(start)} - ${formatEventDate(end!)}`
   }
 
   return formatEventTime(start)

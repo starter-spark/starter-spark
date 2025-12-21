@@ -135,12 +135,25 @@
   }
 }
 
-/* The Blueprint Grid Texture (Light Mode) */
+/* The Blueprint Grid Texture (Light Mode) - Marketing pages only */
 body {
   @apply bg-background text-foreground font-sans antialiased;
   /* Slate-300 dots, 1.5px size, 32px spacing - Corrected Syntax */
   background-image: radial-gradient(var(--grid-color) 1.5px, transparent 1.5px);
-  background-size: 32px 32px; 
+  background-size: 32px 32px;
+}
+
+/* Remove grid pattern from admin pages and constrain height */
+body:has(.admin-layout) {
+  background-image: none;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Ensure html doesn't create extra scroll on admin */
+html:has(.admin-layout) {
+  height: 100vh;
+  overflow: hidden;
 }
 
 /* Custom Scrollbar (Webkit) */

@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { createClient } from "@/lib/supabase/client"
+import { createPost } from "@/app/(marketing)/community/actions"
 import { useRouter } from "next/navigation"
 import { Send, Code, Bold, Italic, Link as LinkIcon, HelpCircle } from "lucide-react"
 
@@ -68,43 +68,23 @@ export function NewQuestionForm({ products }: NewQuestionFormProps) {
     setIsSubmitting(true)
 
     try {
-      const supabase = createClient()
+      const result = await createPost({
+        title,
+        content,
+        productId,
+        tags: selectedTags,
+      })
 
-      // Get current user
-      const { data: { user } } = await supabase.auth.getUser()
-
-      if (!user) {
-        setError("You must be logged in to post a question.")
-        setIsSubmitting(false)
+      if (!result.success) {
+        setError(result.error || "Failed to post your question. Please try again.")
         return
       }
 
-      // Insert the post
-      const { data: post, error: insertError } = await supabase
-        .from("posts")
-        .insert({
-          title: title.trim(),
-          content: content.trim(),
-          author_id: user.id,
-          product_id: productId || null,
-          tags: selectedTags.length > 0 ? selectedTags : null,
-          status: "open",
-        })
-        .select("slug, id")
-        .single()
-
-      if (insertError) {
-        console.error("Error posting question:", insertError)
-        setError("Failed to post your question. Please try again.")
-        setIsSubmitting(false)
-        return
-      }
-
-      // Redirect to the new question using ID (more reliable than slug)
-      router.push(`/community/${post.id}`)
+      router.push(`/community/${result.postId}`)
     } catch (err) {
       console.error("Error:", err)
       setError("An unexpected error occurred. Please try again.")
+    } finally {
       setIsSubmitting(false)
     }
   }
@@ -153,7 +133,7 @@ export function NewQuestionForm({ products }: NewQuestionFormProps) {
           id="title"
           type="text"
           value={title}
-          onChange={(e) => setTitle(e.target.value)}
+          onChange={(e) => { setTitle(e.target.value); }}
           placeholder="What's your question? Be specific."
           className="bg-white border-slate-200 focus:border-cyan-700"
           maxLength={200}
@@ -174,7 +154,7 @@ export function NewQuestionForm({ products }: NewQuestionFormProps) {
         <select
           id="product"
           value={productId}
-          onChange={(e) => setProductId(e.target.value)}
+          onChange={(e) => { setProductId(e.target.value); }}
           className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm text-slate-700 focus:border-cyan-700 focus:outline-none"
         >
           <option value="">Select a product...</option>
@@ -196,7 +176,7 @@ export function NewQuestionForm({ products }: NewQuestionFormProps) {
             <button
               key={tag}
               type="button"
-              onClick={() => toggleTag(tag)}
+              onClick={() => { toggleTag(tag); }}
               className={`cursor-pointer px-3 py-1 text-sm font-mono rounded transition-colors ${
                 selectedTags.includes(tag)
                   ? "bg-cyan-700 text-white"
@@ -222,7 +202,7 @@ export function NewQuestionForm({ products }: NewQuestionFormProps) {
         <div className="flex items-center gap-2 mb-2 p-2 bg-slate-50 border border-b-0 border-slate-200 rounded-t">
           <button
             type="button"
-            onClick={() => insertFormatting("**", "**")}
+            onClick={() => { insertFormatting("**", "**"); }}
             className="cursor-pointer p-2 text-slate-500 hover:text-cyan-700 hover:bg-white rounded transition-colors"
             title="Bold"
           >
@@ -230,7 +210,7 @@ export function NewQuestionForm({ products }: NewQuestionFormProps) {
           </button>
           <button
             type="button"
-            onClick={() => insertFormatting("*", "*")}
+            onClick={() => { insertFormatting("*", "*"); }}
             className="cursor-pointer p-2 text-slate-500 hover:text-cyan-700 hover:bg-white rounded transition-colors"
             title="Italic"
           >
@@ -238,7 +218,7 @@ export function NewQuestionForm({ products }: NewQuestionFormProps) {
           </button>
           <button
             type="button"
-            onClick={() => insertFormatting("`", "`")}
+            onClick={() => { insertFormatting("`", "`"); }}
             className="cursor-pointer p-2 text-slate-500 hover:text-cyan-700 hover:bg-white rounded transition-colors"
             title="Inline Code"
           >
@@ -246,7 +226,7 @@ export function NewQuestionForm({ products }: NewQuestionFormProps) {
           </button>
           <button
             type="button"
-            onClick={() => insertFormatting("\n```cpp\n", "\n```\n")}
+            onClick={() => { insertFormatting("\n```cpp\n", "\n```\n"); }}
             className="cursor-pointer p-2 text-slate-500 hover:text-cyan-700 hover:bg-white rounded transition-colors text-xs font-mono"
             title="Code Block"
           >
@@ -254,7 +234,7 @@ export function NewQuestionForm({ products }: NewQuestionFormProps) {
           </button>
           <button
             type="button"
-            onClick={() => insertFormatting("[", "](url)")}
+            onClick={() => { insertFormatting("[", "](url)"); }}
             className="cursor-pointer p-2 text-slate-500 hover:text-cyan-700 hover:bg-white rounded transition-colors"
             title="Link"
           >
@@ -265,7 +245,7 @@ export function NewQuestionForm({ products }: NewQuestionFormProps) {
         <textarea
           id="question-content"
           value={content}
-          onChange={(e) => setContent(e.target.value)}
+          onChange={(e) => { setContent(e.target.value); }}
           placeholder="Describe your question in detail...
 
 Include:
@@ -313,7 +293,7 @@ The more detail you provide, the better we can help!"
         <Button
           type="button"
           variant="outline"
-          onClick={() => router.back()}
+          onClick={() => { router.back(); }}
           className="border-slate-200 text-slate-600 hover:text-slate-900"
         >
           Cancel

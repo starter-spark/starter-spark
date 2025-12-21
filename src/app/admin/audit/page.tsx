@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabase/admin"
+import { createClient } from "@/lib/supabase/server"
 import { AuditLogTable } from "./AuditLogTable"
 
 export const metadata = {
@@ -12,7 +13,26 @@ async function getAuditLogs(searchParams: {
   action?: string
   user?: string
 }) {
-  const page = parseInt(searchParams.page || "1")
+  // Defense-in-depth: verify admin/staff before using service role.
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) {
+    return { logs: [], count: 0, userEmails: {} }
+  }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .maybeSingle()
+
+  if (!profile || (profile.role !== "admin" && profile.role !== "staff")) {
+    return { logs: [], count: 0, userEmails: {} }
+  }
+
+  const page = Number.parseInt(searchParams.page || "1")
   const limit = 25
   const offset = (page - 1) * limit
 
@@ -47,11 +67,11 @@ async function getAuditLogs(searchParams: {
       .select("id, email")
       .in("id", userIds)
 
-    profiles?.forEach((p) => {
+    if (profiles) for (const p of profiles) {
       if (p.id && p.email) {
         userEmails[p.id] = p.email
       }
-    })
+    }
   }
 
   return { logs: logs || [], count: count || 0, userEmails }
@@ -69,7 +89,7 @@ export default async function AuditLogPage({
 }) {
   const params = await searchParams
   const { logs, count, userEmails } = await getAuditLogs(params)
-  const currentPage = parseInt(params.page || "1")
+  const currentPage = Number.parseInt(params.page || "1")
   const totalPages = Math.ceil(count / 25)
 
   return (

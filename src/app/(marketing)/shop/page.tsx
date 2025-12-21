@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server"
 import { ShopFilters } from "./ShopFilters"
 import { Package } from "lucide-react"
 import Link from "next/link"
-import { ProductTag } from "@/components/commerce"
+import { type ProductTag } from "@/components/commerce"
 import { getContents } from "@/lib/content"
 import type { Metadata } from "next"
 import { siteConfig } from "@/config/site"
@@ -73,7 +73,6 @@ export default async function ShopPage() {
         type,
         url,
         is_primary,
-        image_type,
         sort_order
       )
     `)
@@ -84,8 +83,8 @@ export default async function ShopPage() {
   }
 
   // Transform and sort products for display
-  type ProductTagItem = { tag: string; priority: number | null; discount_percent: number | null; expires_at: string | null }
-  type ProductMediaItem = { type: string | null; url: string; is_primary: boolean | null; image_type: string | null; sort_order: number | null }
+  interface ProductTagItem { tag: string; priority: number | null; discount_percent: number | null; expires_at: string | null }
+  interface ProductMediaItem { type: string | null; url: string; is_primary: boolean | null; sort_order: number | null }
 
   const transformedProducts = (products || []).map((product) => {
     const specs = product.specs as {
@@ -108,14 +107,13 @@ export default async function ShopPage() {
       discount_percent: t.discount_percent,
     }))
 
-    // Get primary image or first hero image or first image (filter out 3D models)
+    // Get primary image or first image by sort_order (filter out 3D models, videos, documents)
     const productMedia = (product.product_media as unknown as ProductMediaItem[] | null) || []
     const media = productMedia.filter((m) => m.type === 'image' || !m.type)
     const primaryImage = media.find((m) => m.is_primary)
-    const heroImage = media.find((m) => m.image_type === "hero")
     const sortedMedia = [...media].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
     const firstImage = sortedMedia[0]
-    const image = primaryImage?.url || heroImage?.url || firstImage?.url || undefined
+    const image = primaryImage?.url || firstImage?.url || undefined
 
     return {
       id: product.id,

@@ -78,7 +78,7 @@ export function Leaderboard({ entries, currentUserRank }: LeaderboardProps) {
       {entries.length > 5 && (
         <button
           type="button"
-          onClick={() => setExpanded(!expanded)}
+          onClick={() => { setExpanded(!expanded); }}
           className="w-full px-4 py-2 text-xs text-slate-500 hover:text-slate-700 hover:bg-slate-50 flex items-center justify-center gap-1 border-t border-slate-100"
         >
           {expanded ? (

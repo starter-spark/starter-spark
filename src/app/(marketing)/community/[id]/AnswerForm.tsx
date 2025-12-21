@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { createClient } from "@/lib/supabase/client"
+import { createAnswer } from "@/app/(marketing)/community/actions"
 import { useRouter } from "next/navigation"
 import { Send, Code, Bold, Italic, Link as LinkIcon } from "lucide-react"
 
@@ -28,34 +28,13 @@ export function AnswerForm({ postId }: AnswerFormProps) {
     setIsSubmitting(true)
 
     try {
-      const supabase = createClient()
+      const result = await createAnswer({ postId, content })
 
-      // Get current user
-      const { data: { user } } = await supabase.auth.getUser()
-
-      if (!user) {
-        setError("You must be logged in to post an answer.")
-        setIsSubmitting(false)
+      if (!result.success) {
+        setError(result.error || "Failed to post your answer. Please try again.")
         return
       }
 
-      // Insert the comment
-      const { error: insertError } = await supabase
-        .from("comments")
-        .insert({
-          post_id: postId,
-          author_id: user.id,
-          content: content.trim(),
-        })
-
-      if (insertError) {
-        console.error("Error posting answer:", insertError)
-        setError("Failed to post your answer. Please try again.")
-        setIsSubmitting(false)
-        return
-      }
-
-      // Clear form and refresh
       setContent("")
       router.refresh()
     } catch (err) {
@@ -95,7 +74,7 @@ export function AnswerForm({ postId }: AnswerFormProps) {
       <div className="flex items-center gap-2 mb-3 pb-3 border-b border-slate-100">
         <button
           type="button"
-          onClick={() => insertFormatting("**", "**")}
+          onClick={() => { insertFormatting("**", "**"); }}
           className="p-2 text-slate-500 hover:text-cyan-700 hover:bg-slate-50 rounded transition-colors"
           title="Bold"
         >
@@ -103,7 +82,7 @@ export function AnswerForm({ postId }: AnswerFormProps) {
         </button>
         <button
           type="button"
-          onClick={() => insertFormatting("*", "*")}
+          onClick={() => { insertFormatting("*", "*"); }}
           className="p-2 text-slate-500 hover:text-cyan-700 hover:bg-slate-50 rounded transition-colors"
           title="Italic"
         >
@@ -111,7 +90,7 @@ export function AnswerForm({ postId }: AnswerFormProps) {
         </button>
         <button
           type="button"
-          onClick={() => insertFormatting("`", "`")}
+          onClick={() => { insertFormatting("`", "`"); }}
           className="p-2 text-slate-500 hover:text-cyan-700 hover:bg-slate-50 rounded transition-colors"
           title="Inline Code"
         >
@@ -119,7 +98,7 @@ export function AnswerForm({ postId }: AnswerFormProps) {
         </button>
         <button
           type="button"
-          onClick={() => insertFormatting("\n```cpp\n", "\n```\n")}
+          onClick={() => { insertFormatting("\n```cpp\n", "\n```\n"); }}
           className="p-2 text-slate-500 hover:text-cyan-700 hover:bg-slate-50 rounded transition-colors text-xs font-mono"
           title="Code Block"
         >
@@ -127,7 +106,7 @@ export function AnswerForm({ postId }: AnswerFormProps) {
         </button>
         <button
           type="button"
-          onClick={() => insertFormatting("[", "](url)")}
+          onClick={() => { insertFormatting("[", "](url)"); }}
           className="p-2 text-slate-500 hover:text-cyan-700 hover:bg-slate-50 rounded transition-colors"
           title="Link"
         >
@@ -139,7 +118,7 @@ export function AnswerForm({ postId }: AnswerFormProps) {
       <textarea
         id="answer-content"
         value={content}
-        onChange={(e) => setContent(e.target.value)}
+        onChange={(e) => { setContent(e.target.value); }}
         placeholder="Write your answer..."
         rows={8}
         className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded text-slate-700 placeholder:text-slate-500 focus:outline-none focus:border-cyan-700 focus:bg-white resize-y min-h-[150px]"

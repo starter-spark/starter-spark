@@ -109,7 +109,7 @@ export async function logAuditEvent({
       action,
       resource_type: resourceType,
       resource_id: resourceId || null,
-      details: (details as Json) || null,
+      details: (details as unknown as Json) || null,
       ip_address: ipAddress,
       user_agent: userAgent,
     })
@@ -152,9 +152,14 @@ export async function getAuditLogs(options?: {
     .from('profiles')
     .select('role')
     .eq('id', user.id)
-    .single()
+    .maybeSingle()
 
-  if (profileError || !profile || (profile.role !== 'admin' && profile.role !== 'staff')) {
+  if (profileError) {
+    console.error('[Audit] Failed to verify admin role:', profileError)
+    return []
+  }
+
+  if (!profile || (profile.role !== 'admin' && profile.role !== 'staff')) {
     return []
   }
 

@@ -61,13 +61,13 @@ export function SkillAssessment({ userId, onComplete }: SkillAssessmentProps) {
 
   const calculateSkillLevel = (): string => {
     let totalPoints = 0
-    questions.forEach((q) => {
+    for (const q of questions) {
       const questionId = q.id
       // eslint-disable-next-line security/detect-object-injection -- questionId is from trusted questions array
       const answer = answers[questionId]
       const option = q.options.find((o) => o.value === answer)
       if (option) totalPoints += option.points
-    })
+    }
 
     // Max points = 9 (3 questions * 3 max points)
     if (totalPoints <= 2) return "beginner"

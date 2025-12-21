@@ -8,8 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Separator } from "@/components/ui/separator"
 import { Loader2, Save, Trash2, Plus, X, Package, AlertTriangle, Image as ImageIcon } from "lucide-react"
 import { updateProduct, deleteProduct, updateProductTags, saveProductMedia } from "../actions"
-import { MediaUploader, MediaItem } from "@/components/admin/MediaUploader"
-import { Database } from "@/lib/supabase/database.types"
+import { MediaUploader, type MediaItem } from "@/components/admin/MediaUploader"
+import { type Database } from "@/lib/supabase/database.types"
 
 type ProductTagType = Database["public"]["Enums"]["product_tag_type"]
 
@@ -154,11 +154,11 @@ export function ProductForm({ product, initialTags = [], initialMedia = [] }: Pr
 
     // Convert specs array to object
     const specsObject: Record<string, string> = {}
-    specs.forEach((spec) => {
+    for (const spec of specs) {
       if (spec.key.trim()) {
         specsObject[spec.key.trim()] = spec.value.trim()
       }
-    })
+    }
 
     startTransition(async () => {
       // Update product
@@ -222,7 +222,7 @@ export function ProductForm({ product, initialTags = [], initialMedia = [] }: Pr
   }
 
   return (
-    <form onSubmit={(e) => void handleSubmit(e)} className="space-y-6">
+    <form onSubmit={(e) => { handleSubmit(e); }} className="space-y-6">
       {error && (
         <div className="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-600">
           {error}
@@ -244,7 +244,7 @@ export function ProductForm({ product, initialTags = [], initialMedia = [] }: Pr
               <Input
                 id="name"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => { setName(e.target.value); }}
                 required
               />
             </div>
@@ -255,7 +255,7 @@ export function ProductForm({ product, initialTags = [], initialMedia = [] }: Pr
               <Input
                 id="slug"
                 value={slug}
-                onChange={(e) => setSlug(e.target.value)}
+                onChange={(e) => { setSlug(e.target.value); }}
                 required
                 pattern="[a-z0-9\-]+"
                 title="Lowercase letters, numbers, and hyphens only"
@@ -269,7 +269,7 @@ export function ProductForm({ product, initialTags = [], initialMedia = [] }: Pr
             <textarea
               id="description"
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={(e) => { setDescription(e.target.value); }}
               className="min-h-[100px] w-full rounded-md border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-700 focus:ring-offset-2"
             />
           </div>
@@ -294,7 +294,7 @@ export function ProductForm({ product, initialTags = [], initialMedia = [] }: Pr
                 type="number"
                 min="0"
                 value={priceCents}
-                onChange={(e) => setPriceCents(parseInt(e.target.value) || 0)}
+                onChange={(e) => { setPriceCents(Number.parseInt(e.target.value) || 0); }}
                 required
               />
               <p className="text-xs text-slate-500">
@@ -308,7 +308,7 @@ export function ProductForm({ product, initialTags = [], initialMedia = [] }: Pr
               <Input
                 id="stripe"
                 value={stripePriceId}
-                onChange={(e) => setStripePriceId(e.target.value)}
+                onChange={(e) => { setStripePriceId(e.target.value); }}
                 placeholder="price_..."
               />
             </div>
@@ -349,7 +349,7 @@ export function ProductForm({ product, initialTags = [], initialMedia = [] }: Pr
                       min="1"
                       max="99"
                       value={discountPercent ?? ""}
-                      onChange={(e) => setDiscountPercent(e.target.value ? parseInt(e.target.value) : null)}
+                      onChange={(e) => { setDiscountPercent(e.target.value ? Number.parseInt(e.target.value) : null); }}
                       placeholder="e.g., 20"
                       className="bg-white"
                     />
@@ -362,7 +362,7 @@ export function ProductForm({ product, initialTags = [], initialMedia = [] }: Pr
                       id="discountExpires"
                       type="datetime-local"
                       value={discountExpiresAt ? discountExpiresAt.slice(0, 16) : ""}
-                      onChange={(e) => setDiscountExpiresAt(e.target.value ? new Date(e.target.value).toISOString() : "")}
+                      onChange={(e) => { setDiscountExpiresAt(e.target.value ? new Date(e.target.value).toISOString() : ""); }}
                       className="bg-white"
                     />
                   </div>
@@ -436,7 +436,7 @@ export function ProductForm({ product, initialTags = [], initialMedia = [] }: Pr
                     type="number"
                     min="0"
                     value={stockQuantity ?? ""}
-                    onChange={(e) => setStockQuantity(e.target.value ? parseInt(e.target.value) : null)}
+                    onChange={(e) => { setStockQuantity(e.target.value ? Number.parseInt(e.target.value) : null); }}
                     placeholder="e.g., 50"
                   />
                 </div>
@@ -449,7 +449,7 @@ export function ProductForm({ product, initialTags = [], initialMedia = [] }: Pr
                     type="number"
                     min="1"
                     value={lowStockThreshold}
-                    onChange={(e) => setLowStockThreshold(parseInt(e.target.value) || 10)}
+                    onChange={(e) => { setLowStockThreshold(Number.parseInt(e.target.value) || 10); }}
                   />
                   <p className="text-xs text-slate-500">
                     Product shows &quot;Limited&quot; when stock falls to or below this number
@@ -558,7 +558,7 @@ export function ProductForm({ product, initialTags = [], initialMedia = [] }: Pr
                           max="100"
                           value={getTagPriority(tagInfo.type)}
                           onChange={(e) =>
-                            updateTagPriority(tagInfo.type, parseInt(e.target.value) || 0)
+                            { updateTagPriority(tagInfo.type, Number.parseInt(e.target.value) || 0); }
                           }
                           className="w-20 h-7 text-xs"
                         />
@@ -602,20 +602,20 @@ export function ProductForm({ product, initialTags = [], initialMedia = [] }: Pr
                   <Input
                     placeholder="Key"
                     value={spec.key}
-                    onChange={(e) => handleSpecChange(index, "key", e.target.value)}
+                    onChange={(e) => { handleSpecChange(index, "key", e.target.value); }}
                     className="flex-1"
                   />
                   <Input
                     placeholder="Value"
                     value={spec.value}
-                    onChange={(e) => handleSpecChange(index, "value", e.target.value)}
+                    onChange={(e) => { handleSpecChange(index, "value", e.target.value); }}
                     className="flex-1"
                   />
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon"
-                    onClick={() => handleRemoveSpec(index)}
+                    onClick={() => { handleRemoveSpec(index); }}
                   >
                     <X className="h-4 w-4" />
                   </Button>
@@ -666,7 +666,7 @@ export function ProductForm({ product, initialTags = [], initialMedia = [] }: Pr
           <Button
             type="button"
             variant="outline"
-            onClick={() => router.push("/admin/products")}
+            onClick={() => { router.push("/admin/products"); }}
           >
             Cancel
           </Button>

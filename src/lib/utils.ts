@@ -14,9 +14,9 @@ export function formatRelativeTime(dateString: string): string {
   const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000)
 
   if (diffInSeconds < 60) return "just now"
-  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} min ago`
-  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`
-  if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} days ago`
+  if (diffInSeconds < 3600) return String(Math.floor(diffInSeconds / 60)) + " min ago"
+  if (diffInSeconds < 86_400) return String(Math.floor(diffInSeconds / 3600)) + " hours ago"
+  if (diffInSeconds < 604_800) return String(Math.floor(diffInSeconds / 86_400)) + " days ago"
   return date.toLocaleDateString()
 }
 
@@ -24,10 +24,12 @@ export function formatRelativeTime(dateString: string): string {
  * Formats duration in minutes to human-readable string (e.g., "1h 30m", "45 min")
  */
 export function formatDuration(minutes: number): string {
-  if (minutes < 60) return `${minutes} min`
+  if (minutes < 60) return String(minutes) + " min"
   const hours = Math.floor(minutes / 60)
   const mins = minutes % 60
-  return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`
+  return mins > 0
+    ? String(hours) + "h " + String(mins) + "m"
+    : String(hours) + "h"
 }
 
 /**

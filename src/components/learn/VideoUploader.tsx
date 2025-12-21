@@ -1,11 +1,12 @@
 "use client"
 
-import { useState, useRef, useCallback } from "react"
+import { useEffect, useState, useRef, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Upload, Video, X, Loader2, CheckCircle2, AlertCircle, Link2 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { resolveLearnAssetUrl, parseLearnAssetRef, toLearnAssetRef } from "@/lib/learn-assets"
 
 interface VideoUploaderProps {
   lessonId: string
@@ -25,16 +26,39 @@ export function VideoUploader({
   const [uploadState, setUploadState] = useState<UploadState>("idle")
   const [progress, setProgress] = useState(0)
   const [error, setError] = useState<string | null>(null)
-  const [showUrlInput, setShowUrlInput] = useState(!!value && !value.includes("learn-assets"))
+  const progressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const resetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const isLearnAsset =
+    Boolean(parseLearnAssetRef(value)) ||
+    value.startsWith("lessons/") ||
+    (value.includes("/storage/v1/object/") && value.includes("/learn-assets/"))
+  const isExternalUrl = value.startsWith("http") && !isLearnAsset
+
+  const [showUrlInput, setShowUrlInput] = useState(
+    Boolean(value) && isExternalUrl
+  )
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [dragOver, setDragOver] = useState(false)
 
-  const isYouTubeOrExternal = value && (
-    value.includes("youtube.com") ||
-    value.includes("youtu.be") ||
-    value.includes("vimeo.com") ||
-    (!value.includes("learn-assets") && value.startsWith("http"))
-  )
+  useEffect(() => {
+    return () => {
+      if (progressIntervalRef.current !== null) {
+        globalThis.clearInterval(progressIntervalRef.current)
+        progressIntervalRef.current = null
+      }
+      if (resetTimeoutRef.current !== null) {
+        globalThis.clearTimeout(resetTimeoutRef.current)
+        resetTimeoutRef.current = null
+      }
+    }
+  }, [])
+
+  const isYouTubeOrExternal =
+    Boolean(value) &&
+    (value.includes("youtube.com") ||
+      value.includes("youtu.be") ||
+      value.includes("vimeo.com") ||
+      isExternalUrl)
 
   const handleFileSelect = useCallback(async (file: File) => {
     setError(null)
@@ -64,7 +88,10 @@ export function VideoUploader({
 
     try {
       // Simulate progress for better UX (actual upload doesn't provide progress)
-      const progressInterval = setInterval(() => {
+      if (progressIntervalRef.current !== null) {
+        globalThis.clearInterval(progressIntervalRef.current)
+      }
+      progressIntervalRef.current = globalThis.setInterval(() => {
         setProgress((prev) => Math.min(prev + 10, 90))
       }, 200)
 
@@ -72,8 +99,6 @@ export function VideoUploader({
         method: "POST",
         body: formData,
       })
-
-      clearInterval(progressInterval)
 
       if (!response.ok) {
         const data = await response.json() as { error?: string }
@@ -85,13 +110,20 @@ export function VideoUploader({
       setProgress(100)
       setUploadState("success")
 
-      // Use the signed URL if available, otherwise use the path
-      const videoUrl = data.url || data.path || ""
-      onChange(videoUrl)
+      const videoRef =
+        typeof (data as { ref?: unknown }).ref === "string"
+          ? (data as { ref: string }).ref
+          : typeof data.path === "string"
+            ? toLearnAssetRef("learn-assets", data.path)
+            : ""
+      onChange(videoRef)
       setShowUrlInput(false)
 
       // Reset after a moment
-      setTimeout(() => {
+      if (resetTimeoutRef.current !== null) {
+        globalThis.clearTimeout(resetTimeoutRef.current)
+      }
+      resetTimeoutRef.current = globalThis.setTimeout(() => {
         setUploadState("idle")
         setProgress(0)
       }, 2000)
@@ -99,6 +131,11 @@ export function VideoUploader({
       const message = err instanceof Error ? err.message : "Upload failed"
       setError(message)
       setUploadState("error")
+    } finally {
+      if (progressIntervalRef.current !== null) {
+        globalThis.clearInterval(progressIntervalRef.current)
+        progressIntervalRef.current = null
+      }
     }
   }, [lessonId, onChange])
 
@@ -146,10 +183,10 @@ export function VideoUploader({
       <div className="flex items-center gap-2 text-sm">
         <button
           type="button"
-          onClick={() => setShowUrlInput(false)}
+          onClick={() => { setShowUrlInput(false); }}
           className={cn(
             "px-3 py-1 rounded-full text-xs font-mono transition-colors",
-            !showUrlInput ? "bg-cyan-100 text-cyan-800" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+            showUrlInput ? "bg-slate-100 text-slate-600 hover:bg-slate-200" : "bg-cyan-100 text-cyan-800"
           )}
         >
           <Upload className="w-3 h-3 inline mr-1" />
@@ -157,7 +194,7 @@ export function VideoUploader({
         </button>
         <button
           type="button"
-          onClick={() => setShowUrlInput(true)}
+          onClick={() => { setShowUrlInput(true); }}
           className={cn(
             "px-3 py-1 rounded-full text-xs font-mono transition-colors",
             showUrlInput ? "bg-cyan-100 text-cyan-800" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
@@ -174,7 +211,7 @@ export function VideoUploader({
           <Label className="text-xs">Video URL (YouTube, Vimeo, or direct link)</Label>
           <Input
             value={value}
-            onChange={(e) => onChange(e.target.value)}
+            onChange={(e) => { onChange(e.target.value); }}
             placeholder="https://youtube.com/watch?v=... or https://..."
           />
         </div>
@@ -185,7 +222,7 @@ export function VideoUploader({
           {value && !isYouTubeOrExternal && (
             <div className="relative rounded border border-slate-200 overflow-hidden bg-black">
               <video
-                src={value}
+                src={resolveLearnAssetUrl(value)}
                 controls
                 className="w-full max-h-[300px]"
               />
@@ -212,14 +249,6 @@ export function VideoUploader({
                 uploadState === "uploading" && "pointer-events-none opacity-70"
               )}
             >
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="video/mp4,video/webm,video/quicktime"
-                onChange={handleFileInputChange}
-                className="hidden"
-              />
-
               {uploadState === "idle" && (
                 <>
                   <Video className="w-10 h-10 mx-auto mb-3 text-slate-400" />

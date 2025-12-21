@@ -102,7 +102,7 @@ export default async function CommunityPage({
   }
 
   // Apply text search
-  if (params.q && params.q.trim()) {
+  if (params.q?.trim()) {
     query = query.ilike("title", `%${params.q.trim()}%`)
   }
 
@@ -120,9 +120,9 @@ export default async function CommunityPage({
 
   // Get unique tags from posts
   const allTags = new Set<string>()
-  posts?.forEach((post) => {
-    post.tags?.forEach((tag) => allTags.add(tag))
-  })
+  if (posts) for (const post of posts) {
+    if (post.tags) for (const tag of post.tags) allTags.add(tag)
+  }
   const availableTags = Array.from(allTags).sort()
 
   return (

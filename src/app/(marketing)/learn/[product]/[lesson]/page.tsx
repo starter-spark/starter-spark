@@ -18,70 +18,24 @@ export default async function LessonPage({
   const { product: productSlug, lesson: lessonSlug } = await params
   const supabase = await createClient()
 
-  // Fetch the lesson with its module and course info
-  const { data: lesson, error: lessonError } = await supabase
-    .from("lessons")
-    .select(`
-      id,
-      slug,
-      title,
-      description,
-      lesson_type,
-      difficulty,
-      duration_minutes,
-      sort_order,
-      is_published,
-      module:modules (
-        id,
-        title,
-        sort_order,
-        is_published,
-        course:courses (
-          id,
-          title,
-          is_published,
-          product:products (
-            id,
-            slug,
-            name
-          )
-        )
-      )
-    `)
-    .eq("slug", lessonSlug)
-    .eq("is_published", true)
-    .single()
+  // First fetch the product by slug
+  const { data: product, error: productError } = await supabase
+    .from("products")
+    .select("id, slug, name")
+    .eq("slug", productSlug)
+    .maybeSingle()
 
-  if (lessonError || !lesson) {
+  if (productError) {
+    console.error("Error fetching product:", productError)
+    throw new Error("Failed to load product")
+  }
+
+  if (!product) {
     notFound()
   }
 
-  const lessonModule = lesson.module as unknown as {
-    id: string
-    title: string
-    sort_order: number
-    is_published: boolean | null
-    course: {
-      id: string
-      title: string
-      is_published: boolean | null
-      product: { id: string; slug: string; name: string } | null
-    } | null
-  } | null
-
-  const course = lessonModule?.course
-  const product = course?.product
-
-  if (lessonModule?.is_published === false || course?.is_published === false) {
-    notFound()
-  }
-
-  if (!product || product.slug !== productSlug) {
-    notFound()
-  }
-
-  // Fetch full course structure for sidebar
-  const { data: courseData } = await supabase
+  // Then fetch the published course structure by product_id
+  const { data: courseData, error: courseError } = await supabase
     .from("courses")
     .select(`
       id,
@@ -96,22 +50,31 @@ export default async function LessonPage({
           id,
           slug,
           title,
+          description,
+          lesson_type,
+          difficulty,
+          duration_minutes,
           sort_order,
           is_optional,
           is_published
         )
       )
     `)
-    .eq("id", course.id)
+    .eq("product_id", product.id)
     .eq("is_published", true)
-    .single()
+    .maybeSingle()
+
+  if (courseError) {
+    console.error("Error fetching course structure:", courseError)
+    throw new Error("Failed to load course")
+  }
 
   if (!courseData) {
     notFound()
   }
 
   // Sort modules and lessons
-  type ModuleWithLessons = {
+  interface ModuleWithLessons {
     id: string
     title: string
     sort_order: number
@@ -120,6 +83,10 @@ export default async function LessonPage({
       id: string
       slug: string
       title: string
+      description: string | null
+      lesson_type: string | null
+      difficulty: string | null
+      duration_minutes: number
       sort_order: number
       is_optional: boolean | null
       is_published: boolean | null
@@ -137,18 +104,22 @@ export default async function LessonPage({
           .sort((a, b) => a.sort_order - b.sort_order) || [],
     })) || []
 
-  // Build flat list of all lessons for navigation
-  const allLessons: { slug: string; title: string; moduleId: string }[] = []
-  sortedModules.forEach((mod) => {
-    mod.lessons.forEach((l) => {
-      allLessons.push({ slug: l.slug, title: l.title, moduleId: mod.id })
-    })
-  })
+  const flatLessons = sortedModules.flatMap((mod) =>
+    mod.lessons.map((l) => ({ ...l, moduleId: mod.id }))
+  )
+
+  const lesson = flatLessons.find((l) => l.slug === lessonSlug)
+  if (!lesson) {
+    notFound()
+  }
 
   // Find current lesson index and prev/next
-  const currentIndex = allLessons.findIndex((l) => l.slug === lessonSlug)
-  const prevLesson = currentIndex > 0 ? allLessons[currentIndex - 1] : null
-  const nextLesson = currentIndex < allLessons.length - 1 ? allLessons[currentIndex + 1] : null
+  const currentIndex = flatLessons.findIndex((l) => l.slug === lessonSlug)
+  const prevLesson = currentIndex > 0 ? flatLessons[currentIndex - 1] : null
+  const nextLesson =
+    currentIndex >= 0 && currentIndex < flatLessons.length - 1
+      ? flatLessons[currentIndex + 1]
+      : null
   const nextHref = nextLesson ? `/learn/${productSlug}/${nextLesson.slug}` : `/learn/${productSlug}`
   const prefetchHrefs = nextHref === `/learn/${productSlug}`
     ? [nextHref]
@@ -204,17 +175,18 @@ export default async function LessonPage({
   const lessonContent = lessonContentRaw as LessonContentData | null
 
   // Fetch user's lesson progress for this course
-  const completedLessonIds: Set<string> = new Set()
+  const completedLessonIds = new Set<string>()
   if (user) {
-    const allLessonIds = sortedModules.flatMap((mod) => mod.lessons.map((l) => l.id))
+    const courseLessonIds = sortedModules.flatMap((mod) => mod.lessons.map((l) => l.id))
+    const lessonIdsForProgress = courseLessonIds.length > 0 ? courseLessonIds : [lesson.id]
     const { data: progressData } = await supabase
       .from("lesson_progress")
       .select("lesson_id")
       .eq("user_id", user.id)
-      .in("lesson_id", allLessonIds)
+      .in("lesson_id", lessonIdsForProgress)
 
     if (progressData) {
-      progressData.forEach((p) => completedLessonIds.add(p.lesson_id))
+      for (const p of progressData) completedLessonIds.add(p.lesson_id)
     }
   }
 
@@ -269,7 +241,7 @@ export default async function LessonPage({
         course={sidebarCourse}
         completedLessonIds={completedLessonIds}
         progressPercent={progressPercent}
-        progressStorageKey={`learn:${user.id}:course:${course.id}:progress`}
+        progressStorageKey={`learn:${user.id}:course:${courseData.id}:progress`}
       />
 
       {/* Main Content */}
@@ -330,7 +302,7 @@ export default async function LessonPage({
             }
             isLastLesson={!nextLesson}
             lessonId={lesson.id}
-            progressStorageKey={`learn:${user.id}:course:${course.id}:progress`}
+            progressStorageKey={`learn:${user.id}:course:${courseData.id}:progress`}
             nextProgressPercent={nextProgressPercent}
           />
         </div>

@@ -14,7 +14,7 @@ interface ClaimResponse {
 // Format code as XXXX-XXXX-XXXX-XXXX
 function formatCode(value: string): string {
   // Strip everything except alphanumeric, convert to uppercase
-  const stripped = value.replace(/[^A-Za-z0-9]/g, "").toUpperCase()
+  const stripped = value.replaceAll(/[^A-Za-z0-9]/g, "").toUpperCase()
   // Limit to 16 characters (4 groups of 4)
   const limited = stripped.slice(0, 16)
   // Add dashes every 4 characters

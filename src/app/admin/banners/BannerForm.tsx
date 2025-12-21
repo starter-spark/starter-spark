@@ -80,17 +80,13 @@ export function BannerForm({ banner }: BannerFormProps) {
       const formData = new FormData(e.currentTarget)
 
       // Add multi-select pages
-      selectedPages.forEach((page) => formData.append("pages", page))
+      for (const page of selectedPages) { formData.append("pages", page); }
 
       // Add boolean fields
       formData.set("is_dismissible", isDismissible.toString())
       formData.set("is_active", isActive.toString())
 
-      if (banner?.id) {
-        await updateBanner(banner.id, formData)
-      } else {
-        await createBanner(formData)
-      }
+      await (banner?.id ? updateBanner(banner.id, formData) : createBanner(formData));
 
       router.push("/admin/banners")
       router.refresh()
@@ -219,7 +215,7 @@ export function BannerForm({ banner }: BannerFormProps) {
                     <button
                       key={option.value}
                       type="button"
-                      onClick={() => togglePage(option.value)}
+                      onClick={() => { togglePage(option.value); }}
                       className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-sm transition-colors ${
                         selectedPages.includes(option.value)
                           ? "bg-cyan-100 text-cyan-700"
@@ -333,7 +329,7 @@ export function BannerForm({ banner }: BannerFormProps) {
         <Button
           type="button"
           variant="outline"
-          onClick={() => router.push("/admin/banners")}
+          onClick={() => { router.push("/admin/banners"); }}
           disabled={isSubmitting}
         >
           Cancel

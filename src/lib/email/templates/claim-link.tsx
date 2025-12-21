@@ -10,10 +10,10 @@ import * as React from "react"
 import { BaseLayout } from "./base-layout"
 
 interface ClaimLinkEmailProps {
-  productName: string
-  licenseCode: string
-  claimToken: string
-  siteUrl: string
+  readonly productName: string
+  readonly licenseCode: string
+  readonly claimToken: string
+  readonly siteUrl: string
 }
 
 export function ClaimLinkEmail({

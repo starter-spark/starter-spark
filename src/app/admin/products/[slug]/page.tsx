@@ -27,15 +27,15 @@ async function getProduct(slug: string) {
         mime_type,
         alt_text,
         is_primary,
-        sort_order,
-        image_type
+        sort_order
       )
     `)
     .eq("slug", slug)
-    .single()
+    .maybeSingle()
 
   if (error) {
-    return null
+    console.error("Error fetching product:", error)
+    throw new Error("Failed to load product")
   }
 
   return data
@@ -54,7 +54,7 @@ export default async function EditProductPage({
   }
 
   // Transform tags for the form
-  type ProductTagItem = { tag: string; priority: number | null; discount_percent: number | null }
+  interface ProductTagItem { tag: string; priority: number | null; discount_percent: number | null }
   type ProductTagType = "featured" | "discount" | "new" | "bestseller" | "limited" | "bundle" | "out_of_stock"
   const productTags = (product.product_tags as unknown as ProductTagItem[] | null) || []
   const tags = productTags.map((t) => ({
@@ -64,7 +64,7 @@ export default async function EditProductPage({
   }))
 
   // Transform media for the form
-  type ProductMediaItem = {
+  interface ProductMediaItem {
     id: string
     type: string | null
     url: string
@@ -75,7 +75,6 @@ export default async function EditProductPage({
     alt_text: string | null
     is_primary: boolean | null
     sort_order: number | null
-    image_type: string | null
   }
   const productMedia = (product.product_media as unknown as ProductMediaItem[] | null) || []
   const media = productMedia
@@ -91,7 +90,6 @@ export default async function EditProductPage({
       alt_text: m.alt_text ?? undefined,
       is_primary: m.is_primary ?? false,
       sort_order: m.sort_order ?? 0,
-      image_type: (m.image_type as "hero" | "knolling" | "detail" | "action" | "packaging" | "other") ?? undefined,
     }))
 
   return (

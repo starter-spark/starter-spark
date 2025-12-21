@@ -30,7 +30,7 @@ export function VoteButtons({
 
   const handleVote = async (voteType: 1 | -1) => {
     if (!isAuthenticated) {
-      router.push("/login?redirect=" + encodeURIComponent(window.location.pathname))
+      router.push("/login?redirect=" + encodeURIComponent(globalThis.location.pathname))
       return
     }
 
@@ -63,7 +63,7 @@ export function VoteButtons({
       setVotes(previousVotes)
 
       if (result.requiresAuth) {
-        router.push("/login?redirect=" + encodeURIComponent(window.location.pathname))
+        router.push("/login?redirect=" + encodeURIComponent(globalThis.location.pathname))
       }
     }
 

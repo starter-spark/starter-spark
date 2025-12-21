@@ -61,7 +61,7 @@ export function ArduinoPinout({ isOpen, onClose }: ArduinoPinoutProps) {
     dialogRef.current?.focus()
 
     document.addEventListener("keydown", handleKeyDown)
-    return () => document.removeEventListener("keydown", handleKeyDown)
+    return () => { document.removeEventListener("keydown", handleKeyDown); }
   }, [isOpen, onClose])
 
   if (!isOpen) return null
@@ -78,7 +78,7 @@ export function ArduinoPinout({ isOpen, onClose }: ArduinoPinoutProps) {
         ref={dialogRef}
         tabIndex={-1}
         className="bg-white rounded-lg border border-slate-200 w-full max-w-2xl shadow-xl max-h-[90vh] overflow-hidden flex flex-col outline-none"
-        onClick={(e) => e.stopPropagation()}
+        onClick={(e) => { e.stopPropagation(); }}
       >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-slate-200">

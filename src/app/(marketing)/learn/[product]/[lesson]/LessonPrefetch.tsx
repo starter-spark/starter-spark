@@ -3,7 +3,7 @@
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 
-type LessonPrefetchProps = {
+interface LessonPrefetchProps {
   hrefs: string[]
 }
 
@@ -11,13 +11,13 @@ export function LessonPrefetch({ hrefs }: LessonPrefetchProps) {
   const router = useRouter()
 
   useEffect(() => {
-    if (typeof window === "undefined") return
+    if (globalThis.window === undefined) return
     if (hrefs.length === 0) return
 
     const connection = (navigator as unknown as { connection?: { saveData?: boolean; effectiveType?: string } })
       .connection
     if (connection?.saveData) return
-    if (connection?.effectiveType && /2g/.test(connection.effectiveType)) return
+    if (connection?.effectiveType?.includes('2g')) return
 
     const run = () => {
       for (const href of hrefs) {
@@ -26,12 +26,12 @@ export function LessonPrefetch({ hrefs }: LessonPrefetchProps) {
     }
 
     const requestIdleCallback = (
-      window as unknown as {
+      globalThis as unknown as {
         requestIdleCallback?: (callback: IdleRequestCallback, options?: IdleRequestOptions) => number
       }
     ).requestIdleCallback
     const cancelIdleCallback = (
-      window as unknown as { cancelIdleCallback?: (handle: number) => void }
+      globalThis as unknown as { cancelIdleCallback?: (handle: number) => void }
     ).cancelIdleCallback
 
     if (typeof requestIdleCallback === "function" && typeof cancelIdleCallback === "function") {
@@ -39,11 +39,11 @@ export function LessonPrefetch({ hrefs }: LessonPrefetchProps) {
         void _deadline
         run()
       }, { timeout: 1500 })
-      return () => cancelIdleCallback(handle)
+      return () => { cancelIdleCallback(handle); }
     }
 
-    const timeout = window.setTimeout(run, 800)
-    return () => window.clearTimeout(timeout)
+    const timeout = globalThis.setTimeout(run, 800)
+    return () => { globalThis.clearTimeout(timeout); }
   }, [router, hrefs])
 
   return null

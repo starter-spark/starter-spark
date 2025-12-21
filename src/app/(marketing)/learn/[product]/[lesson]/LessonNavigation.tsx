@@ -5,7 +5,7 @@ import { useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react"
 
-type LessonNavigationProps = {
+interface LessonNavigationProps {
   prevHref?: string | null
   nextHref: string
   isLastLesson: boolean
@@ -40,12 +40,17 @@ export function LessonNavigation({
 }: LessonNavigationProps) {
   const markComplete = useCallback(
     (event: React.MouseEvent<HTMLElement>) => {
-      if (typeof window === "undefined") return
+      if (globalThis.window === undefined) return
       if (!shouldSendCompletion(event)) return
 
       safeSessionStorageSet(
         `${progressStorageKey}:pending`,
-        String(nextProgressPercent)
+        JSON.stringify({
+          lessonId,
+          progress: nextProgressPercent,
+          createdAt: Date.now(),
+          attempts: 0,
+        })
       )
 
       const payload = JSON.stringify({ lessonId })
@@ -61,6 +66,8 @@ export function LessonNavigation({
         headers: { "content-type": "application/json" },
         body: payload,
         keepalive: true,
+      }).catch(() => {
+        // non-blocking best-effort
       })
     },
     [lessonId, nextProgressPercent, progressStorageKey]
@@ -105,4 +112,3 @@ export function LessonNavigation({
     </div>
   )
 }
-

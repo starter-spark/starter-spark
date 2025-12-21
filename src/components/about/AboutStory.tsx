@@ -2,6 +2,7 @@
 
 import { motion } from "motion/react"
 import ReactMarkdown from "react-markdown"
+import { isExternalHref, sanitizeMarkdownUrl, safeMarkdownUrlTransform } from "@/lib/safe-url"
 
 interface AboutStoryProps {
   content?: string
@@ -48,7 +49,27 @@ export function AboutStory({
             ))
           ) : (
             // Render markdown content
-            <ReactMarkdown>{content}</ReactMarkdown>
+            <ReactMarkdown
+              urlTransform={safeMarkdownUrlTransform}
+              components={{
+                a: ({ href, children }) => {
+                  const safeHref = sanitizeMarkdownUrl(href, "href")
+                  if (!safeHref) return <span>{children}</span>
+                  const external = isExternalHref(safeHref)
+                  return (
+                    <a
+                      href={safeHref}
+                      target={external ? "_blank" : undefined}
+                      rel={external ? "noopener noreferrer" : undefined}
+                    >
+                      {children}
+                    </a>
+                  )
+                },
+              }}
+            >
+              {content}
+            </ReactMarkdown>
           )}
         </motion.div>
       </div>

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Package, CheckCircle, AlertCircle, ArrowRight, LogIn } from "lucide-react"
 import Link from "next/link"
 import { ClaimButton } from "./ClaimButton"
+import { isValidClaimToken } from "@/lib/validation"
 
 export const metadata = {
   title: "Claim Your Kit - StarterSpark Robotics",
@@ -17,6 +18,10 @@ interface ClaimPageProps {
 export default async function ClaimPage({ params }: ClaimPageProps) {
   const { token } = await params
 
+  if (!isValidClaimToken(token)) {
+    return <InvalidClaimLink />
+  }
+
   // Look up the license by claim token
   const { data: license, error } = await supabaseAdmin
     .from("licenses")
@@ -24,11 +29,10 @@ export default async function ClaimPage({ params }: ClaimPageProps) {
       id,
       code,
       owner_id,
-      customer_email,
       product:products(name, slug, description)
     `)
     .eq("claim_token", token)
-    .single()
+    .maybeSingle()
 
   // Check if user is logged in
   const supabase = await createClient()
@@ -36,39 +40,8 @@ export default async function ClaimPage({ params }: ClaimPageProps) {
 
   // Invalid or missing token
   if (error || !license) {
-    return (
-      <div className="bg-slate-50">
-        <section className="pt-32 pb-24 px-6 lg:px-20">
-          <div className="max-w-md mx-auto text-center">
-            <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-red-100 flex items-center justify-center">
-              <AlertCircle className="w-10 h-10 text-red-500" />
-            </div>
-            <h1 className="font-mono text-2xl text-slate-900 mb-2">
-              Invalid Claim Link
-            </h1>
-            <p className="text-slate-600 mb-8">
-              This claim link is invalid or has already been used. If you purchased
-              a kit, check your email for a valid claim link or contact support.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button asChild className="bg-cyan-700 hover:bg-cyan-600 text-white font-mono">
-                <Link href="/shop">
-                  <Package className="w-4 h-4 mr-2" />
-                  Shop Kits
-                </Link>
-              </Button>
-              <Button
-                asChild
-                variant="outline"
-                className="border-slate-200 hover:border-cyan-700 text-slate-600 hover:text-cyan-700 font-mono"
-              >
-                <Link href="/workshop">Go to Workshop</Link>
-              </Button>
-            </div>
-          </div>
-        </section>
-      </div>
-    )
+    if (error) console.error("Error fetching claim token:", error)
+    return <InvalidClaimLink />
   }
 
   // Already claimed
@@ -185,6 +158,42 @@ export default async function ClaimPage({ params }: ClaimPageProps) {
           <p className="text-center text-sm text-slate-500 mt-4">
             This will link the kit to your account: {user.email}
           </p>
+        </div>
+      </section>
+    </div>
+  )
+}
+
+function InvalidClaimLink() {
+  return (
+    <div className="bg-slate-50">
+      <section className="pt-32 pb-24 px-6 lg:px-20">
+        <div className="max-w-md mx-auto text-center">
+          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-red-100 flex items-center justify-center">
+            <AlertCircle className="w-10 h-10 text-red-500" />
+          </div>
+          <h1 className="font-mono text-2xl text-slate-900 mb-2">
+            Invalid Claim Link
+          </h1>
+          <p className="text-slate-600 mb-8">
+            This claim link is invalid or has already been used. If you purchased a kit,
+            check your email for a valid claim link or contact support.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button asChild className="bg-cyan-700 hover:bg-cyan-600 text-white font-mono">
+              <Link href="/shop">
+                <Package className="w-4 h-4 mr-2" />
+                Shop Kits
+              </Link>
+            </Button>
+            <Button
+              asChild
+              variant="outline"
+              className="border-slate-200 hover:border-cyan-700 text-slate-600 hover:text-cyan-700 font-mono"
+            >
+              <Link href="/workshop">Go to Workshop</Link>
+            </Button>
+          </div>
         </div>
       </section>
     </div>

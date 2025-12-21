@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server"
 import { notFound } from "next/navigation"
 import ReactMarkdown from "react-markdown"
 import type { Metadata } from "next"
+import { isExternalHref, sanitizeMarkdownUrl, safeMarkdownUrlTransform } from "@/lib/safe-url"
 
 interface PageProps {
   params: Promise<{ slug: string }>
@@ -70,7 +71,27 @@ export default async function CustomPage({ params }: PageProps) {
         <div className="max-w-4xl mx-auto">
           <div className="bg-white rounded border border-slate-200 p-8 lg:p-12">
             <div className="prose prose-slate max-w-none prose-headings:font-mono prose-headings:text-slate-900 prose-p:text-slate-600 prose-p:leading-relaxed prose-a:text-cyan-700 prose-a:no-underline hover:prose-a:underline prose-li:text-slate-600 prose-blockquote:border-l-cyan-700 prose-blockquote:bg-slate-50 prose-blockquote:py-2 prose-blockquote:px-4 prose-blockquote:rounded-r prose-blockquote:not-italic">
-              <ReactMarkdown>{page.content}</ReactMarkdown>
+              <ReactMarkdown
+                urlTransform={safeMarkdownUrlTransform}
+                components={{
+                  a: ({ href, children }) => {
+                    const safeHref = sanitizeMarkdownUrl(href, "href")
+                    if (!safeHref) return <span>{children}</span>
+                    const external = isExternalHref(safeHref)
+                    return (
+                      <a
+                        href={safeHref}
+                        target={external ? "_blank" : undefined}
+                        rel={external ? "noopener noreferrer" : undefined}
+                      >
+                        {children}
+                      </a>
+                    )
+                  },
+                }}
+              >
+                {page.content}
+              </ReactMarkdown>
             </div>
           </div>
         </div>

@@ -3,8 +3,9 @@
 import { supabaseAdmin } from "@/lib/supabase/admin"
 import { rateLimitAction } from "@/lib/rate-limit"
 import { headers } from "next/headers"
+import type { Json } from "@/lib/supabase/database.types"
 
-export type Attachment = {
+export interface Attachment {
   name: string
   path: string
   size: number
@@ -36,18 +37,18 @@ function isValidAttachmentPath(path: string): boolean {
 
   const allowedExt = "(?:jpg|png|gif|webp|mp4|webm|mov)"
   const legacyPattern = new RegExp(
-    `^\\d{4}\\/\\d{2}\\/\\d{2}\\/[a-f0-9]{32}_\\d+\\.${allowedExt}$`,
+    String.raw`^\d{4}\/\d{2}\/\d{2}\/[a-f0-9]{32}_\d+\.${allowedExt}$`,
     "i"
   )
   const sessionPattern = new RegExp(
-    `^contact\\/[a-f0-9]{32}\\/\\d{4}\\/\\d{2}\\/\\d{2}\\/[a-f0-9]{32}_\\d+\\.${allowedExt}$`,
+    String.raw`^contact\/[a-f0-9]{32}\/\d{4}\/\d{2}\/\d{2}\/[a-f0-9]{32}_\d+\.${allowedExt}$`,
     "i"
   )
 
   return legacyPattern.test(path) || sessionPattern.test(path)
 }
 
-export type ContactFormData = {
+export interface ContactFormData {
   name: string
   email: string
   subject: string
@@ -55,7 +56,7 @@ export type ContactFormData = {
   attachments?: Attachment[]
 }
 
-export type ContactFormResult = {
+export interface ContactFormResult {
   success: boolean
   error?: string
 }
@@ -68,7 +69,7 @@ export async function submitContactForm(
     return { success: false, error: "Name must be at least 2 characters" }
   }
 
-  if (!data.email || !data.email.includes("@")) {
+  if (!data.email?.includes("@")) {
     return { success: false, error: "Please enter a valid email address" }
   }
 
@@ -164,7 +165,7 @@ export async function submitContactForm(
       email: data.email.trim().toLowerCase(),
       subject: data.subject.trim(),
       message: data.situation.trim(), // stored as 'message' in DB
-      attachments: data.attachments || [],
+      attachments: (data.attachments || []) as unknown as Json,
     })
 
     if (error) {

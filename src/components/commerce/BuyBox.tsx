@@ -97,18 +97,18 @@ export function BuyBox({
         <Badge
           variant="outline"
           className={`font-mono text-xs ${
-            !inStock
-              ? "bg-red-50 text-red-700 border-red-200"
-              : isLimitedStock
+            inStock
+              ? isLimitedStock
               ? "bg-amber-50 text-amber-700 border-amber-200"
               : "bg-green-50 text-green-700 border-green-200"
+              : "bg-red-50 text-red-700 border-red-200"
           }`}
         >
-          {!inStock
-            ? "Out of Stock"
-            : isLimitedStock && stockQuantity !== null && stockQuantity !== undefined
+          {inStock
+            ? isLimitedStock && stockQuantity !== null && stockQuantity !== undefined
             ? `Only ${stockQuantity} left`
-            : "In Stock"}
+            : "In Stock"
+            : "Out of Stock"}
         </Badge>
       </div>
 
@@ -144,7 +144,7 @@ export function BuyBox({
         <label className="text-sm text-slate-600">Quantity</label>
         <div className="flex items-center gap-3">
           <button
-            onClick={() => setQuantity(Math.max(1, quantity - 1))}
+            onClick={() => { setQuantity(Math.max(1, quantity - 1)); }}
             className="w-10 h-10 rounded border border-slate-200 flex items-center justify-center hover:border-slate-300 transition-colors cursor-pointer"
             aria-label="Decrease quantity"
           >
@@ -152,7 +152,7 @@ export function BuyBox({
           </button>
           <span className="w-12 text-center font-mono text-lg">{quantity}</span>
           <button
-            onClick={() => setQuantity(quantity + 1)}
+            onClick={() => { setQuantity(quantity + 1); }}
             className="w-10 h-10 rounded border border-slate-200 flex items-center justify-center hover:border-slate-300 transition-colors cursor-pointer"
             aria-label="Increase quantity"
           >

@@ -168,7 +168,7 @@ export default async function BannersPage() {
                   banner.is_active && banner.ends_at && new Date(banner.ends_at) <= now
 
                 return (
-                  <TableRow key={banner.id} className={!banner.is_active ? "opacity-60" : ""}>
+                  <TableRow key={banner.id} className={banner.is_active ? "" : "opacity-60"}>
                     <TableCell>
                       <div className="max-w-[250px]">
                         <p className="truncate font-medium text-slate-900">{banner.title}</p>
@@ -222,11 +222,7 @@ export default async function BannersPage() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      {!banner.is_active ? (
-                        <Badge variant="outline" className="border-slate-300 text-slate-500">
-                          Inactive
-                        </Badge>
-                      ) : isExpired ? (
+                      {banner.is_active ? isExpired ? (
                         <Badge variant="outline" className="border-slate-300 text-slate-500">
                           Expired
                         </Badge>
@@ -237,6 +233,10 @@ export default async function BannersPage() {
                       ) : (
                         <Badge variant="outline" className="border-amber-300 text-amber-700">
                           Draft
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="border-slate-300 text-slate-500">
+                          Inactive
                         </Badge>
                       )}
                     </TableCell>

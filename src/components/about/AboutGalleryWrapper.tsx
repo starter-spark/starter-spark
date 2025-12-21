@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
-import { AboutGallery, AboutStat } from "./AboutGallery"
+import { AboutGallery, type AboutStat } from "./AboutGallery"
 
 /**
  * Server component that fetches site stats and renders AboutGallery
@@ -37,15 +37,30 @@ export async function AboutGalleryWrapper() {
       : String(stat.value)
 
     // Map database keys to expected labels
-    if (stat.key === "workshops_hosted") {
+    switch (stat.key) {
+    case "workshops_hosted": {
       statsMap["Workshops Hosted"] = { value: displayValue, label: "Workshops Hosted" }
-    } else if (stat.key === "students_reached") {
+    
+    break;
+    }
+    case "students_reached": {
       statsMap["Students Reached"] = { value: displayValue, label: "Students Reached" }
-    } else if (stat.key === "schools_supported" || stat.key === "partner_schools") {
+    
+    break;
+    }
+    case "schools_supported": 
+    case "partner_schools": {
       statsMap["Partner Schools"] = { value: displayValue, label: "Partner Schools" }
-    } else if (stat.key === "kits_deployed") {
+    
+    break;
+    }
+    case "kits_deployed": {
       // Add kits deployed as an extra stat if needed
       statsMap["Kits Deployed"] = { value: displayValue, label: "Kits Deployed" }
+    
+    break;
+    }
+    // No default
     }
   }
 

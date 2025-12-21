@@ -15,12 +15,12 @@ interface ProductSpecs {
   badge?: string | null
   inStock?: boolean
   learningOutcomes?: string[]
-  includedItems?: Array<{
+  includedItems?: {
     quantity: number
     name: string
     description: string
-  }>
-  technicalSpecs?: Array<{ label: string; value: string }>
+  }[]
+  technicalSpecs?: { label: string; value: string }[]
 }
 
 type PageParams = Promise<{ slug: string }>
@@ -33,7 +33,7 @@ export async function generateMetadata({
   const { slug } = await params
   const supabase = await createClient()
 
-  const { data: product } = await supabase
+  const { data: product, error: productError } = await supabase
     .from("products")
     .select(`
       name,
@@ -41,14 +41,19 @@ export async function generateMetadata({
       product_media (url, is_primary, type)
     `)
     .eq("slug", slug)
-    .single()
+    .maybeSingle()
+
+  if (productError) {
+    console.error("Error generating product metadata:", productError)
+    return { title: "Product" }
+  }
 
   if (!product) {
     return { title: "Product Not Found" }
   }
 
   // Get primary image for OG
-  type MediaItem = { url: string; is_primary?: boolean | null; type?: string }
+  interface MediaItem { url: string; is_primary?: boolean | null; type?: string }
   const media = (product.product_media as unknown as MediaItem[] | null) || []
   const primaryImage = media.find(
     (m) => m.is_primary && m.type === "image"
@@ -114,26 +119,31 @@ export default async function ProductDetailPage({
         id,
         type,
         url,
+        filename,
         alt_text,
         is_primary,
-        image_type,
         sort_order
       )
     `)
     .eq("slug", slug)
-    .single()
+    .maybeSingle()
 
-  if (error || !product) {
+  if (error) {
+    console.error("Error fetching product:", error)
+    throw new Error("Failed to load product")
+  }
+
+  if (!product) {
     notFound()
   }
 
   const specs = product.specs as ProductSpecs | null
-  type ProductTag = { tag: string }
-  const tags = ((product.product_tags as unknown as ProductTag[] | null) || []).map((t) => t.tag)
+  interface ProductTag { tag: string }
+  const tags = new Set(((product.product_tags as unknown as ProductTag[] | null) || []).map((t) => t.tag))
 
   // Determine stock status from inventory tracking or tags
-  const hasOutOfStockTag = tags.includes("out_of_stock")
-  const hasLimitedTag = tags.includes("limited")
+  const hasOutOfStockTag = tags.has("out_of_stock")
+  const hasLimitedTag = tags.has("limited")
 
   // inStock: check inventory tracking first, then fall back to specs
   const inStock = product.track_inventory
@@ -150,9 +160,9 @@ export default async function ProductDetailPage({
   const discountExpiresAt = product.discount_expires_at
 
   // Extract images and 3D models from product_media, sorted by sort_order
-  type FullMediaItem = { url: string; is_primary?: boolean | null; type?: string; sort_order?: number | null }
+  interface FullMediaItem { url: string; filename?: string; is_primary?: boolean | null; type?: string; sort_order?: number | null }
   const allMedia = ((product.product_media as unknown as FullMediaItem[] | null) || [])
-    .sort((a) => (a.sort_order ?? 0))
+    .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
 
   // Filter images only (exclude 3D models, videos, documents)
   const imageMedia = allMedia.filter((m) => m.type === 'image' || !m.type)
@@ -164,6 +174,12 @@ export default async function ProductDetailPage({
   const modelPathFromMedia = modelMedia?.url
   const modelPathFromSpecs = specs?.modelPath
   const finalModelPath = modelPathFromMedia || modelPathFromSpecs
+
+  // Get datasheet URL if available (document with "datasheet" in filename)
+  const datasheetMedia = allMedia.find(
+    (m) => m.type === 'document' && m.filename?.toLowerCase().includes('datasheet')
+  )
+  const datasheetUrl = datasheetMedia?.url
 
   // Generate structured data for SEO
   const productSchema = getProductSchema({
@@ -243,6 +259,7 @@ export default async function ProductDetailPage({
             learningOutcomes={learningOutcomes}
             includedItems={includedItems}
             specs={technicalSpecs}
+            datasheetUrl={datasheetUrl}
           />
         </div>
       </section>

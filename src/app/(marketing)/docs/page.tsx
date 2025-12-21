@@ -1,132 +1,70 @@
 import { createClient } from "@/lib/supabase/server"
-import { BookOpen, Cpu, Code, Wrench, FileText, ExternalLink, ChevronRight, type LucideIcon } from "lucide-react"
+import { BookOpen, Cpu, Zap, Wrench, Book, Rocket, ChevronRight, Search } from "lucide-react"
 import Link from "next/link"
+import { DocSearch } from "./DocSearch"
 
 export const metadata = {
   title: "Documentation - StarterSpark Robotics",
-  description: "Assembly guides, programming tutorials, and technical documentation for StarterSpark robotics kits.",
+  description: "Comprehensive documentation, guides, and references for StarterSpark robotics kits.",
 }
 
-interface DocLink {
-  title: string
-  description: string
-  href: string
-  external?: boolean
+// Map category icons to Lucide components
+const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+  Rocket,
+  Cpu,
+  Zap,
+  Wrench,
+  Book,
+  BookOpen,
 }
 
-const hardwareGuides: DocLink[] = [
-  {
-    title: "Assembly Overview",
-    description: "Step-by-step assembly instructions for your robotics kit",
-    href: "/learn",
-  },
-  {
-    title: "Wiring Diagrams",
-    description: "Complete wiring schematics and connection guides",
-    href: "/learn",
-  },
-  {
-    title: "Component Reference",
-    description: "Technical specifications for all included components",
-    href: "/learn",
-  },
-]
-
-const softwareGuides: DocLink[] = [
-  {
-    title: "Getting Started with Arduino",
-    description: "Set up your development environment and write your first program",
-    href: "/learn",
-  },
-  {
-    title: "Motor Control Basics",
-    description: "Learn to control servo motors and DC motors",
-    href: "/learn",
-  },
-  {
-    title: "Sensor Integration",
-    description: "Connect and read data from various sensors",
-    href: "/learn",
-  },
-]
-
-const additionalResources: DocLink[] = [
-  {
-    title: "Arduino Reference",
-    description: "Official Arduino language reference and documentation",
-    href: "https://www.arduino.cc/reference/en/",
-    external: true,
-  },
-  {
-    title: "Community Forum",
-    description: "Ask questions and get help from other builders",
-    href: "/community",
-  },
-  {
-    title: "Troubleshooting Guide",
-    description: "Common issues and their solutions",
-    href: "/community?tag=troubleshooting",
-  },
-]
-
-function DocSection({
-  id,
-  title,
-  icon: Icon,
-  links,
-}: {
+interface DocCategory {
   id: string
-  title: string
-  icon: LucideIcon
-  links: DocLink[]
-}) {
-  return (
-    <section id={id} className="scroll-mt-32">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded bg-cyan-50 flex items-center justify-center">
-          <Icon className="w-5 h-5 text-cyan-700" />
-        </div>
-        <h2 className="font-mono text-2xl text-slate-900">{title}</h2>
-      </div>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {links.map((link) => (
-          <Link
-            key={link.title}
-            href={link.href}
-            target={link.external ? "_blank" : undefined}
-            rel={link.external ? "noopener noreferrer" : undefined}
-            className="group block p-6 bg-white rounded border border-slate-200 hover:border-cyan-300 transition-colors"
-          >
-            <div className="flex items-start justify-between mb-2">
-              <h3 className="font-mono text-lg text-slate-900 group-hover:text-cyan-700 transition-colors">
-                {link.title}
-              </h3>
-              {link.external ? (
-                <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-cyan-600 transition-colors" />
-              ) : (
-                <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-cyan-600 transition-colors" />
-              )}
-            </div>
-            <p className="text-sm text-slate-600">{link.description}</p>
-          </Link>
-        ))}
-      </div>
-    </section>
-  )
+  name: string
+  slug: string
+  description: string | null
+  icon: string | null
+  sort_order: number | null
+  pages: {
+    id: string
+    title: string
+    slug: string
+    excerpt: string | null
+  }[]
 }
 
 export default async function DocsPage() {
   const supabase = await createClient()
 
-  // Fetch courses count for stats
-  const { count: courseCount } = await supabase
-    .from("courses")
-    .select("*", { count: "exact", head: true })
+  // Fetch published categories with their published pages
+  const { data: categories, error } = await supabase
+    .from("doc_categories")
+    .select(`
+      id,
+      name,
+      slug,
+      description,
+      icon,
+      sort_order,
+      pages:doc_pages (
+        id,
+        title,
+        slug,
+        excerpt
+      )
+    `)
+    .eq("is_published", true)
+    .order("sort_order", { ascending: true })
 
-  // Fetch total lessons count
-  const { count: lessonCount } = await supabase
-    .from("lessons")
-    .select("*", { count: "exact", head: true })
+  if (error) {
+    console.error("Error fetching categories:", error)
+  }
+
+  // Filter to only show categories that have published pages OR use all if no pages yet
+  const typedCategories = (categories ?? []) as unknown as DocCategory[]
+
+  // Count total pages
+  const totalPages = typedCategories.reduce((acc, cat) => acc + (cat.pages?.length || 0), 0)
 
   return (
     <div className="bg-slate-50">
@@ -142,72 +80,68 @@ export default async function DocsPage() {
             Everything you need to go from unboxing to autonomous operation.
           </p>
 
+          {/* Search */}
+          <DocSearch />
+
           {/* Quick Stats */}
-          <div className="flex flex-wrap gap-6">
+          <div className="flex flex-wrap gap-6 mt-8">
             <div className="flex items-center gap-2 px-4 py-2 bg-white rounded border border-slate-200">
               <BookOpen className="w-5 h-5 text-cyan-700" />
-              <span className="font-mono text-slate-900">{courseCount || 0} Courses</span>
+              <span className="font-mono text-slate-900">{typedCategories.length} Categories</span>
             </div>
             <div className="flex items-center gap-2 px-4 py-2 bg-white rounded border border-slate-200">
-              <FileText className="w-5 h-5 text-cyan-700" />
-              <span className="font-mono text-slate-900">{lessonCount || 0} Lessons</span>
+              <Search className="w-5 h-5 text-cyan-700" />
+              <span className="font-mono text-slate-900">{totalPages} Articles</span>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Quick Navigation */}
-      <section className="pb-8 px-6 lg:px-20">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-wrap gap-4">
-            <a
-              href="#hardware"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-700 text-white font-mono text-sm rounded hover:bg-cyan-600 transition-colors"
-            >
-              <Cpu className="w-4 h-4" />
-              Hardware Guides
-            </a>
-            <a
-              href="#software"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-white text-slate-700 font-mono text-sm rounded border border-slate-200 hover:border-cyan-300 transition-colors"
-            >
-              <Code className="w-4 h-4" />
-              Software Guides
-            </a>
-            <a
-              href="#resources"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-white text-slate-700 font-mono text-sm rounded border border-slate-200 hover:border-cyan-300 transition-colors"
-            >
-              <Wrench className="w-4 h-4" />
-              Additional Resources
-            </a>
-          </div>
-        </div>
-      </section>
-
-      {/* Documentation Sections */}
+      {/* Categories Grid */}
       <section className="pb-24 px-6 lg:px-20">
-        <div className="max-w-7xl mx-auto space-y-16">
-          <DocSection
-            id="hardware"
-            title="Hardware Guides"
-            icon={Cpu}
-            links={hardwareGuides}
-          />
+        <div className="max-w-7xl mx-auto">
+          {typedCategories.length === 0 ? (
+            <div className="text-center py-16 bg-white rounded border border-slate-200">
+              <BookOpen className="w-12 h-12 mx-auto text-slate-300 mb-4" />
+              <h2 className="font-mono text-xl text-slate-900 mb-2">Documentation Coming Soon</h2>
+              <p className="text-slate-600">
+                We&apos;re working on comprehensive documentation. Check back soon!
+              </p>
+            </div>
+          ) : (
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {typedCategories.map((category) => {
+                const Icon = iconMap[category.icon || "BookOpen"] || BookOpen
+                const pageCount = category.pages?.length || 0
 
-          <DocSection
-            id="software"
-            title="Software Guides"
-            icon={Code}
-            links={softwareGuides}
-          />
-
-          <DocSection
-            id="resources"
-            title="Additional Resources"
-            icon={Wrench}
-            links={additionalResources}
-          />
+                return (
+                  <Link
+                    key={category.id}
+                    href={`/docs/${category.slug}`}
+                    className="group block bg-white rounded border border-slate-200 hover:border-cyan-300 hover:shadow-sm transition-all overflow-hidden"
+                  >
+                    <div className="p-6">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="w-12 h-12 rounded bg-cyan-50 flex items-center justify-center group-hover:bg-cyan-100 transition-colors">
+                          <Icon className="w-6 h-6 text-cyan-700" />
+                        </div>
+                        <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-cyan-600 transition-colors" />
+                      </div>
+                      <h2 className="font-mono text-xl text-slate-900 mb-2 group-hover:text-cyan-700 transition-colors">
+                        {category.name}
+                      </h2>
+                      <p className="text-sm text-slate-600 mb-4 line-clamp-2">
+                        {category.description || "Explore articles in this category"}
+                      </p>
+                      <p className="text-xs font-mono text-slate-500">
+                        {pageCount} {pageCount === 1 ? "article" : "articles"}
+                      </p>
+                    </div>
+                  </Link>
+                )
+              })}
+            </div>
+          )}
         </div>
       </section>
 
@@ -216,14 +150,14 @@ export default async function DocsPage() {
         <div className="max-w-7xl mx-auto">
           <div className="p-8 bg-white rounded border border-slate-200 text-center">
             <h2 className="font-mono text-2xl text-slate-900 mb-3">
-              Ready to Start Building?
+              Looking for Hands-On Learning?
             </h2>
             <p className="text-slate-600 mb-6 max-w-xl mx-auto">
-              Begin with our structured learning path. Each course builds on the previous one,
-              taking you from beginner to advanced robotics.
+              Our interactive courses provide step-by-step instruction with progress tracking.
+              Perfect for building your first robotics project.
             </p>
             <Link
-              href="/learn"
+              href="/workshop?tab=courses"
               className="inline-flex items-center gap-2 px-6 py-3 bg-cyan-700 hover:bg-cyan-600 text-white font-mono rounded transition-colors"
             >
               <BookOpen className="w-5 h-5" />

@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation"
+import { headers } from "next/headers"
 import { createClient } from "@/lib/supabase/server"
 import { AdminSidebar } from "@/components/admin/AdminSidebar"
 
@@ -12,6 +13,7 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode
 }) {
+  const nonce = (await headers()).get("x-nonce") ?? ""
   const supabase = await createClient()
 
   // Get user
@@ -26,9 +28,14 @@ export default async function AdminLayout({
     .from("profiles")
     .select("full_name, role")
     .eq("id", user.id)
-    .single()
+    .maybeSingle()
 
-  if (profileError || !profile) {
+  if (profileError) {
+    console.error("Admin layout profile fetch failed:", profileError)
+    throw new Error("Failed to load admin profile")
+  }
+
+  if (!profile) {
     redirect("/?error=no_profile")
   }
 
@@ -38,7 +45,7 @@ export default async function AdminLayout({
   }
 
   return (
-    <div className="flex h-screen min-h-0 bg-slate-50">
+    <div className="admin-layout flex h-screen min-h-0 bg-slate-50" data-csp-nonce={nonce || undefined}>
       <AdminSidebar
         user={{
           email: user.email || "",

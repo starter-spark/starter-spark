@@ -1,13 +1,143 @@
 import { stripe } from "@/lib/stripe"
 import { supabaseAdmin } from "@/lib/supabase/admin"
 import { NextResponse } from "next/server"
-import Stripe from "stripe"
+import type Stripe from "stripe"
 import { generateLicenseCode, generateClaimToken, formatPrice } from "@/lib/validation"
 import { sendPurchaseConfirmation } from "@/lib/email/send"
+
+type StripeCheckoutFulfillmentStatus = "processing" | "completed" | "failed"
+
+type StripeCheckoutFulfillmentRow = {
+  stripe_session_id: string
+  stripe_event_id: string | null
+  status: StripeCheckoutFulfillmentStatus
+  attempt_count: number
+  last_error: string | null
+  stock_decremented_at: string | null
+  email_sent_at: string | null
+  processed_at: string | null
+  updated_at: string | null
+}
+
+function maskEmail(email: string): string {
+  const [local, domain] = email.split("@")
+  if (!local || !domain) return "***"
+  if (local.length <= 2) return `**@${domain}`
+  return `${local.slice(0, 2)}***@${domain}`
+}
+
+function purchaseItemRef(sessionId: string, lineItemId: string, unitIndex: number): string {
+  return `stripe:${sessionId}:${lineItemId}:${unitIndex}`
+}
+
+async function loadFulfillment(sessionId: string): Promise<StripeCheckoutFulfillmentRow | null> {
+  const { data, error } = await supabaseAdmin
+    .from("stripe_checkout_fulfillments")
+    .select(
+      "stripe_session_id,stripe_event_id,status,attempt_count,last_error,stock_decremented_at,email_sent_at,processed_at,updated_at"
+    )
+    .eq("stripe_session_id", sessionId)
+    .maybeSingle()
+
+  if (error) {
+    console.error("Error fetching stripe_checkout_fulfillments:", error)
+    return null
+  }
+
+  return (data as StripeCheckoutFulfillmentRow | null) ?? null
+}
+
+async function startFulfillment(sessionId: string, eventId: string): Promise<StripeCheckoutFulfillmentRow | null> {
+  const { data, error } = await supabaseAdmin
+    .from("stripe_checkout_fulfillments")
+    .insert({
+      stripe_session_id: sessionId,
+      stripe_event_id: eventId,
+      status: "processing",
+      attempt_count: 1,
+    })
+    .select(
+      "stripe_session_id,stripe_event_id,status,attempt_count,last_error,stock_decremented_at,email_sent_at,processed_at,updated_at"
+    )
+    .maybeSingle()
+
+  if (!error) {
+    return (data as StripeCheckoutFulfillmentRow | null) ?? null
+  }
+
+  // Duplicate (another attempt already created the row).
+  if (error.code === "23505" || error.message?.toLowerCase().includes("duplicate")) {
+    const existing = await loadFulfillment(sessionId)
+    if (!existing) return null
+
+    if (existing.status === "completed") return existing
+
+    const { data: updated } = await supabaseAdmin
+      .from("stripe_checkout_fulfillments")
+      .update({
+        status: "processing",
+        stripe_event_id: eventId,
+        attempt_count: (existing.attempt_count ?? 0) + 1,
+        last_error: null,
+      })
+      .eq("stripe_session_id", sessionId)
+      .select(
+        "stripe_session_id,stripe_event_id,status,attempt_count,last_error,stock_decremented_at,email_sent_at,processed_at,updated_at"
+      )
+      .maybeSingle()
+
+    return (updated as StripeCheckoutFulfillmentRow | null) ?? existing
+  }
+
+  console.error("Error inserting stripe_checkout_fulfillments:", error)
+  return null
+}
+
+async function markFulfillmentFailed(sessionId: string, message: string): Promise<void> {
+  const { error } = await supabaseAdmin
+    .from("stripe_checkout_fulfillments")
+    .update({ status: "failed", last_error: message })
+    .eq("stripe_session_id", sessionId)
+
+  if (error) {
+    console.error("Error updating stripe_checkout_fulfillments failure status:", error)
+  }
+}
+
+async function markFulfillmentCompleted(sessionId: string): Promise<void> {
+  const { error } = await supabaseAdmin
+    .from("stripe_checkout_fulfillments")
+    .update({ status: "completed", processed_at: new Date().toISOString(), last_error: null })
+    .eq("stripe_session_id", sessionId)
+
+  if (error) {
+    console.error("Error updating stripe_checkout_fulfillments completed status:", error)
+  }
+}
+
+async function claimOnce(sessionId: string, field: "stock_decremented_at" | "email_sent_at"): Promise<boolean> {
+  const payload: Record<string, string> = { [field]: new Date().toISOString() }
+
+  const { data, error } = await supabaseAdmin
+    .from("stripe_checkout_fulfillments")
+    .update(payload)
+    .eq("stripe_session_id", sessionId)
+    .is(field, null)
+    .select("stripe_session_id")
+    .maybeSingle()
+
+  if (error) {
+    console.error(`Error claiming ${field} for fulfillment:`, error)
+    return false
+  }
+
+  return Boolean(data)
+}
 
 export async function POST(request: Request) {
   const body = await request.text()
   const signature = request.headers.get("stripe-signature")
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
 
   if (!signature) {
     console.error("Missing Stripe signature")
@@ -17,13 +147,18 @@ export async function POST(request: Request) {
     )
   }
 
+  if (!webhookSecret) {
+    console.error("Missing STRIPE_WEBHOOK_SECRET")
+    return NextResponse.json({ error: "Server misconfigured" }, { status: 500 })
+  }
+
   let event: Stripe.Event
 
   try {
     event = stripe.webhooks.constructEvent(
       body,
       signature,
-      process.env.STRIPE_WEBHOOK_SECRET!
+      webhookSecret
     )
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error"
@@ -39,16 +174,15 @@ export async function POST(request: Request) {
     case "checkout.session.completed": {
       const session = event.data.object
 
-      // Idempotency check: See if we already processed this session
-      // Note: A session can have multiple licenses (for quantity > 1), so we check for ANY
-      const { data: existingLicenses } = await supabaseAdmin
-        .from("licenses")
-        .select("id")
-        .eq("stripe_session_id", session.id)
-        .limit(1)
+      // DB-backed idempotency: create/update a fulfillment row. This prevents double stock decrement
+      // and repeated email sends, and provides a single place to record failures.
+      const fulfillment = await startFulfillment(session.id, event.id)
+      if (!fulfillment) {
+        return NextResponse.json({ error: "Unable to start fulfillment" }, { status: 500 })
+      }
 
-      if (existingLicenses && existingLicenses.length > 0) {
-        console.log(`Session ${session.id} already processed, skipping`)
+      if (fulfillment.status === "completed") {
+        console.log(`Session ${session.id} already fulfilled, skipping`)
         return NextResponse.json({ received: true, status: "already_processed" })
       }
 
@@ -57,6 +191,7 @@ export async function POST(request: Request) {
 
       if (!customerEmail) {
         console.error("No customer email found in session")
+        await markFulfillmentFailed(session.id, "Missing customer email")
         return NextResponse.json(
           { error: "No customer email" },
           { status: 400 }
@@ -64,12 +199,20 @@ export async function POST(request: Request) {
       }
 
       // Retrieve line items from Stripe (avoids metadata size limits)
-      const lineItems = await stripe.checkout.sessions.listLineItems(session.id, {
-        expand: ["data.price.product"],
-      })
+      let lineItems: Stripe.ApiList<Stripe.LineItem>
+      try {
+        lineItems = await stripe.checkout.sessions.listLineItems(session.id, {
+          expand: ["data.price.product"],
+        })
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Unknown error"
+        console.error("Error fetching Stripe line items:", message)
+        await markFulfillmentFailed(session.id, `Stripe line items error: ${message}`)
+        return NextResponse.json({ error: "Failed to fetch line items" }, { status: 500 })
+      }
 
       // Extract items from line items, filtering out shipping
-      const productItems: { slug: string; quantity: number }[] = []
+      const productItems: { slug: string; quantity: number; lineItemId: string }[] = []
       for (const lineItem of lineItems.data) {
         const product = lineItem.price?.product as Stripe.Product | undefined
         const slug = product?.metadata?.slug
@@ -80,11 +223,18 @@ export async function POST(request: Request) {
         productItems.push({
           slug,
           quantity: lineItem.quantity || 1,
+          lineItemId: lineItem.id,
         })
       }
 
+      if (productItems.length === 0) {
+        console.log(`Session ${session.id} contains no license-bearing items`)
+        await markFulfillmentCompleted(session.id)
+        return NextResponse.json({ received: true, status: "no_licenses" })
+      }
+
       // Look up products by slug (include inventory fields for stock decrement)
-      const slugs = productItems.map(item => item.slug)
+      const slugs = [...new Set(productItems.map((item) => item.slug))]
       const { data: products, error: productsError } = await supabaseAdmin
         .from("products")
         .select("id, slug, name, track_inventory, stock_quantity")
@@ -101,7 +251,38 @@ export async function POST(request: Request) {
       // Create a map of slug -> product
       const productMap = new Map(products.map(p => [p.slug, p]))
 
-      // Create licenses for each item
+      // Load any existing licenses for this session. If a legacy fulfillment created licenses
+      // before `purchase_item_ref` existed, we avoid creating duplicates and mark this session
+      // fulfilled immediately.
+      const { data: existingSessionLicenses, error: existingSessionLicensesError } =
+        await supabaseAdmin
+          .from("licenses")
+          .select("id,purchase_item_ref")
+          .eq("stripe_session_id", session.id)
+
+      if (existingSessionLicensesError) {
+        console.error("Error checking existing session licenses:", existingSessionLicensesError)
+        await markFulfillmentFailed(session.id, "Failed to check existing licenses")
+        return NextResponse.json({ error: "Failed to check existing licenses" }, { status: 500 })
+      }
+
+      if (
+        Array.isArray(existingSessionLicenses) &&
+        existingSessionLicenses.length > 0 &&
+        existingSessionLicenses.every((l) => l.purchase_item_ref == null)
+      ) {
+        console.log(`Session ${session.id} already has licenses (legacy), skipping`)
+        await markFulfillmentCompleted(session.id)
+        return NextResponse.json({ received: true, status: "already_processed" })
+      }
+
+      const existingRefs = new Set(
+        (existingSessionLicenses ?? [])
+          .map((l) => l.purchase_item_ref)
+          .filter((ref): ref is string => typeof ref === "string" && ref.length > 0)
+      )
+
+      // Create licenses for each item (idempotent via purchase_item_ref)
       // NOTE: Licenses are NEVER auto-claimed. All licenses start as 'pending'
       // and must be explicitly claimed by the user in their workshop.
       const licensesToCreate: {
@@ -113,79 +294,139 @@ export async function POST(request: Request) {
         customer_email: string
         claim_token: string
         status: "pending"
+        purchase_item_ref: string
       }[] = []
 
       for (const item of productItems) {
         const product = productMap.get(item.slug)
         if (!product) {
-          console.error(`Product not found for slug: ${item.slug}`)
-          continue
+          const message = `Product not found for slug: ${item.slug}`
+          console.error(message)
+          await markFulfillmentFailed(session.id, message)
+          return NextResponse.json({ error: "Unknown product" }, { status: 500 })
         }
 
         // Create one license per quantity
         for (let i = 0; i < item.quantity; i++) {
-          const code = generateLicenseCode()
-          // Always generate claim token - user must explicitly claim
-          const claimToken = generateClaimToken()
+          const ref = purchaseItemRef(session.id, item.lineItemId, i + 1)
+          if (existingRefs.has(ref)) continue
 
           licensesToCreate.push({
-            code,
+            code: generateLicenseCode(),
             product_id: product.id,
             owner_id: null, // Never auto-claim
             source: "online_purchase",
             stripe_session_id: session.id,
             customer_email: customerEmail,
-            claim_token: claimToken,
+            claim_token: generateClaimToken(),
             status: "pending",
+            purchase_item_ref: ref,
           })
         }
       }
 
       if (licensesToCreate.length === 0) {
-        console.log("No licenses to create")
+        console.log(`No new licenses to create for session ${session.id}`)
+        await markFulfillmentCompleted(session.id)
         return NextResponse.json({ received: true, status: "no_licenses" })
       }
 
-      // Insert all licenses
-      const { data: createdLicenses, error: insertError } = await supabaseAdmin
-        .from("licenses")
-        .insert(licensesToCreate)
-        .select()
+      // Insert all licenses. Use purchase_item_ref to make it safe under retries/concurrency.
+      const maxInsertRounds = 5
+      let createdOrExisting: Array<{
+        id: string
+        code: string
+        product_id: string
+        claim_token: string | null
+        purchase_item_ref: string | null
+      }> = []
+      let insertSucceeded = false
 
-      if (insertError) {
-        // Check if it's a duplicate key error (already processed)
-        if (insertError.code === "23505" || insertError.message?.includes("duplicate key")) {
-          console.log(`Session ${session.id} already processed (duplicate key), returning success`)
-          return NextResponse.json({ received: true, status: "already_processed" })
+      for (let round = 0; round < maxInsertRounds; round++) {
+        const { data: inserted, error: insertError } = await supabaseAdmin
+          .from("licenses")
+          .upsert(licensesToCreate, {
+            onConflict: "purchase_item_ref",
+            ignoreDuplicates: true,
+          })
+          .select("id,code,product_id,claim_token,purchase_item_ref")
+
+        if (!insertError) {
+          if (inserted) createdOrExisting = inserted
+          insertSucceeded = true
+          break
         }
-        console.error("Error creating licenses:", insertError)
-        return NextResponse.json(
-          { error: "Failed to create licenses" },
-          { status: 500 }
-        )
+
+        // Rare: code/claim_token collisions. Regenerate and retry.
+        const isUniqueViolation =
+          insertError.code === "23505" ||
+          insertError.message?.toLowerCase().includes("duplicate")
+        if (!isUniqueViolation) {
+          console.error("Error creating licenses:", insertError)
+          await markFulfillmentFailed(session.id, `License insert error: ${insertError.message}`)
+          return NextResponse.json({ error: "Failed to create licenses" }, { status: 500 })
+        }
+
+        console.warn(`Unique violation inserting licenses (round ${round + 1}/${maxInsertRounds}); retrying`)
+        for (const row of licensesToCreate) {
+          row.code = generateLicenseCode()
+          row.claim_token = generateClaimToken()
+        }
       }
 
-      console.log(`Created ${createdLicenses.length} licenses for session ${session.id}`)
+      if (!insertSucceeded) {
+        console.error(`Failed to insert licenses for session ${session.id} after ${maxInsertRounds} attempts`)
+        await markFulfillmentFailed(session.id, "Failed to insert licenses after retries")
+        return NextResponse.json({ error: "Failed to create licenses" }, { status: 500 })
+      }
+
+      // Fetch full license list for this session (covers retries where this attempt inserted 0 rows).
+      const { data: allSessionLicenses, error: allSessionLicensesError } = await supabaseAdmin
+        .from("licenses")
+        .select("id,code,product_id,claim_token,purchase_item_ref")
+        .eq("stripe_session_id", session.id)
+
+      if (allSessionLicensesError || !allSessionLicenses) {
+        console.error("Error fetching session licenses:", allSessionLicensesError)
+        await markFulfillmentFailed(session.id, "Failed to fetch created licenses")
+        return NextResponse.json({ error: "Failed to fetch created licenses" }, { status: 500 })
+      }
+
+      createdOrExisting = allSessionLicenses
+
+      console.log(`Session ${session.id}: ${createdOrExisting.length} total licenses (created+existing)`)
 
       // Decrement stock for products with inventory tracking (Phase 14.4)
-      for (const item of productItems) {
-        const product = productMap.get(item.slug)
-        if (!product) continue
+      const shouldDecrement = await claimOnce(session.id, "stock_decremented_at")
+      if (shouldDecrement) {
+        const quantityBySlug = new Map<string, number>()
+        for (const item of productItems) {
+          quantityBySlug.set(item.slug, (quantityBySlug.get(item.slug) ?? 0) + item.quantity)
+        }
 
-        // Only decrement if inventory tracking is enabled
-        if (product.track_inventory && product.stock_quantity !== null) {
-          const newQuantity = Math.max(0, product.stock_quantity - item.quantity)
+        for (const [slug, quantity] of quantityBySlug.entries()) {
+          const product = productMap.get(slug)
+          if (!product) continue
 
-          const { error: stockError } = await supabaseAdmin
-            .from("products")
-            .update({ stock_quantity: newQuantity })
-            .eq("id", product.id)
+          // Only decrement if inventory tracking is enabled
+          if (product.track_inventory && product.stock_quantity !== null) {
+            const { data: updatedStock, error: stockError } = await supabaseAdmin.rpc(
+              "decrement_product_stock",
+              {
+                p_product_id: product.id,
+                p_quantity: quantity,
+              }
+            )
 
-          if (stockError) {
-            console.error("Failed to decrement stock for product:", item.slug, stockError)
-            // Don't fail the webhook, just log the error
-          } else {
-            console.log(`Decremented stock for ${item.slug}: ${product.stock_quantity} -> ${newQuantity}`)
+            if (stockError) {
+              console.error("Failed to decrement stock for product:", slug, stockError)
+              // Don't fail the webhook, just log the error. (Inventory can be reconciled.)
+            } else {
+              const newQuantity = updatedStock?.[0]?.stock_quantity
+              if (typeof newQuantity === "number") {
+                console.log(`Decremented stock for ${slug}: now ${newQuantity}`)
+              }
+            }
           }
         }
       }
@@ -195,34 +436,39 @@ export async function POST(request: Request) {
       const orderTotal = formatPrice(session.amount_total || 0)
 
       // Build license info for email
-      const licenseInfoForEmail = createdLicenses.map((license) => {
+      const licenseInfoForEmail = createdOrExisting.map((license) => {
         const product = products.find((p) => p.id === license.product_id)
         return {
           code: license.code,
           productName: product?.name || "StarterSpark Kit",
-          claimToken: license.claim_token,
+          claimToken: license.claim_token || "",
         }
       })
 
-      try {
-        await sendPurchaseConfirmation({
-          to: customerEmail,
-          customerName: session.customer_details?.name || undefined,
-          orderTotal,
-          licenses: licenseInfoForEmail,
-          // Always true - user must explicitly claim in workshop
-          isGuestPurchase: true,
-        })
-        console.log(`Purchase confirmation email sent to ${customerEmail}`)
-      } catch (emailError) {
-        // Log email error but don't fail the webhook
-        console.error("Failed to send purchase confirmation email:", emailError)
+      const shouldSendEmail = await claimOnce(session.id, "email_sent_at")
+      if (shouldSendEmail) {
+        try {
+          await sendPurchaseConfirmation({
+            to: customerEmail,
+            customerName: session.customer_details?.name || undefined,
+            orderTotal,
+            licenses: licenseInfoForEmail,
+            // Always true - user must explicitly claim in workshop
+            isGuestPurchase: true,
+          })
+          console.log(`Purchase confirmation email sent to ${maskEmail(customerEmail)}`)
+        } catch (emailError) {
+          // Log email error but don't fail the webhook
+          console.error("Failed to send purchase confirmation email:", emailError)
+        }
       }
+
+      await markFulfillmentCompleted(session.id)
 
       return NextResponse.json({
         received: true,
         status: "licenses_created",
-        count: createdLicenses.length,
+        count: createdOrExisting.length,
       })
     }
 

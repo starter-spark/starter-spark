@@ -90,7 +90,7 @@ export default function ProductViewer3D({
                 shadows="contact"
                 adjustCamera={false}
               >
-                <Model path={modelPath} onLoad={() => setIsLoaded(true)} />
+                <Model path={modelPath} onLoad={() => { setIsLoaded(true); }} />
               </Stage>
               <OrbitControls
                 enableZoom={true}
@@ -107,7 +107,7 @@ export default function ProductViewer3D({
 }
 
 function supportsWebGL(): boolean {
-  if (typeof window === "undefined") return false
+  if (globalThis.window === undefined) return false
   if (typeof document === "undefined") return false
   if (typeof WebGLRenderingContext === "undefined") return false
   try {

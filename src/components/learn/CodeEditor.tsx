@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils"
 
 type CodeEditorTheme = "light" | "dark"
 
-type CodeEditorProps = {
+interface CodeEditorProps {
   initialCode: string
   value?: string
   language?: string
@@ -35,9 +35,8 @@ type CodeEditorProps = {
 }
 
 function safeGetLocalStorage(key: string): string | null {
-  if (typeof window === "undefined") return null
   try {
-    return window.localStorage.getItem(key)
+    return globalThis.localStorage.getItem(key)
   } catch {
     return null
   }
@@ -46,7 +45,7 @@ function safeGetLocalStorage(key: string): string | null {
 function safeSetLocalStorage(key: string, value: string) {
   if (typeof window === "undefined") return
   try {
-    window.localStorage.setItem(key, value)
+    globalThis.localStorage.setItem(key, value)
   } catch {
     // ignore (private mode, quota, etc.)
   }
@@ -54,6 +53,11 @@ function safeSetLocalStorage(key: string, value: string) {
 
 function readPageCspNonce(): string | null {
   if (typeof document === "undefined") return null
+  const fromDataAttr = document.querySelector<HTMLElement>("[data-csp-nonce]")?.dataset.cspNonce
+  if (fromDataAttr && fromDataAttr.trim()) return fromDataAttr.trim()
+  const meta = document.querySelector<HTMLMetaElement>('meta[name="csp-nonce"]')
+  const metaNonce = meta?.content?.trim()
+  if (metaNonce) return metaNonce
   const script = document.querySelector<HTMLScriptElement>("script[nonce]")
   const nonce = script?.nonce || script?.getAttribute("nonce")
   if (!nonce) return null
@@ -66,22 +70,33 @@ function downloadTextFile(filename: string, contents: string) {
   const a = document.createElement("a")
   a.href = url
   a.download = filename
-  document.body.appendChild(a)
+  document.body.append(a)
   a.click()
   a.remove()
   URL.revokeObjectURL(url)
 }
 
 function inferDownloadName(filename: string | undefined, language: string): string {
-  if (filename && filename.trim()) return filename.trim()
-  const ext =
-    language === "cpp" || language === "c" || language === "arduino" || language === "ino"
-      ? "ino"
-      : language === "typescript" || language === "ts"
-        ? "ts"
-        : language === "javascript" || language === "js"
-          ? "js"
-          : "txt"
+  if (filename?.trim()) return filename.trim()
+  let ext: string
+  switch (language) {
+    case "cpp":
+    case "c":
+    case "arduino":
+    case "ino":
+      ext = "ino"
+      break
+    case "typescript":
+    case "ts":
+      ext = "ts"
+      break
+    case "javascript":
+    case "js":
+      ext = "js"
+      break
+    default:
+      ext = "txt"
+  }
   return `code.${ext}`
 }
 
@@ -203,8 +218,8 @@ type DiffOp =
   | { type: "delete"; line: string }
 
 function diffByLines(a: string, b: string): DiffOp[] {
-  const aLines = a.replace(/\r\n/g, "\n").split("\n")
-  const bLines = b.replace(/\r\n/g, "\n").split("\n")
+  const aLines = a.replaceAll('\r\n', "\n").split("\n")
+  const bLines = b.replaceAll('\r\n', "\n").split("\n")
 
   const LOOKAHEAD = 40
   const findNext = (lines: string[], target: string, start: number): number | null => {
@@ -232,8 +247,7 @@ function diffByLines(a: string, b: string): DiffOp[] {
     const nextInA = findNext(aLines, bLine, i + 1)
 
     if (nextInA === null && nextInB === null) {
-      ops.push({ type: "delete", line: aLine })
-      ops.push({ type: "insert", line: bLine })
+      ops.push({ type: "delete", line: aLine }, { type: "insert", line: bLine })
       i += 1
       j += 1
       continue
@@ -315,7 +329,7 @@ export function CodeEditor({
     try {
       await navigator.clipboard.writeText(code)
       setCopied(true)
-      setTimeout(() => setCopied(false), 1500)
+      setTimeout(() => { setCopied(false); }, 1500)
     } catch {
       // ignore
     }
@@ -393,7 +407,7 @@ export function CodeEditor({
     return ext
   }, [language, theme])
 
-  const hasDiff = Boolean(diffAgainst && diffAgainst.trim())
+  const hasDiff = Boolean(diffAgainst?.trim())
   const diffOps = useMemo(() => {
     if (!showDiff || !hasDiff || !diffAgainst) return null
     return diffByLines(code, diffAgainst)
@@ -439,7 +453,7 @@ export function CodeEditor({
         <div className="flex items-center gap-1.5">
           <button
             type="button"
-            onClick={() => setTheme((prev) => (prev === "light" ? "dark" : "light"))}
+            onClick={() => { setTheme((prev) => (prev === "light" ? "dark" : "light")); }}
             className="inline-flex items-center gap-1.5 rounded px-2 py-1 text-xs text-slate-600 hover:text-slate-900 hover:bg-slate-200"
             aria-label={theme === "light" ? "Switch to dark theme" : "Switch to light theme"}
             title={theme === "light" ? "Dark theme" : "Light theme"}
@@ -466,7 +480,7 @@ export function CodeEditor({
           {hasDiff && !readOnly && (
             <button
               type="button"
-              onClick={() => setShowDiff((prev) => !prev)}
+              onClick={() => { setShowDiff((prev) => !prev); }}
               className="inline-flex items-center gap-1.5 rounded px-2 py-1 text-xs text-slate-600 hover:text-slate-900 hover:bg-slate-200"
               aria-expanded={showDiff}
               aria-label={showDiff ? "Hide diff" : "Show diff"}
@@ -554,7 +568,7 @@ export function CodeEditor({
             <p className="text-xs font-mono text-slate-500">{diffTitle}</p>
             <button
               type="button"
-              onClick={() => setShowDiff(false)}
+              onClick={() => { setShowDiff(false); }}
               className="text-xs text-slate-500 hover:text-slate-700"
             >
               Close

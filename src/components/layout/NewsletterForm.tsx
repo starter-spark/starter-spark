@@ -77,7 +77,7 @@ export function NewsletterForm() {
           type="email"
           placeholder="your@email.com"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) => { setEmail(e.target.value); }}
           className="h-10 bg-slate-50 text-sm"
           disabled={status === "loading"}
           aria-describedby={status === "error" && message ? "newsletter-error" : undefined}

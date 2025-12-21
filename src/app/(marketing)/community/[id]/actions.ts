@@ -1,9 +1,19 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
+import { supabaseAdmin } from "@/lib/supabase/admin"
+import { rateLimitAction } from "@/lib/rate-limit"
+import { isUuid } from "@/lib/uuid"
 import { revalidatePath } from "next/cache"
 
 export async function voteOnPost(postId: string, voteType: 1 | -1) {
+  if (!isUuid(postId)) {
+    return { error: "Invalid post.", requiresAuth: false }
+  }
+  if (voteType !== 1 && voteType !== -1) {
+    return { error: "Invalid vote.", requiresAuth: false }
+  }
+
   const supabase = await createClient()
 
   const {
@@ -14,13 +24,25 @@ export async function voteOnPost(postId: string, voteType: 1 | -1) {
     return { error: "You must be signed in to vote", requiresAuth: true }
   }
 
+  const rateLimitResult = await rateLimitAction(user.id, "communityVote")
+  if (!rateLimitResult.success) {
+    return {
+      error: rateLimitResult.error || "Too many votes. Please try again shortly.",
+    }
+  }
+
   // Check if user already voted on this post
-  const { data: existingVote } = await supabase
+  const { data: existingVote, error: existingVoteError } = await supabase
     .from("post_votes")
     .select("id, vote_type")
     .eq("post_id", postId)
     .eq("user_id", user.id)
-    .single()
+    .maybeSingle()
+
+  if (existingVoteError) {
+    console.error("Error checking existing post vote:", existingVoteError)
+    return { error: "Failed to load your vote. Please try again." }
+  }
 
   if (existingVote) {
     if (existingVote.vote_type === voteType) {
@@ -83,6 +105,13 @@ export async function voteOnPost(postId: string, voteType: 1 | -1) {
 }
 
 export async function voteOnComment(commentId: string, voteType: 1 | -1) {
+  if (!isUuid(commentId)) {
+    return { error: "Invalid comment.", requiresAuth: false }
+  }
+  if (voteType !== 1 && voteType !== -1) {
+    return { error: "Invalid vote.", requiresAuth: false }
+  }
+
   const supabase = await createClient()
 
   const {
@@ -93,13 +122,25 @@ export async function voteOnComment(commentId: string, voteType: 1 | -1) {
     return { error: "You must be signed in to vote", requiresAuth: true }
   }
 
+  const rateLimitResult = await rateLimitAction(user.id, "communityVote")
+  if (!rateLimitResult.success) {
+    return {
+      error: rateLimitResult.error || "Too many votes. Please try again shortly.",
+    }
+  }
+
   // Check if user already voted on this comment
-  const { data: existingVote } = await supabase
+  const { data: existingVote, error: existingVoteError } = await supabase
     .from("comment_votes")
     .select("id, vote_type")
     .eq("comment_id", commentId)
     .eq("user_id", user.id)
-    .single()
+    .maybeSingle()
+
+  if (existingVoteError) {
+    console.error("Error checking existing comment vote:", existingVoteError)
+    return { error: "Failed to load your vote. Please try again." }
+  }
 
   if (existingVote) {
     if (existingVote.vote_type === voteType) {
@@ -158,6 +199,10 @@ export async function voteOnComment(commentId: string, voteType: 1 | -1) {
 }
 
 export async function reportPost(postId: string) {
+  if (!isUuid(postId)) {
+    return { error: "Invalid post.", requiresAuth: false }
+  }
+
   const supabase = await createClient()
 
   const {
@@ -168,17 +213,37 @@ export async function reportPost(postId: string) {
     return { error: "You must be signed in to report", requiresAuth: true }
   }
 
-  // Flag the post for review
-  const { error } = await supabase
-    .from("posts")
-    .update({ status: "flagged" })
-    .eq("id", postId)
+  const rateLimitResult = await rateLimitAction(user.id, "communityReport")
+  if (!rateLimitResult.success) {
+    return {
+      error: rateLimitResult.error || "Too many reports. Please try again later.",
+    }
+  }
 
-  if (error) {
-    console.error("Error reporting:", error)
+  const { error: reportError } = await supabase.from("post_reports").insert({
+    post_id: postId,
+    reporter_id: user.id,
+  })
+
+  if (reportError) {
+    if (reportError.code === "23505") {
+      return { success: true, message: "Thanks for reporting. We've already noted this post." }
+    }
+    console.error("Error reporting:", reportError)
     return { error: "Failed to report. Please try again." }
   }
 
+  const { error: updateError } = await supabaseAdmin
+    .from("posts")
+    .update({ status: "flagged" })
+    .eq("id", postId)
+    .neq("status", "flagged")
+
+  if (updateError) {
+    console.error("Error flagging post:", updateError)
+  }
+
   revalidatePath(`/community/${postId}`)
+  revalidatePath("/community")
   return { success: true, message: "Post reported for review. Thank you." }
 }

@@ -32,7 +32,7 @@ export function LoginForm({ redirectTo, claimToken }: LoginFormProps) {
       const supabase = createClient()
 
       // Build the redirect URL
-      const siteUrl = window.location.origin
+      const siteUrl = globalThis.location.origin
       let callbackUrl = `${siteUrl}/auth/callback`
 
       // Add redirect params
@@ -66,7 +66,7 @@ export function LoginForm({ redirectTo, claimToken }: LoginFormProps) {
       // Handle rate limit error with user-friendly message
       const errorMessage = err instanceof Error ? err.message : String(err)
       if (errorMessage.includes("after")) {
-        const seconds = errorMessage.match(/after (\d+) seconds?/)?.[1]
+        const seconds = (/after (\d+) seconds?/.exec(errorMessage))?.[1]
         if (seconds) {
           setError(`Please wait ${seconds} seconds before requesting another link.`)
         } else {
@@ -119,7 +119,7 @@ export function LoginForm({ redirectTo, claimToken }: LoginFormProps) {
             type="email"
             placeholder="you@example.com"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => { setEmail(e.target.value); }}
             className="pl-10 bg-slate-50 border-slate-200 focus:border-cyan-700"
             disabled={isLoading}
             required

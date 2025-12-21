@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 import { logAuditEvent } from "@/lib/audit"
+import { requireAdmin } from "@/lib/auth"
 
 interface UpdateStatInput {
   id: string
@@ -16,24 +17,11 @@ interface UpdateStatInput {
 export async function updateSiteStat(input: UpdateStatInput) {
   const supabase = await createClient()
 
-  // Verify admin role
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    return { error: "Not authenticated" }
+  const guard = await requireAdmin(supabase)
+  if (!guard.ok) {
+    return { error: guard.error }
   }
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single()
-
-  if (profile?.role !== "admin") {
-    return { error: "Not authorized" }
-  }
+  const user = guard.user
 
   // Update the stat
   const updateData: Record<string, unknown> = {
@@ -49,14 +37,20 @@ export async function updateSiteStat(input: UpdateStatInput) {
     updateData.auto_source = input.is_auto_calculated ? (input.auto_source || null) : null
   }
 
-  const { error } = await supabase
+  const { data: updated, error } = await supabase
     .from("site_stats")
     .update(updateData)
     .eq("id", input.id)
+    .select("id")
+    .maybeSingle()
 
   if (error) {
     console.error("Error updating site stat:", error)
     return { error: error.message }
+  }
+
+  if (!updated) {
+    return { error: "Stat not found" }
   }
 
   // Log audit event
@@ -88,49 +82,49 @@ export async function createSiteStat(input: {
 }) {
   const supabase = await createClient()
 
-  // Verify admin role
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    return { error: "Not authenticated" }
+  const guard = await requireAdmin(supabase)
+  if (!guard.ok) {
+    return { error: guard.error }
   }
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single()
-
-  if (profile?.role !== "admin") {
-    return { error: "Not authorized" }
-  }
+  const user = guard.user
 
   // Get the max sort_order
-  const { data: maxOrder } = await supabase
+  const { data: maxOrder, error: maxOrderError } = await supabase
     .from("site_stats")
     .select("sort_order")
     .order("sort_order", { ascending: false })
     .limit(1)
-    .single()
+    .maybeSingle()
+
+  if (maxOrderError) {
+    console.error("Error fetching max sort_order:", maxOrderError)
+    return { error: maxOrderError.message }
+  }
 
   const nextSortOrder = (maxOrder?.sort_order || 0) + 1
 
   // Create the stat
-  const { data: stat, error } = await supabase.from("site_stats").insert({
-    key: input.key,
-    value: input.value,
-    label: input.label,
-    suffix: input.suffix || "",
-    is_auto_calculated: input.is_auto_calculated,
-    auto_source: input.is_auto_calculated ? (input.auto_source || null) : null,
-    sort_order: nextSortOrder,
-  }).select("id").single()
+  const { data: stat, error } = await supabase
+    .from("site_stats")
+    .insert({
+      key: input.key,
+      value: input.value,
+      label: input.label,
+      suffix: input.suffix || "",
+      is_auto_calculated: input.is_auto_calculated,
+      auto_source: input.is_auto_calculated ? (input.auto_source || null) : null,
+      sort_order: nextSortOrder,
+    })
+    .select("id")
+    .maybeSingle()
 
   if (error) {
     console.error("Error creating site stat:", error)
     return { error: error.message }
+  }
+
+  if (!stat) {
+    return { error: "Failed to create stat" }
   }
 
   // Log audit event
@@ -155,37 +149,27 @@ export async function createSiteStat(input: {
 export async function deleteSiteStat(id: string) {
   const supabase = await createClient()
 
-  // Verify admin role
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    return { error: "Not authenticated" }
+  const guard = await requireAdmin(supabase)
+  if (!guard.ok) {
+    return { error: guard.error }
   }
+  const user = guard.user
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single()
-
-  if (profile?.role !== "admin") {
-    return { error: "Not authorized" }
-  }
-
-  // Get stat info before deleting for audit log
-  const { data: stat } = await supabase
+  // Delete and return the stat for audit details.
+  const { data: stat, error } = await supabase
     .from("site_stats")
-    .select("key, label")
+    .delete()
     .eq("id", id)
-    .single()
-
-  const { error } = await supabase.from("site_stats").delete().eq("id", id)
+    .select("id, key, label")
+    .maybeSingle()
 
   if (error) {
     console.error("Error deleting site stat:", error)
     return { error: error.message }
+  }
+
+  if (!stat) {
+    return { error: "Stat not found" }
   }
 
   // Log audit event
@@ -195,8 +179,8 @@ export async function deleteSiteStat(id: string) {
     resourceType: 'stats',
     resourceId: id,
     details: {
-      key: stat?.key,
-      label: stat?.label,
+      key: stat.key,
+      label: stat.label,
     },
   })
 

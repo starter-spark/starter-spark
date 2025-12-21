@@ -1,8 +1,9 @@
 import { createClient } from "@/lib/supabase/server"
 import { supabaseAdmin } from "@/lib/supabase/admin"
-import { NextRequest, NextResponse } from "next/server"
+import { type NextRequest, NextResponse, after } from "next/server"
 import { rateLimit } from "@/lib/rate-limit"
 import { checkKitClaimAchievements } from "@/lib/achievements"
+import { isUuid } from "@/lib/uuid"
 
 export async function POST(request: NextRequest) {
   // Rate limit: 10 requests per minute
@@ -42,6 +43,13 @@ export async function POST(request: NextRequest) {
     )
   }
 
+  if (!isUuid(licenseId)) {
+    return NextResponse.json(
+      { error: "Invalid license ID" },
+      { status: 400 }
+    )
+  }
+
   if (action !== "claim" && action !== "reject") {
     return NextResponse.json(
       { error: "Action must be 'claim' or 'reject'" },
@@ -54,13 +62,15 @@ export async function POST(request: NextRequest) {
     .from("licenses")
     .select("id, status, customer_email, owner_id, product_id, products(name)")
     .eq("id", licenseId)
-    .single()
+    .maybeSingle()
 
-  if (fetchError || !license) {
-    return NextResponse.json(
-      { error: "License not found" },
-      { status: 404 }
-    )
+  if (fetchError) {
+    console.error("Failed to fetch pending license:", fetchError)
+    return NextResponse.json({ error: "Failed to load license" }, { status: 500 })
+  }
+
+  if (!license) {
+    return NextResponse.json({ error: "License not found" }, { status: 404 })
   }
 
   // Security check: email must match
@@ -97,11 +107,16 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
+
+    return NextResponse.json(
+      { error: "This license is no longer pending." },
+      { status: 409 }
+    )
   }
 
   if (action === "claim") {
     // Claim the license
-    const { error: updateError } = await supabaseAdmin
+    const { data: updatedLicense, error: updateError } = await supabaseAdmin
       .from("licenses")
       .update({
         status: "claimed",
@@ -110,7 +125,11 @@ export async function POST(request: NextRequest) {
         claim_token: null, // Clear the token
       })
       .eq("id", licenseId)
+      .eq("customer_email", license.customer_email)
       .eq("status", "pending") // Atomic check
+      .is("owner_id", null)
+      .select("id")
+      .maybeSingle()
 
     if (updateError) {
       console.error("Failed to claim license:", updateError)
@@ -120,8 +139,21 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Trigger achievement check asynchronously
-    void checkKitClaimAchievements(user.id)
+    if (!updatedLicense) {
+      return NextResponse.json(
+        { error: "This license is no longer pending." },
+        { status: 409 }
+      )
+    }
+
+    // Trigger achievement check asynchronously (after response)
+    after(async () => {
+      try {
+        await checkKitClaimAchievements(user.id)
+      } catch (err) {
+        console.error("Error checking kit achievements:", err)
+      }
+    })
 
     const productName = (license.products as { name: string } | null)?.name || "Kit"
 
@@ -133,19 +165,30 @@ export async function POST(request: NextRequest) {
     })
   } else {
     // Reject the license
-    const { error: updateError } = await supabaseAdmin
+    const { data: updatedLicense, error: updateError } = await supabaseAdmin
       .from("licenses")
       .update({
         status: "rejected",
       })
       .eq("id", licenseId)
+      .eq("customer_email", license.customer_email)
       .eq("status", "pending") // Atomic check
+      .is("owner_id", null)
+      .select("id")
+      .maybeSingle()
 
     if (updateError) {
       console.error("Failed to reject license:", updateError)
       return NextResponse.json(
         { error: "Failed to reject license" },
         { status: 500 }
+      )
+    }
+
+    if (!updatedLicense) {
+      return NextResponse.json(
+        { error: "This license is no longer pending." },
+        { status: 409 }
       )
     }
 

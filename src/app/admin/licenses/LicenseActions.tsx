@@ -56,7 +56,7 @@ export function LicenseActions({ licenseId, isClaimed }: LicenseActionsProps) {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => void handleCopyCode()}>
+        <DropdownMenuItem onClick={() => { handleCopyCode(); }}>
           <Copy className="mr-2 h-4 w-4" />
           Copy Code
         </DropdownMenuItem>

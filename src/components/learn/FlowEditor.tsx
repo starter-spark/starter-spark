@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
   ReactFlow,
   addEdge,
@@ -9,7 +9,6 @@ import {
   MiniMap,
   type Connection,
   type Node,
-  type Edge,
   type OnSelectionChangeParams,
   useEdgesState,
   useNodesState,
@@ -22,6 +21,7 @@ import { Separator } from "@/components/ui/separator"
 import { Check, Copy, Download } from "lucide-react"
 import { reactFlowTokens } from "@/styles/reactflow-tokens"
 import { cn } from "@/lib/utils"
+import { randomId } from "@/lib/random-id"
 import {
   type FlowState,
   type VisualBlockType,
@@ -33,7 +33,7 @@ import { CodeEditor } from "./CodeEditor"
 
 type EditorMode = "diagram" | "visual"
 
-type FlowEditorProps = {
+interface FlowEditorProps {
   mode: EditorMode
   value: unknown
   onChange: (next: FlowState) => void
@@ -41,9 +41,12 @@ type FlowEditorProps = {
   height?: number
 }
 
-function newId(): string {
-  if (typeof crypto !== "undefined" && "randomUUID" in crypto) return crypto.randomUUID()
-  return `${Date.now()}-${Math.random().toString(16).slice(2)}`
+function flowSignature(flow: FlowState): string {
+  try {
+    return JSON.stringify(flow)
+  } catch {
+    return ""
+  }
 }
 
 function getDefaultVisualNodes(): FlowState["nodes"] {
@@ -74,7 +77,7 @@ const visualPalette: { type: VisualBlockType; label: string }[] = [
 ]
 
 function createVisualNode(blockType: VisualBlockType): FlowState["nodes"][number] {
-  const id = newId()
+  const id = randomId()
 
   const params: Record<string, unknown> =
     blockType === "variable"
@@ -129,7 +132,7 @@ function diagramStyleFor(key: DiagramStyleKey) {
 }
 
 function createDiagramNode(styleKey: DiagramStyleKey): FlowState["nodes"][number] {
-  const id = newId()
+  const id = randomId()
   const style = diagramStyleFor(styleKey)
   const label =
     styleKey === "primary"
@@ -150,23 +153,58 @@ function createDiagramNode(styleKey: DiagramStyleKey): FlowState["nodes"][number
 }
 
 export function FlowEditor({ mode, value, onChange, className, height = 420 }: FlowEditorProps) {
-  const initial = useMemo(() => parseFlowState(value), [value])
-  const initialNodes = useMemo(() => {
+  const parsed = useMemo(() => parseFlowState(value), [value])
+  const parsedNodes = useMemo(() => {
     if (mode === "visual") {
-      return initial.nodes.length ? initial.nodes : getDefaultVisualNodes()
+      return parsed.nodes.length ? parsed.nodes : getDefaultVisualNodes()
     }
-    return initial.nodes
-  }, [initial.nodes, mode])
+    return parsed.nodes
+  }, [mode, parsed.nodes])
 
-  const [nodes, setNodes, onNodesChange] = useNodesState<FlowState["nodes"][number]>(initialNodes)
-  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>(initial.edges)
+  const parsedFlow = useMemo(() => ({ nodes: parsedNodes, edges: parsed.edges }), [parsed.edges, parsedNodes])
+  const parsedSig = useMemo(() => flowSignature(parsedFlow), [parsedFlow])
+
+  const [nodes, setNodes, onNodesChange] = useNodesState<FlowState["nodes"][number]>(parsedNodes)
+  const [edges, setEdges, onEdgesChange] = useEdgesState(parsed.edges)
 
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const selectedNode = selectedId ? nodes.find((n) => n.id === selectedId) : undefined
 
+  // Support external edits (e.g. admin "raw JSON" editor) by syncing local state to `value`.
+  const suppressNextEmitRef = useRef(false)
+  const lastAppliedSigRef = useRef(parsedSig)
+  const lastSentSigRef = useRef(parsedSig)
+
+  // Use ref to avoid infinite loops when parent doesn't memoize onChange
+  const onChangeRef = useRef(onChange)
   useEffect(() => {
-    onChange({ nodes, edges })
-  }, [edges, nodes, onChange])
+    onChangeRef.current = onChange
+  }, [onChange])
+
+  useEffect(() => {
+    if (parsedSig === lastAppliedSigRef.current) return
+
+    lastAppliedSigRef.current = parsedSig
+    lastSentSigRef.current = parsedSig
+    suppressNextEmitRef.current = true
+
+    setSelectedId(null)
+    setNodes(parsedFlow.nodes)
+    setEdges(parsedFlow.edges)
+  }, [parsedFlow, parsedSig, setEdges, setNodes])
+
+  useEffect(() => {
+    if (suppressNextEmitRef.current) {
+      suppressNextEmitRef.current = false
+      return
+    }
+
+    const sig = flowSignature({ nodes, edges })
+    if (sig === lastSentSigRef.current) return
+    lastSentSigRef.current = sig
+
+    onChangeRef.current({ nodes, edges })
+  }, [edges, nodes])
 
   const onConnect = useCallback(
     (connection: Connection) => {
@@ -197,7 +235,7 @@ export function FlowEditor({ mode, value, onChange, className, height = 420 }: F
     setNodes((prev) =>
       prev.map((n) => {
         if (n.id !== selectedId) return n
-        return { ...n, data: { ...(n.data ?? {}), label } }
+        return { ...n, data: { ...n.data, label } }
       })
     )
   }
@@ -208,7 +246,7 @@ export function FlowEditor({ mode, value, onChange, className, height = 420 }: F
       prev.map((n) => {
         if (n.id !== selectedId) return n
         const params: Record<string, unknown> = n.data?.params ?? {}
-        return { ...n, data: { ...(n.data ?? {}), params: { ...params, ...patch } } }
+        return { ...n, data: { ...n.data, params: { ...params, ...patch } } }
       })
     )
   }
@@ -231,7 +269,7 @@ export function FlowEditor({ mode, value, onChange, className, height = 420 }: F
     if (!generatedCode) return
     navigator.clipboard.writeText(generatedCode).then(() => {
       setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+      setTimeout(() => { setCopied(false); }, 2000)
     }).catch(() => {
       // Fallback or silent fail
     })
@@ -244,7 +282,7 @@ export function FlowEditor({ mode, value, onChange, className, height = 420 }: F
     const a = document.createElement("a")
     a.href = url
     a.download = "sketch.ino"
-    document.body.appendChild(a)
+    document.body.append(a)
     a.click()
     a.remove()
     URL.revokeObjectURL(url)
@@ -274,7 +312,7 @@ export function FlowEditor({ mode, value, onChange, className, height = 420 }: F
                   type="button"
                   variant="outline"
                   className="w-full justify-start font-mono"
-                  onClick={() => addNode(item.type)}
+                  onClick={() => { addNode(item.type); }}
                 >
                   + {item.label}
                 </Button>
@@ -285,7 +323,7 @@ export function FlowEditor({ mode, value, onChange, className, height = 420 }: F
                   type="button"
                   variant="outline"
                   className="w-full justify-start font-mono"
-                  onClick={() => addNode("primary")}
+                  onClick={() => { addNode("primary"); }}
                 >
                   + Primary node
                 </Button>
@@ -293,7 +331,7 @@ export function FlowEditor({ mode, value, onChange, className, height = 420 }: F
                   type="button"
                   variant="outline"
                   className="w-full justify-start font-mono"
-                  onClick={() => addNode("secondary")}
+                  onClick={() => { addNode("secondary"); }}
                 >
                   + Component node
                 </Button>
@@ -301,7 +339,7 @@ export function FlowEditor({ mode, value, onChange, className, height = 420 }: F
                   type="button"
                   variant="outline"
                   className="w-full justify-start font-mono"
-                  onClick={() => addNode("power")}
+                  onClick={() => { addNode("power"); }}
                 >
                   + Power node
                 </Button>
@@ -309,7 +347,7 @@ export function FlowEditor({ mode, value, onChange, className, height = 420 }: F
                   type="button"
                   variant="outline"
                   className="w-full justify-start font-mono"
-                  onClick={() => addNode("component")}
+                  onClick={() => { addNode("component"); }}
                 >
                   + Dashed node
                 </Button>
@@ -320,13 +358,13 @@ export function FlowEditor({ mode, value, onChange, className, height = 420 }: F
 
         {/* Canvas */}
         <div className="border-b lg:border-b-0 lg:border-r border-slate-200" style={{ height }}>
-          <ReactFlow<FlowState["nodes"][number], Edge>
+          <ReactFlow<FlowState["nodes"][number]>
             nodes={nodes}
             edges={edges}
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
-            onSelectionChange={(s: OnSelectionChangeParams<FlowState["nodes"][number], Edge>) => {
+            onSelectionChange={(s: OnSelectionChangeParams<FlowState["nodes"][number]>) => {
               const node = s.nodes[0]
               setSelectedId(node ? node.id : null)
             }}
@@ -360,17 +398,13 @@ export function FlowEditor({ mode, value, onChange, className, height = 420 }: F
             </Button>
           </div>
 
-          {!selectedNode ? (
-            <p className="text-sm text-slate-500">
-              Select a node to edit its properties.
-            </p>
-          ) : (
+          {selectedNode ? (
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label>Label</Label>
                 <Input
                   value={typeof selectedNode.data?.label === "string" ? selectedNode.data.label : ""}
-                  onChange={(e) => setSelectedLabel(e.target.value)}
+                  onChange={(e) => { setSelectedLabel(e.target.value); }}
                 />
               </div>
 
@@ -387,6 +421,10 @@ export function FlowEditor({ mode, value, onChange, className, height = 420 }: F
                 </>
               )}
             </div>
+          ) : (
+            <p className="text-sm text-slate-500">
+              Select a node to edit its properties.
+            </p>
           )}
 
           {mode === "visual" && generatedCode && (
@@ -452,14 +490,14 @@ function VisualParamsEditor({
           <Label>Name</Label>
           <Input
             value={typeof params.name === "string" ? params.name : ""}
-            onChange={(e) => onChange({ name: e.target.value })}
+            onChange={(e) => { onChange({ name: e.target.value }); }}
           />
         </div>
         <div className="space-y-2">
           <Label>Type</Label>
           <select
             value={typeof params.varType === "string" ? params.varType : "int"}
-            onChange={(e) => onChange({ varType: e.target.value })}
+            onChange={(e) => { onChange({ varType: e.target.value }); }}
             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-mono"
           >
             <option value="int">int</option>
@@ -471,7 +509,7 @@ function VisualParamsEditor({
           <Label>Value</Label>
           <Input
             value={typeof params.value === "string" || typeof params.value === "number" ? String(params.value) : "0"}
-            onChange={(e) => onChange({ value: e.target.value })}
+            onChange={(e) => { onChange({ value: e.target.value }); }}
           />
         </div>
       </div>
@@ -485,7 +523,7 @@ function VisualParamsEditor({
           <Label>Variable</Label>
           <Input
             value={typeof params.variable === "string" ? params.variable : "servo"}
-            onChange={(e) => onChange({ variable: e.target.value })}
+            onChange={(e) => { onChange({ variable: e.target.value }); }}
           />
         </div>
         <div className="space-y-2">
@@ -493,7 +531,7 @@ function VisualParamsEditor({
           <Input
             type="number"
             value={typeof params.pin === "number" ? params.pin : 9}
-            onChange={(e) => onChange({ pin: Number(e.target.value) })}
+            onChange={(e) => { onChange({ pin: Number(e.target.value) }); }}
           />
         </div>
       </div>
@@ -507,7 +545,7 @@ function VisualParamsEditor({
           <Label>Variable</Label>
           <Input
             value={typeof params.variable === "string" ? params.variable : "servo"}
-            onChange={(e) => onChange({ variable: e.target.value })}
+            onChange={(e) => { onChange({ variable: e.target.value }); }}
           />
         </div>
         <div className="space-y-2">
@@ -515,7 +553,7 @@ function VisualParamsEditor({
           <Input
             type="number"
             value={typeof params.angle === "number" ? params.angle : 90}
-            onChange={(e) => onChange({ angle: Number(e.target.value) })}
+            onChange={(e) => { onChange({ angle: Number(e.target.value) }); }}
           />
         </div>
       </div>
@@ -529,7 +567,7 @@ function VisualParamsEditor({
         <Input
           type="number"
           value={typeof params.ms === "number" ? params.ms : 500}
-          onChange={(e) => onChange({ ms: Number(e.target.value) })}
+          onChange={(e) => { onChange({ ms: Number(e.target.value) }); }}
         />
       </div>
     )
@@ -543,14 +581,14 @@ function VisualParamsEditor({
           <Input
             type="number"
             value={typeof params.pin === "number" ? params.pin : 13}
-            onChange={(e) => onChange({ pin: Number(e.target.value) })}
+            onChange={(e) => { onChange({ pin: Number(e.target.value) }); }}
           />
         </div>
         <div className="space-y-2">
           <Label>Value</Label>
           <select
             value={typeof params.value === "string" ? params.value : "HIGH"}
-            onChange={(e) => onChange({ value: e.target.value })}
+            onChange={(e) => { onChange({ value: e.target.value }); }}
             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-mono"
           >
             <option value="HIGH">HIGH</option>
@@ -569,7 +607,7 @@ function VisualParamsEditor({
           <Input
             type="number"
             value={typeof params.pin === "number" ? params.pin : 9}
-            onChange={(e) => onChange({ pin: Number(e.target.value) })}
+            onChange={(e) => { onChange({ pin: Number(e.target.value) }); }}
           />
         </div>
         <div className="space-y-2">
@@ -577,7 +615,7 @@ function VisualParamsEditor({
           <Input
             type="number"
             value={typeof params.value === "number" ? params.value : 128}
-            onChange={(e) => onChange({ value: Number(e.target.value) })}
+            onChange={(e) => { onChange({ value: Number(e.target.value) }); }}
           />
         </div>
       </div>
@@ -590,7 +628,7 @@ function VisualParamsEditor({
         <Label>Message</Label>
         <Input
           value={typeof params.message === "string" ? params.message : ""}
-          onChange={(e) => onChange({ message: e.target.value })}
+          onChange={(e) => { onChange({ message: e.target.value }); }}
         />
       </div>
     )

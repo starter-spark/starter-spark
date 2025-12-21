@@ -1,4 +1,4 @@
-import crypto from "crypto"
+import crypto from "node:crypto"
 
 /**
  * License code character set (excludes ambiguous characters: 0, O, 1, I)
@@ -65,6 +65,20 @@ export function normalizeLicenseCode(code: string): string {
 }
 
 /**
+ * Normalizes a license code into the canonical storage format (XXXX-XXXX-XXXX-XXXX).
+ * Accepts either dashed or undashed input.
+ */
+export function normalizeLicenseCodeForLookup(code: string): string {
+  const normalized = normalizeLicenseCode(code)
+  const stripped = normalized.replaceAll("-", "")
+  if (stripped.length !== LICENSE_CODE_SEGMENTS * LICENSE_CODE_SEGMENT_LENGTH) {
+    return normalized
+  }
+  const parts = stripped.match(/.{1,4}/g) || []
+  return parts.join("-")
+}
+
+/**
  * Validates a claim token format (64 character hex string)
  */
 export function isValidClaimToken(token: string): boolean {
@@ -84,7 +98,7 @@ export function formatPrice(cents: number): string {
  */
 export function formatPriceWithCurrency(
   cents: number,
-  currency: string = "USD"
+  currency = "USD"
 ): string {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -97,7 +111,16 @@ export function formatPriceWithCurrency(
  */
 export function isValidEmail(email: string): boolean {
   if (!email || typeof email !== "string") return false
-  // Simple regex for email validation
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  return emailRegex.test(email)
+  const trimmed = email.trim()
+  if (!trimmed) return false
+  if (trimmed.includes(" ")) return false
+
+  const atIndex = trimmed.indexOf("@")
+  if (atIndex <= 0 || atIndex !== trimmed.lastIndexOf("@")) return false
+
+  const domain = trimmed.slice(atIndex + 1)
+  if (!domain || domain.startsWith(".") || domain.endsWith(".")) return false
+  if (!domain.includes(".")) return false
+
+  return true
 }

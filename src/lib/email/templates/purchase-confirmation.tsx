@@ -16,11 +16,11 @@ interface LicenseInfo {
 }
 
 interface PurchaseConfirmationProps {
-  customerName?: string
-  orderTotal: string
-  licenses: LicenseInfo[]
-  isGuestPurchase: boolean
-  siteUrl: string
+  readonly customerName?: string
+  readonly orderTotal: string
+  readonly licenses: LicenseInfo[]
+  readonly isGuestPurchase: boolean
+  readonly siteUrl: string
 }
 
 export function PurchaseConfirmationEmail({
@@ -30,7 +30,9 @@ export function PurchaseConfirmationEmail({
   isGuestPurchase,
   siteUrl,
 }: PurchaseConfirmationProps) {
-  const previewText = `Your StarterSpark order is confirmed - ${licenses.length} license${licenses.length > 1 ? "s" : ""} included`
+  const licenseCount = licenses.length
+  const licenseLabel = licenseCount === 1 ? "license" : "licenses"
+  const previewText = `Your StarterSpark order is confirmed - ${String(licenseCount)} ${licenseLabel} included`
 
   return (
     <BaseLayout preview={previewText}>

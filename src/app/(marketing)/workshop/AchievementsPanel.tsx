@@ -109,10 +109,14 @@ export function AchievementsPanel({
               )}
 
               {/* Tooltip on hover */}
-              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-900 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-900 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 max-w-[200px]">
                 <div className="font-medium">{achievement.name}</div>
-                {isEarned && (
+                {isEarned ? (
                   <div className="text-amber-400">+{achievement.points} pts</div>
+                ) : (
+                  achievement.unlock_hint && (
+                    <div className="text-slate-400 text-[10px] mt-0.5 whitespace-normal">{achievement.unlock_hint}</div>
+                  )
                 )}
               </div>
             </div>
@@ -122,7 +126,7 @@ export function AchievementsPanel({
 
       {sortedAchievements.length > 8 && (
         <button
-          onClick={() => setShowAll(!showAll)}
+          onClick={() => { setShowAll(!showAll); }}
           className="w-full mt-3 text-xs text-cyan-700 hover:text-cyan-800 font-mono"
         >
           {showAll ? "Show Less" : `View All (${sortedAchievements.length})`}

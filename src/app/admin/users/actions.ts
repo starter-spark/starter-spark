@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server"
 import { supabaseAdmin } from "@/lib/supabase/admin"
 import { logAuditEvent } from "@/lib/audit"
 import { rateLimitAction } from "@/lib/rate-limit"
+import { requireAdmin } from "@/lib/auth"
 
 export async function updateUserRole(
   userId: string,
@@ -12,26 +13,16 @@ export async function updateUserRole(
 ): Promise<{ error: string | null }> {
   const supabase = await createClient()
 
-  // Check if current user is admin
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return { error: "Unauthorized" }
+  const guard = await requireAdmin(supabase)
+  if (!guard.ok) {
+    return { error: guard.user ? "Only admins can change user roles" : guard.error }
   }
+  const user = guard.user
 
   // Rate limit admin actions
   const rateLimitResult = await rateLimitAction(user.id, "adminMutation")
   if (!rateLimitResult.success) {
     return { error: rateLimitResult.error || "Rate limited" }
-  }
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single()
-
-  if (!profile || profile.role !== "admin") {
-    return { error: "Only admins can change user roles" }
   }
 
   // Prevent admin from demoting themselves
@@ -46,22 +37,37 @@ export async function updateUserRole(
   }
 
   // Get the target user's current role for audit log
-  const { data: targetProfile } = await supabaseAdmin
+  const { data: targetProfile, error: targetError } = await supabaseAdmin
     .from("profiles")
     .select("role, email")
     .eq("id", userId)
-    .single()
+    .maybeSingle()
+
+  if (targetError) {
+    console.error("Error fetching target profile:", targetError)
+    return { error: targetError.message }
+  }
+
+  if (!targetProfile) {
+    return { error: "User not found" }
+  }
 
   const oldRole = targetProfile?.role || "unknown"
 
-  const { error } = await supabaseAdmin
+  const { data: updatedProfile, error: updateError } = await supabaseAdmin
     .from("profiles")
     .update({ role })
     .eq("id", userId)
+    .select("id")
+    .maybeSingle()
 
-  if (error) {
-    console.error("Error updating user role:", error)
-    return { error: error.message }
+  if (updateError) {
+    console.error("Error updating user role:", updateError)
+    return { error: updateError.message }
+  }
+
+  if (!updatedProfile) {
+    return { error: "User not found" }
   }
 
   // Log the role change to audit log

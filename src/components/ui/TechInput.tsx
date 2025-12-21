@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Input, InputProps } from "@/components/ui/input"
+import { Input, type InputProps } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 
 interface TechInputProps extends InputProps {
@@ -12,7 +12,7 @@ interface TechInputProps extends InputProps {
 export const TechInput = React.forwardRef<HTMLInputElement, TechInputProps>(
   ({ className, label, status = "default", id, ...props }, ref) => {
     // Generate a stable ID if not provided but label exists
-    const inputId = id || (label ? `tech-input-${label.toLowerCase().replace(/\s+/g, '-')}` : undefined)
+    const inputId = id || (label ? `tech-input-${label.toLowerCase().replaceAll(/\s+/g, '-')}` : undefined)
 
     return (
       <div className="w-full space-y-2">

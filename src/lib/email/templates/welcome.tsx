@@ -10,8 +10,8 @@ import * as React from "react"
 import { BaseLayout } from "./base-layout"
 
 interface WelcomeEmailProps {
-  userName?: string
-  siteUrl: string
+  readonly userName?: string
+  readonly siteUrl: string
 }
 
 export function WelcomeEmail({ userName, siteUrl }: WelcomeEmailProps) {

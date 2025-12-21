@@ -34,9 +34,9 @@ export default async function SiteContentPage() {
 
   // Group content by category
   const contentByCategory: Record<string, typeof content> = {}
-  CATEGORIES.forEach(cat => {
+  for (const cat of CATEGORIES) {
     contentByCategory[cat.key] = (content || []).filter(c => c.category === cat.key)
-  })
+  }
 
   return (
     <div className="space-y-6">

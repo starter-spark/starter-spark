@@ -26,6 +26,7 @@ export type Database = {
           name: string
           points: number | null
           sort_order: number | null
+          unlock_hint: string | null
         }
         Insert: {
           category?: string | null
@@ -38,6 +39,7 @@ export type Database = {
           name: string
           points?: number | null
           sort_order?: number | null
+          unlock_hint?: string | null
         }
         Update: {
           category?: string | null
@@ -50,6 +52,7 @@ export type Database = {
           name?: string
           points?: number | null
           sort_order?: number | null
+          unlock_hint?: string | null
         }
         Relationships: []
       }
@@ -287,6 +290,158 @@ export type Database = {
           },
         ]
       }
+      doc_attachments: {
+        Row: {
+          created_at: string | null
+          file_size: number | null
+          filename: string
+          id: string
+          mime_type: string | null
+          page_id: string
+          storage_path: string
+        }
+        Insert: {
+          created_at?: string | null
+          file_size?: number | null
+          filename: string
+          id?: string
+          mime_type?: string | null
+          page_id: string
+          storage_path: string
+        }
+        Update: {
+          created_at?: string | null
+          file_size?: number | null
+          filename?: string
+          id?: string
+          mime_type?: string | null
+          page_id?: string
+          storage_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doc_attachments_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "doc_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      doc_categories: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          icon: string | null
+          id: string
+          is_published: boolean | null
+          name: string
+          parent_id: string | null
+          slug: string
+          sort_order: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_published?: boolean | null
+          name: string
+          parent_id?: string | null
+          slug: string
+          sort_order?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_published?: boolean | null
+          name?: string
+          parent_id?: string | null
+          slug?: string
+          sort_order?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doc_categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "doc_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      doc_pages: {
+        Row: {
+          category_id: string
+          content: string | null
+          created_at: string | null
+          created_by: string | null
+          excerpt: string | null
+          id: string
+          is_published: boolean | null
+          slug: string
+          sort_order: number | null
+          title: string
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          category_id: string
+          content?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          excerpt?: string | null
+          id?: string
+          is_published?: boolean | null
+          slug: string
+          sort_order?: number | null
+          title: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          category_id?: string
+          content?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          excerpt?: string | null
+          id?: string
+          is_published?: boolean | null
+          slug?: string
+          sort_order?: number | null
+          title?: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doc_pages_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "doc_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "doc_pages_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "doc_pages_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           address: string | null
@@ -493,6 +648,7 @@ export type Database = {
           id: string
           owner_id: string | null
           product_id: string
+          purchase_item_ref: string | null
           source: string | null
           status: Database["public"]["Enums"]["license_status"]
           stripe_session_id: string | null
@@ -506,6 +662,7 @@ export type Database = {
           id?: string
           owner_id?: string | null
           product_id: string
+          purchase_item_ref?: string | null
           source?: string | null
           status?: Database["public"]["Enums"]["license_status"]
           stripe_session_id?: string | null
@@ -519,6 +676,7 @@ export type Database = {
           id?: string
           owner_id?: string | null
           product_id?: string
+          purchase_item_ref?: string | null
           source?: string | null
           status?: Database["public"]["Enums"]["license_status"]
           stripe_session_id?: string | null
@@ -635,6 +793,45 @@ export type Database = {
         }
         Relationships: []
       }
+      post_reports: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          reason: string | null
+          reporter_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          reason?: string | null
+          reporter_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          reason?: string | null
+          reporter_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_reports_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_reports_reporter_id_fkey"
+            columns: ["reporter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       post_votes: {
         Row: {
           created_at: string | null
@@ -742,7 +939,6 @@ export type Database = {
           file_size: number | null
           filename: string
           id: string
-          image_type: Database["public"]["Enums"]["product_image_type"] | null
           is_primary: boolean | null
           metadata: Json | null
           mime_type: string | null
@@ -759,7 +955,6 @@ export type Database = {
           file_size?: number | null
           filename: string
           id?: string
-          image_type?: Database["public"]["Enums"]["product_image_type"] | null
           is_primary?: boolean | null
           metadata?: Json | null
           mime_type?: string | null
@@ -776,7 +971,6 @@ export type Database = {
           file_size?: number | null
           filename?: string
           id?: string
-          image_type?: Database["public"]["Enums"]["product_image_type"] | null
           is_primary?: boolean | null
           metadata?: Json | null
           mime_type?: string | null
@@ -1074,6 +1268,45 @@ export type Database = {
         }
         Relationships: []
       }
+      stripe_checkout_fulfillments: {
+        Row: {
+          attempt_count: number
+          created_at: string
+          email_sent_at: string | null
+          last_error: string | null
+          processed_at: string | null
+          status: string
+          stock_decremented_at: string | null
+          stripe_event_id: string | null
+          stripe_session_id: string
+          updated_at: string
+        }
+        Insert: {
+          attempt_count?: number
+          created_at?: string
+          email_sent_at?: string | null
+          last_error?: string | null
+          processed_at?: string | null
+          status?: string
+          stock_decremented_at?: string | null
+          stripe_event_id?: string | null
+          stripe_session_id: string
+          updated_at?: string
+        }
+        Update: {
+          attempt_count?: number
+          created_at?: string
+          email_sent_at?: string | null
+          last_error?: string | null
+          processed_at?: string | null
+          status?: string
+          stock_decremented_at?: string | null
+          stripe_event_id?: string | null
+          stripe_session_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       team_members: {
         Row: {
           bio: string | null
@@ -1248,13 +1481,19 @@ export type Database = {
         }
         Returns: boolean
       }
-      cleanup_expired_tags: { Args: never; Returns: undefined }
+      cleanup_expired_tags: { Args: Record<PropertyKey, never>; Returns: undefined }
+      decrement_product_stock: {
+        Args: { p_product_id: string; p_quantity: number }
+        Returns: {
+          stock_quantity: number
+        }[]
+      }
       get_course_progress: {
         Args: { p_course_id: string; p_user_id: string }
         Returns: number
       }
       get_site_stats: {
-        Args: never
+        Args: Record<PropertyKey, never>
         Returns: {
           key: string
           label: string
@@ -1266,13 +1505,28 @@ export type Database = {
         Args: { article_id: string }
         Returns: undefined
       }
+      increment_post_view: { Args: { p_post_id: string }; Returns: undefined }
       is_admin:
-        | { Args: never; Returns: boolean }
+        | { Args: Record<PropertyKey, never>; Returns: boolean }
         | { Args: { user_id: string }; Returns: boolean }
-      is_staff: { Args: { user_id: string }; Returns: boolean }
+      is_staff:
+        | { Args: Record<PropertyKey, never>; Returns: boolean }
+        | { Args: { user_id: string }; Returns: boolean }
       record_article_feedback: {
         Args: { article_id: string; is_helpful: boolean }
         Returns: undefined
+      }
+      search_docs: {
+        Args: { result_limit?: number; search_query: string }
+        Returns: {
+          category_name: string
+          category_slug: string
+          excerpt: string
+          id: string
+          rank: number
+          slug: string
+          title: string
+        }[]
       }
       update_comment_upvotes: {
         Args: { p_comment_id: string }
@@ -1283,13 +1537,6 @@ export type Database = {
     }
     Enums: {
       license_status: "pending" | "claimed" | "rejected" | "claimed_by_other"
-      product_image_type:
-        | "hero"
-        | "knolling"
-        | "detail"
-        | "action"
-        | "packaging"
-        | "other"
       product_status: "active" | "coming_soon" | "draft"
       product_tag_type:
         | "featured"
@@ -1428,14 +1675,6 @@ export const Constants = {
   public: {
     Enums: {
       license_status: ["pending", "claimed", "rejected", "claimed_by_other"],
-      product_image_type: [
-        "hero",
-        "knolling",
-        "detail",
-        "action",
-        "packaging",
-        "other",
-      ],
       product_status: ["active", "coming_soon", "draft"],
       product_tag_type: [
         "featured",

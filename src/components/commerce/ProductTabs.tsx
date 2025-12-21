@@ -15,15 +15,16 @@ import { Button } from "@/components/ui/button"
 interface ProductTabsProps {
   description: string
   learningOutcomes: string[]
-  includedItems: Array<{
+  includedItems: {
     quantity: number
     name: string
     description: string
-  }>
-  specs: Array<{
+  }[]
+  specs: {
     label: string
     value: string
-  }>
+  }[]
+  datasheetUrl?: string
 }
 
 export function ProductTabs({
@@ -31,6 +32,7 @@ export function ProductTabs({
   learningOutcomes,
   includedItems,
   specs,
+  datasheetUrl,
 }: ProductTabsProps) {
   return (
     <Tabs defaultValue="overview" className="w-full">
@@ -172,7 +174,7 @@ export function ProductTabs({
               <div
                 key={spec.label}
                 className={`flex justify-between p-4 ${
-                  idx !== specs.length - 1 ? "border-b border-slate-100" : ""
+                  idx === specs.length - 1 ? "" : "border-b border-slate-100"
                 }`}
               >
                 <span className="text-slate-500">{spec.label}</span>
@@ -182,13 +184,18 @@ export function ProductTabs({
           </div>
 
           {/* Download Datasheet */}
-          <Button
-            variant="outline"
-            className="mt-6 border-slate-200 text-slate-600 hover:text-cyan-700 hover:border-cyan-700 font-mono"
-          >
-            <FileDown className="w-4 h-4 mr-2" />
-            Download Datasheet (PDF)
-          </Button>
+          {datasheetUrl && (
+            <Button
+              variant="outline"
+              className="mt-6 border-slate-200 text-slate-600 hover:text-cyan-700 hover:border-cyan-700 font-mono"
+              asChild
+            >
+              <a href={datasheetUrl} target="_blank" rel="noopener noreferrer" download>
+                <FileDown className="w-4 h-4 mr-2" />
+                Download Datasheet (PDF)
+              </a>
+            </Button>
+          )}
         </div>
       </TabsContent>
     </Tabs>

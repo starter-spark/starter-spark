@@ -18,9 +18,20 @@ import type { Components } from "react-markdown"
 import type { ComponentPropsWithoutRef } from "react"
 import remarkGfm from "remark-gfm"
 import remarkDirective from "remark-directive"
+import remarkEmoji from "remark-emoji"
 import { visit } from "unist-util-visit"
 import type { Plugin } from "unified"
 import type { Root } from "mdast"
+import {
+  normalizeLearnAssetValue,
+  parseLearnAssetRef,
+  resolveLearnAssetUrl,
+} from "@/lib/learn-assets"
+import {
+  isExternalHref,
+  sanitizeMarkdownUrl,
+  safeMarkdownUrlTransform,
+} from "@/lib/safe-url"
 
 const LazyCodeEditor = dynamic(
   () => import("@/components/learn/CodeEditor").then((m) => m.CodeEditor),
@@ -152,7 +163,7 @@ function CodeBlock({
   const handleCopy = () => {
     void navigator.clipboard.writeText(code)
     setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+    setTimeout(() => { setCopied(false); }, 2000)
   }
 
   return (
@@ -259,19 +270,27 @@ function Callout({
 function getVideoEmbed(
   url: string
 ): { type: "youtube" | "vimeo" | "direct"; id: string } | null {
-  const youtubeMatch = url.match(
-    /(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
-  )
+  const normalized = normalizeLearnAssetValue(url)
+
+  if (normalized.startsWith("/api/learn/assets?")) {
+    return { type: "direct", id: normalized }
+  }
+
+  if (parseLearnAssetRef(normalized)) {
+    return { type: "direct", id: resolveLearnAssetUrl(normalized) }
+  }
+
+  const youtubeMatch = /(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/.exec(url)
   if (youtubeMatch) {
     return { type: "youtube", id: youtubeMatch[1] }
   }
 
-  const vimeoMatch = url.match(/vimeo\.com\/(?:video\/)?(\d+)/)
+  const vimeoMatch = /vimeo\.com\/(?:video\/)?(\d+)/.exec(url)
   if (vimeoMatch) {
     return { type: "vimeo", id: vimeoMatch[1] }
   }
 
-  if (url.match(/\.(mp4|webm|ogg)$/i)) {
+  if (/\.(mp4|webm|ogg)$/i.test(url)) {
     return { type: "direct", id: url }
   }
 
@@ -322,6 +341,107 @@ function VideoPlayer({ url }: { url: string }) {
   )
 }
 
+function QuizBlock({
+  question,
+  options,
+  correctAnswer,
+  blockId,
+}: {
+  question: string
+  options: string[]
+  correctAnswer: number | null
+  blockId: string
+}) {
+  const [selected, setSelected] = useState<number | null>(null)
+  const [submitted, setSubmitted] = useState(false)
+
+  const isCorrect = submitted && selected === correctAnswer
+
+  return (
+    <div className="rounded-lg border border-slate-200 bg-white p-6 my-6">
+      <h3 className="font-mono text-lg font-semibold text-slate-900 mb-4">
+        {question}
+      </h3>
+      <div className="space-y-2">
+        {options.map((opt, i) => {
+          const isSelected = selected === i
+          const showCorrect = submitted && correctAnswer === i
+          const showIncorrect = submitted && isSelected && correctAnswer !== i
+
+          return (
+            <button
+              key={i}
+              type="button"
+              onClick={() => {
+                if (!submitted) {
+                  setSelected(i)
+                }
+              }}
+              disabled={submitted}
+              className={`w-full text-left px-4 py-3 rounded-lg border transition-colors ${
+                showCorrect
+                  ? "border-green-500 bg-green-50 text-green-800"
+                  : showIncorrect
+                    ? "border-red-500 bg-red-50 text-red-800"
+                    : isSelected
+                      ? "border-cyan-500 bg-cyan-50 text-slate-900"
+                      : "border-slate-200 hover:border-slate-300 text-slate-700"
+              } ${submitted ? "cursor-default" : "cursor-pointer"}`}
+            >
+              <div className="flex items-center gap-3">
+                <div
+                  className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                    showCorrect
+                      ? "border-green-500 bg-green-500"
+                      : showIncorrect
+                        ? "border-red-500 bg-red-500"
+                        : isSelected
+                          ? "border-cyan-500 bg-cyan-500"
+                          : "border-slate-300"
+                  }`}
+                >
+                  {(isSelected || showCorrect) && (
+                    <div className="w-2 h-2 rounded-full bg-white" />
+                  )}
+                </div>
+                <span className="text-sm">{opt}</span>
+              </div>
+            </button>
+          )
+        })}
+      </div>
+      {!submitted && selected !== null && (
+        <button
+          type="button"
+          onClick={() => setSubmitted(true)}
+          className="mt-4 px-4 py-2 rounded bg-cyan-700 hover:bg-cyan-600 text-white font-mono text-sm transition-colors"
+        >
+          Check Answer
+        </button>
+      )}
+      {submitted && (
+        <div className={`mt-4 p-3 rounded ${isCorrect ? "bg-green-50 text-green-800" : "bg-red-50 text-red-800"}`}>
+          <p className="text-sm font-medium">
+            {isCorrect ? "Correct!" : `Incorrect. The correct answer is: ${options[correctAnswer ?? 0]}`}
+          </p>
+        </div>
+      )}
+      {submitted && (
+        <button
+          type="button"
+          onClick={() => {
+            setSelected(null)
+            setSubmitted(false)
+          }}
+          className="mt-3 text-sm text-cyan-700 hover:text-cyan-600 font-medium"
+        >
+          Try Again
+        </button>
+      )}
+    </div>
+  )
+}
+
 function CodeChallenge({
   starterCode,
   solutionCode,
@@ -356,7 +476,7 @@ function CodeChallenge({
           {solutionCode && (
             <div>
               <button
-                onClick={() => setShowSolution(!showSolution)}
+                onClick={() => { setShowSolution(!showSolution); }}
                 className="text-sm text-cyan-700 hover:text-cyan-600 font-medium"
                 type="button"
               >
@@ -425,16 +545,26 @@ export function LessonContent({
       li: ({ children }) => (
         <li className="text-slate-600">{children}</li>
       ),
-      a: ({ href, children }) => (
-        <a
-          href={href}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-cyan-700 hover:underline"
-        >
+      blockquote: ({ children }) => (
+        <blockquote className="border-l-4 border-cyan-500 bg-slate-50 pl-4 py-2 my-4 italic text-slate-600">
           {children}
-        </a>
+        </blockquote>
       ),
+      a: ({ href, children }) => {
+        const safeHref = sanitizeMarkdownUrl(href, "href")
+        if (!safeHref) return <span>{children}</span>
+        const external = isExternalHref(safeHref)
+        return (
+          <a
+            href={safeHref}
+            target={external ? "_blank" : undefined}
+            rel={external ? "noopener noreferrer" : undefined}
+            className="text-cyan-700 hover:underline"
+          >
+            {children}
+          </a>
+        )
+      },
       strong: ({ children }) => <strong>{children}</strong>,
       em: ({ children }) => <em>{children}</em>,
       div: ({
@@ -448,7 +578,7 @@ export function LessonContent({
         return <div {...props}>{children}</div>
       },
       code: ({ className, children }) => {
-        const match = (className || "").match(/language-(\w+)/)
+        const match = /language-(\w+)/.exec((className || ""))
         const isInline = !match
 
         if (isInline) {
@@ -489,7 +619,7 @@ export function LessonContent({
               type="button"
               role="checkbox"
               aria-checked={isChecked}
-              onClick={() => toggleCheckbox(index)}
+              onClick={() => { toggleCheckbox(index); }}
               className="inline-flex items-center justify-center w-5 h-5 mr-2 align-text-bottom rounded border border-slate-300 bg-white hover:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 transition-colors cursor-pointer"
             >
               {isChecked ? (
@@ -506,7 +636,8 @@ export function LessonContent({
 
   const renderMarkdown = (markdown: string) => (
     <ReactMarkdown
-      remarkPlugins={[remarkGfm, remarkDirective, remarkCallouts]}
+      remarkPlugins={[remarkGfm, remarkDirective, remarkCallouts, remarkEmoji]}
+      urlTransform={safeMarkdownUrlTransform}
       components={markdownComponents}
     >
       {markdown}
@@ -549,13 +680,14 @@ export function LessonContent({
           if (type === "image") {
             const url = asString(block.url)
             if (!url) return null
+            const resolvedUrl = resolveLearnAssetUrl(url)
             const alt = asString(block.alt) || ""
             const caption = asString(block.caption)
             return (
               <figure key={(asString(block.id) || String(index))} className="my-6">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={url}
+                  src={resolvedUrl}
                   alt={alt}
                   className="w-full rounded border border-slate-200 bg-white"
                   loading="lazy"
@@ -597,6 +729,7 @@ export function LessonContent({
           if (type === "download") {
             const url = asString(block.url)
             if (!url) return null
+            const resolvedUrl = resolveLearnAssetUrl(url)
             const filename = asString(block.filename) || "Download"
             const description = asString(block.description)
             const ext = filename.split(".").pop()?.toLowerCase() || ""
@@ -620,7 +753,7 @@ export function LessonContent({
                   {description && <p className="text-sm text-slate-600 mt-1">{description}</p>}
                 </div>
                 <a
-                  href={url}
+                  href={resolvedUrl}
                   download={filename}
                   className="flex-shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded bg-cyan-700 hover:bg-cyan-600 text-white font-mono text-sm transition-colors"
                 >
@@ -636,22 +769,16 @@ export function LessonContent({
             const options = Array.isArray(block.options)
               ? block.options.filter((o): o is string => typeof o === "string")
               : []
+            const correctAnswer = asNumber(block.correctAnswer) ?? asNumber(block.correct_answer)
+            const blockId = asString(block.id) || `quiz-${index}`
             return (
-              <div
-                key={(asString(block.id) || String(index))}
-                className="rounded border border-slate-200 bg-white p-4"
-              >
-                <h3 className="font-mono text-lg font-semibold text-slate-900 mb-2">
-                  {question}
-                </h3>
-                <ul className="space-y-2">
-                  {options.map((opt, i) => (
-                    <li key={i} className="text-sm text-slate-700">
-                      {opt}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              <QuizBlock
+                key={blockId}
+                question={question}
+                options={options}
+                correctAnswer={correctAnswer}
+                blockId={blockId}
+              />
             )
           }
 

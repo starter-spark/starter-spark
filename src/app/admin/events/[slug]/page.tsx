@@ -13,11 +13,11 @@ async function getEvent(slug: string) {
     .from("events")
     .select("*")
     .eq("slug", slug)
-    .single()
+    .maybeSingle()
 
   if (error) {
     console.error("Error fetching event:", error)
-    return null
+    throw new Error("Failed to load event")
   }
 
   return data

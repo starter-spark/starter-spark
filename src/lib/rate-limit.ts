@@ -33,6 +33,14 @@ export const rateLimitConfigs = {
   supportFeedback: { requests: 20 * multiplier, window: "1 m" as const },
   newsletter: { requests: 10 * multiplier, window: "1 m" as const },
   ogImage: { requests: 60 * multiplier, window: "1 m" as const },
+  // Community actions
+  communityVote: { requests: 30 * multiplier, window: "1 m" as const },
+  communityReport: { requests: 5 * multiplier, window: "10 m" as const },
+  communityPost: { requests: 3 * multiplier, window: "10 m" as const },
+  communityAnswer: { requests: 10 * multiplier, window: "10 m" as const },
+  // Protected assets / downloads
+  certificate: { requests: 10 * multiplier, window: "10 m" as const },
+  learnAsset: { requests: 120 * multiplier, window: "1 m" as const },
   // Admin actions - moderate limits
   adminMutation: { requests: 20 * multiplier, window: "1 m" as const },
   learnUpload: { requests: 10 * multiplier, window: "1 m" as const },
@@ -60,6 +68,18 @@ function getRateLimitConfig(configKey: RateLimitConfig) {
       return rateLimitConfigs.newsletter
     case "ogImage":
       return rateLimitConfigs.ogImage
+    case "communityVote":
+      return rateLimitConfigs.communityVote
+    case "communityReport":
+      return rateLimitConfigs.communityReport
+    case "communityPost":
+      return rateLimitConfigs.communityPost
+    case "communityAnswer":
+      return rateLimitConfigs.communityAnswer
+    case "certificate":
+      return rateLimitConfigs.certificate
+    case "learnAsset":
+      return rateLimitConfigs.learnAsset
     case "adminMutation":
       return rateLimitConfigs.adminMutation
     case "learnUpload":
@@ -77,10 +97,10 @@ function parseWindowToMs(window: string): number {
   const match = /^(\d+)\s*(ms|s|m|h|d)$/i.exec(window.trim())
   if (!match) return 60_000
 
-  const value = Number.parseInt(match[1] ?? "", 10)
+  const value = Number.parseInt(match[1], 10)
   if (!Number.isFinite(value) || value <= 0) return 60_000
 
-  const unit = (match[2] ?? "m").toLowerCase()
+  const unit = match[2].toLowerCase()
   switch (unit) {
     case "ms":
       return value
@@ -109,7 +129,7 @@ function getClientIp(request: Request): string {
   return ip || "127.0.0.1"
 }
 
-type MemoryRateLimitEntry = {
+interface MemoryRateLimitEntry {
   count: number
   reset: number
 }
@@ -258,7 +278,7 @@ export function rateLimitHeaders(configKey: RateLimitConfig = "default"): Header
 export async function rateLimitAction(
   identifier: string,
   configKey: RateLimitConfig = "adminMutation"
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; error: string | null }> {
   const key = `${configKey}:${identifier}`
   const config = getRateLimitConfig(configKey)
 
@@ -271,11 +291,11 @@ export async function rateLimitAction(
         const retryAfter = Math.max(0, Math.ceil((reset - Date.now()) / 1000))
         return {
           success: false,
-          error: `Too many requests. Please try again in ${retryAfter} seconds.`,
+          error: `Too many requests. Please try again in ${String(retryAfter)} seconds.`,
         }
       }
 
-      return { success: true }
+      return { success: true, error: null }
     }
 
     const nowMs = Date.now()
@@ -286,23 +306,23 @@ export async function rateLimitAction(
 
     if (!existing || existing.reset <= nowMs) {
       memoryStore.set(key, { count: 1, reset: nowMs + windowMs })
-      return { success: true }
+      return { success: true, error: null }
     }
 
     if (existing.count >= config.requests) {
       const retryAfter = Math.max(0, Math.ceil((existing.reset - nowMs) / 1000))
       return {
         success: false,
-        error: `Too many requests. Please try again in ${retryAfter} seconds.`,
+        error: `Too many requests. Please try again in ${String(retryAfter)} seconds.`,
       }
     }
 
     existing.count += 1
     memoryStore.set(key, existing)
-    return { success: true }
+    return { success: true, error: null }
   } catch (error) {
     // If rate limiting fails, allow the request but log the error
     console.error("Rate limiting error:", error)
-    return { success: true }
+    return { success: true, error: null }
   }
 }

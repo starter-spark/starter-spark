@@ -98,7 +98,7 @@ export function EditEventForm({ event }: EditEventFormProps) {
   }
 
   return (
-    <form onSubmit={(e) => void handleSubmit(e)} className="space-y-6">
+    <form onSubmit={(e) => { handleSubmit(e); }} className="space-y-6">
       {error && (
         <div className="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-600">
           {error}
@@ -119,7 +119,7 @@ export function EditEventForm({ event }: EditEventFormProps) {
               <Input
                 id="title"
                 value={title}
-                onChange={(e) => setTitle(e.target.value)}
+                onChange={(e) => { setTitle(e.target.value); }}
                 required
               />
             </div>
@@ -130,7 +130,7 @@ export function EditEventForm({ event }: EditEventFormProps) {
               <Input
                 id="slug"
                 value={slug}
-                onChange={(e) => setSlug(e.target.value)}
+                onChange={(e) => { setSlug(e.target.value); }}
                 required
               />
             </div>
@@ -143,7 +143,7 @@ export function EditEventForm({ event }: EditEventFormProps) {
             <Textarea
               id="description"
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={(e) => { setDescription(e.target.value); }}
               rows={3}
             />
           </div>
@@ -156,7 +156,7 @@ export function EditEventForm({ event }: EditEventFormProps) {
               <select
                 id="event_type"
                 value={eventType}
-                onChange={(e) => setEventType(e.target.value)}
+                onChange={(e) => { setEventType(e.target.value); }}
                 required
                 className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-700 focus:ring-offset-2"
               >
@@ -176,7 +176,7 @@ export function EditEventForm({ event }: EditEventFormProps) {
                 type="number"
                 min="1"
                 value={capacity}
-                onChange={(e) => setCapacity(e.target.value ? parseInt(e.target.value) : "")}
+                onChange={(e) => { setCapacity(e.target.value ? Number.parseInt(e.target.value) : ""); }}
                 placeholder="Leave empty for unlimited"
               />
             </div>
@@ -199,7 +199,7 @@ export function EditEventForm({ event }: EditEventFormProps) {
                 id="event_date"
                 type="datetime-local"
                 value={eventDate}
-                onChange={(e) => setEventDate(e.target.value)}
+                onChange={(e) => { setEventDate(e.target.value); }}
                 required
               />
             </div>
@@ -211,7 +211,7 @@ export function EditEventForm({ event }: EditEventFormProps) {
                 id="end_date"
                 type="datetime-local"
                 value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
+                onChange={(e) => { setEndDate(e.target.value); }}
               />
             </div>
           </div>
@@ -224,7 +224,7 @@ export function EditEventForm({ event }: EditEventFormProps) {
               <Input
                 id="location"
                 value={location}
-                onChange={(e) => setLocation(e.target.value)}
+                onChange={(e) => { setLocation(e.target.value); }}
                 required
               />
             </div>
@@ -235,7 +235,7 @@ export function EditEventForm({ event }: EditEventFormProps) {
               <Input
                 id="address"
                 value={address}
-                onChange={(e) => setAddress(e.target.value)}
+                onChange={(e) => { setAddress(e.target.value); }}
               />
             </div>
           </div>
@@ -257,7 +257,7 @@ export function EditEventForm({ event }: EditEventFormProps) {
                 id="rsvp_url"
                 type="url"
                 value={rsvpUrl}
-                onChange={(e) => setRsvpUrl(e.target.value)}
+                onChange={(e) => { setRsvpUrl(e.target.value); }}
               />
             </div>
             <div className="space-y-2">
@@ -268,7 +268,7 @@ export function EditEventForm({ event }: EditEventFormProps) {
                 id="image_url"
                 type="url"
                 value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
+                onChange={(e) => { setImageUrl(e.target.value); }}
               />
             </div>
           </div>
@@ -278,7 +278,7 @@ export function EditEventForm({ event }: EditEventFormProps) {
               id="is_public"
               type="checkbox"
               checked={isPublic}
-              onChange={(e) => setIsPublic(e.target.checked)}
+              onChange={(e) => { setIsPublic(e.target.checked); }}
               className="h-4 w-4 rounded border-slate-300"
             />
             <label htmlFor="is_public" className="text-sm text-slate-700">
@@ -293,7 +293,7 @@ export function EditEventForm({ event }: EditEventFormProps) {
           type="button"
           variant="outline"
           className="text-red-600 hover:bg-red-50 hover:text-red-700"
-          onClick={() => void handleDelete()}
+          onClick={() => { handleDelete(); }}
           disabled={isPending}
         >
           Delete Event
@@ -302,7 +302,7 @@ export function EditEventForm({ event }: EditEventFormProps) {
           <Button
             type="button"
             variant="outline"
-            onClick={() => router.push("/admin/events")}
+            onClick={() => { router.push("/admin/events"); }}
           >
             Cancel
           </Button>

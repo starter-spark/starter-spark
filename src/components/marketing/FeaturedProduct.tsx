@@ -23,7 +23,6 @@ export async function FeaturedProduct() {
           type,
           url,
           is_primary,
-          image_type,
           sort_order
         )
       )
@@ -31,7 +30,7 @@ export async function FeaturedProduct() {
     .eq("tag", "featured")
     .order("priority", { ascending: false, nullsFirst: false })
     .limit(1)
-    .single()
+    .maybeSingle()
 
   if (tagsError || !featuredTags?.products) {
     console.error("Failed to fetch featured product:", tagsError?.message)
@@ -45,13 +44,12 @@ export async function FeaturedProduct() {
     description: string | null
     price_cents: number
     specs: Record<string, string> | null
-    product_media: Array<{
+    product_media: {
       type: string
       url: string
       is_primary: boolean | null
-      image_type: string | null
       sort_order: number | null
-    }>
+    }[]
   }
 
   // Extract only images from product_media (filter out 3D models, videos, documents)

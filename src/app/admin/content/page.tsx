@@ -30,7 +30,7 @@ const SYSTEM_PAGE_METADATA: Record<string, { title: string; description: string;
 }
 
 // System page keys (not custom pages)
-const SYSTEM_PAGE_KEYS = ["privacy", "terms", "about_hero", "about_story"]
+const SYSTEM_PAGE_KEYS = new Set(["privacy", "terms", "about_hero", "about_story"])
 
 export default async function ContentPage() {
   const supabase = await createClient()
@@ -52,7 +52,7 @@ export default async function ContentPage() {
 
   // Separate system pages from custom pages
   const systemPages = (allPages || []).filter(
-    (page) => SYSTEM_PAGE_KEYS.includes(page.page_key) || !page.is_custom_page
+    (page) => SYSTEM_PAGE_KEYS.has(page.page_key) || !page.is_custom_page
   )
   const customPages = (allPages || []).filter((page) => page.is_custom_page)
 

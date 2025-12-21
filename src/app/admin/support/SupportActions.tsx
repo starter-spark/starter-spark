@@ -38,11 +38,11 @@ function isValidAttachmentPath(path: string): boolean {
 
   const allowedExt = "(?:jpg|png|gif|webp|mp4|webm|mov)"
   const legacyPattern = new RegExp(
-    `^\\d{4}\\/\\d{2}\\/\\d{2}\\/[a-f0-9]{32}_\\d+\\.${allowedExt}$`,
+    String.raw`^\d{4}\/\d{2}\/\d{2}\/[a-f0-9]{32}_\d+\.${allowedExt}$`,
     "i"
   )
   const sessionPattern = new RegExp(
-    `^contact\\/[a-f0-9]{32}\\/\\d{4}\\/\\d{2}\\/\\d{2}\\/[a-f0-9]{32}_\\d+\\.${allowedExt}$`,
+    String.raw`^contact\/[a-f0-9]{32}\/\d{4}\/\d{2}\/\d{2}\/[a-f0-9]{32}_\d+\.${allowedExt}$`,
     "i"
   )
 

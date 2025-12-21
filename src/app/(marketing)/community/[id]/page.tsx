@@ -14,6 +14,7 @@ import { MarkdownContent } from "./MarkdownContent"
 import { VoteButtons } from "./VoteButtons"
 import { PostActions } from "./PostActions"
 import { siteConfig } from "@/config/site"
+import { isUuid } from "@/lib/uuid"
 
 type PageParams = Promise<{ id: string }>
 
@@ -26,15 +27,15 @@ export async function generateMetadata({
   const supabase = await createClient()
 
   // Check if id looks like a UUID, otherwise treat as slug
-  const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
+  const isUUID = isUuid(id)
 
-  const { data: post } = await supabase
+  const { data: post, error } = await supabase
     .from("posts")
     .select("title, content")
     .eq(isUUID ? "id" : "slug", id)
-    .single()
+    .maybeSingle()
 
-  if (!post) {
+  if (error || !post) {
     return { title: "Question Not Found" }
   }
 
@@ -86,7 +87,7 @@ export default async function QuestionDetailPage({
 
   // Fetch the post with author and comments
   // Check if id looks like a UUID, otherwise treat as slug
-  const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
+  const isUUID = isUuid(id)
 
   const { data: post, error } = await supabase
     .from("posts")
@@ -117,14 +118,19 @@ export default async function QuestionDetailPage({
     `
     )
     .eq(isUUID ? "id" : "slug", id)
-    .single()
+    .maybeSingle()
 
-  if (error || !post) {
+  if (error) {
+    console.error("Error fetching community post:", error)
+    throw new Error("Failed to load post")
+  }
+
+  if (!post) {
     notFound()
   }
 
   // Fetch comments separately (answers)
-  const commentsAuthorIdFkey = `comments${"_author"}${"_id"}${"_fkey"}` as const
+  const commentsAuthorIdFkey = `comments_author_id_fkey` as const
   const commentsAuthorJoin = `author:profiles!${commentsAuthorIdFkey}` as const
   const commentsSelect = `
       id,
@@ -176,12 +182,16 @@ export default async function QuestionDetailPage({
 
   if (user) {
     // Fetch post vote
-    const { data: postVoteData } = await supabase
+    const { data: postVoteData, error: postVoteError } = await supabase
       .from("post_votes")
       .select("vote_type")
       .eq("post_id", post.id)
       .eq("user_id", user.id)
-      .single()
+      .maybeSingle()
+
+    if (postVoteError) {
+      console.error("Error fetching post vote:", postVoteError)
+    }
 
     if (postVoteData) {
       userPostVote = postVoteData.vote_type as 1 | -1
@@ -204,12 +214,11 @@ export default async function QuestionDetailPage({
     }
   }
 
-  // Increment view count (fire and forget)
-  supabase
-    .from("posts")
-    .update({ view_count: (post.view_count || 0) + 1 })
-    .eq("id", post.id)
-    .then(() => {})
+  // Increment view count (safe + RLS-compatible)
+  const { error: viewCountError } = await supabase.rpc("increment_post_view", { p_post_id: post.id })
+  if (viewCountError) {
+    console.error("Error incrementing post view count:", viewCountError)
+  }
 
   const author = post.author as unknown as {
     id: string

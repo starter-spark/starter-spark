@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
 import { getContents } from "@/lib/content"
-import { EventsPreviewSection, Workshop, Discussion } from "./EventsPreview"
+import { EventsPreviewSection, type Workshop, type Discussion } from "./EventsPreview"
 
 const DEFAULT_CONTENT = {
   "home.community.title": "Join the Community",

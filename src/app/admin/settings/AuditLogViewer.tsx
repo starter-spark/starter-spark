@@ -196,7 +196,7 @@ export function AuditLogViewer({ logs }: AuditLogViewerProps) {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => setExpandedId(isExpanded ? null : log.id)}
+                      onClick={() => { setExpandedId(isExpanded ? null : log.id); }}
                       className="h-6 w-6 p-0"
                     >
                       {isExpanded ? (

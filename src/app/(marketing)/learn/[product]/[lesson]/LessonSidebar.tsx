@@ -11,6 +11,7 @@ import {
   X,
 } from "lucide-react"
 import { AnimatedProgressFill } from "@/components/learn/AnimatedProgressFill"
+import { LearnProgressSync } from "@/components/learn/LearnProgressSync"
 
 interface LessonSidebarProps {
   product: string
@@ -40,8 +41,44 @@ export function LessonSidebar({
     new Set([0, 1, 2]) // All expanded by default
   )
 
+  const pendingCompletion = useMemo(() => {
+    if (globalThis.window === undefined) return null
+
+    try {
+      const raw = sessionStorage.getItem(`${progressStorageKey}:pending`)
+      if (!raw) return null
+
+      // Legacy: pending stored as a plain number string.
+      const legacy = Number(raw)
+      if (Number.isFinite(legacy)) {
+        return { lessonId: null as string | null, progress: legacy }
+      }
+
+      const parsed: unknown = JSON.parse(raw)
+      if (typeof parsed !== "object" || parsed === null) return null
+      const record = parsed as Record<string, unknown>
+
+      const lessonId =
+        typeof record.lessonId === "string" && record.lessonId.length > 0
+          ? record.lessonId
+          : null
+
+      const progress =
+        typeof record.progress === "number" && Number.isFinite(record.progress)
+          ? record.progress
+          : typeof record.progress === "string" && Number.isFinite(Number(record.progress))
+            ? Number(record.progress)
+            : null
+
+      if (progress === null) return null
+      return { lessonId, progress }
+    } catch {
+      return null
+    }
+  }, [progressStorageKey])
+
   const displayProgressPercent = useMemo(() => {
-    if (typeof window === "undefined") return progressPercent
+    if (globalThis.window === undefined) return progressPercent
 
     const safeReadNumber = (key: string): number | null => {
       try {
@@ -55,11 +92,21 @@ export function LessonSidebar({
     }
 
     const stored = safeReadNumber(progressStorageKey)
-    const pending = safeReadNumber(`${progressStorageKey}:pending`)
+    const pending = pendingCompletion?.progress ?? null
 
     const clamp = (value: number) => Math.min(100, Math.max(0, value))
     return clamp(Math.max(progressPercent, stored ?? 0, pending ?? 0))
-  }, [progressPercent, progressStorageKey])
+  }, [pendingCompletion?.progress, progressPercent, progressStorageKey])
+
+  const optimisticCompletedLessonIds = useMemo(() => {
+    const pendingLessonId = pendingCompletion?.lessonId
+    if (!pendingLessonId) return completedLessonIds
+    if (completedLessonIds.has(pendingLessonId)) return completedLessonIds
+
+    const next = new Set(completedLessonIds)
+    next.add(pendingLessonId)
+    return next
+  }, [completedLessonIds, pendingCompletion?.lessonId])
 
   const toggleModule = (index: number) => {
     setExpandedModules((prev) => {
@@ -103,7 +150,7 @@ export function LessonSidebar({
         </div>
         <div className="h-1.5 bg-slate-200 rounded-full overflow-hidden">
           <AnimatedProgressFill
-            progress={displayProgressPercent}
+            progress={progressPercent}
             storageKey={progressStorageKey}
             className="h-full bg-cyan-700 rounded-full"
           />
@@ -119,7 +166,7 @@ export function LessonSidebar({
           return (
             <div key={moduleIndex} className="border-b border-slate-100">
               <button
-                onClick={() => toggleModule(moduleIndex)}
+                onClick={() => { toggleModule(moduleIndex); }}
                 className={`w-full flex items-center justify-between p-4 text-left transition-colors ${
                   isCurrentModule
                     ? "bg-cyan-50 text-cyan-700"
@@ -140,13 +187,13 @@ export function LessonSidebar({
                 <div className="pb-2">
                   {courseModule.lessons.map((lesson) => {
                     const isCurrent = lesson.slug === currentLesson
-                    const isCompleted = completedLessonIds.has(lesson.id)
+                    const isCompleted = optimisticCompletedLessonIds.has(lesson.id)
 
                     return (
                       <Link
                         key={lesson.slug}
                         href={`/learn/${product}/${lesson.slug}`}
-                        onClick={() => setMobileOpen(false)}
+                        onClick={() => { setMobileOpen(false); }}
                         className={`flex items-center gap-3 px-4 py-2 text-sm transition-colors ${
                           isCurrent
                             ? "bg-cyan-700 text-white"
@@ -183,6 +230,7 @@ export function LessonSidebar({
 
   return (
     <>
+      <LearnProgressSync storageKey={progressStorageKey} />
       {/* Desktop Sidebar */}
       <aside className="hidden lg:flex lg:flex-col lg:w-72 lg:fixed lg:inset-y-0 lg:left-0 bg-white border-r border-slate-200 pt-16">
         {sidebarContent}
@@ -190,7 +238,7 @@ export function LessonSidebar({
 
       {/* Mobile Sidebar Toggle */}
       <button
-        onClick={() => setMobileOpen(true)}
+        onClick={() => { setMobileOpen(true); }}
         className="lg:hidden fixed bottom-6 right-6 z-50 w-12 h-12 bg-cyan-700 text-white rounded-full shadow-lg flex items-center justify-center"
       >
         <Menu className="w-5 h-5" />
@@ -201,11 +249,11 @@ export function LessonSidebar({
         <div className="lg:hidden fixed inset-0 z-50 flex">
           <div
             className="fixed inset-0 bg-slate-900/50"
-            onClick={() => setMobileOpen(false)}
+            onClick={() => { setMobileOpen(false); }}
           />
           <aside className="relative w-80 max-w-[85vw] bg-white flex flex-col">
             <button
-              onClick={() => setMobileOpen(false)}
+              onClick={() => { setMobileOpen(false); }}
               className="absolute top-4 right-4 text-slate-500 hover:text-slate-600"
             >
               <X className="w-5 h-5" />

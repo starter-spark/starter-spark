@@ -18,8 +18,7 @@ import {
   Trash2,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
-
-export type ImageType = "hero" | "knolling" | "detail" | "action" | "packaging" | "other"
+import { randomId } from "@/lib/random-id"
 
 export interface MediaItem {
   id?: string
@@ -32,17 +31,7 @@ export interface MediaItem {
   alt_text?: string
   is_primary?: boolean
   sort_order?: number
-  image_type?: ImageType // Semantic type for images
   isNew?: boolean // For tracking unsaved uploads
-}
-
-const IMAGE_TYPE_LABELS: Record<ImageType, string> = {
-  hero: "Hero (Main)",
-  knolling: "Knolling (Flat Lay)",
-  detail: "Detail (Close-up)",
-  action: "Action (In Use)",
-  packaging: "Packaging",
-  other: "Other",
 }
 
 interface MediaUploaderProps {
@@ -59,15 +48,64 @@ const ACCEPTED_TYPES: Record<string, string[]> = {
   document: ["application/pdf"],
 }
 
-
-function getMediaType(mimeType: string): MediaItem["type"] {
-  if (ACCEPTED_TYPES.image.includes(mimeType)) return "image"
-  if (ACCEPTED_TYPES.video.includes(mimeType)) return "video"
-  if (ACCEPTED_TYPES["3d_model"].includes(mimeType)) return "3d_model"
-  if (ACCEPTED_TYPES.document.includes(mimeType)) return "document"
-  // Default based on extension for .glb files
-  return "image"
+const MAX_FILE_SIZE_BYTES: Record<MediaItem["type"], number> = {
+  image: 15 * 1024 * 1024, // 15MB
+  video: 200 * 1024 * 1024, // 200MB
+  "3d_model": 100 * 1024 * 1024, // 100MB
+  document: 50 * 1024 * 1024, // 50MB
 }
+
+function getFileExtension(filename: string): string | null {
+  const last = filename.split(".").pop()
+  if (!last || last === filename) return null
+  return last.toLowerCase()
+}
+
+function extensionFromMime(mimeType: string): string | null {
+  switch (mimeType) {
+    case "image/jpeg":
+      return "jpg"
+    case "image/png":
+      return "png"
+    case "image/webp":
+      return "webp"
+    case "image/gif":
+      return "gif"
+    case "video/mp4":
+      return "mp4"
+    case "video/webm":
+      return "webm"
+    case "application/pdf":
+      return "pdf"
+    case "model/gltf-binary":
+      return "glb"
+    case "model/gltf+json":
+      return "gltf"
+    default:
+      return null
+  }
+}
+
+function detectMediaType(file: File): MediaItem["type"] | null {
+  const ext = getFileExtension(file.name)
+  if (ext === "glb" || ext === "gltf") return "3d_model"
+  if (ACCEPTED_TYPES.image.includes(file.type)) return "image"
+  if (ACCEPTED_TYPES.video.includes(file.type)) return "video"
+  if (ACCEPTED_TYPES.document.includes(file.type)) return "document"
+  // Some browsers report .glb as application/octet-stream
+  if (file.type === "application/octet-stream" && (ext === "glb" || ext === "gltf")) {
+    return "3d_model"
+  }
+  return null
+}
+
+function storageFolderFor(type: MediaItem["type"]): string {
+  if (type === "image") return "images"
+  if (type === "video") return "videos"
+  if (type === "3d_model") return "models"
+  return "documents"
+}
+
 
 function formatFileSize(bytes: number | undefined | null): string {
   if (!bytes || bytes <= 0) return "Size unknown"
@@ -79,6 +117,7 @@ function formatFileSize(bytes: number | undefined | null): string {
 export function MediaUploader({ productId, media, onChange, bucket = "products" }: MediaUploaderProps) {
   const [isDragging, setIsDragging] = useState(false)
   const [uploading, setUploading] = useState<string[]>([])
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const supabase = createClient()
 
@@ -93,14 +132,44 @@ export function MediaUploader({ productId, media, onChange, bucket = "products" 
   }, [])
 
   const uploadFile = useCallback(async (file: File): Promise<MediaItem | null> => {
-    const fileId = `${file.name}-${Date.now()}`
+    setErrorMessage(null)
+
+    if (!file || file.size <= 0) {
+      setErrorMessage("Empty files are not allowed.")
+      return null
+    }
+
+    const mediaType = detectMediaType(file)
+    if (!mediaType) {
+      setErrorMessage(`Unsupported file type for "${file.name}".`)
+      return null
+    }
+
+    const maxSize = MAX_FILE_SIZE_BYTES[mediaType]
+    if (file.size > maxSize) {
+      setErrorMessage(
+        `File "${file.name}" exceeds ${(maxSize / (1024 * 1024)).toFixed(0)}MB limit.`
+      )
+      return null
+    }
+
+    const fileId = `${file.name}-${randomId()}`
     setUploading((prev) => [...prev, fileId])
 
     try {
-      // Generate unique filename
-      const ext = file.name.split(".").pop()
-      const filename = `${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`
-      const storagePath = `${productId}/${filename}`
+      const ext =
+        getFileExtension(file.name) ??
+        extensionFromMime(file.type) ??
+        (mediaType === "3d_model" ? "glb" : null)
+
+      if (!ext) {
+        setErrorMessage(`Could not determine file extension for "${file.name}".`)
+        return null
+      }
+
+      const folder = storageFolderFor(mediaType)
+      const filename = `${randomId()}.${ext}`
+      const storagePath = `${productId}/${folder}/${filename}`
 
       // Upload to Supabase Storage
       const { data, error } = await supabase.storage
@@ -118,12 +187,6 @@ export function MediaUploader({ productId, media, onChange, bucket = "products" 
       // Get public URL
       const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(storagePath)
 
-      // Determine media type
-      let mediaType = getMediaType(file.type)
-      if (ext === "glb" || ext === "gltf") {
-        mediaType = "3d_model"
-      }
-
       return {
         type: mediaType,
         url: urlData.publicUrl,
@@ -133,11 +196,11 @@ export function MediaUploader({ productId, media, onChange, bucket = "products" 
         mime_type: file.type,
         is_primary: false,
         sort_order: media.length,
-        image_type: mediaType === "image" ? "other" : undefined,
         isNew: true,
       }
     } catch (err) {
       console.error("Upload failed:", err)
+      setErrorMessage("Upload failed. Please try again.")
       return null
     } finally {
       setUploading((prev) => prev.filter((id) => id !== fileId))
@@ -155,14 +218,19 @@ export function MediaUploader({ productId, media, onChange, bucket = "products" 
       const newMedia = results.filter((m): m is MediaItem => m !== null)
 
       if (newMedia.length > 0) {
+        const orderedNewMedia = newMedia.map((item, idx) => ({
+          ...item,
+          sort_order: media.length + idx,
+        }))
+
         // Set first image as primary if no primary exists
-        const hasImage = newMedia.some((m) => m.type === "image")
+        const hasImage = orderedNewMedia.some((m) => m.type === "image")
         const hasPrimaryImage = media.some((m) => m.type === "image" && m.is_primary)
         if (hasImage && !hasPrimaryImage) {
-          const firstImage = newMedia.find((m) => m.type === "image")
+          const firstImage = orderedNewMedia.find((m) => m.type === "image")
           if (firstImage) firstImage.is_primary = true
         }
-        onChange([...media, ...newMedia])
+        onChange([...media, ...orderedNewMedia])
       }
     },
     [media, onChange, uploadFile]
@@ -175,13 +243,18 @@ export function MediaUploader({ productId, media, onChange, bucket = "products" 
     const newMedia = results.filter((m): m is MediaItem => m !== null)
 
     if (newMedia.length > 0) {
-      const hasImage = newMedia.some((m) => m.type === "image")
+      const orderedNewMedia = newMedia.map((item, idx) => ({
+        ...item,
+        sort_order: media.length + idx,
+      }))
+
+      const hasImage = orderedNewMedia.some((m) => m.type === "image")
       const hasPrimaryImage = media.some((m) => m.type === "image" && m.is_primary)
       if (hasImage && !hasPrimaryImage) {
-        const firstImage = newMedia.find((m) => m.type === "image")
+        const firstImage = orderedNewMedia.find((m) => m.type === "image")
         if (firstImage) firstImage.is_primary = true
       }
-      onChange([...media, ...newMedia])
+      onChange([...media, ...orderedNewMedia])
     }
 
     // Reset input
@@ -202,7 +275,7 @@ export function MediaUploader({ productId, media, onChange, bucket = "products" 
     // If we removed the primary image, set a new one
     if (item.is_primary && item.type === "image") {
       const firstImageIndex = newMedia.findIndex((m) => m.type === "image")
-      if (firstImageIndex >= 0) {
+      if (firstImageIndex !== -1) {
         onChange(
           newMedia.map((m, i) => (i === firstImageIndex ? { ...m, is_primary: true } : m))
         )
@@ -227,10 +300,6 @@ export function MediaUploader({ productId, media, onChange, bucket = "products" 
 
   const handleAltTextChange = (index: number, altText: string) => {
     onChange(media.map((m, i) => (i === index ? { ...m, alt_text: altText } : m)))
-  }
-
-  const handleImageTypeChange = (index: number, imageType: ImageType) => {
-    onChange(media.map((m, i) => (i === index ? { ...m, image_type: imageType } : m)))
   }
 
   const images = media.filter((m) => m.type === "image")
@@ -280,6 +349,10 @@ export function MediaUploader({ productId, media, onChange, bucket = "products" 
             Uploading {uploading.length} file(s)...
           </div>
         )}
+
+        {errorMessage && (
+          <p className="mt-3 text-sm text-red-600">{errorMessage}</p>
+        )}
       </div>
 
       {/* Images Section */}
@@ -312,7 +385,7 @@ export function MediaUploader({ productId, media, onChange, bucket = "products" 
                             type="button"
                             size="sm"
                             variant="secondary"
-                            onClick={() => handleSetPrimary(originalIndex)}
+                            onClick={() => { handleSetPrimary(originalIndex); }}
                           >
                             <Star className="mr-1 h-3 w-3" />
                             Primary
@@ -328,24 +401,13 @@ export function MediaUploader({ productId, media, onChange, bucket = "products" 
                         </Button>
                       </div>
                     </div>
-                    <div className="space-y-1.5 p-2">
+                    <div className="p-2">
                       <Input
                         placeholder="Alt text..."
                         value={item.alt_text || ""}
-                        onChange={(e) => handleAltTextChange(originalIndex, e.target.value)}
+                        onChange={(e) => { handleAltTextChange(originalIndex, e.target.value); }}
                         className="h-7 text-xs"
                       />
-                      <select
-                        value={item.image_type || "other"}
-                        onChange={(e) => handleImageTypeChange(originalIndex, e.target.value as ImageType)}
-                        className="h-7 w-full rounded border border-slate-200 bg-white px-2 text-xs text-slate-700 focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
-                      >
-                        {Object.entries(IMAGE_TYPE_LABELS).map(([value, label]) => (
-                          <option key={value} value={value}>
-                            {label}
-                          </option>
-                        ))}
-                      </select>
                     </div>
                   </CardContent>
                 </Card>
@@ -440,9 +502,14 @@ export function MediaUploader({ productId, media, onChange, bucket = "products" 
       {/* Documents Section */}
       {documents.length > 0 && (
         <div className="space-y-3">
-          <Label className="text-sm font-medium text-slate-700">
-            Documents ({documents.length})
-          </Label>
+          <div>
+            <Label className="text-sm font-medium text-slate-700">
+              Documents ({documents.length})
+            </Label>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Name PDFs with &ldquo;datasheet&rdquo; to show the download button on product pages
+            </p>
+          </div>
           <div className="grid gap-4 sm:grid-cols-2">
             {documents.map((item) => {
               const originalIndex = media.indexOf(item)

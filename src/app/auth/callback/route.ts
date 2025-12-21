@@ -9,6 +9,19 @@ const SITE_URL =
   (process.env.VERCEL_BRANCH_URL ? `https://${process.env.VERCEL_BRANCH_URL}` : null) ||
   (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000")
 
+function maskEmail(email: string): string {
+  const [local, domain] = email.split("@")
+  if (!local || !domain) return "***"
+  if (local.length <= 2) return `**@${domain}`
+  return `${local.slice(0, 2)}***@${domain}`
+}
+
+function maskLicenseCode(code: string): string {
+  const normalized = code.replaceAll("-", "")
+  if (normalized.length <= 8) return "****"
+  return `${normalized.slice(0, 4)}-****-****-${normalized.slice(-4)}`
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const code = searchParams.get("code")
@@ -28,24 +41,28 @@ export async function GET(request: Request) {
 
     // Check if this is a new user (created within last 60 seconds)
     const isNewUser = user.created_at
-      ? (Date.now() - new Date(user.created_at).getTime()) < 60000
+      ? (Date.now() - new Date(user.created_at).getTime()) < 60_000
       : false
 
     // Send welcome email to new users
     if (isNewUser && user.email) {
       try {
         // Get user's name from profile if available
-        const { data: profile } = await supabaseAdmin
+        const { data: profile, error: profileError } = await supabaseAdmin
           .from("profiles")
           .select("full_name")
           .eq("id", user.id)
-          .single()
+          .maybeSingle()
+
+        if (profileError) {
+          console.error("Failed to fetch profile name for welcome email:", profileError)
+        }
 
         await sendWelcomeEmail({
           to: user.email,
           userName: profile?.full_name || undefined,
         })
-        console.log(`Welcome email sent to new user: ${user.email}`)
+        console.log(`Welcome email sent to new user: ${maskEmail(user.email)}`)
       } catch (emailErr) {
         // Log error but don't fail the auth flow
         console.error("Failed to send welcome email:", emailErr)
@@ -55,24 +72,50 @@ export async function GET(request: Request) {
     // If there's a claim token, claim the license
     if (claimToken && user && isValidClaimToken(claimToken)) {
       try {
-        // Atomically claim the license using the claim token
-        const { data: claimedLicense, error: claimError } = await supabaseAdmin
+        // Look up the license for this claim token.
+        const { data: license, error: fetchError } = await supabaseAdmin
           .from("licenses")
-          .update({
-            owner_id: user.id,
-            claimed_at: new Date().toISOString(),
-            claim_token: null, // Clear the claim token after claiming
-          })
+          .select("id, code, status, owner_id, customer_email, product:products(name)")
           .eq("claim_token", claimToken)
-          .is("owner_id", null) // Only claim if not already claimed
-          .select("id, code, product:products(name)")
-          .single()
+          .maybeSingle()
 
-        if (claimError) {
-          console.error("Claim error:", claimError)
-          // Still redirect, but the user can claim manually later
-        } else if (claimedLicense) {
-          console.log(`License ${claimedLicense.code} claimed by user ${user.id}`)
+        if (fetchError || !license) {
+          // Token was already used or never existed; continue normal redirect flow.
+          if (fetchError) console.error("Claim lookup error:", fetchError)
+        } else if (license.status !== "pending") {
+          // Already processed; continue.
+        } else if (license.owner_id) {
+          // Already claimed; continue.
+        } else {
+          const isOriginalPurchaser =
+            Boolean(license.customer_email) &&
+            license.customer_email?.toLowerCase() === user.email?.toLowerCase()
+          const newStatus = isOriginalPurchaser ? "claimed" : "claimed_by_other"
+
+          // Atomically claim the license.
+          const { data: claimedLicense, error: claimError } = await supabaseAdmin
+            .from("licenses")
+            .update({
+              owner_id: user.id,
+              claimed_at: new Date().toISOString(),
+              claim_token: null, // Clear the claim token after claiming
+              status: newStatus,
+            })
+            .eq("id", license.id)
+            .eq("status", "pending")
+            .eq("claim_token", claimToken)
+            .is("owner_id", null)
+            .select("id, code, status")
+            .maybeSingle()
+
+          if (claimError) {
+            console.error("Claim error:", claimError)
+            // Still redirect, but the user can claim manually later
+          } else if (claimedLicense) {
+            console.log(
+              `License ${maskLicenseCode(claimedLicense.code)} claimed by user ${user.id} (status=${claimedLicense.status})`
+            )
+          }
         }
       } catch (err) {
         console.error("Error claiming license:", err)

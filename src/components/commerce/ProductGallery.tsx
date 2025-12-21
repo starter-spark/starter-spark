@@ -181,7 +181,7 @@ export function ProductGallery({
           {modelPath && (
             <button
               type="button"
-              onClick={() => setView("3d")}
+              onClick={() => { setView("3d"); }}
               className={cn(
                 "shrink-0 size-20 rounded border overflow-hidden transition-all cursor-pointer bg-slate-50",
                 view === "3d"
@@ -202,9 +202,9 @@ export function ProductGallery({
             <button
               key={imageUrl + idx}
               type="button"
-              onMouseEnter={() => handleHoverImage(idx)}
-              onFocus={() => handleHoverImage(idx)}
-              onClick={() => handleSelectImage(idx)}
+              onMouseEnter={() => { handleHoverImage(idx); }}
+              onFocus={() => { handleHoverImage(idx); }}
+              onClick={() => { handleSelectImage(idx); }}
               className={cn(
                 "shrink-0 size-20 rounded border overflow-hidden transition-all cursor-pointer relative",
                 view === "images" && displayImageIndex === idx

@@ -17,11 +17,14 @@ export default async function EditContentPage({
     .from("page_content")
     .select("*")
     .eq("page_key", pageKey)
-    .single()
+    .maybeSingle()
 
-  if (error || !page) {
-    notFound()
+  if (error) {
+    console.error("Error fetching page content:", error)
+    throw new Error("Failed to load page content")
   }
+
+  if (!page) notFound()
 
   return (
     <div className="space-y-6">

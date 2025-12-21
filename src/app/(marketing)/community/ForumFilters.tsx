@@ -100,7 +100,7 @@ export function ForumFilters({
             type="text"
             placeholder="Search questions..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => { setSearch(e.target.value); }}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 updateFilter("q", search.trim() || null)
@@ -138,7 +138,7 @@ export function ForumFilters({
                 key={status}
                 variant={isActive ? "default" : "outline"}
                 size="sm"
-                onClick={() => updateFilter("status", status)}
+                onClick={() => { updateFilter("status", status); }}
                 disabled={isPending}
                 className={
                   isActive
@@ -170,7 +170,7 @@ export function ForumFilters({
                   variant={isActive ? "default" : "outline"}
                   size="sm"
                   onClick={() =>
-                    updateFilter("tag", activeTag === tag ? null : tag)
+                    { updateFilter("tag", activeTag === tag ? null : tag); }
                   }
                   disabled={isPending}
                   className={
@@ -198,7 +198,7 @@ export function ForumFilters({
             name="product-filter"
             aria-label="Product"
             value={activeProduct || ""}
-            onChange={(e) => updateFilter("product", e.target.value || null)}
+            onChange={(e) => { updateFilter("product", e.target.value || null); }}
             disabled={isPending}
             className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm text-slate-700 focus:border-cyan-700 focus:outline-none cursor-pointer disabled:opacity-50"
           >

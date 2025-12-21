@@ -11,12 +11,13 @@ import { ArrowLeft, Save, Eye, CheckCircle, Loader2, AlertCircle } from "lucide-
 import Link from "next/link"
 import ReactMarkdown from "react-markdown"
 import { createCustomPage, checkSlugAvailability } from "../actions"
+import { isExternalHref, sanitizeMarkdownUrl, safeMarkdownUrlTransform } from "@/lib/safe-url"
 
 function generateSlug(title: string): string {
   return title
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
+    .replaceAll(/[^a-z0-9]+/g, "-")
+    .replaceAll(/^-|-$/g, "")
     .slice(0, 50)
 }
 
@@ -56,15 +57,15 @@ export function NewCustomPageForm() {
         setSlugChecking(true)
         const result = await checkSlugAvailability(slug)
         setSlugChecking(false)
-        if (!result.available) {
-          setSlugError(result.error || "Slug not available")
-        } else {
+        if (result.available) {
           setSlugError(null)
+        } else {
+          setSlugError(result.error || "Slug not available")
         }
       })()
     }, 300)
 
-    return () => clearTimeout(timeout)
+    return () => { clearTimeout(timeout); }
   }, [slug])
 
   const handleSlugChange = (value: string) => {
@@ -72,12 +73,12 @@ export function NewCustomPageForm() {
     // Sanitize the slug as they type
     const sanitized = value
       .toLowerCase()
-      .replace(/[^a-z0-9-]/g, "")
+      .replaceAll(/[^a-z0-9-]/g, "")
       .slice(0, 50)
     setSlug(sanitized)
   }
 
-  const handleSubmit = (publish: boolean = false) => {
+  const handleSubmit = (publish = false) => {
     setError(null)
 
     if (!title.trim()) {
@@ -166,7 +167,7 @@ export function NewCustomPageForm() {
             <Input
               id="title"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => { setTitle(e.target.value); }}
               placeholder="e.g., Frequently Asked Questions"
             />
           </div>
@@ -182,7 +183,7 @@ export function NewCustomPageForm() {
                 <Input
                   id="slug"
                   value={slug}
-                  onChange={(e) => handleSlugChange(e.target.value)}
+                  onChange={(e) => { handleSlugChange(e.target.value); }}
                   placeholder="faq"
                   className={slugError ? "border-red-300 focus:ring-red-500" : ""}
                 />
@@ -224,7 +225,7 @@ export function NewCustomPageForm() {
             <TabsContent value="edit" className="mt-2">
               <textarea
                 value={content}
-                onChange={(e) => setContent(e.target.value)}
+                onChange={(e) => { setContent(e.target.value); }}
                 className="w-full h-[400px] font-mono text-sm p-4 border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-700 focus:ring-offset-2"
                 placeholder="# Your Page Title
 
@@ -241,7 +242,28 @@ Write your content here using Markdown...
             <TabsContent value="preview" className="mt-2">
               <div className="w-full min-h-[400px] p-6 border border-slate-200 rounded-md bg-slate-50 prose prose-slate max-w-none">
                 {content ? (
-                  <ReactMarkdown>{content}</ReactMarkdown>
+                  <ReactMarkdown
+                    urlTransform={safeMarkdownUrlTransform}
+                    components={{
+                      a: ({ href, children }) => {
+                        const safeHref = sanitizeMarkdownUrl(href, "href")
+                        if (!safeHref) return <span>{children}</span>
+                        const external = isExternalHref(safeHref)
+                        return (
+                          <a
+                            href={safeHref}
+                            target={external ? "_blank" : undefined}
+                            rel={external ? "noopener noreferrer" : undefined}
+                            className="text-cyan-700 hover:underline"
+                          >
+                            {children}
+                          </a>
+                        )
+                      },
+                    }}
+                  >
+                    {content}
+                  </ReactMarkdown>
                 ) : (
                   <p className="text-slate-400 italic">Preview will appear here...</p>
                 )}
@@ -267,7 +289,7 @@ Write your content here using Markdown...
             <Input
               id="seo-title"
               value={seoTitle}
-              onChange={(e) => setSeoTitle(e.target.value)}
+              onChange={(e) => { setSeoTitle(e.target.value); }}
               placeholder={title || "Defaults to page title"}
             />
             <p className="text-xs text-slate-500">
@@ -282,7 +304,7 @@ Write your content here using Markdown...
             <textarea
               id="seo-description"
               value={seoDescription}
-              onChange={(e) => setSeoDescription(e.target.value)}
+              onChange={(e) => { setSeoDescription(e.target.value); }}
               rows={3}
               className="w-full text-sm p-3 border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-700 focus:ring-offset-2"
               placeholder="Brief description for search engines (150-160 characters recommended)"
@@ -296,7 +318,7 @@ Write your content here using Markdown...
         <Button
           type="button"
           variant="outline"
-          onClick={() => handleSubmit(false)}
+          onClick={() => { handleSubmit(false); }}
           disabled={isPending || !!slugError}
         >
           {isPending ? (
@@ -308,7 +330,7 @@ Write your content here using Markdown...
         </Button>
         <Button
           type="button"
-          onClick={() => handleSubmit(true)}
+          onClick={() => { handleSubmit(true); }}
           disabled={isPending || !!slugError}
           className="bg-cyan-700 hover:bg-cyan-600"
         >

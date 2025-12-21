@@ -1,7 +1,7 @@
 "use client"
 
 import { useGLTF, OrbitControls, PerspectiveCamera, Grid, ContactShadows } from "@react-three/drei"
-import { Canvas, ThreeElements } from "@react-three/fiber"
+import { Canvas, type ThreeElements } from "@react-three/fiber"
 import { Suspense, useState, useEffect, useRef } from "react"
 import { useReducedMotion } from "@/hooks/use-reduced-motion"
 import { ClientErrorBoundary } from "@/components/ui/client-error-boundary"
@@ -77,7 +77,7 @@ export default function HeroArm({ className }: { className?: string }) {
       observer.observe(containerRef.current)
     }
 
-    return () => observer.disconnect()
+    return () => { observer.disconnect(); }
   }, [canRender3d, isVisible])
 
   return (
@@ -87,14 +87,7 @@ export default function HeroArm({ className }: { className?: string }) {
       role="img"
       aria-label="Interactive 3D model of a 4DOF robotic arm kit"
     >
-      {!canRender3d ? (
-        <div
-          className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100"
-          aria-hidden="true"
-        >
-          <p className="text-sm text-slate-500 font-mono">3D preview unavailable</p>
-        </div>
-      ) : (
+      {canRender3d ? (
         <>
       {/* Loading State */}
       {(!isLoaded || !isVisible) && (
@@ -168,19 +161,26 @@ export default function HeroArm({ className }: { className?: string }) {
                 minPolarAngle={0}
                 maxPolarAngle={Math.PI / 2}
               />
-              <LoadingIndicator onLoaded={() => setIsLoaded(true)} />
+              <LoadingIndicator onLoaded={() => { setIsLoaded(true); }} />
             </Suspense>
           </Canvas>
         </ClientErrorBoundary>
       )}
         </>
+      ) : (
+        <div
+          className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100"
+          aria-hidden="true"
+        >
+          <p className="text-sm text-slate-500 font-mono">3D preview unavailable</p>
+        </div>
       )}
     </div>
   )
 }
 
 function supportsWebGL(): boolean {
-  if (typeof window === "undefined") return false
+  if (globalThis.window === undefined) return false
   if (typeof document === "undefined") return false
   if (typeof WebGLRenderingContext === "undefined") return false
   try {

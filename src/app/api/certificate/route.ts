@@ -1,9 +1,14 @@
 import { createClient } from "@/lib/supabase/server"
-import { NextRequest, NextResponse } from "next/server"
+import { type NextRequest, NextResponse } from "next/server"
 import { jsPDF } from "jspdf"
 import { getContent } from "@/lib/content"
+import { isUuid } from "@/lib/uuid"
+import { rateLimit } from "@/lib/rate-limit"
 
 export async function GET(request: NextRequest) {
+  const rateLimitResponse = await rateLimit(request, "certificate")
+  if (rateLimitResponse) return rateLimitResponse
+
   const supabase = await createClient()
   const {
     data: { user },
@@ -18,22 +23,50 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Missing courseId" }, { status: 400 })
   }
 
+  if (!isUuid(courseId)) {
+    return NextResponse.json({ error: "Invalid courseId" }, { status: 400 })
+  }
+
   // Fetch course details
-  const { data: course } = await supabase
+  const { data: course, error: courseError } = await supabase
     .from("courses")
-    .select("id, title, difficulty")
+    .select("id, title, difficulty, product_id, is_published")
     .eq("id", courseId)
-    .single()
+    .maybeSingle()
+
+  if (courseError) {
+    return NextResponse.json({ error: "Failed to load course" }, { status: 500 })
+  }
 
   if (!course) {
     return NextResponse.json({ error: "Course not found" }, { status: 404 })
   }
 
+  // Only generate certificates for owned/published courses (defense-in-depth; avoids spoofing)
+  if (course.is_published !== true) {
+    return NextResponse.json({ error: "Course not found" }, { status: 404 })
+  }
+
+  const { data: licenses, error: licenseError } = await supabase
+    .from("licenses")
+    .select("id")
+    .eq("owner_id", user.id)
+    .eq("product_id", course.product_id)
+    .limit(1)
+
+  if (licenseError || !licenses || licenses.length === 0) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+  }
+
   // Verify user completed the course (check all required lessons)
-  const { data: modules } = await supabase
+  const { data: modules, error: modulesError } = await supabase
     .from("modules")
     .select("id, lessons(id, is_optional)")
     .eq("course_id", courseId)
+
+  if (modulesError) {
+    return NextResponse.json({ error: "Failed to load course structure" }, { status: 500 })
+  }
 
   const requiredLessonIds = (modules ?? [])
     .flatMap((m) => {
@@ -45,12 +78,16 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Course has no lessons" }, { status: 400 })
   }
 
-  const { data: progress } = await supabase
+  const { data: progress, error: progressError } = await supabase
     .from("lesson_progress")
-    .select("lesson_id")
+    .select("lesson_id, completed_at")
     .eq("user_id", user.id)
     .in("lesson_id", requiredLessonIds)
     .not("completed_at", "is", null)
+
+  if (progressError) {
+    return NextResponse.json({ error: "Failed to load course progress" }, { status: 500 })
+  }
 
   const completedIds = new Set((progress ?? []).map((p) => p.lesson_id))
   const allCompleted = requiredLessonIds.every((id) => completedIds.has(id))
@@ -62,12 +99,23 @@ export async function GET(request: NextRequest) {
     )
   }
 
+  const completionTimestamp = (progress ?? [])
+    .map((row) => row.completed_at)
+    .filter((value): value is string => typeof value === "string" && value.length > 0)
+    .map((value) => Date.parse(value))
+    .filter((ms) => Number.isFinite(ms))
+    .sort((a, b) => b - a)[0]
+
   // Get user profile for name
-  const { data: profileData } = await supabase
+  const { data: profileData, error: profileError } = await supabase
     .from("profiles")
     .select("display_name, full_name")
     .eq("id", user.id)
-    .single()
+    .maybeSingle()
+
+  if (profileError) {
+    // Non-fatal; fall back to email prefix.
+  }
 
   const profile = profileData as { display_name: string | null; full_name: string | null } | null
   const userName = profile?.full_name || profile?.display_name || user.email?.split("@")[0] || "Learner"
@@ -143,7 +191,7 @@ export async function GET(request: NextRequest) {
   })
 
   // Date
-  const completionDate = new Date().toLocaleDateString("en-US", {
+  const completionDate = new Date(completionTimestamp ?? Date.now()).toLocaleDateString("en-US", {
     year: "numeric",
     month: "long",
     day: "numeric",
@@ -164,11 +212,18 @@ export async function GET(request: NextRequest) {
 
   // Generate PDF buffer
   const pdfBuffer = doc.output("arraybuffer")
+  const safeCourseSlug =
+    course.title
+      .toLowerCase()
+      .replaceAll(/[^a-z0-9]+/g, "-")
+      .replace(/^-+/, "")
+      .replace(/-+$/, "")
+      .slice(0, 60) || "course"
 
   return new NextResponse(pdfBuffer, {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="certificate-${course.title.toLowerCase().replace(/\s+/g, "-")}.pdf"`,
+      "Content-Disposition": `attachment; filename="certificate-${safeCourseSlug}.pdf"`,
     },
   })
 }

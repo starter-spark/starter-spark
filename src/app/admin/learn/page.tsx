@@ -11,6 +11,11 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Plus, Pencil, BookOpen, Layers, FileText, Eye, EyeOff } from "lucide-react"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { formatDuration } from "@/lib/utils"
 
 export const metadata = {
@@ -73,7 +78,7 @@ async function getCourses(): Promise<Course[]> {
     description: row.description,
     difficulty: row.difficulty,
     duration_minutes: row.duration_minutes,
-    is_published: row.is_published as boolean,
+    is_published: row.is_published!,
     product: row.product as Course["product"],
     modules: (row.modules || []) as Course["modules"],
   }))
@@ -240,11 +245,16 @@ export default async function AdminLearnPage() {
                       )}
                     </TableCell>
                     <TableCell>
-                      <Button asChild variant="ghost" size="sm">
-                        <Link href={`/admin/learn/${course.id}`} aria-label={`Edit ${course.title}`}>
-                          <Pencil className="h-4 w-4" />
-                        </Link>
-                      </Button>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button asChild variant="ghost" size="sm">
+                            <Link href={`/admin/learn/${course.id}`} aria-label={`Edit ${course.title}`}>
+                              <Pencil className="h-4 w-4" />
+                            </Link>
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Edit course</TooltipContent>
+                      </Tooltip>
                     </TableCell>
                   </TableRow>
                 )

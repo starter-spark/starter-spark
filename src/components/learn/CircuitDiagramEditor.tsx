@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
   ReactFlow,
   addEdge,
@@ -34,6 +34,7 @@ import {
   Gauge,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { randomId } from "@/lib/random-id"
 
 // Circuit component types
 type CircuitComponentType =
@@ -68,11 +69,6 @@ interface CircuitDiagramEditorProps {
   readOnly?: boolean
   className?: string
   height?: number
-}
-
-function newId(): string {
-  if (typeof crypto !== "undefined" && "randomUUID" in crypto) return crypto.randomUUID()
-  return `${Date.now()}-${Math.random().toString(16).slice(2)}`
 }
 
 // Helper to safely get param value as string
@@ -286,7 +282,7 @@ const nodeTypes: NodeTypes = {
 }
 
 function createCircuitNode(componentType: CircuitComponentType): CircuitNode {
-  const id = newId()
+  const id = randomId()
 
   const labels: Record<CircuitComponentType, string> = {
     arduino: "Arduino Uno",
@@ -352,16 +348,22 @@ export function CircuitDiagramEditor({
   const initial = useMemo(() => parseCircuitState(value), [value])
 
   const [nodes, setNodes, onNodesChange] = useNodesState<CircuitNode>(initial.nodes)
-  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>(initial.edges)
+  const [edges, setEdges, onEdgesChange] = useEdgesState(initial.edges)
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
   const selectedNode = selectedId ? nodes.find((n) => n.id === selectedId) : undefined
 
+  // Use ref to avoid infinite loops when parent doesn't memoize onChange
+  const onChangeRef = useRef(onChange)
   useEffect(() => {
-    if (onChange) {
-      onChange({ nodes, edges })
+    onChangeRef.current = onChange
+  }, [onChange])
+
+  useEffect(() => {
+    if (onChangeRef.current) {
+      onChangeRef.current({ nodes, edges })
     }
-  }, [edges, nodes, onChange])
+  }, [edges, nodes])
 
   const onConnect = useCallback(
     (connection: Connection) => {
@@ -404,7 +406,7 @@ export function CircuitDiagramEditor({
           ...n,
           data: {
             ...n.data,
-            params: { ...(n.data.params ?? {}), ...patch },
+            params: { ...n.data.params, ...patch },
           },
         }
       })
@@ -426,7 +428,7 @@ export function CircuitDiagramEditor({
     const a = document.createElement("a")
     a.href = url
     a.download = "circuit-diagram.json"
-    document.body.appendChild(a)
+    document.body.append(a)
     a.click()
     a.remove()
     URL.revokeObjectURL(url)
@@ -451,7 +453,7 @@ export function CircuitDiagramEditor({
                   variant="outline"
                   size="sm"
                   className="w-full justify-start gap-2 font-mono text-xs h-8"
-                  onClick={() => addNode(item.type)}
+                  onClick={() => { addNode(item.type); }}
                 >
                   {item.icon}
                   {item.label}
@@ -469,13 +471,13 @@ export function CircuitDiagramEditor({
           )}
           style={{ height }}
         >
-          <ReactFlow<CircuitNode, Edge>
+          <ReactFlow<CircuitNode>
             nodes={nodes}
             edges={edges}
             onNodesChange={readOnly ? undefined : onNodesChange}
             onEdgesChange={readOnly ? undefined : onEdgesChange}
             onConnect={onConnect}
-            onSelectionChange={(s: OnSelectionChangeParams<CircuitNode, Edge>) => {
+            onSelectionChange={(s: OnSelectionChangeParams<CircuitNode>) => {
               const node = s.nodes[0]
               setSelectedId(node ? node.id : null)
             }}
@@ -526,17 +528,13 @@ export function CircuitDiagramEditor({
               </div>
             </div>
 
-            {!selectedNode ? (
-              <p className="text-sm text-slate-500">
-                Select a component to edit its properties.
-              </p>
-            ) : (
+            {selectedNode ? (
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label className="text-xs">Label</Label>
                   <Input
                     value={selectedNode.data.label}
-                    onChange={(e) => updateNodeLabel(e.target.value)}
+                    onChange={(e) => { updateNodeLabel(e.target.value); }}
                     className="h-8 text-sm"
                   />
                 </div>
@@ -548,6 +546,10 @@ export function CircuitDiagramEditor({
                   onChange={updateNodeParams}
                 />
               </div>
+            ) : (
+              <p className="text-sm text-slate-500">
+                Select a component to edit its properties.
+              </p>
             )}
 
             <Separator />
@@ -585,7 +587,7 @@ function ComponentParamsEditor({
           <Label className="text-xs">Color</Label>
           <select
             value={getParamString(params, "color", "red")}
-            onChange={(e) => onChange({ color: e.target.value })}
+            onChange={(e) => { onChange({ color: e.target.value }); }}
             className="flex h-8 w-full rounded-md border border-input bg-background px-3 py-1 text-sm font-mono"
           >
             <option value="red">Red</option>
@@ -599,7 +601,7 @@ function ComponentParamsEditor({
           <Input
             type="number"
             value={getParamString(params, "pin", "13")}
-            onChange={(e) => onChange({ pin: Number(e.target.value) })}
+            onChange={(e) => { onChange({ pin: Number(e.target.value) }); }}
             className="h-8 text-sm font-mono"
           />
         </div>
@@ -613,7 +615,7 @@ function ComponentParamsEditor({
         <Label className="text-xs">Resistance (Ω)</Label>
         <select
           value={getParamString(params, "value", "220")}
-          onChange={(e) => onChange({ value: Number(e.target.value) })}
+          onChange={(e) => { onChange({ value: Number(e.target.value) }); }}
           className="flex h-8 w-full rounded-md border border-input bg-background px-3 py-1 text-sm font-mono"
         >
           <option value={100}>100Ω</option>
@@ -621,7 +623,7 @@ function ComponentParamsEditor({
           <option value={330}>330Ω</option>
           <option value={470}>470Ω</option>
           <option value={1000}>1kΩ</option>
-          <option value={10000}>10kΩ</option>
+          <option value={10_000}>10kΩ</option>
         </select>
       </div>
     )
@@ -633,7 +635,7 @@ function ComponentParamsEditor({
         <Label className="text-xs">Capacitance (μF)</Label>
         <select
           value={getParamString(params, "value", "100")}
-          onChange={(e) => onChange({ value: Number(e.target.value) })}
+          onChange={(e) => { onChange({ value: Number(e.target.value) }); }}
           className="flex h-8 w-full rounded-md border border-input bg-background px-3 py-1 text-sm font-mono"
         >
           <option value={10}>10μF</option>
@@ -654,7 +656,7 @@ function ComponentParamsEditor({
         <Input
           type="number"
           value={getParamString(params, "pin", "2")}
-          onChange={(e) => onChange({ pin: Number(e.target.value) })}
+          onChange={(e) => { onChange({ pin: Number(e.target.value) }); }}
           className="h-8 text-sm font-mono"
         />
       </div>
@@ -668,7 +670,7 @@ function ComponentParamsEditor({
         <Input
           type="number"
           value={getParamString(params, "pin", "9")}
-          onChange={(e) => onChange({ pin: Number(e.target.value) })}
+          onChange={(e) => { onChange({ pin: Number(e.target.value) }); }}
           className="h-8 text-sm font-mono"
         />
       </div>
@@ -682,7 +684,7 @@ function ComponentParamsEditor({
           <Label className="text-xs">Type</Label>
           <select
             value={getParamString(params, "type", "photoresistor")}
-            onChange={(e) => onChange({ type: e.target.value })}
+            onChange={(e) => { onChange({ type: e.target.value }); }}
             className="flex h-8 w-full rounded-md border border-input bg-background px-3 py-1 text-sm font-mono"
           >
             <option value="photoresistor">Photoresistor</option>
@@ -695,7 +697,7 @@ function ComponentParamsEditor({
           <Label className="text-xs">Pin</Label>
           <Input
             value={getParamString(params, "pin", "A0")}
-            onChange={(e) => onChange({ pin: e.target.value })}
+            onChange={(e) => { onChange({ pin: e.target.value }); }}
             className="h-8 text-sm font-mono"
           />
         </div>
@@ -709,7 +711,7 @@ function ComponentParamsEditor({
         <Label className="text-xs">Voltage (V)</Label>
         <select
           value={getParamString(params, "voltage", "5")}
-          onChange={(e) => onChange({ voltage: Number(e.target.value) })}
+          onChange={(e) => { onChange({ voltage: Number(e.target.value) }); }}
           className="flex h-8 w-full rounded-md border border-input bg-background px-3 py-1 text-sm font-mono"
         >
           <option value={3.3}>3.3V</option>

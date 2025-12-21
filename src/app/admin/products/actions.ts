@@ -2,8 +2,9 @@
 
 import { revalidatePath } from "next/cache"
 import { createClient } from "@/lib/supabase/server"
-import { Database } from "@/lib/supabase/database.types"
+import { type Database } from "@/lib/supabase/database.types"
 import { logAuditEvent } from "@/lib/audit"
+import { requireAdmin, requireAdminOrStaff } from "@/lib/auth"
 
 type ProductTagType = Database["public"]["Enums"]["product_tag_type"]
 
@@ -30,29 +31,89 @@ interface TagData {
   discount_percent: number | null
 }
 
+const AUTOMATED_TAGS: ProductTagType[] = ["out_of_stock", "limited", "new", "discount"]
+
+function isDiscountActive({
+  discountPercent,
+  originalPriceCents,
+  discountExpiresAt,
+}: {
+  discountPercent: number | null
+  originalPriceCents: number | null
+  discountExpiresAt: string | null
+}): boolean {
+  if (!discountPercent || discountPercent <= 0) return false
+  if (!originalPriceCents || originalPriceCents <= 0) return false
+  if (!discountExpiresAt) return true
+  const expiresAt = new Date(discountExpiresAt)
+  if (Number.isNaN(expiresAt.getTime())) return true
+  return expiresAt.getTime() > Date.now()
+}
+
+async function syncDiscountTag(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  productId: string,
+  {
+    discountPercent,
+    originalPriceCents,
+    discountExpiresAt,
+  }: {
+    discountPercent: number | null
+    originalPriceCents: number | null
+    discountExpiresAt: string | null
+  }
+): Promise<{ error: string | null }> {
+  const active = isDiscountActive({
+    discountPercent,
+    originalPriceCents,
+    discountExpiresAt,
+  })
+
+  if (!active) {
+    const { error } = await supabase
+      .from("product_tags")
+      .delete()
+      .eq("product_id", productId)
+      .eq("tag", "discount")
+
+    if (error) {
+      console.error("Error removing discount tag:", error)
+      return { error: error.message }
+    }
+
+    return { error: null }
+  }
+
+  const { error } = await supabase
+    .from("product_tags")
+    .upsert(
+      {
+        product_id: productId,
+        tag: "discount",
+        priority: 80,
+        discount_percent: discountPercent,
+      },
+      { onConflict: "product_id,tag" }
+    )
+
+  if (error) {
+    console.error("Error upserting discount tag:", error)
+    return { error: error.message }
+  }
+
+  return { error: null }
+}
+
 export async function updateProduct(
   id: string,
   data: ProductData
 ): Promise<{ error: string | null }> {
   const supabase = await createClient()
 
-  // Check if user is admin/staff
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return { error: "Unauthorized" }
-  }
+  const guard = await requireAdminOrStaff(supabase)
+  if (!guard.ok) return { error: guard.error }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single()
-
-  if (!profile || (profile.role !== "admin" && profile.role !== "staff")) {
-    return { error: "Unauthorized" }
-  }
-
-  const { error } = await supabase
+  const { data: updatedProduct, error } = await supabase
     .from("products")
     .update({
       name: data.name,
@@ -71,15 +132,28 @@ export async function updateProduct(
       low_stock_threshold: data.low_stock_threshold,
     })
     .eq("id", id)
+    .select("id")
+    .maybeSingle()
 
   if (error) {
     console.error("Error updating product:", error)
     return { error: error.message }
   }
 
+  if (!updatedProduct) {
+    return { error: "Product not found" }
+  }
+
+  const { error: discountTagError } = await syncDiscountTag(supabase, id, {
+    discountPercent: data.discount_percent,
+    originalPriceCents: data.original_price_cents,
+    discountExpiresAt: data.discount_expires_at,
+  })
+  if (discountTagError) return { error: discountTagError }
+
   // Log audit event
   await logAuditEvent({
-    userId: user.id,
+    userId: guard.user.id,
     action: 'product.updated',
     resourceType: 'product',
     resourceId: id,
@@ -91,7 +165,9 @@ export async function updateProduct(
   })
 
   revalidatePath("/admin/products")
+  revalidatePath(`/admin/products/${data.slug}`)
   revalidatePath("/shop")
+  revalidatePath(`/shop/${data.slug}`)
   revalidatePath("/")
 
   return { error: null }
@@ -100,21 +176,8 @@ export async function updateProduct(
 export async function deleteProduct(id: string): Promise<{ error: string | null }> {
   const supabase = await createClient()
 
-  // Check if user is admin
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return { error: "Unauthorized" }
-  }
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single()
-
-  if (!profile || profile.role !== "admin") {
-    return { error: "Only admins can delete products" }
-  }
+  const guard = await requireAdmin(supabase)
+  if (!guard.ok) return { error: guard.error }
 
   // Check if product has any licenses
   const { count } = await supabase
@@ -126,29 +189,31 @@ export async function deleteProduct(id: string): Promise<{ error: string | null 
     return { error: "Cannot delete product with existing licenses" }
   }
 
-  // Get product info before deleting for audit log
-  const { data: product } = await supabase
+  const { data: deletedProduct, error } = await supabase
     .from("products")
-    .select("name, slug")
+    .delete()
     .eq("id", id)
-    .single()
-
-  const { error } = await supabase.from("products").delete().eq("id", id)
+    .select("id, name, slug")
+    .maybeSingle()
 
   if (error) {
     console.error("Error deleting product:", error)
     return { error: error.message }
   }
 
+  if (!deletedProduct) {
+    return { error: "Product not found" }
+  }
+
   // Log audit event
   await logAuditEvent({
-    userId: user.id,
+    userId: guard.user.id,
     action: 'product.deleted',
     resourceType: 'product',
     resourceId: id,
     details: {
-      name: product?.name,
-      slug: product?.slug,
+      name: deletedProduct.name,
+      slug: deletedProduct.slug,
     },
   })
 
@@ -164,20 +229,14 @@ export async function createProduct(
 ): Promise<{ error: string | null; id: string | null }> {
   const supabase = await createClient()
 
-  // Check if user is admin/staff
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return { error: "Unauthorized", id: null }
+  const guard = await requireAdminOrStaff(supabase)
+  if (!guard.ok) return { error: guard.error, id: null }
+
+  if (!data.name.trim()) {
+    return { error: "Name is required", id: null }
   }
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single()
-
-  if (!profile || (profile.role !== "admin" && profile.role !== "staff")) {
-    return { error: "Unauthorized", id: null }
+  if (!data.slug.trim()) {
+    return { error: "Slug is required", id: null }
   }
 
   const { data: product, error } = await supabase
@@ -199,16 +258,27 @@ export async function createProduct(
       low_stock_threshold: data.low_stock_threshold,
     })
     .select("id")
-    .single()
+    .maybeSingle()
 
   if (error) {
     console.error("Error creating product:", error)
     return { error: error.message, id: null }
   }
 
+  if (!product) {
+    return { error: "Failed to create product", id: null }
+  }
+
+  const { error: discountTagError } = await syncDiscountTag(supabase, product.id, {
+    discountPercent: data.discount_percent,
+    originalPriceCents: data.original_price_cents,
+    discountExpiresAt: data.discount_expires_at,
+  })
+  if (discountTagError) return { error: discountTagError, id: null }
+
   // Log audit event
   await logAuditEvent({
-    userId: user.id,
+    userId: guard.user.id,
     action: 'product.created',
     resourceType: 'product',
     resourceId: product.id,
@@ -232,55 +302,84 @@ export async function updateProductTags(
 ): Promise<{ error: string | null }> {
   const supabase = await createClient()
 
-  // Check if user is admin/staff
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return { error: "Unauthorized" }
+  const guard = await requireAdminOrStaff(supabase)
+  if (!guard.ok) return { error: guard.error }
+
+  const { data: productRow, error: productError } = await supabase
+    .from("products")
+    .select("id")
+    .eq("id", productId)
+    .maybeSingle()
+
+  if (productError) {
+    console.error("Error verifying product exists:", productError)
+    return { error: productError.message }
+  }
+  if (!productRow) return { error: "Product not found" }
+
+  const automatedInRequest = tags.filter((t) => AUTOMATED_TAGS.includes(t.tag))
+  if (automatedInRequest.length > 0) {
+    return { error: "Some tags are managed automatically and cannot be edited here" }
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single()
-
-  if (!profile || (profile.role !== "admin" && profile.role !== "staff")) {
-    return { error: "Unauthorized" }
+  const seen = new Set<ProductTagType>()
+  for (const t of tags) {
+    if (seen.has(t.tag)) return { error: "Duplicate tags are not allowed" }
+    seen.add(t.tag)
   }
 
-  // Delete existing tags for this product
-  const { error: deleteError } = await supabase
+  const { data: existingTags, error: existingError } = await supabase
     .from("product_tags")
-    .delete()
+    .select("tag")
     .eq("product_id", productId)
 
-  if (deleteError) {
-    console.error("Error deleting existing tags:", deleteError)
-    return { error: deleteError.message }
+  if (existingError) {
+    console.error("Error loading existing product tags:", existingError)
+    return { error: existingError.message }
   }
 
-  // Insert new tags if any
-  if (tags.length > 0) {
-    const { error: insertError } = await supabase
-      .from("product_tags")
-      .insert(
-        tags.map((t) => ({
-          product_id: productId,
-          tag: t.tag,
-          priority: t.priority,
-          discount_percent: t.discount_percent,
-        }))
-      )
+  const desiredManualTags = tags.map((t) => t.tag)
+  const desiredSet = new Set(desiredManualTags)
 
-    if (insertError) {
-      console.error("Error inserting tags:", insertError)
-      return { error: insertError.message }
+  const existingManualTags = (existingTags ?? [])
+    .map((t) => t.tag)
+    .filter((t): t is ProductTagType => Boolean(t) && !AUTOMATED_TAGS.includes(t))
+  const toDelete = existingManualTags.filter((t) => !desiredSet.has(t))
+
+  const upsertRows = tags.map((t) => ({
+    product_id: productId,
+    tag: t.tag,
+    priority: t.priority,
+    discount_percent: null,
+  }))
+
+  if (upsertRows.length > 0) {
+    const { error: upsertError } = await supabase
+      .from("product_tags")
+      .upsert(upsertRows, { onConflict: "product_id,tag" })
+
+    if (upsertError) {
+      console.error("Error upserting tags:", upsertError)
+      return { error: upsertError.message }
+    }
+  }
+
+  if (toDelete.length > 0) {
+    const { error: deleteError } = await supabase
+      .from("product_tags")
+      .delete()
+      .eq("product_id", productId)
+      .in("tag", toDelete)
+
+    if (deleteError) {
+      console.error("Error deleting removed tags:", deleteError)
+      return { error: deleteError.message }
     }
   }
 
   // Log audit event
   await logAuditEvent({
-    userId: user.id,
+    userId: guard.user.id,
     action: 'product.tags_updated',
     resourceType: 'product',
     resourceId: productId,
@@ -297,8 +396,6 @@ export async function updateProductTags(
   return { error: null }
 }
 
-type ProductImageType = "hero" | "knolling" | "detail" | "action" | "packaging" | "other"
-
 interface MediaData {
   id?: string
   type: "image" | "video" | "3d_model" | "document"
@@ -310,7 +407,6 @@ interface MediaData {
   alt_text?: string
   is_primary?: boolean
   sort_order?: number
-  image_type?: ProductImageType
   isNew?: boolean
 }
 
@@ -320,30 +416,33 @@ export async function saveProductMedia(
 ): Promise<{ error: string | null }> {
   const supabase = await createClient()
 
-  // Check if user is admin/staff
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return { error: "Unauthorized" }
-  }
+  const guard = await requireAdminOrStaff(supabase)
+  if (!guard.ok) return { error: guard.error }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single()
-
-  if (!profile || !profile.role || !["admin", "staff"].includes(profile.role)) {
-    return { error: "Unauthorized" }
-  }
+  // Ensure only one primary media per type (DB enforces this; normalize to avoid errors)
+  const primaryByType = new Set<MediaData["type"]>()
+  const normalizedMedia = media.map((item) => {
+    if (!item.is_primary) return item
+    if (primaryByType.has(item.type)) {
+      return { ...item, is_primary: false }
+    }
+    primaryByType.add(item.type)
+    return item
+  })
 
   // Get existing media for this product
-  const { data: existingMedia } = await supabase
+  const { data: existingMedia, error: existingError } = await supabase
     .from("product_media")
     .select("id")
     .eq("product_id", productId)
 
+  if (existingError) {
+    console.error("Error loading existing media:", existingError)
+    return { error: existingError.message }
+  }
+
   const existingIds = new Set((existingMedia || []).map((m) => m.id))
-  const currentIds = new Set(media.filter((m) => m.id).map((m) => m.id))
+  const currentIds = new Set(normalizedMedia.filter((m) => m.id).map((m) => m.id))
 
   // Delete media that's no longer in the list
   const toDelete = [...existingIds].filter((id) => !currentIds.has(id))
@@ -359,8 +458,13 @@ export async function saveProductMedia(
     }
   }
 
-  // Update existing media (alt_text, is_primary, sort_order, image_type)
-  for (const item of media.filter((m) => m.id && existingIds.has(m.id))) {
+  // Update existing media (alt_text, is_primary, sort_order)
+  const existingUpdates = normalizedMedia
+    .filter((m) => m.id && existingIds.has(m.id))
+    // Ensure we clear old primaries before setting new ones to avoid transient unique violations.
+    .sort((a, b) => (a.is_primary ? 1 : 0) - (b.is_primary ? 1 : 0))
+
+  for (const item of existingUpdates) {
     if (!item.id) continue // TypeScript guard
     const { error: updateError } = await supabase
       .from("product_media")
@@ -368,9 +472,9 @@ export async function saveProductMedia(
         alt_text: item.alt_text || null,
         is_primary: item.is_primary || false,
         sort_order: item.sort_order ?? 0,
-        image_type: item.image_type || null,
       })
       .eq("id", item.id)
+      .eq("product_id", productId)
 
     if (updateError) {
       console.error("Error updating media:", updateError)
@@ -379,7 +483,7 @@ export async function saveProductMedia(
   }
 
   // Insert new media
-  const newMedia = media.filter((m) => !m.id || m.isNew)
+  const newMedia = normalizedMedia.filter((m) => !m.id || m.isNew)
   if (newMedia.length > 0) {
     const { error: insertError } = await supabase.from("product_media").insert(
       newMedia.map((m) => ({
@@ -393,8 +497,7 @@ export async function saveProductMedia(
         alt_text: m.alt_text || null,
         is_primary: m.is_primary || false,
         sort_order: m.sort_order ?? 0,
-        image_type: m.image_type || null,
-        created_by: user.id,
+        created_by: guard.user.id,
       }))
     )
 

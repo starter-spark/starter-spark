@@ -51,7 +51,7 @@ function TypeWriter({ text, startDelay = 0 }: { text: string; startDelay?: numbe
       typeChar()
     }, startDelay)
 
-    return () => clearTimeout(timeout)
+    return () => { clearTimeout(timeout); }
   }, [isInView, text, startDelay])
 
   return (

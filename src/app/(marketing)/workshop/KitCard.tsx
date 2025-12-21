@@ -8,9 +8,10 @@ interface KitCardProps {
   description: string
   claimedAt: string | null
   quantity?: number
+  compact?: boolean
 }
 
-export function KitCard({ name, slug, description, claimedAt, quantity = 1 }: KitCardProps) {
+export function KitCard({ name, slug, description, claimedAt, quantity = 1, compact = false }: KitCardProps) {
   const formattedDate = claimedAt
     ? new Date(claimedAt).toLocaleDateString("en-US", {
         year: "numeric",
@@ -18,6 +19,33 @@ export function KitCard({ name, slug, description, claimedAt, quantity = 1 }: Ki
         day: "numeric",
       })
     : "Unknown"
+
+  if (compact) {
+    return (
+      <Link
+        href={`/learn/${slug}`}
+        className="flex items-center gap-3 p-3 rounded border border-slate-200 hover:border-cyan-700 transition-colors bg-white"
+      >
+        <div className="relative w-10 h-10 rounded bg-slate-100 flex items-center justify-center flex-shrink-0">
+          <Package className="w-5 h-5 text-cyan-700" />
+          {quantity > 1 && (
+            <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-cyan-700 text-white text-[10px] font-mono font-bold flex items-center justify-center">
+              {quantity}
+            </span>
+          )}
+        </div>
+        <div className="flex-1 min-w-0">
+          <h3 className="font-mono text-sm text-slate-900 truncate">
+            {name}
+          </h3>
+          <p className="text-xs text-slate-500">
+            Claimed {formattedDate}
+          </p>
+        </div>
+        <ExternalLink className="w-4 h-4 text-slate-400 flex-shrink-0" />
+      </Link>
+    )
+  }
 
   return (
     <div className="flex items-start gap-4 p-4 rounded border border-slate-200 hover:border-cyan-700 transition-colors bg-white">

@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { motion } from "motion/react"
 import Link from "next/link"
 import { Star, ImageIcon } from "lucide-react"
-import { Database } from "@/lib/supabase/database.types"
+import { type Database } from "@/lib/supabase/database.types"
 import { ProductImage } from "@/components/ui/optimized-image"
 
 type ProductTagType = Database["public"]["Enums"]["product_tag_type"]

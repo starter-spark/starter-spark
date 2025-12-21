@@ -7,12 +7,12 @@ import { trackPurchaseCompleted } from "@/lib/analytics"
 interface ClearCartProps {
   orderId: string
   total: number
-  items: Array<{
+  items: {
     id: string
     name: string
     quantity: number
     price: number
-  }>
+  }[]
 }
 
 export function ClearCart({ orderId, total, items }: ClearCartProps) {

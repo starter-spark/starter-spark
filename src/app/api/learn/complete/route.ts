@@ -4,12 +4,7 @@ import { createClient } from "@/lib/supabase/server"
 import { rateLimit } from "@/lib/rate-limit"
 import { checkLessonAchievements } from "@/lib/achievements"
 import { after } from "next/server"
-
-function isUuid(value: string): boolean {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-    value
-  )
-}
+import { isUuid } from "@/lib/uuid"
 
 export async function POST(request: NextRequest) {
   const limited = await rateLimit(request, "default")
@@ -40,28 +35,43 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const { error } = await supabase.from("lesson_progress").upsert(
-    {
-      user_id: user.id,
-      lesson_id: lessonId,
-      completed_at: new Date().toISOString(),
-    },
-    { onConflict: "user_id,lesson_id" }
-  )
+  // Progress is append-only. A row indicates completion; never overwrite `completed_at`.
+  // `ignoreDuplicates` makes this idempotent even if the client retries.
+  const { data: upsertedRows, error } = await supabase
+    .from("lesson_progress")
+    .upsert(
+      {
+        user_id: user.id,
+        lesson_id: lessonId,
+      },
+      { onConflict: "user_id,lesson_id", ignoreDuplicates: true }
+    )
+    .select("lesson_id")
 
   if (error) {
     console.error("Error saving lesson progress:", error)
-    return NextResponse.json({ error: "Unable to save progress" }, { status: 403 })
+    if (error.code === "23503") {
+      return NextResponse.json({ error: "Lesson not found" }, { status: 404 })
+    }
+    if (
+      error.code === "42501" ||
+      error.message.toLowerCase().includes("row-level security")
+    ) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
+    return NextResponse.json({ error: "Unable to save progress" }, { status: 500 })
   }
 
-  after(async () => {
-    try {
-      await checkLessonAchievements(user.id, lessonId)
-    } catch (err) {
-      console.error("Error checking lesson achievements:", err)
-    }
-  })
+  const didInsert = Array.isArray(upsertedRows) && upsertedRows.length > 0
+  if (didInsert) {
+    after(async () => {
+      try {
+        await checkLessonAchievements(user.id, lessonId)
+      } catch (err) {
+        console.error("Error checking lesson achievements:", err)
+      }
+    })
+  }
 
   return new NextResponse(null, { status: 204 })
 }
-

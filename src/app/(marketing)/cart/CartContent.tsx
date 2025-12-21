@@ -88,7 +88,7 @@ export function CartContent({
       const data = (await response.json()) as CheckoutResponse
 
       if (data.url) {
-        window.location.href = data.url
+        globalThis.location.href = data.url
       } else {
         console.error("No checkout URL returned")
         setIsLoading(false)
@@ -218,7 +218,7 @@ export function CartContent({
                             </Link>
                             <button
                               type="button"
-                              onClick={() => removeItem(item.slug)}
+                              onClick={() => { removeItem(item.slug); }}
                               className="cursor-pointer p-1 text-slate-500 hover:text-red-600 transition-colors"
                               aria-label="Remove item"
                             >
@@ -261,7 +261,7 @@ export function CartContent({
                               <button
                                 type="button"
                                 onClick={() =>
-                                  updateQuantity(item.slug, item.quantity + 1)
+                                  { updateQuantity(item.slug, item.quantity + 1); }
                                 }
                                 className="cursor-pointer w-8 h-8 rounded border border-slate-200 flex items-center justify-center hover:border-slate-300 transition-colors"
                                 aria-label="Increase quantity"

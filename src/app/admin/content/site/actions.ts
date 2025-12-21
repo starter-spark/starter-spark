@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 import { logAuditEvent } from "@/lib/audit"
+import { requireAdmin } from "@/lib/auth"
 
 export async function updateSiteContent(
   id: string,
@@ -10,34 +11,28 @@ export async function updateSiteContent(
 ): Promise<{ error: string | null }> {
   const supabase = await createClient()
 
-  // Verify admin role
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    return { error: "Not authenticated" }
-  }
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single()
-
-  if (profile?.role !== "admin") {
-    return { error: "Not authorized" }
-  }
+  const guard = await requireAdmin(supabase)
+  if (!guard.ok) return { error: guard.error }
+  const user = guard.user
 
   // Get current content for audit log
-  const { data: existingContent } = await supabase
+  const { data: existingContent, error: existingError } = await supabase
     .from("site_content")
     .select("content_key, content, category")
     .eq("id", id)
-    .single()
+    .maybeSingle()
+
+  if (existingError) {
+    console.error("Error fetching site content:", existingError)
+    return { error: existingError.message }
+  }
+
+  if (!existingContent) {
+    return { error: "Content not found" }
+  }
 
   // Update the content
-  const { error } = await supabase
+  const { data: updated, error } = await supabase
     .from("site_content")
     .update({
       content,
@@ -45,10 +40,16 @@ export async function updateSiteContent(
       updated_at: new Date().toISOString(),
     })
     .eq("id", id)
+    .select("id")
+    .maybeSingle()
 
   if (error) {
     console.error("Error updating site content:", error)
     return { error: error.message }
+  }
+
+  if (!updated) {
+    return { error: "Content not found" }
   }
 
   // Log audit event
@@ -60,29 +61,55 @@ export async function updateSiteContent(
     details: {
       content_key: existingContent?.content_key,
       category: existingContent?.category,
-      previous_content: existingContent?.content?.substring(0, 100),
-      new_content: content.substring(0, 100),
+      previous_content: existingContent?.content?.slice(0, 100),
+      new_content: content.slice(0, 100),
     },
   })
 
   // Revalidate relevant paths based on category
-  const category = existingContent?.category
-  if (category === "global") {
+  const category = existingContent.category
+  switch (category) {
+  case "global": {
     revalidatePath("/", "layout")
-  } else if (category === "homepage") {
+  
+  break;
+  }
+  case "homepage": {
     revalidatePath("/")
-  } else if (category === "shop") {
+  
+  break;
+  }
+  case "shop": {
     revalidatePath("/shop")
-  } else if (category === "events") {
+  
+  break;
+  }
+  case "events": {
     revalidatePath("/events")
-  } else if (category === "community") {
+  
+  break;
+  }
+  case "community": {
     revalidatePath("/community")
-  } else if (category === "learn") {
+  
+  break;
+  }
+  case "learn": {
     revalidatePath("/learn")
-  } else if (category === "workshop") {
+  
+  break;
+  }
+  case "workshop": {
     revalidatePath("/workshop")
-  } else if (category === "cart") {
+  
+  break;
+  }
+  case "cart": {
     revalidatePath("/cart")
+  
+  break;
+  }
+  // No default
   }
 
   revalidatePath("/admin/content/site")
@@ -95,38 +122,32 @@ export async function resetSiteContentToDefault(
 ): Promise<{ error: string | null }> {
   const supabase = await createClient()
 
-  // Verify admin role
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    return { error: "Not authenticated" }
-  }
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single()
-
-  if (profile?.role !== "admin") {
-    return { error: "Not authorized" }
-  }
+  const guard = await requireAdmin(supabase)
+  if (!guard.ok) return { error: guard.error }
+  const user = guard.user
 
   // Get the default value
-  const { data: existingContent } = await supabase
+  const { data: existingContent, error: existingError } = await supabase
     .from("site_content")
     .select("content_key, content, default_value, category")
     .eq("id", id)
-    .single()
+    .maybeSingle()
 
-  if (!existingContent?.default_value) {
+  if (existingError) {
+    console.error("Error fetching site content:", existingError)
+    return { error: existingError.message }
+  }
+
+  if (!existingContent) {
+    return { error: "Content not found" }
+  }
+
+  if (!existingContent.default_value) {
     return { error: "No default value available" }
   }
 
   // Reset to default
-  const { error } = await supabase
+  const { data: updated, error } = await supabase
     .from("site_content")
     .update({
       content: existingContent.default_value,
@@ -134,10 +155,16 @@ export async function resetSiteContentToDefault(
       updated_at: new Date().toISOString(),
     })
     .eq("id", id)
+    .select("id")
+    .maybeSingle()
 
   if (error) {
     console.error("Error resetting site content:", error)
     return { error: error.message }
+  }
+
+  if (!updated) {
+    return { error: "Content not found" }
   }
 
   // Log audit event
@@ -149,8 +176,8 @@ export async function resetSiteContentToDefault(
     details: {
       content_key: existingContent.content_key,
       category: existingContent.category,
-      previous_content: existingContent.content?.substring(0, 100),
-      reset_to: existingContent.default_value.substring(0, 100),
+      previous_content: existingContent.content?.slice(0, 100),
+      reset_to: existingContent.default_value.slice(0, 100),
     },
   })
 

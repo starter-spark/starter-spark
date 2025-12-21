@@ -15,10 +15,11 @@ async function getBanner(id: string) {
     .from("site_banners")
     .select("*")
     .eq("id", id)
-    .single()
+    .maybeSingle()
 
-  if (error || !data) {
-    return null
+  if (error) {
+    console.error("Error fetching banner:", error)
+    throw new Error("Failed to load banner")
   }
 
   return data

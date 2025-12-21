@@ -1,8 +1,14 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
-import { Button } from "@/components/ui/button"
-import { ArrowLeft } from "lucide-react"
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb"
 import { CourseEditor } from "./CourseEditor"
 
 export const metadata = {
@@ -94,10 +100,14 @@ async function getCourse(courseId: string): Promise<Course | null> {
       )
     `)
     .eq("id", courseId)
-    .single()
+    .maybeSingle()
 
-  if (error || !data) {
+  if (error) {
     console.error("Error fetching course:", error)
+    throw new Error("Failed to load course")
+  }
+
+  if (!data) {
     return null
   }
 
@@ -118,7 +128,7 @@ async function getCourse(courseId: string): Promise<Course | null> {
     description: data.description,
     difficulty: data.difficulty,
     duration_minutes: data.duration_minutes,
-    is_published: data.is_published as boolean,
+    is_published: data.is_published!,
     icon: data.icon,
     cover_image_url: data.cover_image_url,
     product: data.product as Course["product"],
@@ -142,23 +152,37 @@ export default async function EditCoursePage({
 
   return (
     <div className="space-y-6">
+      {/* Breadcrumb */}
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild>
+              <Link href="/admin">Admin</Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild>
+              <Link href="/admin/learn">Learn</Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>{course.title}</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <Button asChild variant="ghost" size="icon">
-          <Link href="/admin/learn" aria-label="Back to courses">
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
-        </Button>
-        <div className="flex-1">
-          <h1 className="font-mono text-2xl font-bold text-slate-900">
-            {course.title}
-          </h1>
-          <p className="text-slate-600">
-            {course.product?.name || "No product"} &middot;{" "}
-            {course.modules.length} modules &middot;{" "}
-            {course.modules.reduce((acc, m) => acc + m.lessons.length, 0)} lessons
-          </p>
-        </div>
+      <div>
+        <h1 className="font-mono text-2xl font-bold text-slate-900">
+          {course.title}
+        </h1>
+        <p className="text-slate-600">
+          {course.product?.name || "No product"} &middot;{" "}
+          {course.modules.length} modules &middot;{" "}
+          {course.modules.reduce((acc, m) => acc + m.lessons.length, 0)} lessons
+        </p>
       </div>
 
       {/* Course Editor */}

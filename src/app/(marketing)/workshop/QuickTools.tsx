@@ -16,7 +16,7 @@ export function QuickTools() {
         <h3 className="font-mono text-lg text-slate-900 mb-4">Quick Tools</h3>
         <div className="space-y-3">
           <button
-            onClick={() => setShowServoCalc(true)}
+            onClick={() => { setShowServoCalc(true); }}
             className="cursor-pointer w-full flex items-center gap-3 p-3 rounded border border-slate-200 hover:border-cyan-700 hover:bg-slate-50 transition-colors text-left"
           >
             <Calculator className="w-5 h-5 text-cyan-700" />
@@ -28,7 +28,7 @@ export function QuickTools() {
             </div>
           </button>
           <button
-            onClick={() => setShowPinout(true)}
+            onClick={() => { setShowPinout(true); }}
             className="cursor-pointer w-full flex items-center gap-3 p-3 rounded border border-slate-200 hover:border-cyan-700 hover:bg-slate-50 transition-colors text-left"
           >
             <Cpu className="w-5 h-5 text-cyan-700" />
@@ -55,8 +55,8 @@ export function QuickTools() {
       </div>
 
       {/* Modals */}
-      <ServoCalculator isOpen={showServoCalc} onClose={() => setShowServoCalc(false)} />
-      <ArduinoPinout isOpen={showPinout} onClose={() => setShowPinout(false)} />
+      <ServoCalculator isOpen={showServoCalc} onClose={() => { setShowServoCalc(false); }} />
+      <ArduinoPinout isOpen={showPinout} onClose={() => { setShowPinout(false); }} />
     </>
   )
 }

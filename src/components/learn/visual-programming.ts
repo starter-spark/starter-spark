@@ -11,13 +11,14 @@ export type VisualBlockType =
   | "analog_write"
   | "serial_print"
 
-export type VisualNodeData = {
+export interface VisualNodeData {
   blockType?: VisualBlockType
   label?: string
   params?: Record<string, unknown>
+  [key: string]: unknown
 }
 
-export type FlowState = {
+export interface FlowState {
   nodes: Node<VisualNodeData>[]
   edges: Edge[]
 }
@@ -224,20 +225,16 @@ export function generateArduinoCode(nodes: Node<VisualNodeData>[], edges: Edge[]
   const body: string[] = []
   body.push(...header)
   if (globals.length) {
-    body.push(...globals)
-    body.push("")
+    body.push(...globals, "")
   }
 
   body.push("void setup() {")
   if (setupLines.length === 0) body.push("  // setup")
   else body.push(...setupLines.map((l) => `  ${l}`))
-  body.push("}")
-  body.push("")
-  body.push("void loop() {")
+  body.push("}", "", "void loop() {")
   if (loopLines.length === 0) body.push("  // loop")
   else body.push(...loopLines.map((l) => `  ${l}`))
-  body.push("}")
-  body.push("")
+  body.push("}", "")
 
   return body.join("\n")
 }

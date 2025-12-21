@@ -138,7 +138,7 @@ export function SiteStatsManager({ stats: initialStats }: SiteStatsManagerProps)
 
     startTransition(async () => {
       const result = await createSiteStat({
-        key: newKey.toLowerCase().replace(/\s+/g, "_"),
+        key: newKey.toLowerCase().replaceAll(/\s+/g, "_"),
         value: newValue,
         label: newLabel,
         suffix: newSuffix,
@@ -159,7 +159,7 @@ export function SiteStatsManager({ stats: initialStats }: SiteStatsManagerProps)
         setIsAdding(false)
         setError(null)
         // Note: Page will revalidate and show new stat
-        window.location.reload()
+        globalThis.location.reload()
       }
     })
   }
@@ -177,7 +177,7 @@ export function SiteStatsManager({ stats: initialStats }: SiteStatsManagerProps)
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setIsAdding(true)}
+            onClick={() => { setIsAdding(true); }}
             disabled={isAdding}
           >
             <Plus className="mr-2 h-4 w-4" />
@@ -203,7 +203,7 @@ export function SiteStatsManager({ stats: initialStats }: SiteStatsManagerProps)
                   </label>
                   <Input
                     value={newKey}
-                    onChange={(e) => setNewKey(e.target.value)}
+                    onChange={(e) => { setNewKey(e.target.value); }}
                     placeholder="kits_deployed"
                     className="text-sm"
                   />
@@ -214,7 +214,7 @@ export function SiteStatsManager({ stats: initialStats }: SiteStatsManagerProps)
                   </label>
                   <Input
                     value={newLabel}
-                    onChange={(e) => setNewLabel(e.target.value)}
+                    onChange={(e) => { setNewLabel(e.target.value); }}
                     placeholder="Kits Deployed"
                     className="text-sm"
                   />
@@ -226,7 +226,7 @@ export function SiteStatsManager({ stats: initialStats }: SiteStatsManagerProps)
                   <Input
                     type="number"
                     value={newValue}
-                    onChange={(e) => setNewValue(parseInt(e.target.value) || 0)}
+                    onChange={(e) => { setNewValue(Number.parseInt(e.target.value) || 0); }}
                     className="text-sm"
                   />
                 </div>
@@ -236,7 +236,7 @@ export function SiteStatsManager({ stats: initialStats }: SiteStatsManagerProps)
                   </label>
                   <Input
                     value={newSuffix}
-                    onChange={(e) => setNewSuffix(e.target.value)}
+                    onChange={(e) => { setNewSuffix(e.target.value); }}
                     placeholder="+ or %"
                     className="text-sm"
                   />
@@ -259,7 +259,7 @@ export function SiteStatsManager({ stats: initialStats }: SiteStatsManagerProps)
                   {newIsAuto && (
                     <Select
                       value={newAutoSource || ""}
-                      onValueChange={(value) => setNewAutoSource(value)}
+                      onValueChange={(value) => { setNewAutoSource(value); }}
                     >
                       <SelectTrigger className="w-[200px] text-sm">
                         <SelectValue placeholder="Select data source" />
@@ -291,7 +291,7 @@ export function SiteStatsManager({ stats: initialStats }: SiteStatsManagerProps)
                   </Button>
                   <Button
                     size="sm"
-                    onClick={() => handleCreate()}
+                    onClick={() => { handleCreate(); }}
                     disabled={isPending}
                     className="bg-cyan-700 hover:bg-cyan-600"
                   >
@@ -323,7 +323,7 @@ export function SiteStatsManager({ stats: initialStats }: SiteStatsManagerProps)
                       </label>
                       <Input
                         value={editLabel}
-                        onChange={(e) => setEditLabel(e.target.value)}
+                        onChange={(e) => { setEditLabel(e.target.value); }}
                         className="text-sm"
                       />
                     </div>
@@ -335,7 +335,7 @@ export function SiteStatsManager({ stats: initialStats }: SiteStatsManagerProps)
                         type="number"
                         value={editValue}
                         onChange={(e) =>
-                          setEditValue(parseInt(e.target.value) || 0)
+                          { setEditValue(Number.parseInt(e.target.value) || 0); }
                         }
                         className="text-sm"
                         disabled={editIsAuto}
@@ -347,7 +347,7 @@ export function SiteStatsManager({ stats: initialStats }: SiteStatsManagerProps)
                       </label>
                       <Input
                         value={editSuffix}
-                        onChange={(e) => setEditSuffix(e.target.value)}
+                        onChange={(e) => { setEditSuffix(e.target.value); }}
                         placeholder="+ or %"
                         className="text-sm"
                       />
@@ -370,7 +370,7 @@ export function SiteStatsManager({ stats: initialStats }: SiteStatsManagerProps)
                       {editIsAuto && (
                         <Select
                           value={editAutoSource || ""}
-                          onValueChange={(value) => setEditAutoSource(value)}
+                          onValueChange={(value) => { setEditAutoSource(value); }}
                         >
                           <SelectTrigger className="w-[180px] text-sm">
                             <SelectValue placeholder="Select source" />
@@ -399,7 +399,7 @@ export function SiteStatsManager({ stats: initialStats }: SiteStatsManagerProps)
                       </Button>
                       <Button
                         size="icon"
-                        onClick={() => handleUpdate(stat.id)}
+                        onClick={() => { handleUpdate(stat.id); }}
                         disabled={isPending || (editIsAuto && !editAutoSource)}
                         className="bg-cyan-700 hover:bg-cyan-600"
                       >
@@ -449,14 +449,14 @@ export function SiteStatsManager({ stats: initialStats }: SiteStatsManagerProps)
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => startEditing(stat)}
+                      onClick={() => { startEditing(stat); }}
                     >
                       <Pencil className="h-4 w-4" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => handleDelete(stat.id)}
+                      onClick={() => { handleDelete(stat.id); }}
                       className="text-red-600 hover:text-red-700 hover:bg-red-50"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -472,7 +472,7 @@ export function SiteStatsManager({ stats: initialStats }: SiteStatsManagerProps)
               <p>No stats configured yet.</p>
               <Button
                 variant="link"
-                onClick={() => setIsAdding(true)}
+                onClick={() => { setIsAdding(true); }}
                 className="mt-2 text-cyan-700"
               >
                 Add your first stat

@@ -5,18 +5,22 @@ import { createClient } from "@/lib/supabase/server"
 import { supabaseAdmin } from "@/lib/supabase/admin"
 import { logAuditEvent } from "@/lib/audit"
 import { rateLimitAction } from "@/lib/rate-limit"
+import { requireAdmin, requireAdminOrStaff } from "@/lib/auth"
 
 export async function updatePostStatus(
   postId: string,
   status: string
 ): Promise<{ error: string | null }> {
+  const validStatuses = ["published", "pending", "flagged"] as const
+  if (!validStatuses.includes(status as (typeof validStatuses)[number])) {
+    return { error: "Invalid status" }
+  }
+
   const supabase = await createClient()
 
-  // Check if user is admin/staff
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return { error: "Unauthorized" }
-  }
+  const guard = await requireAdminOrStaff(supabase)
+  if (!guard.ok) return { error: guard.error }
+  const user = guard.user
 
   // Rate limit admin actions
   const rateLimitResult = await rateLimitAction(user.id, "adminMutation")
@@ -24,33 +28,38 @@ export async function updatePostStatus(
     return { error: rateLimitResult.error || "Rate limited" }
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single()
-
-  if (!profile || (profile.role !== "admin" && profile.role !== "staff")) {
-    return { error: "Unauthorized" }
-  }
-
   // Get the post's current status for audit log
-  const { data: post } = await supabaseAdmin
+  const { data: post, error: postError } = await supabaseAdmin
     .from("posts")
     .select("status, title")
     .eq("id", postId)
-    .single()
+    .maybeSingle()
+
+  if (postError) {
+    console.error("Error fetching post:", postError)
+    return { error: postError.message }
+  }
+
+  if (!post) {
+    return { error: "Post not found" }
+  }
 
   const oldStatus = post?.status || "unknown"
 
-  const { error } = await supabaseAdmin
+  const { data: updatedPost, error: updateError } = await supabaseAdmin
     .from("posts")
     .update({ status, updated_at: new Date().toISOString() })
     .eq("id", postId)
+    .select("id")
+    .maybeSingle()
 
-  if (error) {
-    console.error("Error updating post status:", error)
-    return { error: error.message }
+  if (updateError) {
+    console.error("Error updating post status:", updateError)
+    return { error: updateError.message }
+  }
+
+  if (!updatedPost) {
+    return { error: "Post not found" }
   }
 
   // Log the status change to audit log
@@ -74,11 +83,11 @@ export async function updatePostStatus(
 export async function deletePost(postId: string): Promise<{ error: string | null }> {
   const supabase = await createClient()
 
-  // Check if user is admin
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return { error: "Unauthorized" }
+  const guard = await requireAdmin(supabase)
+  if (!guard.ok) {
+    return { error: guard.user ? "Only admins can delete posts" : guard.error }
   }
+  const user = guard.user
 
   // Rate limit admin actions
   const rateLimitResult = await rateLimitAction(user.id, "adminMutation")
@@ -86,44 +95,31 @@ export async function deletePost(postId: string): Promise<{ error: string | null
     return { error: rateLimitResult.error || "Rate limited" }
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single()
-
-  if (!profile || profile.role !== "admin") {
-    return { error: "Only admins can delete posts" }
-  }
-
-  // Get post info for audit log before deleting
-  const { data: post } = await supabaseAdmin
-    .from("posts")
-    .select("title, author_id")
-    .eq("id", postId)
-    .single()
-
-  // Get comment IDs first
-  const { data: comments } = await supabaseAdmin
+  const { count: commentCount, error: countError } = await supabaseAdmin
     .from("comments")
-    .select("id")
+    .select("id", { count: "exact", head: true })
     .eq("post_id", postId)
 
-  const commentCount = comments?.length || 0
-
-  // Delete related data
-  if (comments && comments.length > 0) {
-    const commentIds = comments.map((c) => c.id)
-    await supabaseAdmin.from("comment_votes").delete().in("comment_id", commentIds)
+  if (countError) {
+    console.error("Error counting comments:", countError)
+    return { error: countError.message }
   }
-  await supabaseAdmin.from("comments").delete().eq("post_id", postId)
-  await supabaseAdmin.from("post_votes").delete().eq("post_id", postId)
 
-  const { error } = await supabaseAdmin.from("posts").delete().eq("id", postId)
+  // Delete the post and rely on DB ON DELETE CASCADE to clean up comments/votes.
+  const { data: deletedPost, error: deleteError } = await supabaseAdmin
+    .from("posts")
+    .delete()
+    .eq("id", postId)
+    .select("id, title, author_id")
+    .maybeSingle()
 
-  if (error) {
-    console.error("Error deleting post:", error)
-    return { error: error.message }
+  if (deleteError) {
+    console.error("Error deleting post:", deleteError)
+    return { error: deleteError.message }
+  }
+
+  if (!deletedPost) {
+    return { error: "Post not found" }
   }
 
   // Log the deletion to audit log
@@ -133,9 +129,9 @@ export async function deletePost(postId: string): Promise<{ error: string | null
     resourceType: "post",
     resourceId: postId,
     details: {
-      postTitle: post?.title,
-      authorId: post?.author_id,
-      commentsDeleted: commentCount,
+      postTitle: deletedPost.title,
+      authorId: deletedPost.author_id,
+      commentsDeleted: commentCount || 0,
     },
   })
 

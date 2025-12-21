@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache"
 import { createClient } from "@/lib/supabase/server"
 import { logAuditEvent } from "@/lib/audit"
+import { supabaseAdmin } from "@/lib/supabase/admin"
+import { requireAdminOrStaff } from "@/lib/auth"
 
 interface UpdateContentData {
   title: string
@@ -16,32 +18,29 @@ export async function updatePageContent(
 ): Promise<{ error: string | null }> {
   const supabase = await createClient()
 
-  // Check if user is admin/staff
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return { error: "Unauthorized" }
-  }
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single()
-
-  if (!profile || (profile.role !== "admin" && profile.role !== "staff")) {
-    return { error: "Unauthorized" }
-  }
+  const guard = await requireAdminOrStaff(supabase)
+  if (!guard.ok) return { error: guard.error }
+  const user = guard.user
 
   // Get current content to check version
-  const { data: existing } = await supabase
+  const { data: existing, error: existingError } = await supabaseAdmin
     .from("page_content")
     .select("version")
     .eq("page_key", pageKey)
-    .single()
+    .maybeSingle()
+
+  if (existingError) {
+    console.error("Error fetching page content version:", existingError)
+    return { error: existingError.message }
+  }
+
+  if (!existing) {
+    return { error: "Page not found" }
+  }
 
   const newVersion = (existing?.version || 0) + 1
 
-  const { error } = await supabase
+  const { data: updated, error } = await supabaseAdmin
     .from("page_content")
     .update({
       title: data.title,
@@ -53,10 +52,16 @@ export async function updatePageContent(
       ...(data.publish ? { published_at: new Date().toISOString() } : {}),
     })
     .eq("page_key", pageKey)
+    .select("page_key")
+    .maybeSingle()
 
   if (error) {
     console.error("Error updating page content:", error)
     return { error: error.message }
+  }
+
+  if (!updated) {
+    return { error: "Page not found" }
   }
 
   // Log audit event
@@ -85,23 +90,11 @@ export async function unpublishPageContent(
 ): Promise<{ error: string | null }> {
   const supabase = await createClient()
 
-  // Check if user is admin/staff
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return { error: "Unauthorized" }
-  }
+  const guard = await requireAdminOrStaff(supabase)
+  if (!guard.ok) return { error: guard.error }
+  const user = guard.user
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single()
-
-  if (!profile || (profile.role !== "admin" && profile.role !== "staff")) {
-    return { error: "Unauthorized" }
-  }
-
-  const { error } = await supabase
+  const { data: updated, error } = await supabaseAdmin
     .from("page_content")
     .update({
       published_at: null,
@@ -109,10 +102,16 @@ export async function unpublishPageContent(
       updated_at: new Date().toISOString(),
     })
     .eq("page_key", pageKey)
+    .select("page_key")
+    .maybeSingle()
 
   if (error) {
     console.error("Error unpublishing page:", error)
     return { error: error.message }
+  }
+
+  if (!updated) {
+    return { error: "Page not found" }
   }
 
   // Log audit event
@@ -131,17 +130,17 @@ export async function unpublishPageContent(
 }
 
 // Reserved slugs that cannot be used for custom pages
-const RESERVED_SLUGS = [
+const RESERVED_SLUGS = new Set([
   "shop", "about", "events", "community", "learn", "workshop",
   "cart", "login", "privacy", "terms", "admin", "api", "auth",
   "checkout", "claim", "new", "team"
-]
+])
 
 function generateSlug(title: string): string {
   return title
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
+    .replaceAll(/[^a-z0-9]+/g, "-")
+    .replaceAll(/^-|-$/g, "")
     .slice(0, 50)
 }
 
@@ -159,21 +158,9 @@ export async function createCustomPage(
 ): Promise<{ error: string | null; pageKey?: string }> {
   const supabase = await createClient()
 
-  // Check if user is admin/staff
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return { error: "Unauthorized" }
-  }
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single()
-
-  if (!profile || (profile.role !== "admin" && profile.role !== "staff")) {
-    return { error: "Unauthorized" }
-  }
+  const guard = await requireAdminOrStaff(supabase)
+  if (!guard.ok) return { error: guard.error }
+  const user = guard.user
 
   // Validate slug
   const slug = data.slug || generateSlug(data.title)
@@ -182,17 +169,22 @@ export async function createCustomPage(
     return { error: "Slug is required" }
   }
 
-  if (RESERVED_SLUGS.includes(slug)) {
+  if (RESERVED_SLUGS.has(slug)) {
     return { error: `The slug "${slug}" is reserved and cannot be used` }
   }
 
   // Check if slug already exists
-  const { data: existing } = await supabase
+  const { data: existing, error: existingError } = await supabaseAdmin
     .from("page_content")
     .select("id")
     .eq("slug", slug)
     .eq("is_custom_page", true)
     .maybeSingle()
+
+  if (existingError) {
+    console.error("Error checking slug availability:", existingError)
+    return { error: existingError.message }
+  }
 
   if (existing) {
     return { error: `A page with the slug "${slug}" already exists` }
@@ -201,7 +193,7 @@ export async function createCustomPage(
   // Generate a unique page_key for custom pages
   const pageKey = `custom_${slug}`
 
-  const { error } = await supabase
+  const { error } = await supabaseAdmin
     .from("page_content")
     .insert({
       page_key: pageKey,
@@ -246,41 +238,44 @@ export async function deleteCustomPage(
 ): Promise<{ error: string | null }> {
   const supabase = await createClient()
 
-  // Check if user is admin/staff
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return { error: "Unauthorized" }
-  }
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single()
-
-  if (!profile || (profile.role !== "admin" && profile.role !== "staff")) {
-    return { error: "Unauthorized" }
-  }
+  const guard = await requireAdminOrStaff(supabase)
+  if (!guard.ok) return { error: guard.error }
+  const user = guard.user
 
   // Verify it's a custom page before deleting
-  const { data: page } = await supabase
+  const { data: page, error: pageError } = await supabaseAdmin
     .from("page_content")
     .select("is_custom_page, slug")
     .eq("page_key", pageKey)
-    .single()
+    .maybeSingle()
+
+  if (pageError) {
+    console.error("Error fetching page:", pageError)
+    return { error: pageError.message }
+  }
+
+  if (!page) {
+    return { error: "Page not found" }
+  }
 
   if (!page?.is_custom_page) {
     return { error: "Cannot delete system pages" }
   }
 
-  const { error } = await supabase
+  const { data: deleted, error } = await supabaseAdmin
     .from("page_content")
     .delete()
     .eq("page_key", pageKey)
+    .select("page_key")
+    .maybeSingle()
 
   if (error) {
     console.error("Error deleting custom page:", error)
     return { error: error.message }
+  }
+
+  if (!deleted) {
+    return { error: "Page not found" }
   }
 
   // Log audit event
@@ -310,18 +305,26 @@ export async function checkSlugAvailability(
     return { available: false, error: "Slug is required" }
   }
 
-  if (RESERVED_SLUGS.includes(slug)) {
+  if (RESERVED_SLUGS.has(slug)) {
     return { available: false, error: `"${slug}" is a reserved slug` }
   }
 
   const supabase = await createClient()
 
-  const { data: existing } = await supabase
+  const guard = await requireAdminOrStaff(supabase)
+  if (!guard.ok) return { available: false, error: guard.error }
+
+  const { data: existing, error } = await supabaseAdmin
     .from("page_content")
     .select("id")
     .eq("slug", slug)
     .eq("is_custom_page", true)
     .maybeSingle()
+
+  if (error) {
+    console.error("Error checking slug availability:", error)
+    return { available: false, error: error.message }
+  }
 
   if (existing) {
     return { available: false, error: "This slug is already in use" }

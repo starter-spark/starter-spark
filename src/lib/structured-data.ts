@@ -61,9 +61,9 @@ export function getProductSchema(product: {
       "@type": "Offer",
       price: product.price,
       priceCurrency: "USD",
-      availability: product.inStock !== false
-        ? "https://schema.org/InStock"
-        : "https://schema.org/OutOfStock",
+      availability: product.inStock === false
+        ? "https://schema.org/OutOfStock"
+        : "https://schema.org/InStock",
       seller: {
         "@type": "Organization",
         name: siteConfig.name,

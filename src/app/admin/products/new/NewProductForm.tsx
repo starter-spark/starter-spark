@@ -26,8 +26,8 @@ export function NewProductForm() {
   const generateSlug = (name: string) => {
     return name
       .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-|-$/g, "")
+      .replaceAll(/[^a-z0-9]+/g, "-")
+      .replaceAll(/^-|-$/g, "")
   }
 
   const handleNameChange = (value: string) => {
@@ -61,11 +61,11 @@ export function NewProductForm() {
 
     // Convert specs array to object
     const specsObject: Record<string, string> = {}
-    specs.forEach((spec) => {
+    for (const spec of specs) {
       if (spec.key.trim()) {
         specsObject[spec.key.trim()] = spec.value.trim()
       }
-    })
+    }
 
     startTransition(async () => {
       const result = await createProduct({
@@ -95,7 +95,7 @@ export function NewProductForm() {
   }
 
   return (
-    <form onSubmit={(e) => void handleSubmit(e)} className="space-y-6">
+    <form onSubmit={(e) => { handleSubmit(e); }} className="space-y-6">
       {error && (
         <div className="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-600">
           {error}
@@ -117,7 +117,7 @@ export function NewProductForm() {
               <Input
                 id="name"
                 value={name}
-                onChange={(e) => handleNameChange(e.target.value)}
+                onChange={(e) => { handleNameChange(e.target.value); }}
                 required
               />
             </div>
@@ -128,7 +128,7 @@ export function NewProductForm() {
               <Input
                 id="slug"
                 value={slug}
-                onChange={(e) => setSlug(e.target.value)}
+                onChange={(e) => { setSlug(e.target.value); }}
                 required
                 pattern="[a-z0-9\-]+"
                 title="Lowercase letters, numbers, and hyphens only"
@@ -142,7 +142,7 @@ export function NewProductForm() {
             <textarea
               id="description"
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={(e) => { setDescription(e.target.value); }}
               className="min-h-[100px] w-full rounded-md border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-700 focus:ring-offset-2"
             />
           </div>
@@ -166,7 +166,7 @@ export function NewProductForm() {
                 type="number"
                 min="0"
                 value={priceCents}
-                onChange={(e) => setPriceCents(parseInt(e.target.value) || 0)}
+                onChange={(e) => { setPriceCents(Number.parseInt(e.target.value) || 0); }}
                 required
               />
               <p className="text-xs text-slate-500">
@@ -180,7 +180,7 @@ export function NewProductForm() {
               <Input
                 id="stripe"
                 value={stripePriceId}
-                onChange={(e) => setStripePriceId(e.target.value)}
+                onChange={(e) => { setStripePriceId(e.target.value); }}
                 placeholder="price_..."
               />
             </div>
@@ -212,20 +212,20 @@ export function NewProductForm() {
                   <Input
                     placeholder="Key"
                     value={spec.key}
-                    onChange={(e) => handleSpecChange(index, "key", e.target.value)}
+                    onChange={(e) => { handleSpecChange(index, "key", e.target.value); }}
                     className="flex-1"
                   />
                   <Input
                     placeholder="Value"
                     value={spec.value}
-                    onChange={(e) => handleSpecChange(index, "value", e.target.value)}
+                    onChange={(e) => { handleSpecChange(index, "value", e.target.value); }}
                     className="flex-1"
                   />
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon"
-                    onClick={() => handleRemoveSpec(index)}
+                    onClick={() => { handleRemoveSpec(index); }}
                   >
                     <X className="h-4 w-4" />
                   </Button>
@@ -242,7 +242,7 @@ export function NewProductForm() {
         <Button
           type="button"
           variant="outline"
-          onClick={() => router.push("/admin/products")}
+          onClick={() => { router.push("/admin/products"); }}
         >
           Cancel
         </Button>

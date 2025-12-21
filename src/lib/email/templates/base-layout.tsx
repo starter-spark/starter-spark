@@ -12,8 +12,8 @@ import {
 import * as React from "react"
 
 interface BaseLayoutProps {
-  preview: string
-  children: React.ReactNode
+  readonly preview: string
+  readonly children: React.ReactNode
 }
 
 const baseUrl =

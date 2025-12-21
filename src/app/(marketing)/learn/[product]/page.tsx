@@ -27,7 +27,23 @@ export default async function CoursePage({
   const { product: productSlug } = await params
   const supabase = await createClient()
 
-  // Fetch course with full curriculum from database
+  // First fetch the product by slug
+  const { data: product, error: productError } = await supabase
+    .from("products")
+    .select("id, slug, name")
+    .eq("slug", productSlug)
+    .maybeSingle()
+
+  if (productError) {
+    console.error("Error fetching product:", productError)
+    throw new Error("Failed to load product")
+  }
+
+  if (!product) {
+    notFound()
+  }
+
+  // Then fetch the course by product_id
   const { data: course, error } = await supabase
     .from("courses")
     .select(`
@@ -37,44 +53,39 @@ export default async function CoursePage({
       difficulty,
       duration_minutes,
       is_published,
-      product:products (
-        id,
-        slug,
-        name
-      ),
       modules (
         id,
         title,
         description,
         is_published,
         sort_order,
-	        lessons (
-	          id,
-	          slug,
-	          title,
-	          description,
-	          is_published,
-	          is_optional,
-	          duration_minutes,
-	          sort_order
-	        )
-	      )
+        lessons (
+          id,
+          slug,
+          title,
+          description,
+          is_published,
+          is_optional,
+          duration_minutes,
+          sort_order
+        )
+      )
     `)
-    .eq("products.slug", productSlug)
+    .eq("product_id", product.id)
     .eq("is_published", true)
-    .single()
+    .maybeSingle()
 
-  if (error || !course) {
-    notFound()
+  if (error) {
+    console.error("Error fetching course:", error)
+    throw new Error("Failed to load course")
   }
 
-  const product = course.product as unknown as { id: string; slug: string; name: string } | null
-  if (!product) {
+  if (!course) {
     notFound()
   }
 
   // Sort modules and lessons by sort_order
-	  type ModuleWithLessons = {
+	  interface ModuleWithLessons {
 	    id: string
 	    title: string
 	    description: string | null

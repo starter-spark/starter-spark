@@ -6,10 +6,10 @@ Sentry.init({
   // Adds request headers and IP for users
   sendDefaultPii: true,
 
-  tracesSampleRate: process.env.NODE_ENV === "production" ? 0.1 : 1.0,
+  tracesSampleRate: process.env.NODE_ENV === "production" ? 0.1 : 1,
 
   replaysSessionSampleRate: 0.1,
-  replaysOnErrorSampleRate: 1.0,
+  replaysOnErrorSampleRate: 1,
 
   integrations: [
     Sentry.replayIntegration({

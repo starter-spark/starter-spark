@@ -1,8 +1,14 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
-import { Button } from "@/components/ui/button"
-import { ArrowLeft } from "lucide-react"
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb"
 import { LessonEditor } from "./LessonEditor"
 
 export const metadata = {
@@ -36,7 +42,7 @@ interface Lesson {
   }
 }
 
-async function getLesson(lessonId: string): Promise<Lesson | null> {
+async function getLesson(courseId: string, lessonId: string): Promise<Lesson | null> {
   const supabase = await createClient()
 
   const { data, error } = await supabase
@@ -70,16 +76,24 @@ async function getLesson(lessonId: string): Promise<Lesson | null> {
       )
     `)
     .eq("id", lessonId)
-    .single()
+    .maybeSingle()
 
-  if (error || !data) {
+  if (error) {
     console.error("Error fetching lesson:", error)
+    throw new Error("Failed to load lesson")
+  }
+
+  if (!data) {
     return null
   }
 
   const moduleData = data.module as { id: string; title: string; course: { id: string; title: string } | null } | null
 
   if (!moduleData?.course) {
+    return null
+  }
+
+  if (moduleData.course.id !== courseId) {
     return null
   }
 
@@ -99,11 +113,11 @@ async function getLesson(lessonId: string): Promise<Lesson | null> {
 	    title: data.title,
 	    slug: data.slug,
     description: data.description,
-    lesson_type: (data.lesson_type as string) || "content",
-    difficulty: (data.difficulty as string) || "beginner",
-    estimated_minutes: (data.estimated_minutes as number) || 15,
-    is_published: data.is_published as boolean,
-    is_optional: data.is_optional as boolean,
+    lesson_type: (data.lesson_type!) || "content",
+    difficulty: (data.difficulty!) || "beginner",
+    estimated_minutes: (data.estimated_minutes!) || 15,
+    is_published: data.is_published!,
+    is_optional: data.is_optional!,
     prerequisites: data.prerequisites ?? null,
 	    sort_order: data.sort_order,
 	    content: lessonContent?.content || "",
@@ -141,12 +155,12 @@ async function getAvailableLessons(courseId: string): Promise<{ id: string; titl
     )
     .eq("course_id", courseId)
 
-  if (error || !data) {
+  if (error) {
     console.error("Error fetching course lessons:", error)
-    return []
+    throw new Error("Failed to load course lessons")
   }
 
-  const lessons = data.flatMap((m) => (m.lessons || []) as { id: string; title: string }[])
+  const lessons = (data ?? []).flatMap((m) => (m.lessons || []) as { id: string; title: string }[])
   return lessons
 }
 
@@ -156,7 +170,7 @@ export default async function EditLessonPage({
   params: Promise<{ courseId: string; lessonId: string }>
 }) {
   const { courseId, lessonId } = await params
-  const lesson = await getLesson(lessonId)
+  const lesson = await getLesson(courseId, lessonId)
   const availableLessons = await getAvailableLessons(courseId)
 
   if (!lesson) {
@@ -165,21 +179,39 @@ export default async function EditLessonPage({
 
   return (
     <div className="space-y-6">
+      {/* Breadcrumb */}
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild>
+              <Link href="/admin">Admin</Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild>
+              <Link href="/admin/learn">Learn</Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild>
+              <Link href={`/admin/learn/${courseId}`}>{lesson.module.course.title}</Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>{lesson.title}</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <Button asChild variant="ghost" size="icon">
-          <Link href={`/admin/learn/${courseId}`} aria-label="Back to course">
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
-        </Button>
-        <div className="flex-1">
-          <div className="text-sm text-slate-500 mb-1">
-            {lesson.module.course.title} / {lesson.module.title}
-          </div>
-          <h1 className="font-mono text-2xl font-bold text-slate-900">
-            {lesson.title}
-          </h1>
-        </div>
+      <div>
+        <p className="text-sm text-slate-500 mb-1">{lesson.module.title}</p>
+        <h1 className="font-mono text-2xl font-bold text-slate-900">
+          {lesson.title}
+        </h1>
       </div>
 
       {/* Lesson Editor */}

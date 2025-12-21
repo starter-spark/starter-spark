@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
-import { submitContactForm, ContactFormData } from "./actions"
+import { submitContactForm, type ContactFormData } from "./actions"
 import { Send, CheckCircle2, AlertCircle, Loader2, Upload, X, FileVideo } from "lucide-react"
 import Link from "next/link"
 
@@ -190,7 +190,7 @@ export function ContactForm() {
 
       if (response.success) {
         // Clean up previews
-	        filePreviews.forEach((p) => URL.revokeObjectURL(p.preview))
+	        for (const p of filePreviews) { URL.revokeObjectURL(p.preview); }
 	        setFilePreviews([])
 	        setAcceptedTerms(false)
 	        setFormData({
@@ -221,7 +221,7 @@ export function ContactForm() {
         </p>
         <Button
           variant="outline"
-          onClick={() => setResult(null)}
+          onClick={() => { setResult(null); }}
         >
           Send Another Message
         </Button>
@@ -251,7 +251,7 @@ export function ContactForm() {
             type="text"
             placeholder="Your name"
             value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            onChange={(e) => { setFormData({ ...formData, name: e.target.value }); }}
             required
             disabled={isSubmitting}
           />
@@ -264,7 +264,7 @@ export function ContactForm() {
             type="email"
             placeholder="your@email.com"
             value={formData.email}
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            onChange={(e) => { setFormData({ ...formData, email: e.target.value }); }}
             required
             disabled={isSubmitting}
           />
@@ -278,7 +278,7 @@ export function ContactForm() {
           type="text"
           placeholder="What is this regarding?"
           value={formData.subject}
-          onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+          onChange={(e) => { setFormData({ ...formData, subject: e.target.value }); }}
           required
           disabled={isSubmitting}
         />
@@ -290,7 +290,7 @@ export function ContactForm() {
           id="situation"
           placeholder="Please provide as much detail as possible about your question, issue, or request..."
           value={formData.situation}
-          onChange={(e) => setFormData({ ...formData, situation: e.target.value })}
+          onChange={(e) => { setFormData({ ...formData, situation: e.target.value }); }}
           required
           disabled={isSubmitting}
           rows={6}
@@ -375,7 +375,7 @@ export function ContactForm() {
         <Checkbox
           id="terms"
           checked={acceptedTerms}
-          onCheckedChange={(checked) => setAcceptedTerms(checked === true)}
+          onCheckedChange={(checked) => { setAcceptedTerms(checked === true); }}
           disabled={isSubmitting}
           className="mt-0.5"
         />

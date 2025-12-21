@@ -1,8 +1,9 @@
 "use client"
 
-import { useMemo, useRef, useState } from "react"
+import { useMemo, useRef, useState, useEffect, useCallback, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { Reorder, useDragControls } from "motion/react"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -15,6 +16,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import {
   Save,
   Trash2,
@@ -38,6 +55,7 @@ import { LessonContent } from "@/components/learn/LessonContent"
 import { CodeEditor } from "@/components/learn/CodeEditor"
 import { FlowEditor } from "@/components/learn/FlowEditor"
 import { VideoUploader } from "@/components/learn/VideoUploader"
+import { randomId } from "@/lib/random-id"
 
 type LessonBlock = Record<string, unknown> & {
   id: string
@@ -127,13 +145,6 @@ const blockTypeOptions: {
   { value: "visual_blocks", label: "Visual Blocks", icon: Blocks, description: "Visual blocks JSON" },
 ]
 
-function newId(): string {
-  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
-    return crypto.randomUUID()
-  }
-  return `${Date.now()}-${Math.random().toString(16).slice(2)}`
-}
-
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null
 }
@@ -152,7 +163,7 @@ function normalizeBlocks(raw: unknown, lesson: Lesson): LessonBlock[] {
     for (const item of raw) {
       if (!isRecord(item)) continue
       const type = typeof item.type === "string" ? item.type : "text"
-      const id = typeof item.id === "string" ? item.id : newId()
+      const id = typeof item.id === "string" ? item.id : randomId()
       fromDb.push({ id, type, ...item })
     }
   }
@@ -161,14 +172,14 @@ function normalizeBlocks(raw: unknown, lesson: Lesson): LessonBlock[] {
 
   const seeded: LessonBlock[] = []
   if (lesson.video_url) {
-    seeded.push({ id: newId(), type: "video", url: lesson.video_url })
+    seeded.push({ id: randomId(), type: "video", url: lesson.video_url })
   }
   if (lesson.content?.trim()) {
-    seeded.push({ id: newId(), type: "text", content: lesson.content })
+    seeded.push({ id: randomId(), type: "text", content: lesson.content })
   }
   if (lesson.lesson_type === "code_challenge" && lesson.code_starter) {
     seeded.push({
-      id: newId(),
+      id: randomId(),
       type: "interactive_code",
       language: "cpp",
       starterCode: lesson.code_starter,
@@ -179,7 +190,7 @@ function normalizeBlocks(raw: unknown, lesson: Lesson): LessonBlock[] {
 }
 
 function escapeMarkdown(text: string): string {
-  return text.replace(/\r\n/g, "\n").trim()
+  return text.replaceAll('\r\n', "\n").trim()
 }
 
 function blocksToLegacyFields(blocks: LessonBlock[]): {
@@ -208,8 +219,7 @@ function blocksToLegacyFields(blocks: LessonBlock[]): {
       if (typeof block.solutionCode === "string") codeSolution = block.solutionCode
       const lang = typeof block.language === "string" ? block.language : "cpp"
       parts.push("```" + lang)
-      parts.push(escapeMarkdown(codeStarter))
-      parts.push("```")
+      parts.push(escapeMarkdown(codeStarter), "```")
       continue
     }
 
@@ -229,16 +239,14 @@ function blocksToLegacyFields(blocks: LessonBlock[]): {
     if (type === "code" && typeof block.code === "string") {
       const lang = typeof block.language === "string" ? block.language : "text"
       parts.push("```" + lang)
-      parts.push(escapeMarkdown(block.code))
-      parts.push("```")
+      parts.push(escapeMarkdown(block.code), "```")
       continue
     }
 
     if (type === "callout" && typeof block.content === "string") {
       const variant = typeof block.variant === "string" ? block.variant : "info"
       parts.push(`:::${variant}`)
-      parts.push(escapeMarkdown(block.content))
-      parts.push(":::")
+      parts.push(escapeMarkdown(block.content), ":::")
       continue
     }
 
@@ -271,41 +279,41 @@ const builtInTemplates: { id: string; label: string; blocks: LessonBlock[] }[] =
     id: "basic-text",
     label: "Basic Text Lesson",
     blocks: [
-      { id: newId(), type: "heading", level: 1, content: "Overview" },
-      { id: newId(), type: "text", content: "Write your lesson content here (Markdown supported)." },
+      { id: randomId(), type: "heading", level: 1, content: "Overview" },
+      { id: randomId(), type: "text", content: "Write your lesson content here (Markdown supported)." },
     ],
   },
   {
     id: "code-tutorial",
     label: "Code Tutorial",
     blocks: [
-      { id: newId(), type: "heading", level: 1, content: "What You’ll Build" },
-      { id: newId(), type: "text", content: "Explain the goal, then walk through the code." },
-      { id: newId(), type: "code", language: "cpp", filename: "main.ino", code: "// your code here" },
+      { id: randomId(), type: "heading", level: 1, content: "What You’ll Build" },
+      { id: randomId(), type: "text", content: "Explain the goal, then walk through the code." },
+      { id: randomId(), type: "code", language: "cpp", filename: "main.ino", code: "// your code here" },
     ],
   },
   {
     id: "quiz",
     label: "Quiz",
     blocks: [
-      { id: newId(), type: "heading", level: 1, content: "Quick Check" },
-      { id: newId(), type: "quiz", question: "Question?", options: ["A", "B", "C"], correct: 0, explanation: "" },
+      { id: randomId(), type: "heading", level: 1, content: "Quick Check" },
+      { id: randomId(), type: "quiz", question: "Question?", options: ["A", "B", "C"], correct: 0, explanation: "" },
     ],
   },
   {
     id: "project",
     label: "Project Build",
     blocks: [
-      { id: newId(), type: "heading", level: 1, content: "Project" },
-      { id: newId(), type: "callout", variant: "tip", content: "Call out important constraints or tips." },
-      { id: newId(), type: "text", content: "Describe steps, deliverables, and evaluation criteria." },
+      { id: randomId(), type: "heading", level: 1, content: "Project" },
+      { id: randomId(), type: "callout", variant: "tip", content: "Call out important constraints or tips." },
+      { id: randomId(), type: "text", content: "Describe steps, deliverables, and evaluation criteria." },
     ],
   },
 ]
 
 export function LessonEditor({ lesson, courseId, availableLessons }: LessonEditorProps) {
   const router = useRouter()
-  const [saving, setSaving] = useState(false)
+  const [isPending, startTransition] = useTransition()
   const [deleting, setDeleting] = useState(false)
 
   const [lessonType, setLessonType] = useState(lesson.lesson_type || "content")
@@ -326,6 +334,52 @@ export function LessonEditor({ lesson, courseId, availableLessons }: LessonEdito
   const [templateId, setTemplateId] = useState<string>("")
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
+  // Track initial state for unsaved changes detection
+  const initialBlocksRef = useRef<string>(JSON.stringify(normalizeBlocks(lesson.content_blocks, lesson)))
+  const initialPrereqsRef = useRef<string>(JSON.stringify(lesson.prerequisites || []))
+
+  // Compute if there are unsaved changes
+  const hasUnsavedChanges = useMemo(() => {
+    const blocksChanged = JSON.stringify(blocks) !== initialBlocksRef.current
+    const prereqsChanged = JSON.stringify(prerequisites) !== initialPrereqsRef.current
+    return blocksChanged || prereqsChanged
+  }, [blocks, prerequisites])
+
+  // Warn before leaving page with unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges && !isPending && !deleting) {
+        e.preventDefault()
+        e.returnValue = ""
+      }
+    }
+
+    window.addEventListener("beforeunload", handleBeforeUnload)
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload)
+  }, [hasUnsavedChanges, isPending, deleting])
+
+  // Keyboard shortcut: Cmd/Ctrl+S to save
+  const formRef = useRef<HTMLFormElement>(null)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "s") {
+        e.preventDefault()
+        if (!isPending && formRef.current) {
+          formRef.current.requestSubmit()
+        }
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [isPending])
+
+  // Reset dirty state after successful save
+  const markAsSaved = useCallback(() => {
+    initialBlocksRef.current = JSON.stringify(blocks)
+    initialPrereqsRef.current = JSON.stringify(prerequisites)
+  }, [blocks, prerequisites])
+
   const derived = useMemo(() => blocksToLegacyFields(blocks), [blocks])
 
   const filteredPrereqLessons = useMemo(() => {
@@ -336,22 +390,33 @@ export function LessonEditor({ lesson, courseId, availableLessons }: LessonEdito
   }, [availableLessons, lesson.id, prereqQuery])
 
   const handleSave = async (formData: FormData) => {
-    setSaving(true)
-    await updateLesson(lesson.id, courseId, formData)
-    setSaving(false)
-    router.refresh()
+    startTransition(async () => {
+      const result = await updateLesson(lesson.id, courseId, formData)
+      if (result.error) {
+        toast.error("Failed to save lesson", { description: result.error })
+      } else {
+        markAsSaved()
+        toast.success("Lesson saved successfully")
+        router.refresh()
+      }
+    })
   }
 
   const handleDelete = async () => {
-    if (!confirm("Are you sure you want to delete this lesson?")) return
     setDeleting(true)
-    await deleteLesson(lesson.id, courseId)
-    router.push(`/admin/learn/${courseId}`)
+    const result = await deleteLesson(lesson.id, courseId)
+    if (result.error) {
+      setDeleting(false)
+      toast.error("Failed to delete lesson", { description: result.error })
+    } else {
+      toast.success("Lesson deleted")
+      router.push(`/admin/learn/${courseId}`)
+    }
   }
 
   const addBlock = () => {
     const type = newBlockType
-    const id = newId()
+    const id = randomId()
 
     const base = { id, type }
     const block: LessonBlock =
@@ -413,9 +478,10 @@ export function LessonEditor({ lesson, courseId, availableLessons }: LessonEdito
     if (!tpl) return
     if (blocks.length > 0 && !confirm("Replace current blocks with this template?")) return
     // Re-create IDs to avoid collisions across applies
-    const next = tpl.blocks.map((b) => ({ ...b, id: newId() }))
+    const next = tpl.blocks.map((b) => ({ ...b, id: randomId() }))
     setBlocks(next)
     setTemplateId("")
+    toast.success("Template applied", { description: `Applied "${tpl.label}" template` })
   }
 
   const exportTemplate = () => {
@@ -434,19 +500,31 @@ export function LessonEditor({ lesson, courseId, availableLessons }: LessonEdito
     a.download = "lesson-template.json"
     a.click()
     URL.revokeObjectURL(url)
+    toast.success("Template exported", { description: "lesson-template.json downloaded" })
   }
 
   const importTemplate = async (file: File) => {
-    const text = await file.text()
-    const parsed: unknown = JSON.parse(text)
-    if (!isRecord(parsed)) return
-    const rawBlocks = parsed.blocks
-    if (!isUnknownArray(rawBlocks)) return
+    try {
+      const text = await file.text()
+      const parsed: unknown = JSON.parse(text)
+      if (!isRecord(parsed)) {
+        toast.error("Invalid template file", { description: "File must be a valid JSON object" })
+        return
+      }
+      const rawBlocks = parsed.blocks
+      if (!isUnknownArray(rawBlocks)) {
+        toast.error("Invalid template file", { description: "Template must contain a 'blocks' array" })
+        return
+      }
 
-    const imported: LessonBlock[] = rawBlocks
-      .filter(isBlockLike)
-      .map((b) => ({ ...b, id: newId(), type: b.type }))
-    setBlocks(imported)
+      const imported: LessonBlock[] = rawBlocks
+        .filter(isBlockLike)
+        .map((b) => ({ ...b, id: randomId(), type: b.type }))
+      setBlocks(imported)
+      toast.success("Template imported", { description: `Imported ${imported.length} blocks` })
+    } catch {
+      toast.error("Failed to import template", { description: "Invalid JSON file" })
+    }
   }
 
   const TypeIcon =
@@ -476,7 +554,7 @@ export function LessonEditor({ lesson, courseId, availableLessons }: LessonEdito
               : undefined
 
   return (
-    <form action={handleSave} className="space-y-6">
+    <form ref={formRef} action={handleSave} className="space-y-6">
       {/* Hidden fields that back Radix inputs + block model */}
       <input type="hidden" name="lesson_type" value={lessonType} />
       <input type="hidden" name="difficulty" value={difficulty} />
@@ -493,11 +571,16 @@ export function LessonEditor({ lesson, courseId, availableLessons }: LessonEdito
 
       {/* Top actions */}
       <div className="flex flex-wrap items-center gap-2 justify-between rounded-lg border border-slate-200 bg-white px-4 py-3">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <TypeIcon className="h-5 w-5 text-cyan-600" />
           <span className="font-mono text-sm font-semibold text-slate-900">
             Unified Lesson Editor
           </span>
+          {hasUnsavedChanges && (
+            <span className="text-xs text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+              Unsaved changes
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <Button type="button" variant="outline" onClick={exportTemplate}>
@@ -635,7 +718,7 @@ export function LessonEditor({ lesson, courseId, availableLessons }: LessonEdito
                 </div>
                 <Input
                   value={prereqQuery}
-                  onChange={(e) => setPrereqQuery(e.target.value)}
+                  onChange={(e) => { setPrereqQuery(e.target.value); }}
                   placeholder="Search lessons..."
                 />
                 <div className="mt-3 max-h-48 overflow-auto rounded border border-slate-200">
@@ -650,7 +733,7 @@ export function LessonEditor({ lesson, courseId, availableLessons }: LessonEdito
                             <input
                               type="checkbox"
                               checked={checked}
-                              onChange={() => togglePrereq(l.id)}
+                              onChange={() => { togglePrereq(l.id); }}
                               className="h-4 w-4"
                             />
                             <span className="text-sm text-slate-700">{l.title}</span>
@@ -706,8 +789,9 @@ export function LessonEditor({ lesson, courseId, availableLessons }: LessonEdito
                     <BlockCard
                       key={block.id}
                       block={block}
-                      onChange={(patch) => updateBlock(block.id, patch)}
-                      onDelete={() => removeBlock(block.id)}
+                      lessonId={lesson.id}
+                      onChange={(patch) => { updateBlock(block.id, patch); }}
+                      onDelete={() => { removeBlock(block.id); }}
                     />
                   ))}
                 </Reorder.Group>
@@ -742,18 +826,34 @@ export function LessonEditor({ lesson, courseId, availableLessons }: LessonEdito
 
           {/* Actions */}
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between rounded-lg border border-slate-200 bg-white px-6 py-4">
-            <Button
-              type="button"
-              variant="destructive"
-              onClick={() => void handleDelete()}
-              disabled={deleting}
-            >
-              <Trash2 className="mr-2 h-4 w-4" />
-              {deleting ? "Deleting..." : "Delete Lesson"}
-            </Button>
-            <Button type="submit" className="bg-cyan-700 hover:bg-cyan-600" disabled={saving}>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button type="button" variant="destructive" disabled={deleting}>
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  {deleting ? "Deleting..." : "Delete Lesson"}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete Lesson</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to delete this lesson? This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    className="bg-red-600 hover:bg-red-700"
+                    onClick={() => void handleDelete()}
+                  >
+                    Delete Lesson
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+            <Button type="submit" className="bg-cyan-700 hover:bg-cyan-600" disabled={isPending}>
               <Save className="mr-2 h-4 w-4" />
-              {saving ? "Saving..." : "Save Changes"}
+              {isPending ? "Saving..." : "Save Changes"}
             </Button>
           </div>
         </div>
@@ -785,10 +885,12 @@ export function LessonEditor({ lesson, courseId, availableLessons }: LessonEdito
 
 function BlockCard({
   block,
+  lessonId,
   onChange,
   onDelete,
 }: {
   block: LessonBlock
+  lessonId: string
   onChange: (patch: Record<string, unknown>) => void
   onDelete: () => void
 }) {
@@ -808,7 +910,7 @@ function BlockCard({
       <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-100 bg-slate-50/50">
         <button
           type="button"
-          onPointerDown={(e) => dragControls.start(e)}
+          onPointerDown={(e) => { dragControls.start(e); }}
           className="text-slate-400 hover:text-slate-600 cursor-grab active:cursor-grabbing"
           aria-label="Reorder block"
         >
@@ -819,15 +921,20 @@ function BlockCard({
           {typeMeta?.label || type}
         </span>
         <div className="flex-1" />
-        <Button
-          type="button"
-          variant="ghost"
-          className="text-red-600 hover:text-red-700 hover:bg-red-50"
-          onClick={onDelete}
-          aria-label="Delete block"
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+              onClick={onDelete}
+              aria-label="Delete block"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Delete block</TooltipContent>
+        </Tooltip>
       </div>
 
       <div className="p-4 space-y-4">
@@ -836,7 +943,7 @@ function BlockCard({
             <Label>Markdown</Label>
             <Textarea
               value={typeof block.content === "string" ? block.content : ""}
-              onChange={(e) => onChange({ content: e.target.value })}
+              onChange={(e) => { onChange({ content: e.target.value }); }}
               rows={10}
               className="font-mono text-sm"
               placeholder="Write markdown..."
@@ -850,7 +957,7 @@ function BlockCard({
               <Label>Level</Label>
               <select
                 value={typeof block.level === "number" ? String(block.level) : "1"}
-                onChange={(e) => onChange({ level: Number(e.target.value) })}
+                onChange={(e) => { onChange({ level: Number(e.target.value) }); }}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-mono"
               >
                 <option value="1">H2</option>
@@ -862,7 +969,7 @@ function BlockCard({
               <Label>Text</Label>
               <Input
                 value={typeof block.content === "string" ? block.content : ""}
-                onChange={(e) => onChange({ content: e.target.value })}
+                onChange={(e) => { onChange({ content: e.target.value }); }}
                 placeholder="Heading text..."
               />
             </div>
@@ -875,7 +982,7 @@ function BlockCard({
               <Label>Image URL</Label>
               <Input
                 value={typeof block.url === "string" ? block.url : ""}
-                onChange={(e) => onChange({ url: e.target.value })}
+                onChange={(e) => { onChange({ url: e.target.value }); }}
                 placeholder="https://..."
               />
             </div>
@@ -883,14 +990,14 @@ function BlockCard({
               <Label>Alt text</Label>
               <Input
                 value={typeof block.alt === "string" ? block.alt : ""}
-                onChange={(e) => onChange({ alt: e.target.value })}
+                onChange={(e) => { onChange({ alt: e.target.value }); }}
               />
             </div>
             <div className="space-y-2">
               <Label>Caption (optional)</Label>
               <Input
                 value={typeof block.caption === "string" ? block.caption : ""}
-                onChange={(e) => onChange({ caption: e.target.value })}
+                onChange={(e) => { onChange({ caption: e.target.value }); }}
               />
             </div>
           </div>
@@ -898,9 +1005,9 @@ function BlockCard({
 
         {type === "video" && (
           <VideoUploader
-            lessonId={block.id}
+            lessonId={lessonId}
             value={typeof block.url === "string" ? block.url : ""}
-            onChange={(url) => onChange({ url })}
+            onChange={(url) => { onChange({ url }); }}
           />
         )}
 
@@ -911,7 +1018,7 @@ function BlockCard({
                 <Label>Language</Label>
                 <Input
                   value={typeof block.language === "string" ? block.language : "cpp"}
-                  onChange={(e) => onChange({ language: e.target.value })}
+                  onChange={(e) => { onChange({ language: e.target.value }); }}
                   placeholder="cpp / js / ts / ..."
                 />
               </div>
@@ -919,7 +1026,7 @@ function BlockCard({
                 <Label>Filename (optional)</Label>
                 <Input
                   value={typeof block.filename === "string" ? block.filename : ""}
-                  onChange={(e) => onChange({ filename: e.target.value })}
+                  onChange={(e) => { onChange({ filename: e.target.value }); }}
                   placeholder="main.ino"
                 />
               </div>
@@ -932,7 +1039,7 @@ function BlockCard({
                 language={typeof block.language === "string" ? block.language : "cpp"}
                 filename={typeof block.filename === "string" ? block.filename : undefined}
                 hideReset
-                onChange={(next) => onChange({ code: next })}
+                onChange={(next) => { onChange({ code: next }); }}
               />
             </div>
           </div>
@@ -944,7 +1051,7 @@ function BlockCard({
               <Label>Variant</Label>
               <select
                 value={typeof block.variant === "string" ? block.variant : "info"}
-                onChange={(e) => onChange({ variant: e.target.value })}
+                onChange={(e) => { onChange({ variant: e.target.value }); }}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-mono"
               >
                 <option value="info">Info</option>
@@ -957,7 +1064,7 @@ function BlockCard({
               <Label>Content (Markdown)</Label>
               <Textarea
                 value={typeof block.content === "string" ? block.content : ""}
-                onChange={(e) => onChange({ content: e.target.value })}
+                onChange={(e) => { onChange({ content: e.target.value }); }}
                 rows={6}
                 className="font-mono text-sm"
               />
@@ -971,7 +1078,7 @@ function BlockCard({
               <Label>URL</Label>
               <Input
                 value={typeof block.url === "string" ? block.url : ""}
-                onChange={(e) => onChange({ url: e.target.value })}
+                onChange={(e) => { onChange({ url: e.target.value }); }}
                 placeholder="https://..."
               />
             </div>
@@ -979,14 +1086,14 @@ function BlockCard({
               <Label>Filename</Label>
               <Input
                 value={typeof block.filename === "string" ? block.filename : ""}
-                onChange={(e) => onChange({ filename: e.target.value })}
+                onChange={(e) => { onChange({ filename: e.target.value }); }}
               />
             </div>
             <div className="space-y-2">
               <Label>Description</Label>
               <Input
                 value={typeof block.description === "string" ? block.description : ""}
-                onChange={(e) => onChange({ description: e.target.value })}
+                onChange={(e) => { onChange({ description: e.target.value }); }}
               />
             </div>
           </div>
@@ -1003,7 +1110,7 @@ function BlockCard({
                 <Label>Language</Label>
                 <Input
                   value={typeof block.language === "string" ? block.language : "cpp"}
-                  onChange={(e) => onChange({ language: e.target.value })}
+                  onChange={(e) => { onChange({ language: e.target.value }); }}
                 />
               </div>
             </div>
@@ -1015,7 +1122,7 @@ function BlockCard({
                 language={typeof block.language === "string" ? block.language : "cpp"}
                 filename="starter"
                 hideReset
-                onChange={(next) => onChange({ starterCode: next })}
+                onChange={(next) => { onChange({ starterCode: next }); }}
               />
             </div>
             <div className="space-y-2">
@@ -1026,7 +1133,7 @@ function BlockCard({
                 language={typeof block.language === "string" ? block.language : "cpp"}
                 filename="solution"
                 hideReset
-                onChange={(next) => onChange({ solutionCode: next })}
+                onChange={(next) => { onChange({ solutionCode: next }); }}
               />
             </div>
           </div>
@@ -1040,7 +1147,7 @@ function BlockCard({
             <FlowEditor
               mode="diagram"
               value={isRecord(block.flowData) ? block.flowData : {}}
-              onChange={(next) => onChange({ flowData: next })}
+              onChange={(next) => { onChange({ flowData: next }); }}
               height={420}
             />
             <details className="rounded border border-slate-200 bg-slate-50 p-3">
@@ -1080,7 +1187,7 @@ function BlockCard({
               <FlowEditor
                 mode="visual"
                 value={isRecord(block.flowData) ? block.flowData : {}}
-                onChange={(next) => onChange({ flowData: next })}
+                onChange={(next) => { onChange({ flowData: next }); }}
                 height={520}
               />
             </div>
@@ -1094,7 +1201,7 @@ function BlockCard({
                 <FlowEditor
                   mode="visual"
                   value={isRecord(block.solutionFlowData) ? block.solutionFlowData : {}}
-                  onChange={(next) => onChange({ solutionFlowData: next })}
+                  onChange={(next) => { onChange({ solutionFlowData: next }); }}
                   height={520}
                 />
               </div>
@@ -1124,7 +1231,7 @@ function QuizEditor({
     <div className="space-y-4">
       <div className="space-y-2">
         <Label>Question</Label>
-        <Input value={question} onChange={(e) => onChange({ question: e.target.value })} />
+        <Input value={question} onChange={(e) => { onChange({ question: e.target.value }); }} />
       </div>
 
       <div className="space-y-2">
@@ -1134,7 +1241,7 @@ function QuizEditor({
             type="button"
             size="sm"
             variant="outline"
-            onClick={() => onChange({ options: [...options, ""] })}
+            onClick={() => { onChange({ options: [...options, ""] }); }}
           >
             <Plus className="mr-2 h-3 w-3" />
             Add option
@@ -1152,15 +1259,20 @@ function QuizEditor({
                   onChange({ options: next })
                   }}
                 />
-              <Button
-                type="button"
-                variant="ghost"
-                className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                onClick={() => onChange({ options: options.filter((_, i) => i !== idx) })}
-                aria-label="Remove option"
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    onClick={() => { onChange({ options: options.filter((_, i) => i !== idx) }); }}
+                    aria-label="Remove option"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Remove option</TooltipContent>
+              </Tooltip>
             </div>
           ))}
         </div>
@@ -1171,7 +1283,7 @@ function QuizEditor({
           <Label>Correct option</Label>
           <select
             value={String(correct)}
-            onChange={(e) => onChange({ correct: Number(e.target.value) })}
+            onChange={(e) => { onChange({ correct: Number(e.target.value) }); }}
             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-mono"
           >
             {options.map((_, i) => (
@@ -1183,7 +1295,7 @@ function QuizEditor({
         </div>
         <div className="space-y-2">
           <Label>Explanation (optional)</Label>
-          <Input value={explanation} onChange={(e) => onChange({ explanation: e.target.value })} />
+          <Input value={explanation} onChange={(e) => { onChange({ explanation: e.target.value }); }} />
         </div>
       </div>
     </div>

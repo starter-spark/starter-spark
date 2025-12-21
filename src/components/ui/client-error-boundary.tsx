@@ -2,13 +2,13 @@
 
 import * as React from "react"
 
-type ClientErrorBoundaryProps = {
+interface ClientErrorBoundaryProps {
   children: React.ReactNode
   fallback: React.ReactNode
   onError?: (error: Error) => void
 }
 
-type ClientErrorBoundaryState = {
+interface ClientErrorBoundaryState {
   hasError: boolean
 }
 

@@ -42,7 +42,7 @@ function AnimatedCounter({ value, suffix }: { value: number; suffix: string }) {
         }
       }, duration / steps)
 
-      return () => clearInterval(timer)
+      return () => { clearInterval(timer); }
     }
   }, [isInView, value])
 

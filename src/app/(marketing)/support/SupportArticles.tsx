@@ -9,7 +9,7 @@ import {
 import { ChevronDown, ThumbsUp, ThumbsDown, Wrench, Cpu, Code, User, Truck, HelpCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
 
-type Article = {
+interface Article {
   id: string
   slug: string
   category: string
@@ -22,7 +22,7 @@ type Article = {
   not_helpful_count: number | null
 }
 
-type Category = {
+interface Category {
   key: string
   label: string
   icon: string
@@ -93,7 +93,7 @@ export function SupportArticles({ articlesByCategory, categories }: SupportArtic
               <Collapsible
                 key={article.id}
                 open={openArticle === article.id}
-                onOpenChange={(open) => setOpenArticle(open ? article.id : null)}
+                onOpenChange={(open) => { setOpenArticle(open ? article.id : null); }}
               >
                 <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
                   <CollapsibleTrigger className="w-full px-5 py-4 flex items-center justify-between text-left hover:bg-slate-50 transition-colors">
@@ -253,7 +253,7 @@ function SolutionsContent({ content }: { content: string }) {
     }
 
     // Numbered list
-    const numberedMatch = line.match(/^(\d+)\. (.+)$/)
+    const numberedMatch = /^(\d+)\. (.+)$/.exec(line)
     if (numberedMatch) {
       if (listType !== 'ol') {
         flushList()
@@ -297,7 +297,7 @@ function formatInlineText(text: string): React.ReactNode {
 
   while (remaining.length > 0) {
     // Check for inline code
-    const codeMatch = remaining.match(/^(.*?)`([^`]+)`(.*)$/)
+    const codeMatch = /^(.*?)`([^`]+)`(.*)$/.exec(remaining)
     if (codeMatch) {
       if (codeMatch[1]) {
         parts.push(...formatBold(codeMatch[1], key))
@@ -326,7 +326,7 @@ function formatBold(text: string, startKey: number): React.ReactNode[] {
   let key = startKey
 
   while (remaining.length > 0) {
-    const boldMatch = remaining.match(/^(.*?)\*\*([^*]+)\*\*(.*)$/)
+    const boldMatch = /^(.*?)\*\*([^*]+)\*\*(.*)$/.exec(remaining)
     if (boldMatch) {
       if (boldMatch[1]) {
         parts.push(<span key={key++}>{boldMatch[1]}</span>)

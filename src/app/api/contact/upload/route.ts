@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from "next/server"
+import { type NextRequest, NextResponse } from "next/server"
 import { fileTypeFromBuffer } from "file-type"
 import { supabaseAdmin } from "@/lib/supabase/admin"
-import crypto from "crypto"
+import crypto from "node:crypto"
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit"
 
 // Allowed file types with their magic byte signatures
@@ -32,8 +32,8 @@ function sanitizeFilename(filename: string): string {
 
   // Remove dangerous characters, keep only alphanumeric, dash, underscore, dot
   const sanitized = basename
-    .replace(/[^a-zA-Z0-9._-]/g, "_")
-    .replace(/\.{2,}/g, ".") // Remove multiple dots
+    .replaceAll(/[^a-zA-Z0-9._-]/g, "_")
+    .replaceAll(/\.{2,}/g, ".") // Remove multiple dots
     .slice(0, 100) // Limit length
 
   // Ensure it has an extension
@@ -138,101 +138,132 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const uploadedFiles: Array<{
+    const uploadedPaths: string[] = []
+    const uploadedFiles: {
       name: string
       path: string
       size: number
       type: string
-    }> = []
+    }[] = []
 
-    for (const file of files) {
-      // Basic size check before reading
-      if (file.size === 0) {
-        return NextResponse.json(
-          { error: "Empty files are not allowed" },
-          { status: 400 }
-        )
+    const cleanupUploadedFiles = async () => {
+      if (uploadedPaths.length === 0) return
+      try {
+        const { error: cleanupError } = await supabaseAdmin.storage
+          .from("contact-attachments")
+          .remove(uploadedPaths)
+        if (cleanupError) {
+          console.error("Failed to cleanup uploaded files:", cleanupError)
+        }
+      } catch (err) {
+        console.error("Unexpected error cleaning up uploaded files:", err)
       }
+    }
 
-      // Read file buffer
-      const buffer = Buffer.from(await file.arrayBuffer())
+    try {
+      for (const file of files) {
+        // Basic size check before reading
+        if (file.size === 0) {
+          await cleanupUploadedFiles()
+          return NextResponse.json(
+            { error: "Empty files are not allowed" },
+            { status: 400 }
+          )
+        }
 
-      // SECURITY: Detect actual file type from magic bytes, not from header
-      const detectedType = await fileTypeFromBuffer(buffer)
+        // Read file buffer
+        const buffer = Buffer.from(await file.arrayBuffer())
 
-      if (!detectedType) {
-        return NextResponse.json(
-          { error: `Could not determine file type for: ${file.name}. Only images (JPEG, PNG, GIF, WebP) and videos (MP4, WebM, MOV) are allowed.` },
-          { status: 400 }
-        )
-      }
+        // SECURITY: Detect actual file type from magic bytes, not from header
+        const detectedType = await fileTypeFromBuffer(buffer)
 
-      // Check if detected type is allowed
-      if (!(detectedType.mime in ALLOWED_TYPES)) {
-        return NextResponse.json(
-          { error: `File type "${detectedType.mime}" is not allowed for: ${file.name}. Only images (JPEG, PNG, GIF, WebP) and videos (MP4, WebM, MOV) are allowed.` },
-          { status: 400 }
-        )
-      }
+        if (!detectedType) {
+          await cleanupUploadedFiles()
+          return NextResponse.json(
+            { error: `Could not determine file type for: ${file.name}. Only images (JPEG, PNG, GIF, WebP) and videos (MP4, WebM, MOV) are allowed.` },
+            { status: 400 }
+          )
+        }
 
-      const mimeType = detectedType.mime as AllowedMimeType
-      const typeConfig = getAllowedTypeConfig(mimeType)
+        // Check if detected type is allowed
+        if (!(detectedType.mime in ALLOWED_TYPES)) {
+          await cleanupUploadedFiles()
+          return NextResponse.json(
+            { error: `File type "${detectedType.mime}" is not allowed for: ${file.name}. Only images (JPEG, PNG, GIF, WebP) and videos (MP4, WebM, MOV) are allowed.` },
+            { status: 400 }
+          )
+        }
 
-      // Check individual file size limit
-      if (file.size > typeConfig.maxSize) {
-        const maxMB = typeConfig.maxSize / (1024 * 1024)
-        return NextResponse.json(
-          { error: `File "${file.name}" exceeds ${maxMB}MB limit for ${mimeType.startsWith("video") ? "videos" : "images"}` },
-          { status: 400 }
-        )
-      }
+        const mimeType = detectedType.mime as AllowedMimeType
+        const typeConfig = getAllowedTypeConfig(mimeType)
 
-      // SECURITY: Additional validation for images - check for embedded scripts
-      if (mimeType.startsWith("image/")) {
-        const bufferString = buffer.toString("utf8", 0, Math.min(buffer.length, 1000))
-        const dangerousPatterns = [
-          /<script/i,
-          /javascript:/i,
-          /on\w+\s*=/i, // onclick=, onerror=, etc.
-          /<\?php/i,
-          /<%/i, // ASP tags
-        ]
+        // Check individual file size limit
+        if (file.size > typeConfig.maxSize) {
+          const maxMB = typeConfig.maxSize / (1024 * 1024)
+          await cleanupUploadedFiles()
+          return NextResponse.json(
+            { error: `File "${file.name}" exceeds ${maxMB}MB limit for ${mimeType.startsWith("video") ? "videos" : "images"}` },
+            { status: 400 }
+          )
+        }
 
-        for (const pattern of dangerousPatterns) {
-          if (pattern.test(bufferString)) {
-            return NextResponse.json(
-              { error: `File "${file.name}" contains potentially malicious content` },
-              { status: 400 }
-            )
+        // SECURITY: Additional validation for images - check for embedded scripts
+        if (mimeType.startsWith("image/")) {
+          const bufferString = buffer.toString("utf8", 0, Math.min(buffer.length, 1000))
+          const dangerousPatterns = [
+            /<script/i,
+            /javascript:/i,
+            /on\w+\s*=/i, // onclick=, onerror=, etc.
+            /<\?php/i,
+            /<%/i, // ASP tags
+          ]
+
+          for (const pattern of dangerousPatterns) {
+            if (pattern.test(bufferString)) {
+              await cleanupUploadedFiles()
+              return NextResponse.json(
+                { error: `File "${file.name}" contains potentially malicious content` },
+                { status: 400 }
+              )
+            }
           }
         }
-      }
 
-      // Generate secure storage path
-      const storagePath = generateSecurePath(file.name, mimeType, uploadSession)
+        // Generate secure storage path
+        const storagePath = generateSecurePath(file.name, mimeType, uploadSession)
 
-      // Upload to Supabase Storage using service role
-      const { error: uploadError } = await supabaseAdmin.storage
-        .from("contact-attachments")
-        .upload(storagePath, buffer, {
-          contentType: mimeType,
-          upsert: false, // Never overwrite existing files
+        // Upload to Supabase Storage using service role
+        const { error: uploadError } = await supabaseAdmin.storage
+          .from("contact-attachments")
+          .upload(storagePath, buffer, {
+            contentType: mimeType,
+            upsert: false, // Never overwrite existing files
+          })
+
+        if (uploadError) {
+          console.error("Storage upload error:", uploadError)
+          await cleanupUploadedFiles()
+          return NextResponse.json(
+            { error: "Failed to upload file. Please try again." },
+            { status: 500 }
+          )
+        }
+
+        uploadedPaths.push(storagePath)
+        uploadedFiles.push({
+          name: sanitizeFilename(file.name),
+          path: storagePath,
+          size: file.size,
+          type: mimeType,
         })
-
-      if (uploadError) {
-        console.error("Storage upload error:", uploadError)
-        return NextResponse.json(
-          { error: "Failed to upload file. Please try again." },
-          { status: 500 }
-        )
       }
-
-      uploadedFiles.push({
-        name: sanitizeFilename(file.name),
-        path: storagePath,
-        size: file.size,
-        type: mimeType,
-      })
+    } catch (err) {
+      await cleanupUploadedFiles()
+      console.error("Unexpected error processing uploads:", err)
+      return NextResponse.json(
+        { error: "An unexpected error occurred during upload" },
+        { status: 500 }
+      )
     }
 
     return NextResponse.json(

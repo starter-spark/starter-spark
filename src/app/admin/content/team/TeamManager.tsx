@@ -190,12 +190,12 @@ export function TeamManager({ initialMembers }: TeamManagerProps) {
           <Card
             key={member.id}
             draggable
-            onDragStart={() => handleDragStart(index)}
-            onDragOver={(e) => handleDragOver(e, index)}
+            onDragStart={() => { handleDragStart(index); }}
+            onDragOver={(e) => { handleDragOver(e, index); }}
             onDragEnd={() => void handleDragEnd()}
             className={`bg-white border-slate-200 cursor-move transition-all ${
               draggedIndex === index ? "opacity-50 scale-[0.98]" : ""
-            } ${!member.is_active ? "opacity-60" : ""}`}
+            } ${member.is_active ? "" : "opacity-60"}`}
           >
             <CardContent className="p-4">
               <div className="flex items-center gap-4">
@@ -244,7 +244,7 @@ export function TeamManager({ initialMembers }: TeamManagerProps) {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => openEditDialog(member)}
+                    onClick={() => { openEditDialog(member); }}
                     className="cursor-pointer"
                   >
                     <Pencil className="h-4 w-4" />
@@ -300,7 +300,7 @@ export function TeamManager({ initialMembers }: TeamManagerProps) {
                 <Input
                   id="name"
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onChange={(e) => { setFormData({ ...formData, name: e.target.value }); }}
                   placeholder="John Doe"
                 />
               </div>
@@ -309,7 +309,7 @@ export function TeamManager({ initialMembers }: TeamManagerProps) {
                 <Input
                   id="role"
                   value={formData.role}
-                  onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                  onChange={(e) => { setFormData({ ...formData, role: e.target.value }); }}
                   placeholder="Software Engineer"
                 />
               </div>
@@ -320,7 +320,7 @@ export function TeamManager({ initialMembers }: TeamManagerProps) {
               <Textarea
                 id="bio"
                 value={formData.bio}
-                onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+                onChange={(e) => { setFormData({ ...formData, bio: e.target.value }); }}
                 placeholder="A brief description of this team member..."
                 rows={3}
               />
@@ -331,7 +331,7 @@ export function TeamManager({ initialMembers }: TeamManagerProps) {
               <Input
                 id="image_url"
                 value={formData.image_url}
-                onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+                onChange={(e) => { setFormData({ ...formData, image_url: e.target.value }); }}
                 placeholder="https://example.com/photo.jpg"
               />
             </div>
@@ -344,10 +344,10 @@ export function TeamManager({ initialMembers }: TeamManagerProps) {
                   <Input
                     value={formData.social_links.github}
                     onChange={(e) =>
-                      setFormData({
+                      { setFormData({
                         ...formData,
                         social_links: { ...formData.social_links, github: e.target.value },
-                      })
+                      }); }
                     }
                     placeholder="https://github.com/username"
                     className="flex-1"
@@ -358,10 +358,10 @@ export function TeamManager({ initialMembers }: TeamManagerProps) {
                   <Input
                     value={formData.social_links.linkedin}
                     onChange={(e) =>
-                      setFormData({
+                      { setFormData({
                         ...formData,
                         social_links: { ...formData.social_links, linkedin: e.target.value },
-                      })
+                      }); }
                     }
                     placeholder="https://linkedin.com/in/username"
                     className="flex-1"
@@ -372,10 +372,10 @@ export function TeamManager({ initialMembers }: TeamManagerProps) {
                   <Input
                     value={formData.social_links.twitter}
                     onChange={(e) =>
-                      setFormData({
+                      { setFormData({
                         ...formData,
                         social_links: { ...formData.social_links, twitter: e.target.value },
-                      })
+                      }); }
                     }
                     placeholder="https://twitter.com/username"
                     className="flex-1"
@@ -395,14 +395,14 @@ export function TeamManager({ initialMembers }: TeamManagerProps) {
                 id="is_active"
                 checked={formData.is_active}
                 onCheckedChange={(checked) =>
-                  setFormData({ ...formData, is_active: checked })
+                  { setFormData({ ...formData, is_active: checked }); }
                 }
               />
             </div>
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+            <Button variant="outline" onClick={() => { setIsDialogOpen(false); }}>
               Cancel
             </Button>
             <Button

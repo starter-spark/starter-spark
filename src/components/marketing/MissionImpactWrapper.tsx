@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
 import { getContents } from "@/lib/content"
-import { MissionImpactSection, Stat } from "./MissionImpact"
+import { MissionImpactSection, type Stat } from "./MissionImpact"
 
 const DEFAULT_CONTENT = {
   "home.mission.title": "More Than a Kit",

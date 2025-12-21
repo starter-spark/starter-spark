@@ -13,7 +13,7 @@ interface ProductImageLightboxProps {
   className?: string
 }
 
-type Dimensions = { width: number; height: number }
+interface Dimensions { width: number; height: number }
 
 function wrapIndex(index: number, count: number) {
   if (count <= 0) return 0
@@ -34,17 +34,17 @@ export function ProductImageLightbox({
 
   const reactId = useId()
   const galleryId = useMemo(() => {
-    const safe = reactId.replace(/[:]/g, "")
+    const safe = reactId.replaceAll(/[:]/g, "")
     return `pswp-gallery-${safe}`
   }, [reactId])
 
   const [isReady, setIsReady] = useState(false)
-  const [dimensions, setDimensions] = useState<Array<Dimensions | null>>(() =>
+  const [dimensions, setDimensions] = useState<(Dimensions | null)[]>(() =>
     Array.from({ length: count }, () => null)
   )
 
   const lightboxRef = useRef<PhotoSwipeLightboxType | null>(null)
-  const dimensionsRef = useRef<Array<Dimensions | null>>(dimensions)
+  const dimensionsRef = useRef<(Dimensions | null)[]>(dimensions)
   const pendingRef = useRef<Map<number, Promise<Dimensions>>>(new Map())
 
   useEffect(() => {
@@ -65,7 +65,7 @@ export function ProductImageLightbox({
 
       const promise = new Promise<Dimensions>((resolve) => {
         const src = images.at(idx)
-        const img = new window.Image()
+        const img = new globalThis.Image()
         img.decoding = "async"
 
         const finalize = (nextDims: Dimensions) => {
@@ -74,8 +74,8 @@ export function ProductImageLightbox({
           const galleryEl = document.getElementById(galleryId)
           const anchorEl = galleryEl?.querySelectorAll("a").item(idx) ?? null
           if (anchorEl) {
-            anchorEl.setAttribute("data-pswp-width", String(nextDims.width))
-            anchorEl.setAttribute("data-pswp-height", String(nextDims.height))
+            anchorEl.dataset.pswpWidth = String(nextDims.width)
+            anchorEl.dataset.pswpHeight = String(nextDims.height)
           }
           setDimensions((prev) => {
             const current = prev.at(idx)
@@ -95,12 +95,12 @@ export function ProductImageLightbox({
         }
 
         img.src = src
-        img.onload = () => {
+        img.addEventListener('load', () => {
           const width = img.naturalWidth || 1600
           const height = img.naturalHeight || 1600
           finalize({ width, height })
-        }
-        img.onerror = () => finalize({ width: 1600, height: 1600 })
+        })
+        img.onerror = () => { finalize({ width: 1600, height: 1600 }); }
       })
 
       pendingRef.current.set(idx, promise)
@@ -124,7 +124,7 @@ export function ProductImageLightbox({
         pswpModule: () => import("photoswipe"),
       })
 
-      lightbox.on("close", () => onOpenChange(false))
+      lightbox.on("close", () => { onOpenChange(false); })
       lightbox.on("change", () => {
         const idx = lightbox.pswp?.currIndex
         if (typeof idx === "number") onActiveIndexChange(idx)

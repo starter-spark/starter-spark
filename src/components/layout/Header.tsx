@@ -224,7 +224,7 @@ export function Header() {
             <button
               type="button"
               className="p-2 text-slate-600 hover:text-cyan-700 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-700 focus-visible:ring-offset-2"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              onClick={() => { setMobileMenuOpen(!mobileMenuOpen); }}
               aria-label="Toggle menu"
               aria-expanded={mobileMenuOpen}
               aria-controls="mobile-menu"
@@ -251,14 +251,14 @@ export function Header() {
               title={documentationNav.title}
               items={documentationNav.items}
               isOpen={openSection === "documentation"}
-              onToggle={() => toggleSection("documentation")}
+              onToggle={() => { toggleSection("documentation"); }}
               onNavigate={closeMobileMenu}
             />
             <MobileNavSection
               title={communityNav.title}
               items={communityNav.items}
               isOpen={openSection === "community"}
-              onToggle={() => toggleSection("community")}
+              onToggle={() => { toggleSection("community"); }}
               onNavigate={closeMobileMenu}
             />
 

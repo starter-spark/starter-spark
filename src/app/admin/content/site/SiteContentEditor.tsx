@@ -78,7 +78,7 @@ export default function SiteContentEditor({ content }: SiteContentEditorProps) {
     // Remove category prefix
     const relevantParts = parts.slice(1)
     return relevantParts
-      .map(part => part.charAt(0).toUpperCase() + part.slice(1).replace(/_/g, " "))
+      .map(part => part.charAt(0).toUpperCase() + part.slice(1).replaceAll('_', " "))
       .join(" ")
   }
 
@@ -142,14 +142,14 @@ export default function SiteContentEditor({ content }: SiteContentEditorProps) {
                 {isRichText ? (
                   <Textarea
                     value={currentValue}
-                    onChange={(e) => handleContentChange(item.content_key, e.target.value)}
+                    onChange={(e) => { handleContentChange(item.content_key, e.target.value); }}
                     className="min-h-[100px] bg-white text-slate-900"
                     placeholder={item.default_value || "Enter content..."}
                   />
                 ) : (
                   <Input
                     value={currentValue}
-                    onChange={(e) => handleContentChange(item.content_key, e.target.value)}
+                    onChange={(e) => { handleContentChange(item.content_key, e.target.value); }}
                     className="bg-white text-slate-900"
                     placeholder={item.default_value || "Enter content..."}
                   />
@@ -162,7 +162,7 @@ export default function SiteContentEditor({ content }: SiteContentEditorProps) {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleReset(item)}
+                        onClick={() => { handleReset(item); }}
                         className="text-slate-500 hover:text-slate-700 h-8"
                       >
                         <RotateCcw className="h-3.5 w-3.5 mr-1" />
@@ -172,7 +172,7 @@ export default function SiteContentEditor({ content }: SiteContentEditorProps) {
                     <Button
                       variant={isModified ? "default" : "outline"}
                       size="sm"
-                      onClick={() => void handleSave(item)}
+                      onClick={() => { handleSave(item); }}
                       disabled={!isModified || isPending}
                       className={isModified ? "bg-cyan-700 hover:bg-cyan-600 h-8" : "h-8"}
                     >

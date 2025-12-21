@@ -1,5 +1,5 @@
 import { ImageResponse } from "next/og"
-import { NextRequest } from "next/server"
+import { type NextRequest } from "next/server"
 import { rateLimit } from "@/lib/rate-limit"
 
 export const runtime = "edge"

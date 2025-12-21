@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache"
 import { createClient } from "@/lib/supabase/server"
 import { supabaseAdmin } from "@/lib/supabase/admin"
 import { logAuditEvent } from "@/lib/audit"
+import { requireAdmin, requireAdminOrStaff } from "@/lib/auth"
 
 export async function createEvent(formData: {
   title: string
@@ -21,30 +22,26 @@ export async function createEvent(formData: {
 }): Promise<{ error: string | null }> {
   const supabase = await createClient()
 
-  // Check if user is admin/staff
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return { error: "Unauthorized" }
-  }
+  const guard = await requireAdminOrStaff(supabase)
+  if (!guard.ok) return { error: guard.error }
+  const user = guard.user
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single()
-
-  if (!profile || (profile.role !== "admin" && profile.role !== "staff")) {
-    return { error: "Unauthorized" }
-  }
-
-  const { data: event, error } = await supabaseAdmin.from("events").insert({
-    ...formData,
-    capacity: formData.capacity || null,
-  }).select("id").single()
+  const { data: event, error } = await supabaseAdmin
+    .from("events")
+    .insert({
+      ...formData,
+      capacity: formData.capacity || null,
+    })
+    .select("id")
+    .maybeSingle()
 
   if (error) {
     console.error("Error creating event:", error)
     return { error: error.message }
+  }
+
+  if (!event) {
+    return { error: "Failed to create event" }
   }
 
   // Log audit event
@@ -86,23 +83,11 @@ export async function updateEvent(
 ): Promise<{ error: string | null }> {
   const supabase = await createClient()
 
-  // Check if user is admin/staff
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return { error: "Unauthorized" }
-  }
+  const guard = await requireAdminOrStaff(supabase)
+  if (!guard.ok) return { error: guard.error }
+  const user = guard.user
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single()
-
-  if (!profile || (profile.role !== "admin" && profile.role !== "staff")) {
-    return { error: "Unauthorized" }
-  }
-
-  const { error } = await supabaseAdmin
+  const { data: updatedEvent, error: updateError } = await supabaseAdmin
     .from("events")
     .update({
       ...formData,
@@ -110,10 +95,16 @@ export async function updateEvent(
       updated_at: new Date().toISOString(),
     })
     .eq("id", eventId)
+    .select("id")
+    .maybeSingle()
 
-  if (error) {
-    console.error("Error updating event:", error)
-    return { error: error.message }
+  if (updateError) {
+    console.error("Error updating event:", updateError)
+    return { error: updateError.message }
+  }
+
+  if (!updatedEvent) {
+    return { error: "Event not found" }
   }
 
   // Log audit event
@@ -138,34 +129,26 @@ export async function updateEvent(
 export async function deleteEvent(eventId: string): Promise<{ error: string | null }> {
   const supabase = await createClient()
 
-  // Check if user is admin
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return { error: "Unauthorized" }
+  const guard = await requireAdmin(supabase)
+  if (!guard.ok) {
+    return { error: guard.user ? "Only admins can delete events" : guard.error }
   }
+  const user = guard.user
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single()
-
-  if (!profile || profile.role !== "admin") {
-    return { error: "Only admins can delete events" }
-  }
-
-  // Get event info before deleting for audit log
-  const { data: event } = await supabaseAdmin
+  const { data: deletedEvent, error: deleteError } = await supabaseAdmin
     .from("events")
-    .select("title, slug")
+    .delete()
     .eq("id", eventId)
-    .single()
+    .select("id, title, slug")
+    .maybeSingle()
 
-  const { error } = await supabaseAdmin.from("events").delete().eq("id", eventId)
+  if (deleteError) {
+    console.error("Error deleting event:", deleteError)
+    return { error: deleteError.message }
+  }
 
-  if (error) {
-    console.error("Error deleting event:", error)
-    return { error: error.message }
+  if (!deletedEvent) {
+    return { error: "Event not found" }
   }
 
   // Log audit event
@@ -175,8 +158,8 @@ export async function deleteEvent(eventId: string): Promise<{ error: string | nu
     resourceType: 'event',
     resourceId: eventId,
     details: {
-      title: event?.title,
-      slug: event?.slug,
+      title: deletedEvent.title,
+      slug: deletedEvent.slug,
     },
   })
 

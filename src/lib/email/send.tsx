@@ -32,11 +32,13 @@ export async function sendPurchaseConfirmation({
   isGuestPurchase,
 }: SendPurchaseConfirmationParams) {
   const resend = new Resend(process.env.RESEND_API_KEY)
+  const licenseCount = licenses.length
+  const licenseLabel = licenseCount === 1 ? "license" : "licenses"
 
   const { data, error } = await resend.emails.send({
     from: FROM_EMAIL,
     to,
-    subject: `Your StarterSpark Order is Confirmed! (${licenses.length} license${licenses.length > 1 ? 's' : ''})`,
+    subject: `Your StarterSpark Order is Confirmed! (${String(licenseCount)} ${licenseLabel})`,
     react: (
       <PurchaseConfirmationEmail
         customerName={customerName}

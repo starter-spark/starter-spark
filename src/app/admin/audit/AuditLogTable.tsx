@@ -162,7 +162,7 @@ function CopyButton({ text }: { text: string }) {
   const handleCopy = async () => {
     await navigator.clipboard.writeText(text)
     setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+    setTimeout(() => { setCopied(false); }, 2000)
   }
 
   return (
@@ -249,7 +249,7 @@ function DetailsSection({ details }: { details: Json | null }) {
     <div className="space-y-1">
       {Object.entries(detailsObj).map(([key, value]) => (
         <div key={key} className="flex items-start gap-2 text-sm">
-          <span className="text-slate-500 capitalize min-w-[80px]">{key.replace(/_/g, " ")}:</span>
+          <span className="text-slate-500 capitalize min-w-[80px]">{key.replaceAll('_', " ")}:</span>
           <code className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-xs break-all">
             {formatValue(key, value)}
           </code>
@@ -306,7 +306,7 @@ export function AuditLogTable({
       <div className="flex gap-4 items-center bg-white p-4 rounded-lg border border-slate-200">
         <div className="flex items-center gap-2">
           <span className="text-sm text-slate-600">Resource:</span>
-          <Select value={filters.resource} onValueChange={(v) => updateFilter("resource", v)}>
+          <Select value={filters.resource} onValueChange={(v) => { updateFilter("resource", v); }}>
             <SelectTrigger className="w-[150px]">
               <SelectValue />
             </SelectTrigger>
@@ -314,7 +314,7 @@ export function AuditLogTable({
               <SelectItem value="all">All Resources</SelectItem>
               {allResources.map((r) => (
                 <SelectItem key={r} value={r}>
-                  {r.charAt(0).toUpperCase() + r.slice(1).replace(/_/g, " ")}
+                  {r.charAt(0).toUpperCase() + r.slice(1).replaceAll('_', " ")}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -323,7 +323,7 @@ export function AuditLogTable({
 
         <div className="flex items-center gap-2">
           <span className="text-sm text-slate-600">Action:</span>
-          <Select value={filters.action} onValueChange={(v) => updateFilter("action", v)}>
+          <Select value={filters.action} onValueChange={(v) => { updateFilter("action", v); }}>
             <SelectTrigger className="w-[180px]">
               <SelectValue />
             </SelectTrigger>
@@ -389,7 +389,7 @@ export function AuditLogTable({
 	                          className="h-8 w-8 p-0"
 	                          aria-expanded={isExpanded}
 	                          aria-controls={detailsRowId}
-	                          onClick={() => toggleRow(log.id)}
+	                          onClick={() => { toggleRow(log.id); }}
 	                        >
 	                          <ChevronDown
 	                            className={`h-4 w-4 text-slate-400 transition-transform ${
@@ -412,7 +412,7 @@ export function AuditLogTable({
 	                        <div>
 	                          <div className="flex items-center gap-1.5">
 	                            <span className="text-sm font-medium text-slate-900 capitalize">
-	                              {log.resource_type.replace(/_/g, " ")}
+	                              {log.resource_type.replaceAll('_', " ")}
 	                            </span>
 	                            {resourceLink && (
 	                              <Link
@@ -532,7 +532,7 @@ export function AuditLogTable({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => goToPage(currentPage - 1)}
+              onClick={() => { goToPage(currentPage - 1); }}
               disabled={currentPage <= 1}
             >
               <ChevronLeft className="h-4 w-4 mr-1" />
@@ -541,7 +541,7 @@ export function AuditLogTable({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => goToPage(currentPage + 1)}
+              onClick={() => { goToPage(currentPage + 1); }}
               disabled={currentPage >= totalPages}
             >
               Next

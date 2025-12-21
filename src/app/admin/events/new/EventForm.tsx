@@ -31,8 +31,8 @@ export function EventForm() {
   const generateSlug = (text: string) => {
     return text
       .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)/g, "")
+      .replaceAll(/[^a-z0-9]+/g, "-")
+      .replaceAll(/(^-|-$)/g, "")
   }
 
   const handleTitleChange = (value: string) => {
@@ -71,7 +71,7 @@ export function EventForm() {
   }
 
   return (
-    <form onSubmit={(e) => void handleSubmit(e)} className="space-y-6">
+    <form onSubmit={(e) => { handleSubmit(e); }} className="space-y-6">
       {error && (
         <div className="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-600">
           {error}
@@ -92,7 +92,7 @@ export function EventForm() {
               <Input
                 id="title"
                 value={title}
-                onChange={(e) => handleTitleChange(e.target.value)}
+                onChange={(e) => { handleTitleChange(e.target.value); }}
                 placeholder="Arduino Workshop"
                 required
               />
@@ -104,7 +104,7 @@ export function EventForm() {
               <Input
                 id="slug"
                 value={slug}
-                onChange={(e) => setSlug(e.target.value)}
+                onChange={(e) => { setSlug(e.target.value); }}
                 placeholder="arduino-workshop"
                 required
               />
@@ -118,7 +118,7 @@ export function EventForm() {
             <Textarea
               id="description"
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={(e) => { setDescription(e.target.value); }}
               placeholder="Join us for a hands-on workshop..."
               rows={3}
             />
@@ -132,7 +132,7 @@ export function EventForm() {
               <select
                 id="event_type"
                 value={eventType}
-                onChange={(e) => setEventType(e.target.value)}
+                onChange={(e) => { setEventType(e.target.value); }}
                 required
                 className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-700 focus:ring-offset-2"
               >
@@ -152,7 +152,7 @@ export function EventForm() {
                 type="number"
                 min="1"
                 value={capacity}
-                onChange={(e) => setCapacity(e.target.value ? parseInt(e.target.value) : "")}
+                onChange={(e) => { setCapacity(e.target.value ? Number.parseInt(e.target.value) : ""); }}
                 placeholder="Leave empty for unlimited"
               />
             </div>
@@ -175,7 +175,7 @@ export function EventForm() {
                 id="event_date"
                 type="datetime-local"
                 value={eventDate}
-                onChange={(e) => setEventDate(e.target.value)}
+                onChange={(e) => { setEventDate(e.target.value); }}
                 required
               />
             </div>
@@ -187,7 +187,7 @@ export function EventForm() {
                 id="end_date"
                 type="datetime-local"
                 value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
+                onChange={(e) => { setEndDate(e.target.value); }}
               />
             </div>
           </div>
@@ -200,7 +200,7 @@ export function EventForm() {
               <Input
                 id="location"
                 value={location}
-                onChange={(e) => setLocation(e.target.value)}
+                onChange={(e) => { setLocation(e.target.value); }}
                 placeholder="Honolulu Community Center"
                 required
               />
@@ -212,7 +212,7 @@ export function EventForm() {
               <Input
                 id="address"
                 value={address}
-                onChange={(e) => setAddress(e.target.value)}
+                onChange={(e) => { setAddress(e.target.value); }}
                 placeholder="123 Main St, Honolulu, HI"
               />
             </div>
@@ -235,7 +235,7 @@ export function EventForm() {
                 id="rsvp_url"
                 type="url"
                 value={rsvpUrl}
-                onChange={(e) => setRsvpUrl(e.target.value)}
+                onChange={(e) => { setRsvpUrl(e.target.value); }}
                 placeholder="https://..."
               />
             </div>
@@ -247,7 +247,7 @@ export function EventForm() {
                 id="image_url"
                 type="url"
                 value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
+                onChange={(e) => { setImageUrl(e.target.value); }}
                 placeholder="https://..."
               />
             </div>
@@ -258,7 +258,7 @@ export function EventForm() {
               id="is_public"
               type="checkbox"
               checked={isPublic}
-              onChange={(e) => setIsPublic(e.target.checked)}
+              onChange={(e) => { setIsPublic(e.target.checked); }}
               className="h-4 w-4 rounded border-slate-300"
             />
             <label htmlFor="is_public" className="text-sm text-slate-700">
@@ -272,7 +272,7 @@ export function EventForm() {
         <Button
           type="button"
           variant="outline"
-          onClick={() => router.push("/admin/events")}
+          onClick={() => { router.push("/admin/events"); }}
         >
           Cancel
         </Button>

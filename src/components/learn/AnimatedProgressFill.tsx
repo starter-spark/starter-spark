@@ -4,7 +4,7 @@ import { useLayoutEffect, useMemo, useRef } from "react"
 import type { CSSProperties } from "react"
 import { cn } from "@/lib/utils"
 
-type AnimatedProgressFillProps = {
+interface AnimatedProgressFillProps {
   progress: number
   storageKey: string
   className?: string
@@ -18,7 +18,7 @@ function clampProgress(value: number): number {
 const pendingSuffix = ":pending"
 
 function safeSessionStorageGet(key: string): string | null {
-  if (typeof window === "undefined") return null
+  if (globalThis.window === undefined) return null
   try {
     return sessionStorage.getItem(key)
   } catch {
@@ -26,8 +26,34 @@ function safeSessionStorageGet(key: string): string | null {
   }
 }
 
+function parseStoredProgress(raw: string | null): number | null {
+  if (!raw) return null
+  const num = Number(raw)
+  return Number.isFinite(num) ? num : null
+}
+
+function parsePendingProgress(raw: string | null): number | null {
+  const asNumber = parseStoredProgress(raw)
+  if (asNumber !== null) return asNumber
+
+  if (!raw) return null
+  try {
+    const parsed: unknown = JSON.parse(raw)
+    if (typeof parsed !== "object" || parsed === null) return null
+    const progress = (parsed as Record<string, unknown>).progress
+    if (typeof progress === "number" && Number.isFinite(progress)) return progress
+    if (typeof progress === "string") {
+      const num = Number(progress)
+      return Number.isFinite(num) ? num : null
+    }
+    return null
+  } catch {
+    return null
+  }
+}
+
 function safeSessionStorageSet(key: string, value: string) {
-  if (typeof window === "undefined") return
+  if (globalThis.window === undefined) return
   try {
     sessionStorage.setItem(key, value)
   } catch {
@@ -36,7 +62,7 @@ function safeSessionStorageSet(key: string, value: string) {
 }
 
 function safeSessionStorageRemove(key: string) {
-  if (typeof window === "undefined") return
+  if (globalThis.window === undefined) return
   try {
     sessionStorage.removeItem(key)
   } catch {
@@ -51,15 +77,15 @@ export function AnimatedProgressFill({
 }: AnimatedProgressFillProps) {
   const targetFromProps = useMemo(() => clampProgress(progress), [progress])
   const { initial, target, shouldClearPending } = useMemo(() => {
-    if (typeof window === "undefined") {
+    if (globalThis.window === undefined) {
       return { initial: targetFromProps, target: targetFromProps, shouldClearPending: false }
     }
 
     const storedRaw = safeSessionStorageGet(storageKey)
     const pendingRaw = safeSessionStorageGet(`${storageKey}${pendingSuffix}`)
 
-    const storedValue = storedRaw ? Number(storedRaw) : null
-    const pendingValue = pendingRaw ? Number(pendingRaw) : null
+    const storedValue = parseStoredProgress(storedRaw)
+    const pendingValue = parsePendingProgress(pendingRaw)
 
     const stored = storedValue === null ? null : clampProgress(storedValue)
     const pending = pendingValue === null ? null : clampProgress(pendingValue)
@@ -90,7 +116,7 @@ export function AnimatedProgressFill({
       el.style.width = `${target}%`
     })
 
-    return () => cancelAnimationFrame(raf)
+    return () => { cancelAnimationFrame(raf); }
   }, [initial, shouldClearPending, storageKey, target])
 
   return (

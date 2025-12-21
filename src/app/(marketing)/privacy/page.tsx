@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { createClient } from "@/lib/supabase/server"
 import ReactMarkdown from "react-markdown"
+import { isExternalHref, sanitizeMarkdownUrl, safeMarkdownUrlTransform } from "@/lib/safe-url"
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
@@ -16,7 +17,7 @@ export default async function PrivacyPage() {
     .select("title, content, updated_at")
     .eq("page_key", "privacy")
     .not("published_at", "is", null)
-    .single()
+    .maybeSingle()
 
   const lastUpdated = page?.updated_at
     ? new Date(page.updated_at).toLocaleDateString("en-US", {
@@ -37,7 +38,28 @@ export default async function PrivacyPage() {
           <div className="bg-white rounded border border-slate-200 p-8">
             {page?.content ? (
               <div className="prose prose-slate max-w-none">
-                <ReactMarkdown>{page.content}</ReactMarkdown>
+                <ReactMarkdown
+                  urlTransform={safeMarkdownUrlTransform}
+                  components={{
+                    a: ({ href, children }) => {
+                      const safeHref = sanitizeMarkdownUrl(href, "href")
+                      if (!safeHref) return <span>{children}</span>
+                      const external = isExternalHref(safeHref)
+                      return (
+                        <a
+                          href={safeHref}
+                          target={external ? "_blank" : undefined}
+                          rel={external ? "noopener noreferrer" : undefined}
+                          className="text-cyan-700 hover:underline"
+                        >
+                          {children}
+                        </a>
+                      )
+                    },
+                  }}
+                >
+                  {page.content}
+                </ReactMarkdown>
               </div>
             ) : (
               <p className="text-slate-500 font-mono text-sm">

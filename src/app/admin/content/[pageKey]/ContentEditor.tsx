@@ -11,6 +11,7 @@ import { ArrowLeft, Save, Eye, CheckCircle, Loader2, EyeOff, Trash2 } from "luci
 import Link from "next/link"
 import ReactMarkdown from "react-markdown"
 import { updatePageContent, unpublishPageContent, deleteCustomPage } from "../actions"
+import { isExternalHref, sanitizeMarkdownUrl, safeMarkdownUrlTransform } from "@/lib/safe-url"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -95,7 +96,7 @@ export function ContentEditor({ page }: ContentEditorProps) {
 
   const isPublished = !!page.published_at
 
-  const handleSave = (publish: boolean = false) => {
+  const handleSave = (publish = false) => {
     setError(null)
     setSuccess(null)
 
@@ -229,7 +230,7 @@ export function ContentEditor({ page }: ContentEditorProps) {
             <Input
               id="title"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => { setTitle(e.target.value); }}
               placeholder="Enter page title"
             />
           </div>
@@ -303,14 +304,35 @@ export function ContentEditor({ page }: ContentEditorProps) {
                 <TabsContent value="edit" className="mt-2">
                   <textarea
                     value={content}
-                    onChange={(e) => setContent(e.target.value)}
+                    onChange={(e) => { setContent(e.target.value); }}
                     className="w-full h-[500px] font-mono text-sm p-4 border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-700 focus:ring-offset-2"
                     placeholder="Enter Markdown content..."
                   />
                 </TabsContent>
                 <TabsContent value="preview" className="mt-2">
                   <div className="w-full min-h-[500px] p-6 border border-slate-200 rounded-md bg-slate-50 prose prose-slate max-w-none">
-                    <ReactMarkdown>{content}</ReactMarkdown>
+                    <ReactMarkdown
+                      urlTransform={safeMarkdownUrlTransform}
+                      components={{
+                        a: ({ href, children }) => {
+                          const safeHref = sanitizeMarkdownUrl(href, "href")
+                          if (!safeHref) return <span>{children}</span>
+                          const external = isExternalHref(safeHref)
+                          return (
+                            <a
+                              href={safeHref}
+                              target={external ? "_blank" : undefined}
+                              rel={external ? "noopener noreferrer" : undefined}
+                              className="text-cyan-700 hover:underline"
+                            >
+                              {children}
+                            </a>
+                          )
+                        },
+                      }}
+                    >
+                      {content}
+                    </ReactMarkdown>
                   </div>
                 </TabsContent>
               </Tabs>
@@ -327,7 +349,7 @@ export function ContentEditor({ page }: ContentEditorProps) {
             <Button
               type="button"
               variant="outline"
-              onClick={() => setShowUnpublishDialog(true)}
+              onClick={() => { setShowUnpublishDialog(true); }}
               disabled={isPending}
               className="text-amber-600 border-amber-300 hover:bg-amber-50"
             >
@@ -339,7 +361,7 @@ export function ContentEditor({ page }: ContentEditorProps) {
             <Button
               type="button"
               variant="outline"
-              onClick={() => setShowDeleteDialog(true)}
+              onClick={() => { setShowDeleteDialog(true); }}
               disabled={isPending}
               className="text-red-600 border-red-300 hover:bg-red-50"
             >
@@ -352,7 +374,7 @@ export function ContentEditor({ page }: ContentEditorProps) {
           <Button
             type="button"
             variant="outline"
-            onClick={() => handleSave(false)}
+            onClick={() => { handleSave(false); }}
             disabled={isPending}
           >
             {isPending ? (
@@ -364,7 +386,7 @@ export function ContentEditor({ page }: ContentEditorProps) {
           </Button>
           <Button
             type="button"
-            onClick={() => handleSave(true)}
+            onClick={() => { handleSave(true); }}
             disabled={isPending}
             className="bg-cyan-700 hover:bg-cyan-600"
           >

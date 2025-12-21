@@ -83,7 +83,7 @@ export function ProductSpotlightSection({ product }: ProductSpotlightProps) {
 	              {hasImages && displayImageSrc ? (
 	                <button
 	                  type="button"
-	                  onClick={() => setLightboxOpen(true)}
+	                  onClick={() => { setLightboxOpen(true); }}
 	                  className="absolute inset-0 cursor-zoom-in group"
 	                  aria-label="Open image viewer"
 	                >
@@ -139,7 +139,7 @@ export function ProductSpotlightSection({ product }: ProductSpotlightProps) {
                   <button
                     key={imageUrl + idx}
                     type="button"
-                    onClick={() => handleSelectImage(idx)}
+                    onClick={() => { handleSelectImage(idx); }}
                     className={cn(
                       "shrink-0 size-20 rounded border overflow-hidden transition-all cursor-pointer relative",
                       selectedImage === idx

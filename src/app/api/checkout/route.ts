@@ -17,7 +17,54 @@ export async function POST(request: Request) {
   if (rateLimitResponse) return rateLimitResponse
 
   try {
-    const { items } = (await request.json()) as { items: CartItem[] }
+    const body: unknown = await request.json()
+    const rawItems = (body as { items?: unknown }).items
+    if (!Array.isArray(rawItems)) {
+      return NextResponse.json(
+        { error: "Invalid cart payload" },
+        { status: 400 }
+      )
+    }
+
+    // Normalize + validate items (no negative/NaN/huge quantities; merge duplicates)
+    const quantitiesBySlug = new Map<string, number>()
+    for (const raw of rawItems) {
+      if (!raw || typeof raw !== "object") {
+        return NextResponse.json({ error: "Invalid cart item" }, { status: 400 })
+      }
+
+      const item = raw as Partial<CartItem>
+      const slug = typeof item.slug === "string" ? item.slug.trim() : ""
+      if (!slug || slug.length > 80) {
+        return NextResponse.json({ error: "Invalid product slug" }, { status: 400 })
+      }
+
+      const quantityRaw =
+        typeof item.quantity === "number"
+          ? item.quantity
+          : typeof item.quantity === "string"
+            ? Number(item.quantity)
+            : Number.NaN
+
+      if (!Number.isFinite(quantityRaw) || !Number.isInteger(quantityRaw)) {
+        return NextResponse.json({ error: "Invalid quantity" }, { status: 400 })
+      }
+
+      if (quantityRaw <= 0) {
+        return NextResponse.json({ error: "Quantity must be at least 1" }, { status: 400 })
+      }
+
+      const nextQty = (quantitiesBySlug.get(slug) ?? 0) + quantityRaw
+      if (nextQty > 99) {
+        return NextResponse.json({ error: "Quantity too large" }, { status: 400 })
+      }
+      quantitiesBySlug.set(slug, nextQty)
+    }
+
+    const items = Array.from(quantitiesBySlug.entries()).map(([slug, quantity]) => ({
+      slug,
+      quantity,
+    }))
 
     if (!items || items.length === 0) {
       return NextResponse.json(
@@ -60,12 +107,10 @@ export async function POST(request: Request) {
       let currentPriceCents = product.price_cents
       if (product.discount_expires_at) {
         const expiresAt = new Date(product.discount_expires_at)
-        if (expiresAt <= new Date()) {
-          // Discount expired - use original price if available
-          if (product.original_price_cents) {
+        if (expiresAt <= new Date() && // Discount expired - use original price if available
+          product.original_price_cents) {
             currentPriceCents = product.original_price_cents
           }
-        }
       }
 
       verifiedItems.push({

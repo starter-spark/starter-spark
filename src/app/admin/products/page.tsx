@@ -11,6 +11,11 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Plus, Pencil, Star } from "lucide-react"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { formatPrice } from "@/lib/validation"
 
 export const metadata = {
@@ -108,11 +113,16 @@ export default async function ProductsPage() {
                       )}
                     </TableCell>
                     <TableCell>
-                      <Button asChild variant="ghost" size="sm">
-                        <Link href={`/admin/products/${product.slug}`} aria-label={`Edit ${product.name}`}>
-                          <Pencil className="h-4 w-4" />
-                        </Link>
-                      </Button>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button asChild variant="ghost" size="sm">
+                            <Link href={`/admin/products/${product.slug}`} aria-label={`Edit ${product.name}`}>
+                              <Pencil className="h-4 w-4" />
+                            </Link>
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Edit product</TooltipContent>
+                      </Tooltip>
                     </TableCell>
                   </TableRow>
                 )

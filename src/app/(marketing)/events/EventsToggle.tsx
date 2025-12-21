@@ -42,11 +42,11 @@ function formatDateRange(start: string, end: string | null): string {
   const endDate = end ? new Date(end) : null
 
   if (endDate && startDate.toDateString() === endDate.toDateString()) {
-    return `${formatEventTime(start)} - ${formatEventTime(end as string)}`
+    return `${formatEventTime(start)} - ${formatEventTime(end!)}`
   }
 
   if (endDate) {
-    return `${formatEventDate(start)} - ${formatEventDate(end as string)}`
+    return `${formatEventDate(start)} - ${formatEventDate(end!)}`
   }
 
   return formatEventTime(start)
@@ -141,7 +141,7 @@ export function EventsToggle({ pastEvents }: EventsToggleProps) {
   return (
     <div>
       <button
-        onClick={() => setIsExpanded(!isExpanded)}
+        onClick={() => { setIsExpanded(!isExpanded); }}
         className="flex items-center gap-2 font-mono text-lg text-slate-600 hover:text-slate-900 transition-colors mb-6"
       >
         <ChevronDown

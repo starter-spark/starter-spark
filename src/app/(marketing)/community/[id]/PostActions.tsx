@@ -18,7 +18,7 @@ export function PostActions({ postId, isAuthenticated }: PostActionsProps) {
   const [reported, setReported] = useState(false)
 
   const handleShare = async () => {
-    const url = window.location.href
+    const url = globalThis.location.href
 
     if (navigator.share) {
       try {
@@ -39,23 +39,23 @@ export function PostActions({ postId, isAuthenticated }: PostActionsProps) {
     try {
       await navigator.clipboard.writeText(text)
       setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+      setTimeout(() => { setCopied(false); }, 2000)
     } catch {
       // Fallback for older browsers
       const textArea = document.createElement("textarea")
       textArea.value = text
-      document.body.appendChild(textArea)
+      document.body.append(textArea)
       textArea.select()
       document.execCommand("copy")
-      document.body.removeChild(textArea)
+      textArea.remove()
       setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+      setTimeout(() => { setCopied(false); }, 2000)
     }
   }
 
   const handleSave = () => {
     if (!isAuthenticated) {
-      router.push("/login?redirect=" + encodeURIComponent(window.location.pathname))
+      router.push("/login?redirect=" + encodeURIComponent(globalThis.location.pathname))
       return
     }
     // TODO: Implement save/bookmark functionality
@@ -64,7 +64,7 @@ export function PostActions({ postId, isAuthenticated }: PostActionsProps) {
 
   const handleReport = async () => {
     if (!isAuthenticated) {
-      router.push("/login?redirect=" + encodeURIComponent(window.location.pathname))
+      router.push("/login?redirect=" + encodeURIComponent(globalThis.location.pathname))
       return
     }
 
@@ -107,7 +107,7 @@ export function PostActions({ postId, isAuthenticated }: PostActionsProps) {
         )}
       </button>
       <button
-        onClick={() => void handleSave()}
+        onClick={() => { handleSave(); }}
         className="flex items-center gap-2 text-sm text-slate-500 hover:text-cyan-700 transition-colors"
       >
         <Bookmark className="w-4 h-4" />

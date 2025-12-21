@@ -103,7 +103,7 @@ function getDismissKey(bannerId: string) {
 }
 
 function isDismissed(bannerId: string, dismissDurationHours: number | null): boolean {
-  if (typeof window === "undefined") return false
+  if (globalThis.window === undefined) return false
 
   const dismissedAt = localStorage.getItem(getDismissKey(bannerId))
   if (!dismissedAt) return false
@@ -112,14 +112,14 @@ function isDismissed(bannerId: string, dismissDurationHours: number | null): boo
   if (dismissDurationHours === null) return true
 
   // Check if enough time has passed
-  const dismissedTime = parseInt(dismissedAt, 10)
+  const dismissedTime = Number.parseInt(dismissedAt, 10)
   const hoursSinceDismissed = (Date.now() - dismissedTime) / (1000 * 60 * 60)
 
   return hoursSinceDismissed < dismissDurationHours
 }
 
 function dismissBanner(bannerId: string) {
-  if (typeof window === "undefined") return
+  if (globalThis.window === undefined) return
   localStorage.setItem(getDismissKey(bannerId), Date.now().toString())
 }
 
@@ -175,11 +175,11 @@ export function SiteBanner() {
 
       // Check which banners are already dismissed
       const dismissed = new Set<string>()
-      transformedBanners.forEach(banner => {
+      for (const banner of transformedBanners) {
         if (isDismissed(banner.id, banner.dismiss_duration_hours)) {
           dismissed.add(banner.id)
         }
-      })
+      }
       setDismissedIds(dismissed)
       setIsLoading(false)
     }
@@ -236,7 +236,7 @@ export function SiteBanner() {
 
                 {banner.is_dismissible && (
                   <button
-                    onClick={() => handleDismiss(banner.id)}
+                    onClick={() => { handleDismiss(banner.id); }}
                     className={`absolute right-4 p-1.5 rounded-full transition-colors ${scheme.dismissStyle}`}
                     aria-label="Dismiss banner"
                   >

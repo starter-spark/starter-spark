@@ -43,7 +43,7 @@ export function GenerateLicensesForm({ products }: GenerateLicensesFormProps) {
   const handleCopyCode = async (code: string, index: number) => {
     await navigator.clipboard.writeText(code)
     setCopiedIndex(index)
-    setTimeout(() => setCopiedIndex(null), 2000)
+    setTimeout(() => { setCopiedIndex(null); }, 2000)
   }
 
   const handleCopyAll = async () => {
@@ -84,7 +84,7 @@ export function GenerateLicensesForm({ products }: GenerateLicensesFormProps) {
               <Copy className="mr-2 h-4 w-4" />
               Copy All
             </Button>
-            <Button variant="outline" onClick={() => void handleDownloadCSV()}>
+            <Button variant="outline" onClick={() => { handleDownloadCSV(); }}>
               <Download className="mr-2 h-4 w-4" />
               Download CSV
             </Button>
@@ -124,7 +124,7 @@ export function GenerateLicensesForm({ products }: GenerateLicensesFormProps) {
             </Button>
             <Button
               className="bg-cyan-700 hover:bg-cyan-600"
-              onClick={() => router.push("/admin/licenses")}
+              onClick={() => { router.push("/admin/licenses"); }}
             >
               View All Licenses
             </Button>
@@ -135,7 +135,7 @@ export function GenerateLicensesForm({ products }: GenerateLicensesFormProps) {
   }
 
   return (
-    <form onSubmit={(e) => void handleSubmit(e)} className="space-y-6">
+    <form onSubmit={(e) => { handleSubmit(e); }} className="space-y-6">
       {error && (
         <div className="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-600">
           {error}
@@ -157,7 +157,7 @@ export function GenerateLicensesForm({ products }: GenerateLicensesFormProps) {
             <select
               id="product"
               value={productId}
-              onChange={(e) => setProductId(e.target.value)}
+              onChange={(e) => { setProductId(e.target.value); }}
               required
               className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-700 focus:ring-offset-2"
             >
@@ -180,7 +180,7 @@ export function GenerateLicensesForm({ products }: GenerateLicensesFormProps) {
                 min="1"
                 max="100"
                 value={quantity}
-                onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
+                onChange={(e) => { setQuantity(Number.parseInt(e.target.value) || 1); }}
                 required
               />
               <p className="text-xs text-slate-500">Max 100 per batch</p>
@@ -194,7 +194,7 @@ export function GenerateLicensesForm({ products }: GenerateLicensesFormProps) {
                 id="source"
                 value={source}
                 onChange={(e) =>
-                  setSource(e.target.value as "online_purchase" | "physical_card")
+                  { setSource(e.target.value as "online_purchase" | "physical_card"); }
                 }
                 required
                 className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-700 focus:ring-offset-2"
@@ -214,7 +214,7 @@ export function GenerateLicensesForm({ products }: GenerateLicensesFormProps) {
         <Button
           type="button"
           variant="outline"
-          onClick={() => router.push("/admin/licenses")}
+          onClick={() => { router.push("/admin/licenses"); }}
         >
           Cancel
         </Button>

@@ -4,6 +4,11 @@ import { useState } from "react"
 import { Copy, Check } from "lucide-react"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
+import {
+  isExternalHref,
+  sanitizeMarkdownUrl,
+  safeMarkdownUrlTransform,
+} from "@/lib/safe-url"
 
 interface MarkdownContentProps {
   content: string
@@ -16,7 +21,7 @@ function CodeBlock({ code, language }: { code: string; language: string }) {
   const handleCopy = () => {
     void navigator.clipboard.writeText(code)
     setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+    setTimeout(() => { setCopied(false); }, 2000)
   }
 
   return (
@@ -28,6 +33,7 @@ function CodeBlock({ code, language }: { code: string; language: string }) {
         <button
           onClick={handleCopy}
           className="text-slate-500 hover:text-slate-600 transition-colors"
+          type="button"
         >
           {copied ? (
             <Check className="w-4 h-4 text-green-500" />
@@ -48,6 +54,7 @@ export function MarkdownContent({ content }: MarkdownContentProps) {
     <div className="prose prose-slate max-w-none">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
+        urlTransform={safeMarkdownUrlTransform}
         components={{
           h2: ({ children }) => (
             <h2 className="font-mono text-xl text-slate-900 mt-6 mb-3">{children}</h2>
@@ -67,18 +74,23 @@ export function MarkdownContent({ content }: MarkdownContentProps) {
           li: ({ children }) => (
             <li className="text-slate-600 ml-4">{children}</li>
           ),
-          a: ({ href, children }) => (
-            <a
-              href={href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-cyan-700 hover:underline"
-            >
-              {children}
-            </a>
-          ),
+          a: ({ href, children }) => {
+            const safeHref = sanitizeMarkdownUrl(href, "href")
+            if (!safeHref) return <span>{children}</span>
+            const external = isExternalHref(safeHref)
+            return (
+              <a
+                href={safeHref}
+                target={external ? "_blank" : undefined}
+                rel={external ? "noopener noreferrer" : undefined}
+                className="text-cyan-700 hover:underline"
+              >
+                {children}
+              </a>
+            )
+          },
           code: ({ className, children }) => {
-            const match = (className || "").match(/language-(\w+)/)
+            const match = /language-(\w+)/.exec((className || ""))
             const isInline = !match
 
             if (isInline) {

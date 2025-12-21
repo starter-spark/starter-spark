@@ -4,30 +4,93 @@ import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import type { Json } from "@/lib/supabase/database.types"
+import { requireAdminOrStaff } from "@/lib/auth"
+import crypto from "node:crypto"
 
 // Generate slug from title
 function generateSlug(title: string): string {
   return title
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "")
+    .replaceAll(/[^a-z0-9]+/g, "-")
+    .replaceAll(/(^-|-$)/g, "")
+}
+
+// Generate unique slug by checking for existing slugs and appending suffix if needed
+async function generateUniqueSlug(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  table: "lessons" | "modules" | "courses",
+  parentColumn: string | null,
+  parentId: string | null,
+  baseSlug: string
+): Promise<string> {
+  // First check if base slug is available
+  let query = supabase.from(table).select("slug").eq("slug", baseSlug)
+  if (parentColumn && parentId) {
+    query = query.eq(parentColumn, parentId)
+  }
+
+  const { data: existing } = await query.maybeSingle()
+  if (!existing) return baseSlug
+
+  // Slug exists, find a unique one by appending numbers
+  let suffix = 2
+  while (suffix < 100) {
+    const candidateSlug = `${baseSlug}-${suffix}`
+    let checkQuery = supabase.from(table).select("slug").eq("slug", candidateSlug)
+    if (parentColumn && parentId) {
+      checkQuery = checkQuery.eq(parentColumn, parentId)
+    }
+
+    const { data: check } = await checkQuery.maybeSingle()
+    if (!check) return candidateSlug
+    suffix++
+  }
+
+  // Fallback to random suffix if somehow we have 100+ duplicates
+  return `${baseSlug}-${crypto.randomUUID().slice(0, 8)}`
+}
+
+function assertNonEmptySlug(title: string, entityLabel: string): string {
+  const slug = generateSlug(title)
+  if (!slug) {
+    throw new Error(`${entityLabel} title must contain letters or numbers`)
+  }
+  return slug
+}
+
+function safeJsonArray(value: string, label: string): { ok: true; value: Json[] } | { ok: false; error: string } {
+  try {
+    const parsed: unknown = JSON.parse(value)
+    if (!Array.isArray(parsed)) return { ok: false, error: `${label} must be a JSON array` }
+    return { ok: true, value: parsed as unknown as Json[] }
+  } catch {
+    return { ok: false, error: `${label} is not valid JSON` }
+  }
 }
 
 // Course actions
 export async function createCourse(formData: FormData): Promise<void> {
   const supabase = await createClient()
+  const guard = await requireAdminOrStaff(supabase)
+  if (!guard.ok) throw new Error(guard.error)
 
   const title = formData.get("title") as string
   const description = formData.get("description") as string
   const productId = formData.get("product_id") as string
   const difficulty = formData.get("difficulty") as string
-  const durationMinutes = parseInt(formData.get("duration_minutes") as string) || 0
+  const durationMinutes = Number.parseInt(formData.get("duration_minutes") as string) || 0
 
   if (!title || !productId) {
     throw new Error("Title and product are required")
   }
 
-  const slug = generateSlug(title)
+  const baseSlug = generateSlug(title)
+  if (!baseSlug) {
+    throw new Error("Course title must contain letters or numbers")
+  }
+
+  // Generate unique slug (courses have global unique constraint on slug)
+  const slug = await generateUniqueSlug(supabase, "courses", null, null, baseSlug)
 
   const { data, error } = await supabase
     .from("courses")
@@ -41,11 +104,15 @@ export async function createCourse(formData: FormData): Promise<void> {
       is_published: false,
     })
     .select("id")
-    .single()
+    .maybeSingle()
 
   if (error) {
     console.error("Error creating course:", error)
     throw new Error(error.message)
+  }
+
+  if (!data) {
+    throw new Error("Failed to create course")
   }
 
   revalidatePath("/admin/learn")
@@ -54,16 +121,20 @@ export async function createCourse(formData: FormData): Promise<void> {
 
 export async function updateCourse(courseId: string, formData: FormData) {
   const supabase = await createClient()
+  const guard = await requireAdminOrStaff(supabase)
+  if (!guard.ok) return { error: guard.error }
 
   const title = formData.get("title") as string
   const description = formData.get("description") as string
   const difficulty = formData.get("difficulty") as string
-  const durationMinutes = parseInt(formData.get("duration_minutes") as string) || 0
+  const durationMinutes = Number.parseInt(formData.get("duration_minutes") as string) || 0
   const isPublished = formData.get("is_published") === "true"
 
+  if (!title) return { error: "Title is required" }
   const slug = generateSlug(title)
+  if (!slug) return { error: "Title must contain letters or numbers" }
 
-  const { error } = await supabase
+  const { data: updated, error } = await supabase
     .from("courses")
     .update({
       title,
@@ -75,10 +146,16 @@ export async function updateCourse(courseId: string, formData: FormData) {
       updated_at: new Date().toISOString(),
     })
     .eq("id", courseId)
+    .select("id")
+    .maybeSingle()
 
   if (error) {
     console.error("Error updating course:", error)
     return { error: error.message }
+  }
+
+  if (!updated) {
+    return { error: "Course not found" }
   }
 
   revalidatePath("/admin/learn")
@@ -88,12 +165,23 @@ export async function updateCourse(courseId: string, formData: FormData) {
 
 export async function deleteCourse(courseId: string) {
   const supabase = await createClient()
+  const guard = await requireAdminOrStaff(supabase)
+  if (!guard.ok) return { error: guard.error }
 
-  const { error } = await supabase.from("courses").delete().eq("id", courseId)
+  const { data: deleted, error } = await supabase
+    .from("courses")
+    .delete()
+    .eq("id", courseId)
+    .select("id")
+    .maybeSingle()
 
   if (error) {
     console.error("Error deleting course:", error)
     return { error: error.message }
+  }
+
+  if (!deleted) {
+    return { error: "Course not found" }
   }
 
   revalidatePath("/admin/learn")
@@ -103,6 +191,8 @@ export async function deleteCourse(courseId: string) {
 // Module actions
 export async function createModule(courseId: string, formData: FormData) {
   const supabase = await createClient()
+  const guard = await requireAdminOrStaff(supabase)
+  if (!guard.ok) return { error: guard.error }
 
   const title = formData.get("title") as string
   const description = formData.get("description") as string
@@ -113,18 +203,29 @@ export async function createModule(courseId: string, formData: FormData) {
   }
 
   // Get the highest sort_order for this course
-  const { data: existingModules } = await supabase
+  const { data: existingModules, error: sortError } = await supabase
     .from("modules")
     .select("sort_order")
     .eq("course_id", courseId)
     .order("sort_order", { ascending: false })
     .limit(1)
 
-  const nextSortOrder = existingModules?.[0]?.sort_order !== undefined
-    ? existingModules[0].sort_order + 1
-    : 0
+  if (sortError) {
+    console.error("Error fetching module sort order:", sortError)
+    return { error: "Failed to create module" }
+  }
 
-  const slug = generateSlug(title)
+  const nextSortOrder = existingModules?.[0]?.sort_order === undefined
+    ? 0
+    : existingModules[0].sort_order + 1
+
+  const baseSlug = generateSlug(title)
+  if (!baseSlug) {
+    return { error: "Title must contain letters or numbers" }
+  }
+
+  // Generate unique slug within this course
+  const slug = await generateUniqueSlug(supabase, "modules", "course_id", courseId, baseSlug)
 
   const { data, error } = await supabase
     .from("modules")
@@ -138,11 +239,15 @@ export async function createModule(courseId: string, formData: FormData) {
       is_published: true,
     })
     .select("id")
-    .single()
+    .maybeSingle()
 
   if (error) {
     console.error("Error creating module:", error)
     return { error: error.message }
+  }
+
+  if (!data) {
+    return { error: "Failed to create module" }
   }
 
   revalidatePath(`/admin/learn/${courseId}`)
@@ -151,6 +256,8 @@ export async function createModule(courseId: string, formData: FormData) {
 
 export async function updateModule(moduleId: string, courseId: string, formData: FormData) {
   const supabase = await createClient()
+  const guard = await requireAdminOrStaff(supabase)
+  if (!guard.ok) return { error: guard.error }
 
   const title = formData.get("title") as string
   const description = formData.get("description") as string
@@ -158,8 +265,10 @@ export async function updateModule(moduleId: string, courseId: string, formData:
   const isPublished = formData.get("is_published") === "true"
 
   const slug = generateSlug(title)
+  if (!title) return { error: "Title is required" }
+  if (!slug) return { error: "Title must contain letters or numbers" }
 
-  const { error } = await supabase
+  const { data: updated, error } = await supabase
     .from("modules")
     .update({
       title,
@@ -170,10 +279,17 @@ export async function updateModule(moduleId: string, courseId: string, formData:
       updated_at: new Date().toISOString(),
     })
     .eq("id", moduleId)
+    .eq("course_id", courseId)
+    .select("id")
+    .maybeSingle()
 
   if (error) {
     console.error("Error updating module:", error)
     return { error: error.message }
+  }
+
+  if (!updated) {
+    return { error: "Module not found" }
   }
 
   revalidatePath(`/admin/learn/${courseId}`)
@@ -182,12 +298,24 @@ export async function updateModule(moduleId: string, courseId: string, formData:
 
 export async function deleteModule(moduleId: string, courseId: string) {
   const supabase = await createClient()
+  const guard = await requireAdminOrStaff(supabase)
+  if (!guard.ok) return { error: guard.error }
 
-  const { error } = await supabase.from("modules").delete().eq("id", moduleId)
+  const { data: deleted, error } = await supabase
+    .from("modules")
+    .delete()
+    .eq("id", moduleId)
+    .eq("course_id", courseId)
+    .select("id")
+    .maybeSingle()
 
   if (error) {
     console.error("Error deleting module:", error)
     return { error: error.message }
+  }
+
+  if (!deleted) {
+    return { error: "Module not found" }
   }
 
   revalidatePath(`/admin/learn/${courseId}`)
@@ -196,13 +324,45 @@ export async function deleteModule(moduleId: string, courseId: string) {
 
 export async function reorderModules(courseId: string, moduleIds: string[]) {
   const supabase = await createClient()
+  const guard = await requireAdminOrStaff(supabase)
+  if (!guard.ok) return { error: guard.error }
+
+  const uniqueIds = new Set(moduleIds)
+  if (uniqueIds.size !== moduleIds.length) {
+    return { error: "Invalid module order" }
+  }
+
+  const { data: existingModules, error: verifyError } = await supabase
+    .from("modules")
+    .select("id")
+    .eq("course_id", courseId)
+
+  if (verifyError) {
+    console.error("Error validating module order:", verifyError)
+    return { error: "Failed to reorder modules" }
+  }
+
+  const existingIds = new Set((existingModules ?? []).map((m) => m.id))
+  if (existingIds.size !== moduleIds.length) {
+    return { error: "Invalid module order" }
+  }
+
+  for (const id of moduleIds) {
+    if (!existingIds.has(id)) return { error: "Invalid module order" }
+  }
+
+  if (moduleIds.length === 0) {
+    revalidatePath(`/admin/learn/${courseId}`)
+    return { success: true }
+  }
 
   // Update each module's sort_order
   const updates = moduleIds.map((id, index) =>
     supabase
       .from("modules")
-      .update({ sort_order: index })
+      .update({ sort_order: index, updated_at: new Date().toISOString() })
       .eq("id", id)
+      .eq("course_id", courseId)
   )
 
   const results = await Promise.all(updates)
@@ -220,6 +380,8 @@ export async function reorderModules(courseId: string, moduleIds: string[]) {
 // Lesson actions
 export async function createLesson(moduleId: string, courseId: string, formData: FormData) {
   const supabase = await createClient()
+  const guard = await requireAdminOrStaff(supabase)
+  if (!guard.ok) return { error: guard.error }
 
   const title = formData.get("title") as string
   const description = formData.get("description") as string
@@ -230,18 +392,29 @@ export async function createLesson(moduleId: string, courseId: string, formData:
   }
 
   // Get the highest sort_order for this module
-  const { data: existingLessons } = await supabase
+  const { data: existingLessons, error: sortError } = await supabase
     .from("lessons")
     .select("sort_order")
     .eq("module_id", moduleId)
     .order("sort_order", { ascending: false })
     .limit(1)
 
-  const nextSortOrder = existingLessons?.[0]?.sort_order !== undefined
-    ? existingLessons[0].sort_order + 1
-    : 0
+  if (sortError) {
+    console.error("Error fetching lesson sort order:", sortError)
+    return { error: "Failed to create lesson" }
+  }
 
-  const slug = generateSlug(title)
+  const nextSortOrder = existingLessons?.[0]?.sort_order === undefined
+    ? 0
+    : existingLessons[0].sort_order + 1
+
+  const baseSlug = generateSlug(title)
+  if (!baseSlug) {
+    return { error: "Title must contain letters or numbers" }
+  }
+
+  // Generate unique slug within this module
+  const slug = await generateUniqueSlug(supabase, "lessons", "module_id", moduleId, baseSlug)
 
   const { data, error } = await supabase
     .from("lessons")
@@ -257,11 +430,15 @@ export async function createLesson(moduleId: string, courseId: string, formData:
       estimated_minutes: 15,
     })
     .select("id")
-    .single()
+    .maybeSingle()
 
   if (error) {
     console.error("Error creating lesson:", error)
     return { error: error.message }
+  }
+
+  if (!data) {
+    return { error: "Failed to create lesson" }
   }
 
   const { error: contentError } = await supabase.from("lesson_content").insert({
@@ -272,6 +449,7 @@ export async function createLesson(moduleId: string, courseId: string, formData:
   })
   if (contentError) {
     console.error("Error creating lesson content:", contentError)
+    await supabase.from("lessons").delete().eq("id", data.id)
     return { error: contentError.message }
   }
 
@@ -285,13 +463,15 @@ export async function updateLesson(
   formData: FormData
 ) {
   const supabase = await createClient()
+  const guard = await requireAdminOrStaff(supabase)
+  if (!guard.ok) return { error: guard.error }
 
   const title = formData.get("title") as string
   const description = formData.get("description") as string
   const content = (formData.get("content") as string) || ""
   const lessonType = (formData.get("lesson_type") as string) || "content"
   const difficulty = (formData.get("difficulty") as string) || "beginner"
-  const estimatedMinutes = parseInt(formData.get("estimated_minutes") as string) || 15
+  const estimatedMinutes = Number.parseInt(formData.get("estimated_minutes") as string) || 15
   const isPublished = formData.get("is_published") === "true"
   const isOptional = formData.get("is_optional") === "true"
   const videoUrl = formData.get("video_url") as string
@@ -302,14 +482,9 @@ export async function updateLesson(
   const contentBlocksRaw = formData.get("content_blocks") as string
   let contentBlocks: Json[] = []
   if (contentBlocksRaw) {
-    try {
-      const parsed: unknown = JSON.parse(contentBlocksRaw)
-      if (Array.isArray(parsed)) {
-        contentBlocks = parsed as Json[]
-      }
-    } catch {
-      // Keep empty array
-    }
+    const parsed = safeJsonArray(contentBlocksRaw, "Content blocks")
+    if (!parsed.ok) return { error: parsed.error }
+    contentBlocks = parsed.value
   }
 
   let prerequisites: string[] | null = null
@@ -320,13 +495,15 @@ export async function updateLesson(
         Array.isArray(value) && value.every((v) => typeof v === "string")
       if (isStringArray(parsed)) prerequisites = parsed
     } catch {
-      prerequisites = null
+      return { error: "Prerequisites is not valid JSON" }
     }
   }
 
   const slug = generateSlug(title)
+  if (!title) return { error: "Title is required" }
+  if (!slug) return { error: "Title must contain letters or numbers" }
 
-  const { error: metaError } = await supabase
+  const { data: updatedLesson, error: metaError } = await supabase
     .from("lessons")
     .update({
       title,
@@ -341,10 +518,16 @@ export async function updateLesson(
       updated_at: new Date().toISOString(),
     })
     .eq("id", lessonId)
+    .select("id")
+    .maybeSingle()
 
   if (metaError) {
     console.error("Error updating lesson metadata:", metaError)
     return { error: metaError.message }
+  }
+
+  if (!updatedLesson) {
+    return { error: "Lesson not found" }
   }
 
   const { error: contentError } = await supabase
@@ -373,12 +556,23 @@ export async function updateLesson(
 
 export async function deleteLesson(lessonId: string, courseId: string) {
   const supabase = await createClient()
+  const guard = await requireAdminOrStaff(supabase)
+  if (!guard.ok) return { error: guard.error }
 
-  const { error } = await supabase.from("lessons").delete().eq("id", lessonId)
+  const { data: deleted, error } = await supabase
+    .from("lessons")
+    .delete()
+    .eq("id", lessonId)
+    .select("id, module_id")
+    .maybeSingle()
 
   if (error) {
     console.error("Error deleting lesson:", error)
     return { error: error.message }
+  }
+
+  if (!deleted) {
+    return { error: "Lesson not found" }
   }
 
   revalidatePath(`/admin/learn/${courseId}`)
@@ -387,12 +581,44 @@ export async function deleteLesson(lessonId: string, courseId: string) {
 
 export async function reorderLessons(moduleId: string, courseId: string, lessonIds: string[]) {
   const supabase = await createClient()
+  const guard = await requireAdminOrStaff(supabase)
+  if (!guard.ok) return { error: guard.error }
+
+  const uniqueIds = new Set(lessonIds)
+  if (uniqueIds.size !== lessonIds.length) {
+    return { error: "Invalid lesson order" }
+  }
+
+  const { data: existingLessons, error: verifyError } = await supabase
+    .from("lessons")
+    .select("id")
+    .eq("module_id", moduleId)
+
+  if (verifyError) {
+    console.error("Error validating lesson order:", verifyError)
+    return { error: "Failed to reorder lessons" }
+  }
+
+  const existingIds = new Set((existingLessons ?? []).map((l) => l.id))
+  if (existingIds.size !== lessonIds.length) {
+    return { error: "Invalid lesson order" }
+  }
+
+  for (const id of lessonIds) {
+    if (!existingIds.has(id)) return { error: "Invalid lesson order" }
+  }
+
+  if (lessonIds.length === 0) {
+    revalidatePath(`/admin/learn/${courseId}`)
+    return { success: true }
+  }
 
   const updates = lessonIds.map((id, index) =>
     supabase
       .from("lessons")
-      .update({ sort_order: index })
+      .update({ sort_order: index, updated_at: new Date().toISOString() })
       .eq("id", id)
+      .eq("module_id", moduleId)
   )
 
   const results = await Promise.all(updates)

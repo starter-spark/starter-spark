@@ -7,7 +7,7 @@ import { reactFlowTokens } from "@/styles/reactflow-tokens"
 import { cn } from "@/lib/utils"
 import { parseFlowState } from "./visual-programming"
 
-type FlowViewerProps = {
+interface FlowViewerProps {
   value: unknown
   className?: string
   height?: number

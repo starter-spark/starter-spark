@@ -1,9 +1,10 @@
-import { NextRequest, NextResponse } from "next/server"
+import { type NextRequest, NextResponse } from "next/server"
 import { fileTypeFromBuffer } from "file-type"
 import { supabaseAdmin } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
-import crypto from "crypto"
+import crypto from "node:crypto"
 import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit"
+import { toLearnAssetRef } from "@/lib/learn-assets"
 
 // Allowed file types with their magic byte signatures
 const ALLOWED_TYPES = {
@@ -20,12 +21,15 @@ const ALLOWED_TYPES = {
 
 type AllowedMimeType = keyof typeof ALLOWED_TYPES
 
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
 // Sanitize filename
 function sanitizeFilename(filename: string): string {
   const basename = filename.split(/[\\/]/).pop() || "file"
   const sanitized = basename
-    .replace(/[^a-zA-Z0-9._-]/g, "_")
-    .replace(/\.{2,}/g, ".")
+    .replaceAll(/[^a-zA-Z0-9._-]/g, "_")
+    .replaceAll(/\.{2,}/g, ".")
     .slice(0, 100)
 
   if (!sanitized.includes(".")) {
@@ -103,11 +107,16 @@ export async function POST(request: NextRequest) {
     }
 
     // Check admin role
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("role")
       .eq("id", user.id)
-      .single()
+      .maybeSingle()
+
+    if (profileError) {
+      console.error("Error fetching user profile:", profileError)
+      return NextResponse.json({ error: "Unable to verify permissions" }, { status: 500 })
+    }
 
     const userRole = (profile as { role: string } | null)?.role
     if (userRole !== "admin" && userRole !== "staff") {
@@ -118,7 +127,6 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData()
     const file = formData.get("file") as File | null
     const lessonId = formData.get("lessonId") as string | null
-    const assetType = (formData.get("assetType") as "video" | "image") || "video"
 
     if (!file) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 })
@@ -126,6 +134,10 @@ export async function POST(request: NextRequest) {
 
     if (!lessonId) {
       return NextResponse.json({ error: "Lesson ID required" }, { status: 400 })
+    }
+
+    if (!UUID_RE.test(lessonId)) {
+      return NextResponse.json({ error: "Invalid lesson ID" }, { status: 400 })
     }
 
     // Validate file size is not 0
@@ -156,6 +168,10 @@ export async function POST(request: NextRequest) {
 
     const mimeType = detectedType.mime as AllowedMimeType
     const typeConfig = getAllowedTypeConfig(mimeType)
+
+    const assetType: "video" | "image" = mimeType.startsWith("video/")
+      ? "video"
+      : "image"
 
     // Check individual file size limit
     if (file.size > typeConfig.maxSize) {
@@ -206,30 +222,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Generate a signed URL for 1 year (for lesson content)
-    const { data: signedUrlData, error: signedUrlError } = await supabaseAdmin.storage
-      .from("learn-assets")
-      .createSignedUrl(storagePath, 60 * 60 * 24 * 365) // 1 year
-
-    if (signedUrlError || !signedUrlData) {
-      console.error("Signed URL error:", signedUrlError)
-      // Return the path instead if signed URL fails - can be resolved later
-      return NextResponse.json(
-        {
-          success: true,
-          path: storagePath,
-          type: mimeType,
-          size: file.size,
-        },
-        { headers: rateLimitHeaders("learnUpload") }
-      )
-    }
-
     return NextResponse.json(
       {
         success: true,
-        url: signedUrlData.signedUrl,
         path: storagePath,
+        ref: toLearnAssetRef("learn-assets", storagePath),
         type: mimeType,
         size: file.size,
       },

@@ -1,8 +1,9 @@
 import { createClient } from "@/lib/supabase/server"
 import { supabaseAdmin } from "@/lib/supabase/admin"
-import { NextResponse } from "next/server"
+import { NextResponse, after } from "next/server"
 import { rateLimit } from "@/lib/rate-limit"
 import { checkKitClaimAchievements } from "@/lib/achievements"
+import { isValidClaimToken } from "@/lib/validation"
 
 export async function POST(request: Request) {
   // Rate limit: 5 requests per minute
@@ -23,9 +24,19 @@ export async function POST(request: Request) {
       )
     }
 
-    const { token } = (await request.json()) as { token: unknown }
+    let body: unknown
+    try {
+      body = await request.json()
+    } catch {
+      return NextResponse.json({ error: "Invalid request body" }, { status: 400 })
+    }
 
-    if (!token || typeof token !== "string") {
+    const token =
+      typeof body === "object" && body !== null
+        ? (body as Record<string, unknown>).token
+        : undefined
+
+    if (!token || typeof token !== "string" || !isValidClaimToken(token)) {
       return NextResponse.json(
         { error: "Invalid claim token" },
         { status: 400 }
@@ -33,11 +44,19 @@ export async function POST(request: Request) {
     }
 
     // First, check if the license exists and get customer_email
-    const { data: license } = await supabaseAdmin
+    const { data: license, error: licenseError } = await supabaseAdmin
       .from("licenses")
       .select("id, customer_email, status, owner_id")
       .eq("claim_token", token)
-      .single()
+      .maybeSingle()
+
+    if (licenseError) {
+      console.error("Error fetching license by token:", licenseError)
+      return NextResponse.json(
+        { error: "An error occurred. Please try again." },
+        { status: 500 }
+      )
+    }
 
     if (!license) {
       // Can't find by token - it was already used or never existed
@@ -78,18 +97,12 @@ export async function POST(request: Request) {
       })
       .eq("id", license.id)
       .eq("status", "pending") // Atomic check
+      .eq("claim_token", token)
+      .is("owner_id", null)
       .select("id, code, product:products(name)")
-      .single()
+      .maybeSingle()
 
     if (claimError) {
-      if (claimError.code === "PGRST116") {
-        // Race condition - someone else claimed it
-        return NextResponse.json(
-          { error: "This kit was just claimed by another user. Please refresh and try again." },
-          { status: 400 }
-        )
-      }
-
       console.error("Error claiming license by token:", claimError)
       return NextResponse.json(
         { error: "An error occurred. Please try again." },
@@ -97,11 +110,25 @@ export async function POST(request: Request) {
       )
     }
 
+    if (!claimedLicense) {
+      // Race condition - someone else claimed it between our read and update
+      return NextResponse.json(
+        { error: "This kit was just claimed by another user. Please refresh and try again." },
+        { status: 409 }
+      )
+    }
+
     const productName =
       (claimedLicense.product as unknown as { name: string } | null)?.name || "Kit"
 
-    // Trigger achievement check asynchronously
-    void checkKitClaimAchievements(user.id)
+    // Trigger achievement check asynchronously (after response)
+    after(async () => {
+      try {
+        await checkKitClaimAchievements(user.id)
+      } catch (err) {
+        console.error("Error checking kit achievements:", err)
+      }
+    })
 
     return NextResponse.json({
       message: `${productName} claimed successfully!`,
