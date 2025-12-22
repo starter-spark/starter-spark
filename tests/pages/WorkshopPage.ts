@@ -62,6 +62,10 @@ export class WorkshopPage {
 
   async goto() {
     await this.page.goto("/workshop")
+    await this.page
+      .locator('header[data-hydrated="true"]')
+      .waitFor({ timeout: 5000 })
+      .catch(() => {})
   }
 
   async expectPageLoaded() {

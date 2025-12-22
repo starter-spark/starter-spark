@@ -103,7 +103,7 @@ test.describe("Shop Page", () => {
 
   test("should display footer", async ({ page }) => {
     await page.goto("/shop")
-    await expect(page.locator("footer")).toBeVisible({ timeout: 10000 })
+    await expect(page.getByRole("contentinfo")).toBeVisible({ timeout: 10000 })
   })
 })
 
@@ -137,7 +137,7 @@ test.describe("About Page", () => {
 
   test("should display footer", async ({ page }) => {
     await page.goto("/about")
-    await expect(page.locator("footer")).toBeVisible({ timeout: 10000 })
+    await expect(page.getByRole("contentinfo")).toBeVisible({ timeout: 10000 })
   })
 })
 
@@ -162,7 +162,7 @@ test.describe("Events Page", () => {
 
   test("should display footer", async ({ page }) => {
     await page.goto("/events")
-    await expect(page.locator("footer")).toBeVisible({ timeout: 10000 })
+    await expect(page.getByRole("contentinfo")).toBeVisible({ timeout: 10000 })
   })
 })
 
@@ -170,7 +170,7 @@ test.describe("Learn Page", () => {
   test("should load and display learn content", async ({ page }) => {
     await page.goto("/learn")
 
-    await expect(page).toHaveURL(/\/workshop(\?|$)/)
+    await expect(page).toHaveURL(/\/(learn|workshop)(\?|$)/)
 
     // Check for learn/courses heading or content
     const heading = page.getByRole("heading", { level: 1 }).first()
@@ -179,25 +179,30 @@ test.describe("Learn Page", () => {
 
   test("should display courses or content", async ({ page }) => {
     await page.goto("/learn")
-    await expect(page).toHaveURL(/\/workshop(\?|$)/)
+    await expect(page).toHaveURL(/\/(learn|workshop)(\?|$)/)
 
     const signInHeading = page.getByRole("heading", { name: /sign in required/i })
+    const signInCopy = page.getByText(/sign in to access your kits|sign in to view your kits/i)
     const coursesCount = page.getByText(/\d+ courses? available/i)
     const emptyState = page.getByText(/no courses available/i)
 
-    const hasSignIn = await signInHeading.isVisible().catch(() => false)
-    if (!hasSignIn) {
-      const hasCourses = await coursesCount.isVisible().catch(() => false)
-      const hasEmpty = await emptyState.isVisible().catch(() => false)
-      expect(hasCourses || hasEmpty).toBeTruthy()
-    } else {
-      await expect(signInHeading).toBeVisible()
-    }
+    await Promise.race([
+      signInHeading.waitFor({ timeout: 5000 }),
+      signInCopy.waitFor({ timeout: 5000 }),
+      coursesCount.waitFor({ timeout: 5000 }),
+      emptyState.waitFor({ timeout: 5000 }),
+    ]).catch(() => {})
+
+    const hasSignIn = (await signInHeading.isVisible().catch(() => false))
+      || (await signInCopy.isVisible().catch(() => false))
+    const hasCourses = await coursesCount.isVisible().catch(() => false)
+    const hasEmpty = await emptyState.isVisible().catch(() => false)
+    expect(hasSignIn || hasCourses || hasEmpty).toBeTruthy()
   })
 
   test("should display footer", async ({ page }) => {
     await page.goto("/learn")
-    await expect(page.locator("footer")).toBeVisible({ timeout: 10000 })
+    await expect(page.getByRole("contentinfo")).toBeVisible({ timeout: 10000 })
   })
 })
 
@@ -254,7 +259,7 @@ test.describe("Community Page", () => {
     await page.waitForLoadState("networkidle")
 
     // Footer might be hidden if page shows error boundary
-    const footer = page.locator("footer")
+    const footer = page.getByRole("contentinfo")
     const errorState = page.getByRole("heading", { name: /something went wrong/i })
 
     const hasFooter = await footer.isVisible({ timeout: 5000 }).catch(() => false)

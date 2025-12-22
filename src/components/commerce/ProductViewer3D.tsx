@@ -10,7 +10,7 @@ interface ProductViewer3DProps {
 }
 
 function Model({ path, onLoad }: { path: string; onLoad: () => void }) {
-  const { scene } = useGLTF(path)
+  const { scene } = useGLTF(path, true)
 
   useEffect(() => {
     // Once the model is loaded and the scene is available, trigger onLoad
@@ -39,7 +39,7 @@ export default function ProductViewer3D({
         role="img"
         aria-label="3D preview unavailable"
       >
-        <p className="text-sm font-mono text-slate-500">3D preview unavailable</p>
+        <p className="text-sm font-mono text-slate-600">3D preview unavailable</p>
       </div>
     )
   }
@@ -61,7 +61,7 @@ export default function ProductViewer3D({
               className="w-10 h-10 border-2 border-slate-200 border-t-cyan-700 rounded-full animate-spin"
               aria-hidden="true"
             />
-            <p className="text-sm font-mono text-slate-500">Loading 3D…</p>
+            <p className="text-sm font-mono text-slate-600">Loading 3D…</p>
           </div>
         </div>
       )}
@@ -74,7 +74,7 @@ export default function ProductViewer3D({
               className="absolute inset-0 flex items-center justify-center"
               aria-hidden="true"
             >
-              <p className="text-sm font-mono text-slate-500">3D preview unavailable</p>
+              <p className="text-sm font-mono text-slate-600">3D preview unavailable</p>
             </div>
           }
           onError={() => {
@@ -86,7 +86,7 @@ export default function ProductViewer3D({
             <Suspense fallback={null}>
               <Stage
                 intensity={0.8}
-                environment="city"
+                environment={null}
                 shadows="contact"
                 adjustCamera={false}
               >

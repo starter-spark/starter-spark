@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { createClient } from "@/lib/supabase/server"
+import { createPublicClient } from "@/lib/supabase/public"
 import ReactMarkdown from "react-markdown"
 import { isExternalHref, sanitizeMarkdownUrl, safeMarkdownUrlTransform } from "@/lib/safe-url"
 import { isE2E } from "@/lib/e2e"
@@ -13,7 +13,7 @@ export default async function TermsPage() {
   let page: { title: string | null; content: string | null; updated_at: string | null } | null = null
   if (!isE2E) {
     try {
-      const supabase = await createClient()
+      const supabase = createPublicClient()
       const { data } = await supabase
         .from("page_content")
         .select("title, content, updated_at")

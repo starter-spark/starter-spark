@@ -31,7 +31,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             <LoginForm redirectTo={redirect} claimToken={claim} />
           </div>
 
-          <p className="text-center text-sm text-slate-500 mt-6">
+          <p className="text-center text-sm text-slate-600 mt-6">
             We&apos;ll send you a magic link to sign in. No password needed.
           </p>
         </div>

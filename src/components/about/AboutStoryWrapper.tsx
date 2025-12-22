@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server"
+import { createPublicClient } from "@/lib/supabase/public"
 import { AboutStory } from "./AboutStory"
 import { isE2E } from "@/lib/e2e"
 
@@ -24,7 +24,7 @@ This section will highlight our commitment to giving back and supporting Hawaii 
   let pageContent: { content: string } | null = null
   let error: { message?: string } | null = null
   try {
-    const supabase = await createClient()
+    const supabase = createPublicClient()
     const { data, error: fetchError } = await supabase
       .from("page_content")
       .select("content")

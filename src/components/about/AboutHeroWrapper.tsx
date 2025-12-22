@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server"
+import { createPublicClient } from "@/lib/supabase/public"
 import { getContent } from "@/lib/content"
 import { AboutHero } from "./AboutHero"
 import { isE2E } from "@/lib/e2e"
@@ -31,7 +31,7 @@ export async function AboutHeroWrapper() {
   let pageContent: { content: string } | null = null
   let error: { message?: string } | null = null
   try {
-    const supabase = await createClient()
+    const supabase = createPublicClient()
     const { data, error: fetchError } = await supabase
       .from("page_content")
       .select("content")

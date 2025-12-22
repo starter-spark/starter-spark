@@ -55,7 +55,7 @@ test.describe("Workshop Page - Layout", () => {
   test("should display footer", async ({ page }) => {
     await page.goto("/workshop")
 
-    await expect(page.locator("footer")).toBeVisible()
+    await expect(page.getByRole("contentinfo")).toBeVisible({ timeout: 10000 })
   })
 })
 

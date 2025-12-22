@@ -1,9 +1,16 @@
 import * as Sentry from "@sentry/nextjs"
 
+const isLocalHost =
+  typeof window !== "undefined" &&
+  (window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1")
+
 const sentryEnabled =
   process.env.NODE_ENV === "production" &&
   !!process.env.NEXT_PUBLIC_SENTRY_DSN &&
-  process.env.NEXT_PUBLIC_SENTRY_DISABLED !== "1"
+  process.env.NEXT_PUBLIC_SENTRY_DISABLED !== "1" &&
+  process.env.NEXT_PUBLIC_E2E !== "1" &&
+  !isLocalHost
 
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,

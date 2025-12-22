@@ -174,6 +174,7 @@ export default async function ProductDetailPage({
       id?: string
       type?: string
       url: string
+      storage_path?: string | null
       filename?: string
       alt_text?: string | null
       is_primary?: boolean | null
@@ -183,25 +184,26 @@ export default async function ProductDetailPage({
   } | null = null
 
   if (isE2E) {
-    product = getE2EProduct(slug) as typeof product | null
+    product = getE2EProduct(slug) as typeof product  
   } else {
     try {
-      const supabase = await createClient()
-      const { data, error } = await supabase
-        .from("products")
-        .select(`
-          *,
-          product_tags (tag),
-          product_media (
-            id,
-            type,
-            url,
-            filename,
-            alt_text,
-            is_primary,
-            sort_order
-          )
-        `)
+    const supabase = await createClient()
+    const { data, error } = await supabase
+      .from("products")
+      .select(`
+        *,
+        product_tags (tag),
+        product_media (
+          id,
+          type,
+          url,
+          storage_path,
+          filename,
+          alt_text,
+          is_primary,
+          sort_order
+        )
+      `)
         .eq("slug", slug)
         .maybeSingle()
 
@@ -242,7 +244,14 @@ export default async function ProductDetailPage({
   const discountExpiresAt = product.discount_expires_at
 
   // Extract images and 3D models from product_media, sorted by sort_order
-  interface FullMediaItem { url: string; filename?: string; is_primary?: boolean | null; type?: string; sort_order?: number | null }
+  interface FullMediaItem {
+    url: string
+    storage_path?: string | null
+    filename?: string
+    is_primary?: boolean | null
+    type?: string
+    sort_order?: number | null
+  }
   const allMedia = ((product.product_media as unknown as FullMediaItem[] | null) || [])
     .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
 
@@ -253,7 +262,9 @@ export default async function ProductDetailPage({
 
   // Get 3D model if available (from product_media or specs)
   const modelMedia = allMedia.find((m) => m.type === '3d_model')
-  const modelPathFromMedia = modelMedia?.url
+  const modelPathFromMedia = modelMedia
+    ? await resolveMediaUrl(modelMedia)
+    : undefined
   const modelPathFromSpecs = specs?.modelPath
   const finalModelPath = modelPathFromMedia || modelPathFromSpecs
 
@@ -295,9 +306,9 @@ export default async function ProductDetailPage({
         <div className="max-w-7xl mx-auto">
           <Link
             href="/shop"
-            className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-cyan-700 transition-colors"
+            className="inline-flex items-center gap-2 text-sm text-slate-700 hover:text-cyan-700 transition-colors"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="w-4 h-4" aria-hidden="true" />
             Back to Shop
           </Link>
         </div>
@@ -351,4 +362,51 @@ export default async function ProductDetailPage({
       </section>
     </div>
   )
+}
+
+async function resolveMediaUrl(media: { url?: string; storage_path?: string | null }) {
+  if (!media) return undefined
+
+  const parsed = parseStorageUrl(media.url)
+  const bucket = parsed?.bucket || "products"
+  let storagePath = media.storage_path || parsed?.path || null
+
+  if (!storagePath) return media.url
+  storagePath = storagePath.replace(/^\/+/, "")
+  if (storagePath.startsWith(`${bucket}/`)) {
+    storagePath = storagePath.slice(bucket.length + 1)
+  }
+
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
+  const publicUrl = supabaseUrl
+    ? `${supabaseUrl}/storage/v1/object/public/${bucket}/${storagePath}`
+    : media.url
+
+  try {
+    const { supabaseAdmin } = await import("@/lib/supabase/admin")
+    const { data, error } = await supabaseAdmin
+      .storage
+      .from(bucket)
+      .createSignedUrl(storagePath, 60 * 60)
+    if (!error && data?.signedUrl) return data.signedUrl
+  } catch (error) {
+    console.error("Failed to create signed URL for product media:", error)
+  }
+
+  return publicUrl || media.url
+}
+
+function parseStorageUrl(url?: string | null): { bucket: string; path: string } | null {
+  if (!url) return null
+  try {
+    const parsed = new URL(url)
+    const match = parsed.pathname.match(/\/storage\/v1\/object\/(?:public|sign)\/([^/]+)\/(.+)/)
+    if (!match) return null
+    const bucket = match[1]
+    const rawPath = match[2]
+    const path = decodeURIComponent(rawPath)
+    return { bucket, path }
+  } catch {
+    return null
+  }
 }

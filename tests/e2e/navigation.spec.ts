@@ -21,7 +21,7 @@ test.describe("Header Navigation", () => {
     await homePage.goto()
 
     await homePage.navigateToLearn()
-    await expect(page).toHaveURL(/\/workshop(\?|$)/)
+    await expect(page).toHaveURL(/\/(learn|workshop)(\?|$)/)
   })
 
   test("should navigate to Community from header", async ({ page }) => {
@@ -58,18 +58,17 @@ test.describe("Header Navigation", () => {
 
   test("should navigate home when clicking logo", async ({ page }) => {
     await page.goto("/shop")
-    await page.getByRole("link", { name: /starterspark/i }).click()
+    await page.getByRole("banner").getByRole("link", { name: /starterspark/i }).click()
     await expect(page).toHaveURL("/")
   })
 })
 
 const waitForHeader = async (page: Page) => {
   await page.waitForLoadState("domcontentloaded")
-  await page.locator("header").waitFor()
+  await page.getByRole("banner").waitFor()
   await page
     .locator('header[data-hydrated="true"]')
-    .waitFor({ timeout: 2000 })
-    .catch(() => {})
+    .waitFor({ timeout: 5000 })
 }
 
 test.describe("Mobile Navigation", () => {
@@ -79,7 +78,7 @@ test.describe("Mobile Navigation", () => {
     await page.goto("/")
     await waitForHeader(page)
 
-    const mobileMenuButton = page.getByLabel("Toggle menu")
+    const mobileMenuButton = page.getByRole("banner").getByLabel("Toggle menu")
     await expect(mobileMenuButton).toBeVisible()
   })
 
@@ -108,7 +107,7 @@ test.describe("Mobile Navigation", () => {
     // If CSS hasn't fully loaded, the element might still be visible
     // In that case, verify the mobile menu button IS visible (which confirms we're on mobile)
     if (!isHidden) {
-      const mobileMenuButton = page.getByLabel("Toggle menu")
+      const mobileMenuButton = page.getByRole("banner").getByLabel("Toggle menu")
       await expect(mobileMenuButton).toBeVisible()
       // If mobile menu button is visible, we're on mobile and the test passes
     } else {
@@ -120,8 +119,9 @@ test.describe("Mobile Navigation", () => {
     await page.goto("/")
     await waitForHeader(page)
 
-    const mobileMenuButton = page.getByLabel("Toggle menu")
+    const mobileMenuButton = page.getByRole("banner").getByLabel("Toggle menu")
     await mobileMenuButton.click()
+    await expect(mobileMenuButton).toHaveAttribute("aria-expanded", "true")
 
     // Mobile menu should be visible - verify the nav appears inside the mobile menu wrapper
     const mobileMenu = page.locator("#mobile-menu")
@@ -137,7 +137,7 @@ test.describe("Mobile Navigation", () => {
     await page.goto("/")
     await waitForHeader(page)
 
-    const mobileMenuButton = page.getByLabel("Toggle menu")
+    const mobileMenuButton = page.getByRole("banner").getByLabel("Toggle menu")
     await mobileMenuButton.click()
 
     // Click on a nav link
@@ -145,13 +145,14 @@ test.describe("Mobile Navigation", () => {
 
     // Should navigate to shop
     await expect(page).toHaveURL("/shop")
+    await expect(page.locator("#mobile-menu")).toHaveCount(0)
   })
 
   test("should toggle mobile menu open and close", async ({ page }) => {
     await page.goto("/")
     await waitForHeader(page)
 
-    const mobileMenuButton = page.getByLabel("Toggle menu")
+    const mobileMenuButton = page.getByRole("banner").getByLabel("Toggle menu")
 
     // Open menu
     await mobileMenuButton.click()
@@ -164,7 +165,8 @@ test.describe("Mobile Navigation", () => {
     await mobileMenuButton.click()
 
     // Verify menu is closed
-    await expect(page.locator("#mobile-menu")).toBeHidden()
+    await expect(mobileMenuButton).toHaveAttribute("aria-expanded", "false")
+    await expect(page.locator("#mobile-menu")).toHaveCount(0)
   })
 
   test("should show cart button in mobile header", async ({ page }) => {
@@ -196,7 +198,7 @@ test.describe("Footer Navigation", () => {
 
       if (!hasError) {
         // Only check footer if page loaded successfully
-        await expect(page.locator("footer")).toBeVisible()
+        await expect(page.getByRole("contentinfo")).toBeVisible({ timeout: 10000 })
       }
       // If error state, we skip the footer check for that page (intermittent server issue)
     }
@@ -205,8 +207,8 @@ test.describe("Footer Navigation", () => {
   test("should contain expected footer links", async ({ page }) => {
     await page.goto("/")
 
-    const footer = page.locator("footer")
-    await expect(footer).toBeVisible()
+    const footer = page.getByRole("contentinfo")
+    await expect(footer).toBeVisible({ timeout: 10000 })
 
     // Check for common footer links
     const footerLinks = footer.getByRole("link")

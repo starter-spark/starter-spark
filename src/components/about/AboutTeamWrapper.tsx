@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server"
+import { createPublicClient } from "@/lib/supabase/public"
 import { AboutTeam } from "./AboutTeam"
 import { isE2E } from "@/lib/e2e"
 
@@ -22,7 +22,7 @@ export async function AboutTeamWrapper() {
 
   let members: TeamMember[] = []
   try {
-    const supabase = await createClient()
+    const supabase = createPublicClient()
     const { data, error } = await supabase
       .from("team_members")
       .select("id, name, role, bio, image_url, social_links")
@@ -39,7 +39,7 @@ export async function AboutTeamWrapper() {
 
   // Transform to match the expected format
   const team = members.map((m) => {
-    const socialLinks = m.social_links as TeamMember["social_links"]
+    const socialLinks = m.social_links
     return {
       name: m.name,
       role: m.role,

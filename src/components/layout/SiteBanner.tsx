@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { createClient } from "@/lib/supabase/client"
 import { X, Info, AlertTriangle, CheckCircle, XCircle, Tag, Zap, Gift, Megaphone } from "lucide-react"
 import { motion, AnimatePresence } from "motion/react"
 import Link from "next/link"
@@ -144,44 +143,71 @@ export function SiteBanner() {
 
   useEffect(() => {
     async function fetchBanners() {
-      const supabase = createClient()
+      try {
+        const response = await fetch("/api/site-banners", { cache: "no-store" })
+        if (!response.ok) {
+          const payload: unknown = await response.json().catch(() => null)
+          const message =
+            typeof payload === "object" &&
+            payload !== null &&
+            "error" in payload &&
+            typeof (payload as { error?: unknown }).error === "string"
+              ? (payload as { error: string }).error
+              : "Unknown error"
+          console.error("Failed to fetch banners:", message)
+          setIsLoading(false)
+          return
+        }
+        const data: unknown = await response.json().catch(() => [])
+        const rawBanners = Array.isArray(data) ? data : []
 
-      const { data, error } = await supabase
-        .from("site_banners")
-        .select("id, title, message, link_url, link_text, icon, color_scheme, pages, is_dismissible, dismiss_duration_hours")
-        .order("sort_order", { ascending: true })
+        // Transform data to match Banner interface with defaults
+        const transformedBanners: Banner[] = rawBanners.flatMap((item) => {
+          if (!item || typeof item !== "object") return []
+          const b = item as Partial<Banner>
+          if (
+            typeof b.id !== "string" ||
+            typeof b.title !== "string" ||
+            typeof b.message !== "string"
+          ) {
+            return []
+          }
 
-      if (error) {
-        console.error("Failed to fetch banners:", error.message)
+          const pages = Array.isArray(b.pages)
+            ? b.pages.filter((page) => typeof page === "string")
+            : []
+
+          return [{
+            id: b.id,
+            title: b.title,
+            message: b.message,
+            link_url: typeof b.link_url === "string" ? b.link_url : null,
+            link_text: typeof b.link_text === "string" ? b.link_text : null,
+            icon: typeof b.icon === "string" ? b.icon : null,
+            color_scheme: typeof b.color_scheme === "string" && b.color_scheme ? b.color_scheme : "info",
+            pages,
+            is_dismissible: typeof b.is_dismissible === "boolean" ? b.is_dismissible : true,
+            dismiss_duration_hours: typeof b.dismiss_duration_hours === "number" ? b.dismiss_duration_hours : null,
+          }]
+        })
+
+        setBanners(transformedBanners)
+
+        // Check which banners are already dismissed
+        const dismissed = new Set<string>()
+        for (const banner of transformedBanners) {
+          if (isDismissed(banner.id, banner.dismiss_duration_hours)) {
+            dismissed.add(banner.id)
+          }
+        }
+        setDismissedIds(dismissed)
+        setIsLoading(false)
+        return
+      } catch (error) {
+        console.error("Failed to fetch banners:", error)
         setIsLoading(false)
         return
       }
-
-      // Transform data to match Banner interface with defaults
-      const transformedBanners: Banner[] = (data || []).map(b => ({
-        id: b.id,
-        title: b.title,
-        message: b.message,
-        link_url: b.link_url,
-        link_text: b.link_text,
-        icon: b.icon,
-        color_scheme: b.color_scheme || "info",
-        pages: b.pages || [],
-        is_dismissible: b.is_dismissible ?? true,
-        dismiss_duration_hours: b.dismiss_duration_hours,
-      }))
-
-      setBanners(transformedBanners)
-
-      // Check which banners are already dismissed
-      const dismissed = new Set<string>()
-      for (const banner of transformedBanners) {
-        if (isDismissed(banner.id, banner.dismiss_duration_hours)) {
-          dismissed.add(banner.id)
-        }
-      }
-      setDismissedIds(dismissed)
-      setIsLoading(false)
     }
 
     void fetchBanners()

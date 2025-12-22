@@ -61,7 +61,7 @@ export async function EventsPreview() {
   const supabase = await createClient()
 
   let eventsData: Workshop[] = []
-  let discussions: Discussion[] = []
+  const discussions: Discussion[] = []
   let memberCount = 0
   let discussionCount = 0
 

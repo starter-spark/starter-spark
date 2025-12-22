@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { createClient } from "@/lib/supabase/client"
 import { Loader2, Mail, CheckCircle } from "lucide-react"
+import { isE2E } from "@/lib/e2e"
 
 interface LoginFormProps {
   redirectTo?: string
@@ -35,6 +36,12 @@ export function LoginForm({ redirectTo, claimToken }: LoginFormProps) {
     setError(null)
 
     try {
+      if (isE2E) {
+        await new Promise((resolve) => setTimeout(resolve, 150))
+        setIsSent(true)
+        return
+      }
+
       const supabase = createClient()
 
       // Build the redirect URL
@@ -96,7 +103,7 @@ export function LoginForm({ redirectTo, claimToken }: LoginFormProps) {
         <p className="text-slate-600 mb-4">
           We sent a magic link to <strong>{email}</strong>
         </p>
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-slate-600">
           Click the link in the email to sign in. The link expires in 1 hour.
         </p>
         <button
@@ -119,7 +126,7 @@ export function LoginForm({ redirectTo, claimToken }: LoginFormProps) {
           Email address
         </label>
         <div className="relative">
-          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" aria-hidden="true" />
+          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-600" aria-hidden="true" />
           <Input
             id="email"
             type="email"

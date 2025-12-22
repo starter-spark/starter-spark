@@ -21,12 +21,16 @@ export class ShopPage {
     this.productCards = page.locator('[class*="border"][class*="rounded"]').filter({
       has: page.locator('[class*="font-mono"]'),
     })
-    this.educatorCTA = page.getByText(/educator or school/i)
-    this.footer = page.locator("footer")
+    this.educatorCTA = page.getByRole("heading", { name: /educator or school/i })
+    this.footer = page.getByRole("contentinfo")
   }
 
   async goto() {
     await this.page.goto("/shop", { waitUntil: "domcontentloaded" })
+    await this.page
+      .locator('header[data-hydrated="true"]')
+      .waitFor({ timeout: 5000 })
+      .catch(() => {})
   }
 
   async expectPageLoaded() {
@@ -56,6 +60,6 @@ export class ShopPage {
   }
 
   async expectEducatorCTAVisible() {
-    await expect(this.educatorCTA).toBeVisible()
+    await expect(this.educatorCTA).toBeVisible({ timeout: 10000 })
   }
 }

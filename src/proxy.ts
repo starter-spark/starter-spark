@@ -93,6 +93,8 @@ function buildContentSecurityPolicy({
   connectOrigins.add('https://va.vercel-scripts.com')
   // PostHog assets CDN
   connectOrigins.add('https://us-assets.i.posthog.com')
+  // Draco decoder (gstatic)
+  connectOrigins.add('https://www.gstatic.com')
   if (isVercelPreview) {
     connectOrigins.add('https://vercel.live')
   }

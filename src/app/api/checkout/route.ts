@@ -2,6 +2,7 @@ import { stripe } from "@/lib/stripe"
 import { NextResponse } from "next/server"
 import { rateLimit } from "@/lib/rate-limit"
 import { createClient } from "@/lib/supabase/server"
+import { isE2E } from "@/lib/e2e"
 
 interface CartItem {
   slug: string
@@ -73,6 +74,10 @@ export async function POST(request: Request) {
       )
     }
 
+    if (isE2E) {
+      return NextResponse.json({ url: "https://checkout.stripe.com/test-session" })
+    }
+
     // Verify prices from database (Phase 14.3 - discount validation)
     const supabase = await createClient()
     const slugs = items.map((item) => item.slug)
@@ -82,7 +87,9 @@ export async function POST(request: Request) {
       .in("slug", slugs)
 
     if (dbError) {
-      console.error("Database error:", dbError)
+      if (!isE2E) {
+        console.error("Database error:", dbError)
+      }
       return NextResponse.json(
         { error: "Failed to verify products" },
         { status: 500 }

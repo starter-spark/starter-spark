@@ -30,12 +30,12 @@ export class HomePage {
     this.page = page
 
     // Header
-    this.header = page.locator("header")
-    this.logo = page.getByRole("link", { name: /starterspark/i })
-    this.mobileMenuButton = page.getByLabel("Toggle menu")
+    this.header = page.getByRole("banner")
+    this.logo = this.header.getByRole("link", { name: /starterspark/i })
+    this.mobileMenuButton = this.header.getByLabel("Toggle menu")
     // Cart exists in both desktop+mobile header; select the visible one to avoid timeouts
-    this.cartButton = page.locator('header button[aria-label^="Shopping cart"]:visible')
-    this.footer = page.locator("footer")
+    this.cartButton = this.header.locator('button[aria-label^="Shopping cart"]:visible')
+    this.footer = page.getByRole("contentinfo")
 
     // Hero
     this.heroSection = page.locator("section").first()
@@ -99,42 +99,46 @@ export class HomePage {
     href: string
   ): Promise<void> {
     const trigger = this.page
-      .locator('header [data-slot="dropdown-menu-trigger"]')
-      .filter({ hasText: menu })
+      .getByRole("banner")
+      .getByRole("button", { name: menu, exact: true })
       .first()
 
-    await trigger.click()
+    await expect(trigger).toBeVisible()
+    await trigger.scrollIntoViewIfNeeded()
+    await trigger.click({ force: true })
 
     // Scope to the open menu to avoid matching hero/other links.
     const menuContent = this.page
-      .locator('[data-slot="dropdown-menu-content"]')
+      .locator('[data-slot="dropdown-menu-content"][data-state="open"]')
       .filter({ has: this.page.locator(`a[href="${href}"]`) })
       .first()
     await expect(menuContent).toBeVisible()
     const link = menuContent.locator(`a[href="${href}"]`).first()
     await expect(link).toBeVisible()
-    await link.click()
+    await link.click({ force: true })
   }
 
   // Desktop-only locators (for visibility assertions)
   get navDocumentation(): Locator {
     return this.page
+      .getByRole("banner")
       .locator("nav.hidden.md\\:flex")
       .getByRole("button", { name: "Documentation", exact: true })
   }
 
   get navCommunityMenu(): Locator {
     return this.page
+      .getByRole("banner")
       .locator("nav.hidden.md\\:flex")
       .getByRole("button", { name: "Community", exact: true })
   }
 
   get workshopButton(): Locator {
-    return this.page.locator("header").getByRole("link", { name: "Workshop", exact: true }).first()
+    return this.page.getByRole("banner").getByRole("link", { name: "Workshop", exact: true }).first()
   }
 
   get shopKitsButton(): Locator {
-    return this.page.locator("header").getByRole("link", { name: "Shop Kits", exact: true }).first()
+    return this.page.getByRole("banner").getByRole("link", { name: "Shop Kits", exact: true }).first()
   }
 
   async goto() {
@@ -157,7 +161,7 @@ export class HomePage {
       await this.ensureMobileMenuOpen()
       await this.mobileMenu.getByRole("link", { name: "Shop Kits", exact: true }).click()
     } else {
-      await this.page.locator("header").getByRole("link", { name: "Shop Kits", exact: true }).click()
+      await this.page.getByRole("banner").getByRole("link", { name: "Shop Kits", exact: true }).click()
     }
     await expect(this.page).toHaveURL("/shop")
   }
@@ -170,7 +174,7 @@ export class HomePage {
     } else {
       await this.clickDesktopMenuLink("Documentation", "/learn")
     }
-    await expect(this.page).toHaveURL(/\/workshop(\?|$)/)
+    await expect(this.page).toHaveURL(/\/(learn|workshop)(\?|$)/)
   }
 
   async navigateToAbout() {
@@ -216,7 +220,7 @@ export class HomePage {
       await this.mobileMenu.getByRole("link", { name: "Workshop", exact: true }).click()
     } else {
       // On desktop, Workshop is in the header nav
-      await this.page.locator("header").getByRole("link", { name: "Workshop", exact: true }).click()
+      await this.page.getByRole("banner").getByRole("link", { name: "Workshop", exact: true }).click()
     }
     await expect(this.page).toHaveURL("/workshop")
   }

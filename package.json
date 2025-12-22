@@ -10,7 +10,7 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
-    "chromatic": "dotenv -e .env.local -- chromatic --exit-zero-on-changes --playwright"
+    "chromatic": "DOTENV_CONFIG_QUIET=true dotenv -e .env.local -- chromatic --exit-zero-on-changes --playwright"
   },
   "dependencies": {
     "@codemirror/lang-cpp": "^6.0.3",

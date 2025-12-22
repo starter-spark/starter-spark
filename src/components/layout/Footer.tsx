@@ -3,7 +3,7 @@ import { GithubIcon, InstagramIcon, YoutubeIcon } from "@/components/icons/brand
 import { Heart } from "lucide-react"
 import Link from "next/link"
 import { NewsletterForm } from "./NewsletterForm"
-import { createClient } from "@/lib/supabase/server"
+import { createPublicClient } from "@/lib/supabase/public"
 import { getContents } from "@/lib/content"
 import { isE2E } from "@/lib/e2e"
 
@@ -46,7 +46,7 @@ export async function Footer() {
   let footerProducts: FooterProduct[] = []
   if (!isE2E) {
     try {
-      const supabase = await createClient()
+      const supabase = createPublicClient()
       const { data: products, error } = await supabase
         .from("products")
         .select("slug, name, status")

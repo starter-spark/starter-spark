@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useSyncExternalStore } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import {
@@ -13,6 +13,36 @@ import { Menu, X, ShoppingCart, ChevronDown, Lock } from "lucide-react"
 import { useCartStore, selectCartCount } from "@/store/cart"
 import { documentationNav, communityNav, type NavItem } from "@/config/navigation"
 import { cn } from "@/lib/utils"
+
+const hydrationListeners = new Set<() => void>()
+let hasHydrated = false
+
+function notifyHydration() {
+  if (hasHydrated) return
+  hasHydrated = true
+  for (const listener of hydrationListeners) {
+    listener()
+  }
+}
+
+function subscribeHydration(listener: () => void) {
+  hydrationListeners.add(listener)
+  return () => { hydrationListeners.delete(listener); }
+}
+
+function useHydrated() {
+  const isHydrated = useSyncExternalStore(
+    subscribeHydration,
+    () => hasHydrated,
+    () => false
+  )
+
+  useEffect(() => {
+    notifyHydration()
+  }, [])
+
+  return isHydrated
+}
 
 function NavDropdownItem({ item, onSelect }: { item: NavItem; onSelect?: () => void }) {
   const Icon = item.icon
@@ -112,13 +142,9 @@ function MobileNavSection({
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [openSection, setOpenSection] = useState<string | null>(null)
-  const [isHydrated, setIsHydrated] = useState(false)
+  const isHydrated = useHydrated()
   const cartCount = useCartStore(selectCartCount)
   const openCart = useCartStore((state) => state.openCart)
-
-  useEffect(() => {
-    setIsHydrated(true)
-  }, [])
 
   const closeMobileMenu = () => {
     setMobileMenuOpen(false)

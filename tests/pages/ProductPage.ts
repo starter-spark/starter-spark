@@ -68,6 +68,10 @@ export class ProductPage {
 
   async goto(slug: string) {
     await this.page.goto(`/shop/${slug}`)
+    await this.page
+      .locator('header[data-hydrated="true"]')
+      .waitFor({ timeout: 5000 })
+      .catch(() => {})
   }
 
   async expectPageLoaded() {

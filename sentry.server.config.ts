@@ -3,7 +3,9 @@ import * as Sentry from "@sentry/nextjs"
 const sentryEnabled =
   process.env.NODE_ENV === "production" &&
   !!process.env.NEXT_PUBLIC_SENTRY_DSN &&
-  process.env.NEXT_PUBLIC_SENTRY_DISABLED !== "1"
+  process.env.NEXT_PUBLIC_SENTRY_DISABLED !== "1" &&
+  process.env.NEXT_PUBLIC_E2E !== "1" &&
+  process.env.E2E_TESTS !== "1"
 
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,

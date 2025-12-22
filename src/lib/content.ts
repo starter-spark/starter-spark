@@ -5,7 +5,7 @@
  * Content can be managed by admins at /admin/content/site.
  */
 
-import { createClient } from '@/lib/supabase/server'
+import { createPublicClient } from '@/lib/supabase/public'
 import { isE2E } from './e2e'
 
 /**
@@ -16,7 +16,7 @@ import { isE2E } from './e2e'
  */
 export async function getContent(key: string, defaultValue = ''): Promise<string> {
   if (isE2E) return defaultValue
-  const supabase = await createClient()
+  const supabase = createPublicClient()
   const { data, error } = await supabase
     .from('site_content')
     .select('content')
@@ -45,7 +45,7 @@ export async function getContents(
   if (keys.length === 0) return result
   if (isE2E) return result
 
-  const supabase = await createClient()
+  const supabase = createPublicClient()
   const { data, error } = await supabase
     .from('site_content')
     .select('content_key, content')
@@ -69,7 +69,7 @@ export async function getContents(
  */
 export async function getContentsByCategory(category: string): Promise<Record<string, string>> {
   if (isE2E) return {}
-  const supabase = await createClient()
+  const supabase = createPublicClient()
   const { data } = await supabase
     .from('site_content')
     .select('content_key, content')
@@ -100,7 +100,7 @@ export interface ContentItem {
 
 export async function getAllContent(): Promise<ContentItem[]> {
   if (isE2E) return []
-  const supabase = await createClient()
+  const supabase = createPublicClient()
   const { data } = await supabase
     .from('site_content')
     .select('*')
@@ -112,7 +112,7 @@ export async function getAllContent(): Promise<ContentItem[]> {
 
 export async function getContentByCategory(category: string): Promise<ContentItem[]> {
   if (isE2E) return []
-  const supabase = await createClient()
+  const supabase = createPublicClient()
   const { data } = await supabase
     .from('site_content')
     .select('*')

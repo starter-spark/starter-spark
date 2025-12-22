@@ -18,20 +18,31 @@ export function WorkshopTabs({
 }: WorkshopTabsProps) {
   const searchParams = useSearchParams()
   const pathname = usePathname()
+  const search = searchParams.toString()
 
   // Use local state for instant tab switching
   const [activeTab, setActiveTab] = useState(() => searchParams.get("tab") || "courses")
 
+  useEffect(() => {
+    const urlTab = new URLSearchParams(search).get("tab") || "courses"
+    if (urlTab !== activeTab) {
+      setActiveTab(urlTab)
+    }
+  }, [activeTab, search])
+
   // Update URL without triggering navigation (for bookmarkability)
   useEffect(() => {
-    const params = new URLSearchParams(searchParams.toString())
+    const params = new URLSearchParams(search)
     params.set("tab", activeTab)
     if (activeTab !== "courses") {
       params.delete("difficulty")
     }
-    const newUrl = `${pathname}?${params.toString()}`
+    const nextSearch = params.toString()
+    if (nextSearch === search) return
+
+    const newUrl = nextSearch ? `${pathname}?${nextSearch}` : pathname
     window.history.replaceState(null, "", newUrl)
-  }, [activeTab, pathname, searchParams])
+  }, [activeTab, pathname, search])
 
   const handleTabChange = useCallback((value: string) => {
     setActiveTab(value)

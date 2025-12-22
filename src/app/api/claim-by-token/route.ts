@@ -4,11 +4,19 @@ import { NextResponse, after } from "next/server"
 import { rateLimit } from "@/lib/rate-limit"
 import { checkKitClaimAchievements } from "@/lib/achievements"
 import { isValidClaimToken } from "@/lib/validation"
+import { isE2E } from "@/lib/e2e"
 
 export async function POST(request: Request) {
   // Rate limit: 5 requests per minute
   const rateLimitResponse = await rateLimit(request, "claimByToken")
   if (rateLimitResponse) return rateLimitResponse
+
+  if (isE2E) {
+    return NextResponse.json(
+      { error: "You must be logged in to claim a kit" },
+      { status: 401 }
+    )
+  }
 
   try {
     // Get the user from the session

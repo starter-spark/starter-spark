@@ -132,12 +132,12 @@ export function BuyBox({
           )}
         </div>
         {timeRemaining && (
-          <p className="text-sm text-red-600 font-mono">
+          <p className="text-sm text-red-700 font-mono">
             Sale ends: {timeRemaining}
           </p>
         )}
         {hasActiveDiscount && originalPrice && (
-          <p className="text-sm text-green-600 font-mono">
+          <p className="text-sm text-green-700 font-mono">
             You save ${(originalPrice - price).toFixed(2)}
           </p>
         )}
@@ -145,7 +145,7 @@ export function BuyBox({
 
       {/* Quantity Selector */}
       <div className="space-y-2" role="group" aria-labelledby={quantityLabelId}>
-        <span id={quantityLabelId} className="text-sm text-slate-600">
+        <span id={quantityLabelId} className="text-sm text-slate-700">
           Quantity
         </span>
         <div className="flex items-center gap-3">
@@ -174,7 +174,7 @@ export function BuyBox({
         className={`w-full h-14 font-mono text-lg ${
           inStock
             ? "bg-cyan-700 hover:bg-cyan-600 text-white"
-            : "bg-slate-200 text-slate-500 cursor-not-allowed"
+            : "bg-slate-200 text-slate-600 cursor-not-allowed"
         }`}
       >
         <ShoppingCart className="w-5 h-5 mr-2" aria-hidden="true" />
@@ -183,15 +183,15 @@ export function BuyBox({
 
       {/* Trust Signals */}
       <div className="space-y-3 pt-4 border-t border-slate-200">
-        <div className="flex items-center gap-3 text-sm text-slate-600">
+        <div className="flex items-center gap-3 text-sm text-slate-700">
           <Truck className="w-4 h-4 text-cyan-700" aria-hidden="true" />
           <span>Free shipping on orders $75+</span>
         </div>
-        <div className="flex items-center gap-3 text-sm text-slate-600">
+        <div className="flex items-center gap-3 text-sm text-slate-700">
           <RotateCcw className="w-4 h-4 text-cyan-700" aria-hidden="true" />
           <span>30-day returns</span>
         </div>
-        <div className="flex items-center gap-3 text-sm text-slate-600">
+        <div className="flex items-center gap-3 text-sm text-slate-700">
           <Shield className="w-4 h-4 text-cyan-700" aria-hidden="true" />
           <span>Secure checkout</span>
         </div>
@@ -200,7 +200,7 @@ export function BuyBox({
       {/* Charity Notice */}
       <div
         data-testid="product-charity"
-        className="p-3 bg-amber-50 rounded border border-amber-200 text-sm text-slate-600"
+        className="p-3 bg-amber-50 rounded border border-amber-200 text-sm text-slate-700"
       >
         <span className="font-mono text-amber-700 font-semibold">{charityPercentage}</span> of
         your purchase supports Hawaii STEM education.

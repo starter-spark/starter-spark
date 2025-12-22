@@ -3,6 +3,7 @@
 import posthog from "posthog-js"
 import { PostHogProvider } from "posthog-js/react"
 import { ReactLenis } from "lenis/react"
+import { MotionConfig } from "motion/react"
 import { type ReactNode, useEffect } from "react"
 import { useReducedMotion } from "@/hooks/use-reduced-motion"
 import { usePathname } from "next/navigation"
@@ -13,9 +14,10 @@ interface ProvidersProps {
 
 export function Providers({ children }: ProvidersProps) {
   const prefersReducedMotion = useReducedMotion()
+  const isE2E = process.env.NEXT_PUBLIC_E2E === "1"
   const pathname = usePathname()
   const disableSmoothScroll =
-    pathname.startsWith("/admin") || pathname.startsWith("/learn")
+    isE2E || pathname.startsWith("/admin") || pathname.startsWith("/learn")
 
   useEffect(() => {
     if (!prefersReducedMotion && !disableSmoothScroll) return
@@ -87,10 +89,16 @@ export function Providers({ children }: ProvidersProps) {
     </ReactLenis>
   )
 
+  const wrappedContent = prefersReducedMotion || isE2E ? (
+    <MotionConfig reducedMotion="always">{content}</MotionConfig>
+  ) : (
+    content
+  )
+
   // If PostHog is not configured, just render with Lenis
   if (!process.env.NEXT_PUBLIC_POSTHOG_KEY) {
-    return <>{content}</>
+    return <>{wrappedContent}</>
   }
 
-  return <PostHogProvider client={posthog}>{content}</PostHogProvider>
+  return <PostHogProvider client={posthog}>{wrappedContent}</PostHogProvider>
 }

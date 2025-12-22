@@ -116,7 +116,7 @@ export function ProductGallery({
                 fallback={
                   <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
                     <div className="w-24 h-24 mb-4 rounded-full bg-slate-200 flex items-center justify-center">
-                      <ImageIcon className="w-12 h-12 text-slate-400" aria-hidden="true" />
+                      <ImageIcon className="w-12 h-12 text-slate-600" aria-hidden="true" />
                     </div>
                     <p className="text-slate-600 font-mono text-sm">Failed to load image</p>
                   </div>
@@ -139,7 +139,7 @@ export function ProductGallery({
         ) : (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
             <div className="w-24 h-24 mb-4 rounded-full bg-slate-200 flex items-center justify-center">
-              <ImageIcon className="w-12 h-12 text-slate-400" aria-hidden="true" />
+              <ImageIcon className="w-12 h-12 text-slate-600" aria-hidden="true" />
             </div>
             <p className="text-slate-600 font-mono text-sm">{productName}</p>
           </div>
@@ -192,10 +192,10 @@ export function ProductGallery({
             >
               <div className="w-full h-full flex flex-col items-center justify-center">
                 <Box
-                  className={cn("w-4 h-4 mb-0.5", view === "3d" ? "text-cyan-700" : "text-slate-500")}
+                  className={cn("w-4 h-4 mb-0.5", view === "3d" ? "text-cyan-700" : "text-slate-600")}
                   aria-hidden="true"
                 />
-                <span className={cn("text-[10px] font-mono", view === "3d" ? "text-cyan-700" : "text-slate-500")}>
+                <span className={cn("text-[10px] font-mono", view === "3d" ? "text-cyan-700" : "text-slate-600")}>
                   3D
                 </span>
               </div>

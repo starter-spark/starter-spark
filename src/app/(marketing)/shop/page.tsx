@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server"
+import { createPublicClient } from "@/lib/supabase/public"
 import { ShopFilters } from "./ShopFilters"
 import { Package } from "lucide-react"
 import Link from "next/link"
@@ -75,7 +75,7 @@ export default async function ShopPage() {
     transformedProducts = getE2EShopProducts()
   } else {
     try {
-      const supabase = await createClient()
+      const supabase = createPublicClient()
       const { data: products, error } = await supabase
         .from("products")
         .select(`
@@ -145,7 +145,7 @@ export default async function ShopPage() {
           inStock: specs?.inStock ?? true,
           badge: specs?.badge || undefined,
           category: specs?.category || "kit",
-          status: (product.status || "active") as ShopProduct["status"],
+          status: (product.status || "active"),
           tags,
           createdAt: product.created_at,
           image,

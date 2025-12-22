@@ -2,11 +2,17 @@ import { defineConfig, devices } from '@playwright/test';
 
 import dotenv from 'dotenv';
 import path from 'node:path';
-dotenv.config({ path: path.resolve(__dirname, '.env') });
+
+dotenv.config({
+  path: path.resolve(__dirname, '.env'),
+  quiet: true,
+})
 
 /**
  * See https://playwright.dev/docs/test-configuration.
  */
+const playwrightPort = Number(process.env.PLAYWRIGHT_PORT || 3000)
+
 export default defineConfig({
   testDir: './tests',
   fullyParallel: true,
@@ -18,7 +24,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: 'html',
   use: {
-    baseURL: 'http://localhost:3000',
+    baseURL: `http://localhost:${playwrightPort}`,
 
     trace: 'on-first-retry',
   },
@@ -44,9 +50,9 @@ export default defineConfig({
   ],
 
   webServer: process.env.PLAYWRIGHT_SKIP_WEBSERVER ? undefined : {
-    command: 'npm run start',
-    url: 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI,
+    command: `npm run start -- -H 127.0.0.1 -p ${playwrightPort}`,
+    url: `http://localhost:${playwrightPort}`,
+    reuseExistingServer: process.env.PLAYWRIGHT_REUSE_SERVER === '1' && !process.env.CI,
     env: {
       ...process.env,
       E2E_TESTS: '1',

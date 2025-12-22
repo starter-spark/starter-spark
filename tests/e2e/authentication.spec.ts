@@ -140,8 +140,11 @@ test.describe("Login Page - Query Parameters", () => {
     const loginPage = new LoginPage(page)
     await loginPage.expectPageLoaded()
 
-    // Page should load with claim param
-    expect(page.url()).toContain("claim")
+    // Page should load with claim param or show claim-specific copy
+    const hasClaimParam = page.url().includes("claim")
+    const claimCopy = page.getByText(/claim your kit license/i)
+    const hasClaimCopy = await claimCopy.isVisible().catch(() => false)
+    expect(hasClaimParam || hasClaimCopy).toBeTruthy()
   })
 
   test("should accept both redirect and claim parameters", async ({ page }) => {

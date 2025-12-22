@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server"
+import { createPublicClient } from "@/lib/supabase/public"
 import { getContent } from "@/lib/content"
 import { AboutGallery, type AboutStat } from "./AboutGallery"
 import { isE2E } from "@/lib/e2e"
@@ -26,7 +26,7 @@ export async function AboutGalleryWrapper() {
   let dbStats: { key: string; value: number; label: string; suffix: string | null }[] | null = null
   let error: { message?: string } | null = null
   try {
-    const supabase = await createClient()
+    const supabase = createPublicClient()
     const { data, error: rpcError } = await supabase.rpc("get_site_stats")
     dbStats = data
     if (rpcError) error = rpcError

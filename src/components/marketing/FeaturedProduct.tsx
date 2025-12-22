@@ -113,16 +113,16 @@ export async function FeaturedProduct() {
     if (!value || typeof value !== "object" || Array.isArray(value)) return null
     const entries = Object.entries(value)
     if (entries.length === 0) return null
-    const normalized: Record<string, string> = {}
+    const normalizedEntries: Array<[string, string]> = []
     for (const [key, entryValue] of entries) {
       if (entryValue === null || entryValue === undefined) continue
       if (typeof entryValue === "string" || typeof entryValue === "number" || typeof entryValue === "boolean") {
-        normalized[key] = String(entryValue)
+        normalizedEntries.push([key, String(entryValue)])
       } else {
         return null
       }
     }
-    return Object.keys(normalized).length > 0 ? normalized : null
+    return normalizedEntries.length > 0 ? Object.fromEntries(normalizedEntries) : null
   }
 
   // Extract only images from product_media (filter out 3D models, videos, documents)
