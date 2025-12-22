@@ -2,10 +2,15 @@
 
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
+import { requireAdminOrStaff } from "@/lib/auth"
+import { logAuditEvent } from "@/lib/audit"
 
 // Doc Category Actions
 export async function createCategory(formData: FormData) {
   const supabase = await createClient()
+  const guard = await requireAdminOrStaff(supabase)
+  if (!guard.ok) return { error: guard.error }
+  const user = guard.user
 
   const name = formData.get("name") as string
   const slug = formData.get("slug") as string
@@ -15,19 +20,39 @@ export async function createCategory(formData: FormData) {
   const sortOrder = parseInt(formData.get("sort_order") as string) || 0
   const isPublished = formData.get("is_published") === "true"
 
-  const { error } = await supabase.from("doc_categories").insert({
-    name,
-    slug,
-    description: description || null,
-    icon: icon || null,
-    parent_id: parentId || null,
-    sort_order: sortOrder,
-    is_published: isPublished,
-  })
+  const { data, error } = await supabase
+    .from("doc_categories")
+    .insert({
+      name,
+      slug,
+      description: description || null,
+      icon: icon || null,
+      parent_id: parentId || null,
+      sort_order: sortOrder,
+      is_published: isPublished,
+    })
+    .select("id, name, slug")
+    .maybeSingle()
 
   if (error) {
     return { error: error.message }
   }
+
+  if (!data) {
+    return { error: "Failed to create category" }
+  }
+
+  await logAuditEvent({
+    userId: user.id,
+    action: "doc_category.created",
+    resourceType: "doc_category",
+    resourceId: data.id,
+    details: {
+      name: data.name,
+      slug: data.slug,
+      is_published: isPublished,
+    },
+  })
 
   revalidatePath("/admin/docs/categories")
   revalidatePath("/docs")
@@ -36,6 +61,9 @@ export async function createCategory(formData: FormData) {
 
 export async function updateCategory(id: string, formData: FormData) {
   const supabase = await createClient()
+  const guard = await requireAdminOrStaff(supabase)
+  if (!guard.ok) return { error: guard.error }
+  const user = guard.user
 
   const name = formData.get("name") as string
   const slug = formData.get("slug") as string
@@ -45,7 +73,7 @@ export async function updateCategory(id: string, formData: FormData) {
   const sortOrder = parseInt(formData.get("sort_order") as string) || 0
   const isPublished = formData.get("is_published") === "true"
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("doc_categories")
     .update({
       name,
@@ -58,10 +86,28 @@ export async function updateCategory(id: string, formData: FormData) {
       updated_at: new Date().toISOString(),
     })
     .eq("id", id)
+    .select("id, name, slug")
+    .maybeSingle()
 
   if (error) {
     return { error: error.message }
   }
+
+  if (!data) {
+    return { error: "Category not found" }
+  }
+
+  await logAuditEvent({
+    userId: user.id,
+    action: "doc_category.updated",
+    resourceType: "doc_category",
+    resourceId: data.id,
+    details: {
+      name: data.name,
+      slug: data.slug,
+      is_published: isPublished,
+    },
+  })
 
   revalidatePath("/admin/docs/categories")
   revalidatePath("/docs")
@@ -70,12 +116,35 @@ export async function updateCategory(id: string, formData: FormData) {
 
 export async function deleteCategory(id: string) {
   const supabase = await createClient()
+  const guard = await requireAdminOrStaff(supabase)
+  if (!guard.ok) return { error: guard.error }
+  const user = guard.user
 
-  const { error } = await supabase.from("doc_categories").delete().eq("id", id)
+  const { data, error } = await supabase
+    .from("doc_categories")
+    .delete()
+    .eq("id", id)
+    .select("id, name, slug")
+    .maybeSingle()
 
   if (error) {
     return { error: error.message }
   }
+
+  if (!data) {
+    return { error: "Category not found" }
+  }
+
+  await logAuditEvent({
+    userId: user.id,
+    action: "doc_category.deleted",
+    resourceType: "doc_category",
+    resourceId: data.id,
+    details: {
+      name: data.name,
+      slug: data.slug,
+    },
+  })
 
   revalidatePath("/admin/docs/categories")
   revalidatePath("/docs")
@@ -85,9 +154,9 @@ export async function deleteCategory(id: string) {
 // Doc Page Actions
 export async function createDocPage(formData: FormData) {
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const guard = await requireAdminOrStaff(supabase)
+  if (!guard.ok) return { error: guard.error }
+  const user = guard.user
 
   const categoryId = formData.get("category_id") as string
   const title = formData.get("title") as string
@@ -107,15 +176,32 @@ export async function createDocPage(formData: FormData) {
       excerpt: excerpt || null,
       sort_order: sortOrder,
       is_published: isPublished,
-      created_by: user?.id,
-      updated_by: user?.id,
+      created_by: user.id,
+      updated_by: user.id,
     })
-    .select("id")
-    .single()
+    .select("id, title, slug, is_published")
+    .maybeSingle()
 
   if (error) {
     return { error: error.message }
   }
+
+  if (!data) {
+    return { error: "Failed to create doc page" }
+  }
+
+  await logAuditEvent({
+    userId: user.id,
+    action: "doc_page.created",
+    resourceType: "doc_page",
+    resourceId: data.id,
+    details: {
+      title: data.title,
+      slug: data.slug,
+      category_id: categoryId,
+      is_published: data.is_published,
+    },
+  })
 
   revalidatePath("/admin/docs")
   revalidatePath("/docs")
@@ -124,9 +210,9 @@ export async function createDocPage(formData: FormData) {
 
 export async function updateDocPage(id: string, formData: FormData) {
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const guard = await requireAdminOrStaff(supabase)
+  if (!guard.ok) return { error: guard.error }
+  const user = guard.user
 
   const categoryId = formData.get("category_id") as string
   const title = formData.get("title") as string
@@ -136,7 +222,7 @@ export async function updateDocPage(id: string, formData: FormData) {
   const sortOrder = parseInt(formData.get("sort_order") as string) || 0
   const isPublished = formData.get("is_published") === "true"
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("doc_pages")
     .update({
       category_id: categoryId,
@@ -146,14 +232,33 @@ export async function updateDocPage(id: string, formData: FormData) {
       excerpt: excerpt || null,
       sort_order: sortOrder,
       is_published: isPublished,
-      updated_by: user?.id,
+      updated_by: user.id,
       updated_at: new Date().toISOString(),
     })
     .eq("id", id)
+    .select("id, title, slug, is_published")
+    .maybeSingle()
 
   if (error) {
     return { error: error.message }
   }
+
+  if (!data) {
+    return { error: "Doc page not found" }
+  }
+
+  await logAuditEvent({
+    userId: user.id,
+    action: "doc_page.updated",
+    resourceType: "doc_page",
+    resourceId: data.id,
+    details: {
+      title: data.title,
+      slug: data.slug,
+      category_id: categoryId,
+      is_published: data.is_published,
+    },
+  })
 
   revalidatePath("/admin/docs")
   revalidatePath("/docs")
@@ -162,12 +267,35 @@ export async function updateDocPage(id: string, formData: FormData) {
 
 export async function deleteDocPage(id: string) {
   const supabase = await createClient()
+  const guard = await requireAdminOrStaff(supabase)
+  if (!guard.ok) return { error: guard.error }
+  const user = guard.user
 
-  const { error } = await supabase.from("doc_pages").delete().eq("id", id)
+  const { data, error } = await supabase
+    .from("doc_pages")
+    .delete()
+    .eq("id", id)
+    .select("id, title, slug")
+    .maybeSingle()
 
   if (error) {
     return { error: error.message }
   }
+
+  if (!data) {
+    return { error: "Doc page not found" }
+  }
+
+  await logAuditEvent({
+    userId: user.id,
+    action: "doc_page.deleted",
+    resourceType: "doc_page",
+    resourceId: data.id,
+    details: {
+      title: data.title,
+      slug: data.slug,
+    },
+  })
 
   revalidatePath("/admin/docs")
   revalidatePath("/docs")
@@ -176,18 +304,38 @@ export async function deleteDocPage(id: string) {
 
 export async function toggleDocPagePublished(id: string, isPublished: boolean) {
   const supabase = await createClient()
+  const guard = await requireAdminOrStaff(supabase)
+  if (!guard.ok) return { error: guard.error }
+  const user = guard.user
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("doc_pages")
     .update({
       is_published: isPublished,
       updated_at: new Date().toISOString(),
     })
     .eq("id", id)
+    .select("id, title, slug")
+    .maybeSingle()
 
   if (error) {
     return { error: error.message }
   }
+
+  if (!data) {
+    return { error: "Doc page not found" }
+  }
+
+  await logAuditEvent({
+    userId: user.id,
+    action: isPublished ? "doc_page.published" : "doc_page.unpublished",
+    resourceType: "doc_page",
+    resourceId: data.id,
+    details: {
+      title: data.title,
+      slug: data.slug,
+    },
+  })
 
   revalidatePath("/admin/docs")
   revalidatePath("/docs")

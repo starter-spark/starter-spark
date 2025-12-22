@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 import { requireAdminOrStaff } from "@/lib/auth"
+import { logAuditEvent } from "@/lib/audit"
 
 interface TeamMemberData {
   name: string
@@ -21,6 +22,7 @@ export async function createTeamMember(data: TeamMemberData) {
   const supabase = await createClient()
   const guard = await requireAdminOrStaff(supabase)
   if (!guard.ok) return { success: false, error: guard.error }
+  const user = guard.user
 
   // Get the highest sort_order
   const { data: lastMember, error: lastMemberError } = await supabase
@@ -55,6 +57,18 @@ export async function createTeamMember(data: TeamMemberData) {
     return { success: false, error: "Failed to create team member" }
   }
 
+  await logAuditEvent({
+    userId: user.id,
+    action: "team_member.created",
+    resourceType: "team_member",
+    resourceId: member.id,
+    details: {
+      name: member.name,
+      role: member.role,
+      is_active: member.is_active,
+    },
+  })
+
   revalidatePath("/admin/content/team")
   revalidatePath("/about")
   return { success: true, member }
@@ -64,6 +78,7 @@ export async function updateTeamMember(id: string, data: Partial<TeamMemberData>
   const supabase = await createClient()
   const guard = await requireAdminOrStaff(supabase)
   if (!guard.ok) return { success: false, error: guard.error }
+  const user = guard.user
 
   const { data: updated, error } = await supabase
     .from("team_members")
@@ -84,6 +99,14 @@ export async function updateTeamMember(id: string, data: Partial<TeamMemberData>
     return { success: false, error: "Team member not found" }
   }
 
+  await logAuditEvent({
+    userId: user.id,
+    action: "team_member.updated",
+    resourceType: "team_member",
+    resourceId: id,
+    details: data,
+  })
+
   revalidatePath("/admin/content/team")
   revalidatePath("/about")
   return { success: true }
@@ -93,6 +116,7 @@ export async function deleteTeamMember(id: string) {
   const supabase = await createClient()
   const guard = await requireAdminOrStaff(supabase)
   if (!guard.ok) return { success: false, error: guard.error }
+  const user = guard.user
 
   const { data: deleted, error } = await supabase
     .from("team_members")
@@ -110,6 +134,13 @@ export async function deleteTeamMember(id: string) {
     return { success: false, error: "Team member not found" }
   }
 
+  await logAuditEvent({
+    userId: user.id,
+    action: "team_member.deleted",
+    resourceType: "team_member",
+    resourceId: id,
+  })
+
   revalidatePath("/admin/content/team")
   revalidatePath("/about")
   return { success: true }
@@ -119,6 +150,7 @@ export async function reorderTeamMembers(orderedIds: string[]) {
   const supabase = await createClient()
   const guard = await requireAdminOrStaff(supabase)
   if (!guard.ok) return { success: false, error: guard.error }
+  const user = guard.user
 
   const uniqueIds = new Set(orderedIds)
   if (uniqueIds.size !== orderedIds.length) {
@@ -140,6 +172,15 @@ export async function reorderTeamMembers(orderedIds: string[]) {
     console.error("Error reordering team members")
     return { success: false, error: "Failed to reorder team members" }
   }
+
+  await logAuditEvent({
+    userId: user.id,
+    action: "team_member.reordered",
+    resourceType: "team_member",
+    details: {
+      ordered_ids: orderedIds,
+    },
+  })
 
   revalidatePath("/admin/content/team")
   revalidatePath("/about")

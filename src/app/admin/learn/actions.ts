@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import type { Json } from "@/lib/supabase/database.types"
 import { requireAdminOrStaff } from "@/lib/auth"
+import { logAuditEvent } from "@/lib/audit"
 import crypto from "node:crypto"
 
 // Generate slug from title
@@ -65,6 +66,7 @@ export async function createCourse(formData: FormData): Promise<void> {
   const supabase = await createClient()
   const guard = await requireAdminOrStaff(supabase)
   if (!guard.ok) throw new Error(guard.error)
+  const user = guard.user
 
   const title = formData.get("title") as string
   const description = formData.get("description") as string
@@ -107,6 +109,19 @@ export async function createCourse(formData: FormData): Promise<void> {
     throw new Error("Failed to create course")
   }
 
+  await logAuditEvent({
+    userId: user.id,
+    action: "course.created",
+    resourceType: "course",
+    resourceId: data.id,
+    details: {
+      title,
+      slug,
+      product_id: productId,
+      difficulty: difficulty || "beginner",
+    },
+  })
+
   revalidatePath("/admin/learn")
   redirect(`/admin/learn/${data.id}`)
 }
@@ -115,6 +130,7 @@ export async function updateCourse(courseId: string, formData: FormData) {
   const supabase = await createClient()
   const guard = await requireAdminOrStaff(supabase)
   if (!guard.ok) return { error: guard.error }
+  const user = guard.user
 
   const title = formData.get("title") as string
   const description = formData.get("description") as string
@@ -150,6 +166,20 @@ export async function updateCourse(courseId: string, formData: FormData) {
     return { error: "Course not found" }
   }
 
+  await logAuditEvent({
+    userId: user.id,
+    action: "course.updated",
+    resourceType: "course",
+    resourceId: courseId,
+    details: {
+      title,
+      slug,
+      difficulty,
+      duration_minutes: durationMinutes,
+      is_published: isPublished,
+    },
+  })
+
   revalidatePath("/admin/learn")
   revalidatePath(`/admin/learn/${courseId}`)
   return { success: true }
@@ -159,12 +189,13 @@ export async function deleteCourse(courseId: string) {
   const supabase = await createClient()
   const guard = await requireAdminOrStaff(supabase)
   if (!guard.ok) return { error: guard.error }
+  const user = guard.user
 
   const { data: deleted, error } = await supabase
     .from("courses")
     .delete()
     .eq("id", courseId)
-    .select("id")
+    .select("id, title, slug")
     .maybeSingle()
 
   if (error) {
@@ -176,6 +207,17 @@ export async function deleteCourse(courseId: string) {
     return { error: "Course not found" }
   }
 
+  await logAuditEvent({
+    userId: user.id,
+    action: "course.deleted",
+    resourceType: "course",
+    resourceId: deleted.id,
+    details: {
+      title: deleted.title,
+      slug: deleted.slug,
+    },
+  })
+
   revalidatePath("/admin/learn")
   redirect("/admin/learn")
 }
@@ -185,6 +227,7 @@ export async function createModule(courseId: string, formData: FormData) {
   const supabase = await createClient()
   const guard = await requireAdminOrStaff(supabase)
   if (!guard.ok) return { error: guard.error }
+  const user = guard.user
 
   const title = formData.get("title") as string
   const description = formData.get("description") as string
@@ -242,6 +285,19 @@ export async function createModule(courseId: string, formData: FormData) {
     return { error: "Failed to create module" }
   }
 
+  await logAuditEvent({
+    userId: user.id,
+    action: "module.created",
+    resourceType: "module",
+    resourceId: data.id,
+    details: {
+      title,
+      slug,
+      course_id: courseId,
+      icon: icon || null,
+    },
+  })
+
   revalidatePath(`/admin/learn/${courseId}`)
   return { success: true, moduleId: data.id }
 }
@@ -250,6 +306,7 @@ export async function updateModule(moduleId: string, courseId: string, formData:
   const supabase = await createClient()
   const guard = await requireAdminOrStaff(supabase)
   if (!guard.ok) return { error: guard.error }
+  const user = guard.user
 
   const title = formData.get("title") as string
   const description = formData.get("description") as string
@@ -284,6 +341,20 @@ export async function updateModule(moduleId: string, courseId: string, formData:
     return { error: "Module not found" }
   }
 
+  await logAuditEvent({
+    userId: user.id,
+    action: "module.updated",
+    resourceType: "module",
+    resourceId: moduleId,
+    details: {
+      title,
+      slug,
+      course_id: courseId,
+      icon: icon || null,
+      is_published: isPublished,
+    },
+  })
+
   revalidatePath(`/admin/learn/${courseId}`)
   return { success: true }
 }
@@ -292,13 +363,14 @@ export async function deleteModule(moduleId: string, courseId: string) {
   const supabase = await createClient()
   const guard = await requireAdminOrStaff(supabase)
   if (!guard.ok) return { error: guard.error }
+  const user = guard.user
 
   const { data: deleted, error } = await supabase
     .from("modules")
     .delete()
     .eq("id", moduleId)
     .eq("course_id", courseId)
-    .select("id")
+    .select("id, title, slug")
     .maybeSingle()
 
   if (error) {
@@ -310,6 +382,18 @@ export async function deleteModule(moduleId: string, courseId: string) {
     return { error: "Module not found" }
   }
 
+  await logAuditEvent({
+    userId: user.id,
+    action: "module.deleted",
+    resourceType: "module",
+    resourceId: deleted.id,
+    details: {
+      title: deleted.title,
+      slug: deleted.slug,
+      course_id: courseId,
+    },
+  })
+
   revalidatePath(`/admin/learn/${courseId}`)
   return { success: true }
 }
@@ -318,6 +402,7 @@ export async function reorderModules(courseId: string, moduleIds: string[]) {
   const supabase = await createClient()
   const guard = await requireAdminOrStaff(supabase)
   if (!guard.ok) return { error: guard.error }
+  const user = guard.user
 
   const uniqueIds = new Set(moduleIds)
   if (uniqueIds.size !== moduleIds.length) {
@@ -365,6 +450,16 @@ export async function reorderModules(courseId: string, moduleIds: string[]) {
     return { error: "Failed to reorder modules" }
   }
 
+  await logAuditEvent({
+    userId: user.id,
+    action: "module.reordered",
+    resourceType: "module",
+    details: {
+      course_id: courseId,
+      module_ids: moduleIds,
+    },
+  })
+
   revalidatePath(`/admin/learn/${courseId}`)
   return { success: true }
 }
@@ -374,6 +469,7 @@ export async function createLesson(moduleId: string, courseId: string, formData:
   const supabase = await createClient()
   const guard = await requireAdminOrStaff(supabase)
   if (!guard.ok) return { error: guard.error }
+  const user = guard.user
 
   const title = formData.get("title") as string
   const description = formData.get("description") as string
@@ -445,6 +541,20 @@ export async function createLesson(moduleId: string, courseId: string, formData:
     return { error: contentError.message }
   }
 
+  await logAuditEvent({
+    userId: user.id,
+    action: "lesson.created",
+    resourceType: "lesson",
+    resourceId: data.id,
+    details: {
+      title,
+      slug,
+      lesson_type: lessonType,
+      module_id: moduleId,
+      course_id: courseId,
+    },
+  })
+
   revalidatePath(`/admin/learn/${courseId}`)
   return { success: true, lessonId: data.id }
 }
@@ -457,6 +567,7 @@ export async function updateLesson(
   const supabase = await createClient()
   const guard = await requireAdminOrStaff(supabase)
   if (!guard.ok) return { error: guard.error }
+  const user = guard.user
 
   const title = formData.get("title") as string
   const description = formData.get("description") as string
@@ -542,6 +653,23 @@ export async function updateLesson(
     return { error: contentError.message }
   }
 
+  await logAuditEvent({
+    userId: user.id,
+    action: "lesson.updated",
+    resourceType: "lesson",
+    resourceId: lessonId,
+    details: {
+      title,
+      slug,
+      lesson_type: lessonType,
+      difficulty,
+      estimated_minutes: estimatedMinutes,
+      is_published: isPublished,
+      is_optional: isOptional,
+      course_id: courseId,
+    },
+  })
+
   revalidatePath(`/admin/learn/${courseId}`)
   return { success: true }
 }
@@ -550,12 +678,13 @@ export async function deleteLesson(lessonId: string, courseId: string) {
   const supabase = await createClient()
   const guard = await requireAdminOrStaff(supabase)
   if (!guard.ok) return { error: guard.error }
+  const user = guard.user
 
   const { data: deleted, error } = await supabase
     .from("lessons")
     .delete()
     .eq("id", lessonId)
-    .select("id, module_id")
+    .select("id, module_id, title, slug")
     .maybeSingle()
 
   if (error) {
@@ -567,6 +696,19 @@ export async function deleteLesson(lessonId: string, courseId: string) {
     return { error: "Lesson not found" }
   }
 
+  await logAuditEvent({
+    userId: user.id,
+    action: "lesson.deleted",
+    resourceType: "lesson",
+    resourceId: deleted.id,
+    details: {
+      title: deleted.title,
+      slug: deleted.slug,
+      module_id: deleted.module_id,
+      course_id: courseId,
+    },
+  })
+
   revalidatePath(`/admin/learn/${courseId}`)
   return { success: true }
 }
@@ -575,6 +717,7 @@ export async function reorderLessons(moduleId: string, courseId: string, lessonI
   const supabase = await createClient()
   const guard = await requireAdminOrStaff(supabase)
   if (!guard.ok) return { error: guard.error }
+  const user = guard.user
 
   const uniqueIds = new Set(lessonIds)
   if (uniqueIds.size !== lessonIds.length) {
@@ -620,6 +763,17 @@ export async function reorderLessons(moduleId: string, courseId: string, lessonI
     console.error("Error reordering lessons:", errors)
     return { error: "Failed to reorder lessons" }
   }
+
+  await logAuditEvent({
+    userId: user.id,
+    action: "lesson.reordered",
+    resourceType: "lesson",
+    details: {
+      module_id: moduleId,
+      course_id: courseId,
+      lesson_ids: lessonIds,
+    },
+  })
 
   revalidatePath(`/admin/learn/${courseId}`)
   return { success: true }

@@ -51,6 +51,32 @@ export type AuditAction =
   | 'banner.duplicated'
   | 'banner.activated'
   | 'banner.deactivated'
+  // Learning management
+  | 'course.created'
+  | 'course.updated'
+  | 'course.deleted'
+  | 'module.created'
+  | 'module.updated'
+  | 'module.deleted'
+  | 'module.reordered'
+  | 'lesson.created'
+  | 'lesson.updated'
+  | 'lesson.deleted'
+  | 'lesson.reordered'
+  // Docs management
+  | 'doc_category.created'
+  | 'doc_category.updated'
+  | 'doc_category.deleted'
+  | 'doc_page.created'
+  | 'doc_page.updated'
+  | 'doc_page.deleted'
+  | 'doc_page.published'
+  | 'doc_page.unpublished'
+  // Team management
+  | 'team_member.created'
+  | 'team_member.updated'
+  | 'team_member.deleted'
+  | 'team_member.reordered'
 
 /**
  * Resource types that can be audited
@@ -67,6 +93,12 @@ export type AuditResourceType =
   | 'stats'
   | 'site_content'
   | 'banner'
+  | 'course'
+  | 'module'
+  | 'lesson'
+  | 'doc_category'
+  | 'doc_page'
+  | 'team_member'
 
 interface AuditLogParams {
   userId: string

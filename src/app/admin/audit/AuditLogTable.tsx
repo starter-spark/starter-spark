@@ -26,6 +26,9 @@ import {
   Calendar,
   MessageSquare,
   Settings,
+  BookOpen,
+  Layers,
+  Folder,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -73,6 +76,12 @@ const resourceIcons = new Map<string, typeof User>([
   ["stats", Settings],
   ["page_content", FileText],
   ["site_content", FileText],
+  ["course", BookOpen],
+  ["module", Layers],
+  ["lesson", FileText],
+  ["doc_category", Folder],
+  ["doc_page", FileText],
+  ["team_member", User],
 ])
 
 const actionDescriptions = new Map<string, { label: string; verb: string; color: string }>([
@@ -113,6 +122,32 @@ const actionDescriptions = new Map<string, { label: string; verb: string; color:
   // Site content
   ["site_content.updated", { label: "Site Content Updated", verb: "updated site content", color: "bg-blue-100 text-blue-700 border-blue-200" }],
   ["site_content.reset", { label: "Site Content Reset", verb: "reset site content to default", color: "bg-amber-100 text-amber-700 border-amber-200" }],
+  // Learning management
+  ["course.created", { label: "Course Created", verb: "created course", color: "bg-green-100 text-green-700 border-green-200" }],
+  ["course.updated", { label: "Course Updated", verb: "updated course", color: "bg-blue-100 text-blue-700 border-blue-200" }],
+  ["course.deleted", { label: "Course Deleted", verb: "deleted course", color: "bg-red-100 text-red-700 border-red-200" }],
+  ["module.created", { label: "Module Created", verb: "created module", color: "bg-green-100 text-green-700 border-green-200" }],
+  ["module.updated", { label: "Module Updated", verb: "updated module", color: "bg-blue-100 text-blue-700 border-blue-200" }],
+  ["module.deleted", { label: "Module Deleted", verb: "deleted module", color: "bg-red-100 text-red-700 border-red-200" }],
+  ["module.reordered", { label: "Modules Reordered", verb: "reordered modules for", color: "bg-cyan-100 text-cyan-700 border-cyan-200" }],
+  ["lesson.created", { label: "Lesson Created", verb: "created lesson", color: "bg-green-100 text-green-700 border-green-200" }],
+  ["lesson.updated", { label: "Lesson Updated", verb: "updated lesson", color: "bg-blue-100 text-blue-700 border-blue-200" }],
+  ["lesson.deleted", { label: "Lesson Deleted", verb: "deleted lesson", color: "bg-red-100 text-red-700 border-red-200" }],
+  ["lesson.reordered", { label: "Lessons Reordered", verb: "reordered lessons for", color: "bg-cyan-100 text-cyan-700 border-cyan-200" }],
+  // Docs management
+  ["doc_category.created", { label: "Doc Category Created", verb: "created doc category", color: "bg-green-100 text-green-700 border-green-200" }],
+  ["doc_category.updated", { label: "Doc Category Updated", verb: "updated doc category", color: "bg-blue-100 text-blue-700 border-blue-200" }],
+  ["doc_category.deleted", { label: "Doc Category Deleted", verb: "deleted doc category", color: "bg-red-100 text-red-700 border-red-200" }],
+  ["doc_page.created", { label: "Doc Page Created", verb: "created doc page", color: "bg-green-100 text-green-700 border-green-200" }],
+  ["doc_page.updated", { label: "Doc Page Updated", verb: "updated doc page", color: "bg-blue-100 text-blue-700 border-blue-200" }],
+  ["doc_page.deleted", { label: "Doc Page Deleted", verb: "deleted doc page", color: "bg-red-100 text-red-700 border-red-200" }],
+  ["doc_page.published", { label: "Doc Page Published", verb: "published doc page", color: "bg-green-100 text-green-700 border-green-200" }],
+  ["doc_page.unpublished", { label: "Doc Page Unpublished", verb: "unpublished doc page", color: "bg-amber-100 text-amber-700 border-amber-200" }],
+  // Team management
+  ["team_member.created", { label: "Team Member Created", verb: "added team member", color: "bg-green-100 text-green-700 border-green-200" }],
+  ["team_member.updated", { label: "Team Member Updated", verb: "updated team member", color: "bg-blue-100 text-blue-700 border-blue-200" }],
+  ["team_member.deleted", { label: "Team Member Deleted", verb: "removed team member", color: "bg-red-100 text-red-700 border-red-200" }],
+  ["team_member.reordered", { label: "Team Reordered", verb: "reordered team members", color: "bg-cyan-100 text-cyan-700 border-cyan-200" }],
 ])
 
 const resourceLinks = new Map<string, (id: string) => string>([
@@ -124,6 +159,12 @@ const resourceLinks = new Map<string, (id: string) => string>([
   ["comment", () => `/admin/community`],
   ["content", (id) => `/admin/content/${id}`],
   ["site_content", () => `/admin/content/site`],
+  ["course", (id) => `/admin/learn/${id}`],
+  ["module", () => `/admin/learn`],
+  ["lesson", () => `/admin/learn`],
+  ["doc_category", () => `/admin/docs/categories`],
+  ["doc_page", (id) => `/admin/docs/${id}`],
+  ["team_member", () => `/admin/content/team`],
 ])
 
 function formatDate(dateStr: string | null): string {
