@@ -5,8 +5,8 @@ const SUPABASE_ANON_KEY_KEYS = [
   "SUPABASE_ANON_KEY",
 ] as const
 const SUPABASE_SERVICE_ROLE_KEY_KEYS = [
-  "SUPABASE_SERVICE_ROLE_KEY",
   "SUPABASE_SECRET_KEY",
+  "SUPABASE_SERVICE_ROLE_KEY",
 ] as const
 
 function missingEnvError(keys: readonly string[]): Error {
@@ -20,17 +20,29 @@ export function getSupabaseUrl(): string {
 }
 
 export function getSupabaseAnonKey(): string {
-  const value =
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+  const publishable = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+  if (publishable) return publishable
+
+  const legacy =
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
     process.env.SUPABASE_ANON_KEY
-  if (!value) throw missingEnvError(SUPABASE_ANON_KEY_KEYS)
-  return value
+  if (!legacy) throw missingEnvError(SUPABASE_ANON_KEY_KEYS)
+
+  if (process.env.NODE_ENV === "production") {
+    console.warn("[supabase] Legacy anon key in use; set NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY.")
+  }
+  return legacy
 }
 
 export function getSupabaseServiceRoleKey(): string {
-  const value =
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY
-  if (!value) throw missingEnvError(SUPABASE_SERVICE_ROLE_KEY_KEYS)
-  return value
+  const secret = process.env.SUPABASE_SECRET_KEY
+  if (secret) return secret
+
+  const legacy = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!legacy) throw missingEnvError(SUPABASE_SERVICE_ROLE_KEY_KEYS)
+
+  if (process.env.NODE_ENV === "production") {
+    console.warn("[supabase] Legacy service role key in use; set SUPABASE_SECRET_KEY.")
+  }
+  return legacy
 }
