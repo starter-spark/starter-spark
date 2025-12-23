@@ -126,6 +126,8 @@ function buildContentSecurityPolicy({
     'https://www.youtube.com',
     'https://www.youtube-nocookie.com',
     'https://player.vimeo.com',
+    // Scratch embeds for easter egg games.
+    'https://scratch.mit.edu',
   ].join(' ')
 
   return [

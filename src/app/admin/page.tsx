@@ -225,7 +225,7 @@ export default async function AdminDashboard() {
                 {activity.recentQuestions.map((question) => (
                   <Link
                     key={question.id}
-                    href={`/admin/community/${question.slug}`}
+                    href={`/community/${question.id}`}
                     className="block rounded border border-slate-200 p-3 transition-colors hover:bg-slate-50"
                   >
                     <div className="flex items-start gap-2">
