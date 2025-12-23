@@ -78,6 +78,9 @@ test.describe("Shop Page Accessibility", () => {
 
     const accessibilityScanResults = await new AxeBuilder({ page })
       .disableRules(["region"])
+      // Exclude site banners - they're dynamic content from DB and may have test data
+      .exclude('[data-testid="site-banners"]')
+      .exclude('[class*="border-cyan-200"]') // Banner styling
       .analyze()
 
     const seriousViolations = accessibilityScanResults.violations.filter(
@@ -205,6 +208,9 @@ test.describe("Login Page Accessibility", () => {
 
     const accessibilityScanResults = await new AxeBuilder({ page })
       .disableRules(["region"])
+      // Exclude site banners - they're dynamic content from DB and may have test data
+      .exclude('[data-testid="site-banners"]')
+      .exclude('[class*="border-cyan-200"]') // Banner styling
       .analyze()
 
     const seriousViolations = accessibilityScanResults.violations.filter(

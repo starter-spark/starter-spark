@@ -4,7 +4,7 @@ import { PurchaseConfirmationEmail } from './templates/purchase-confirmation'
 import { ClaimLinkEmail } from './templates/claim-link'
 import { WelcomeEmail } from './templates/welcome'
 
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'StarterSpark <no-reply@starter-spark.com>'
+const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'StarterSpark <no-reply@starterspark.org>'
 const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ||
   (process.env.VERCEL_BRANCH_URL ? `https://${process.env.VERCEL_BRANCH_URL}` : null) ||

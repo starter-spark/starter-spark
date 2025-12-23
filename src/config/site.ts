@@ -3,7 +3,7 @@ export const siteConfig = {
   tagline: 'Open Source Robotics Kits',
   description:
     'Precision robotics kits for the next generation of engineers. Designed in Hawaii.',
-  url: 'https://starter-spark.com',
+  url: 'https://starterspark.org',
   ogImage: '/og.png',
   links: {
     github: 'https://github.com/starterspark',

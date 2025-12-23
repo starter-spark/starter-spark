@@ -271,5 +271,3 @@ const helpText = {
   color: "#94a3b8",
   textAlign: "center" as const,
 }
-
-export default PurchaseConfirmationEmail

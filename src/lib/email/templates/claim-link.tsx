@@ -211,5 +211,3 @@ const manualClaimText = {
   color: "#94a3b8",
   lineHeight: "20px",
 }
-
-export default ClaimLinkEmail

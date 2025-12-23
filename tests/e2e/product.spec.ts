@@ -178,8 +178,9 @@ test.describe("Product Page - Buy Box", () => {
       localStorage.removeItem("starterspark-cart")
     })
 
-    const increaseBtn = page.getByLabel("Increase quantity")
-    const addToCartBtn = page.getByRole("button", { name: /add to cart/i })
+    // Scope to main to avoid matching cart dialog controls
+    const increaseBtn = page.locator("main").getByLabel("Increase quantity")
+    const addToCartBtn = page.locator("main").getByRole("button", { name: /add to cart/i })
 
     // Set quantity to 3
     await increaseBtn.click()

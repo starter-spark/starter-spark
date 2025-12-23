@@ -250,5 +250,3 @@ const signatureText = {
   fontStyle: "italic",
   textAlign: "center" as const,
 }
-
-export default WelcomeEmail
