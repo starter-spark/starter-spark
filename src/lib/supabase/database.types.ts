@@ -1361,6 +1361,47 @@ export type Database = {
         }
         Relationships: []
       }
+      teapot_stats: {
+        Row: {
+          key: string
+          updated_at: string | null
+          value: number
+        }
+        Insert: {
+          key: string
+          updated_at?: string | null
+          value?: number
+        }
+        Update: {
+          key?: string
+          updated_at?: string | null
+          value?: number
+        }
+        Relationships: []
+      }
+      teapot_viewers: {
+        Row: {
+          user_id: string
+          viewed_at: string
+        }
+        Insert: {
+          user_id: string
+          viewed_at?: string
+        }
+        Update: {
+          user_id?: string
+          viewed_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teapot_viewers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       troubleshooting_articles: {
         Row: {
           category: string
@@ -1529,10 +1570,7 @@ export type Database = {
         Args: { amount?: number; stat_key: string }
         Returns: number
       }
-      track_teapot_view: {
-        Args: Record<string, never>
-        Returns: number
-      }
+      increment_teapot_api_calls: { Args: never; Returns: number }
       is_admin:
         | { Args: never; Returns: boolean }
         | { Args: { user_id: string }; Returns: boolean }
@@ -1556,6 +1594,7 @@ export type Database = {
           title: string
         }[]
       }
+      track_teapot_view: { Args: never; Returns: number }
       unban_user_from_forums: {
         Args: { target_user_id: string }
         Returns: boolean

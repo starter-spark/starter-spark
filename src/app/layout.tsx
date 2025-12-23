@@ -58,29 +58,21 @@ export default async function RootLayout({
 }>) {
   const nonce = (await headers()).get("x-nonce") ?? undefined
 
-  const sourceComment = `
-<!--
-
+  return (
+    <html lang="en">
+      {/* ASCII art visible in View Source - static to avoid hydration issues */}
+      {/*
    ______________    ____  ________________  _____ ____  ___    ____  __ __
-  / ___/_  __/   |  / __ \\/_  __/ ____/ __ \\/ ___// __ \\/   |  / __ \\/ //_/
-  \\__ \\ / / / /| | / /_/ / / / / __/ / /_/ /\\__ \\/ /_/ / /| | / /_/ / ,<
+  / ___/_  __/   |  / __ \/_  __/ ____/ __ \/ ___// __ \/   |  / __ \/ //_/
+  \__ \ / / / /| | / /_/ / / / / __/ / /_/ /\__ \/ /_/ / /| | / /_/ / ,<
  ___/ // / / ___ |/ _, _/ / / / /___/ _, _/___/ / ____/ ___ |/ _, _/ /| |
 /____//_/ /_/  |_/_/ |_| /_/ /_____/_/ |_|/____/_/   /_/  |_/_/ |_/_/ |_|
 
-Made by Kai Stewart (normalday843812)
-https://github.com/normalday843812
-
--->
-`
-
-  return (
-    <html lang="en">
-      <head
-        // eslint-disable-next-line react/no-danger
-        dangerouslySetInnerHTML={{
-          __html: sourceComment + (nonce ? `<meta name="csp-nonce" content="${nonce}" />` : ""),
-        }}
-      />
+Made by Kai Stewart (normalday843812) - https://github.com/normalday843812
+      */}
+      <head>
+        {nonce && <meta name="csp-nonce" content={nonce} />}
+      </head>
       <body
         data-csp-nonce={nonce}
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}

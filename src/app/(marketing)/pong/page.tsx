@@ -3,12 +3,7 @@ import Link from "next/link"
 
 export const metadata: Metadata = {
   title: "Pong Ping",
-  description: `NEW and IMPROVED (and low-effort) Pong Ping!
-{ Controls }
-left/right arrow — move paddle
-space — flick paddle
-S — use time slower (orange powerup)
-R — use score restore (pink powerup)`,
+  description: "NEW and IMPROVED (and low-effort) Pong Ping!",
   robots: "noindex, nofollow",
 }
 

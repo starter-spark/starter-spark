@@ -179,7 +179,8 @@ test.describe("Learn Page", () => {
   })
 
   test("should display courses or content", async ({ page }) => {
-    await page.goto("/learn")
+    // Use waitUntil: "networkidle" to ensure page is stable after redirect
+    await page.goto("/learn", { waitUntil: "networkidle" })
     await expect(page).toHaveURL(/\/(learn|workshop)(\?|$)/)
 
     const signInHeading = page.getByRole("heading", { name: /sign in required/i })
@@ -199,10 +200,13 @@ test.describe("Learn Page", () => {
       },
       { timeout: 15000 }
     ).toBeTruthy()
+
+    // Wait for page to be fully stable before Chromatic snapshot
+    await page.waitForLoadState("networkidle")
   })
 
   test("should display footer", async ({ page }) => {
-    await page.goto("/learn", { waitUntil: "domcontentloaded" })
+    await page.goto("/learn", { waitUntil: "networkidle" })
 
     // Wait for page content to load first (any of these indicates page is ready)
     const heading = page.getByRole("heading", { level: 1 })
@@ -214,6 +218,9 @@ test.describe("Learn Page", () => {
       signInLink.waitFor({ state: "visible", timeout: 15000 }),
       coursesCount.first().waitFor({ state: "visible", timeout: 15000 }),
     ]).catch(() => {})
+
+    // Wait for page to be fully stable before any assertions/snapshots
+    await page.waitForLoadState("networkidle")
 
     // Now check for footer
     await expect(page.getByRole("contentinfo")).toBeVisible({ timeout: 10000 })

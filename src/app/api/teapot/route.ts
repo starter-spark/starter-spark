@@ -8,30 +8,27 @@ import { rateLimit } from "@/lib/rate-limit"
  * Any attempt to brew coffee with a teapot should result in the error code
  * "418 I'm a teapot". The resulting entity body MAY be short and stout.
  *
- * This endpoint tracks every API call (rate limited).
+ * API calls are tracked in teapot_stats table (separate from site_stats).
  */
 
 async function trackApiCall(): Promise<number> {
   try {
     const supabase = await createClient()
 
-    // Increment API call counter (every call, not unique)
-    const { data, error } = await supabase.rpc("increment_stat", {
-      stat_key: "teapot_api_calls",
-      amount: 1,
-    })
+    // Increment API call counter and return new count
+    const { data, error } = await supabase.rpc("increment_teapot_api_calls")
 
     if (error) {
-      // If not authenticated, just get current count
-      const { data: countData } = await supabase
-        .from("site_stats")
+      // Fallback: just get current count
+      const { data: statsData } = await supabase
+        .from("teapot_stats")
         .select("value")
-        .eq("key", "teapot_api_calls")
+        .eq("key", "api_calls")
         .single()
-      return countData?.value ?? 0
+      return statsData?.value ?? 0
     }
 
-    return (data as number) ?? 0
+    return data ?? 0
   } catch {
     return 0
   }
