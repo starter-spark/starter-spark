@@ -6,6 +6,18 @@ import { rateLimitAction } from "@/lib/rate-limit"
 import { isUuid } from "@/lib/uuid"
 import { revalidatePath } from "next/cache"
 
+/**
+ * Check if the current user is banned from forums
+ */
+async function checkBanStatus(supabase: Awaited<ReturnType<typeof createClient>>, userId: string): Promise<boolean> {
+  const { data, error } = await supabase.rpc("is_banned_from_forums", { user_id: userId })
+  if (error) {
+    console.error("Error checking ban status:", error)
+    return false // Fail open - let RLS handle it
+  }
+  return data === true
+}
+
 export async function voteOnPost(postId: string, voteType: 1 | -1) {
   if (!isUuid(postId)) {
     return { error: "Invalid post.", requiresAuth: false }
@@ -22,6 +34,11 @@ export async function voteOnPost(postId: string, voteType: 1 | -1) {
 
   if (!user) {
     return { error: "You must be signed in to vote", requiresAuth: true }
+  }
+
+  // Check if user is banned from forums
+  if (await checkBanStatus(supabase, user.id)) {
+    return { error: "Your account has been restricted from participating in the community forums." }
   }
 
   const rateLimitResult = await rateLimitAction(user.id, "communityVote")
@@ -122,6 +139,11 @@ export async function voteOnComment(commentId: string, voteType: 1 | -1) {
     return { error: "You must be signed in to vote", requiresAuth: true }
   }
 
+  // Check if user is banned from forums
+  if (await checkBanStatus(supabase, user.id)) {
+    return { error: "Your account has been restricted from participating in the community forums." }
+  }
+
   const rateLimitResult = await rateLimitAction(user.id, "communityVote")
   if (!rateLimitResult.success) {
     return {
@@ -211,6 +233,11 @@ export async function reportPost(postId: string) {
 
   if (!user) {
     return { error: "You must be signed in to report", requiresAuth: true }
+  }
+
+  // Check if user is banned from forums
+  if (await checkBanStatus(supabase, user.id)) {
+    return { error: "Your account has been restricted from participating in the community forums." }
   }
 
   const rateLimitResult = await rateLimitAction(user.id, "communityReport")

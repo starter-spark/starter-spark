@@ -27,15 +27,24 @@ test.describe("Workshop Page - Unauthenticated", () => {
     await workshopPage.goto()
 
     // Should see some indication that sign-in is required
-    const signInText = page.getByText(/sign in|login|authentication required/i)
-    await expect(signInText.first()).toBeVisible()
+    // On mobile, the header "Sign In" text may be hidden (icon-only), so check main content
+    const mainContent = page.locator("main")
+    const signInText = mainContent.getByText(/sign in|login|authentication required/i)
+    const headerSignInLink = page.getByRole("banner").getByRole("link", { name: /sign in/i })
+
+    // Either main content has sign-in text OR header has sign-in link
+    const hasMainSignIn = await signInText.first().isVisible().catch(() => false)
+    const hasHeaderSignIn = await headerSignInLink.isVisible().catch(() => false)
+
+    expect(hasMainSignIn || hasHeaderSignIn).toBeTruthy()
   })
 
   test("should provide link to sign in", async ({ page }) => {
     const workshopPage = new WorkshopPage(page)
     await workshopPage.goto()
 
-    const signInLink = page.getByRole("link", { name: /sign in/i })
+    // Use first() to handle multiple sign-in links (header + page content)
+    const signInLink = page.getByRole("link", { name: /sign in/i }).first()
     if (await signInLink.isVisible()) {
       await signInLink.click()
       await expect(page).toHaveURL(/\/login/)

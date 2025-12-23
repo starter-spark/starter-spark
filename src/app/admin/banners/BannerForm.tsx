@@ -39,7 +39,7 @@ interface BannerFormProps {
 
 const COLOR_SCHEMES = [
   // Status banners
-  { value: "info", label: "Info", icon: Info, preview: "bg-cyan-50 text-cyan-800 border-cyan-200", category: "Status" },
+  { value: "info", label: "Info", icon: Info, preview: "bg-cyan-50 text-slate-800 border-cyan-200", category: "Status" },
   { value: "warning", label: "Warning", icon: AlertTriangle, preview: "bg-amber-50 text-amber-800 border-amber-200", category: "Status" },
   { value: "success", label: "Success", icon: CheckCircle, preview: "bg-green-50 text-green-800 border-green-200", category: "Status" },
   { value: "error", label: "Error", icon: XCircle, preview: "bg-red-50 text-red-800 border-red-200", category: "Status" },

@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
 import { Badge } from "@/components/ui/badge"
+import { UserAvatar } from "@/components/ui/user-avatar"
 import {
   Table,
   TableBody,
@@ -8,7 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { CreditCard, User } from "lucide-react"
+import { CreditCard } from "lucide-react"
 
 export const metadata = {
   title: "Orders | Admin",
@@ -23,7 +24,7 @@ async function getOrders() {
     .select(`
       *,
       products(name, price_cents),
-      profiles(email, full_name)
+      profiles(id, email, full_name, avatar_url, avatar_seed)
     `)
     .eq("source", "online_purchase")
     .order("created_at", { ascending: false })
@@ -96,7 +97,7 @@ export default async function OrdersPage() {
             <TableBody>
               {orders.map((order) => {
                 const product = order.products as unknown as { name: string; price_cents: number } | null
-                const owner = order.profiles as unknown as { email: string; full_name: string | null } | null
+                const owner = order.profiles as unknown as { id: string; email: string; full_name: string | null; avatar_url: string | null; avatar_seed: string | null } | null
 
                 return (
                   <TableRow key={order.id}>
@@ -117,7 +118,16 @@ export default async function OrdersPage() {
                     <TableCell>
                       {owner ? (
                         <div className="flex items-center gap-2">
-                          <User className="h-4 w-4 text-slate-400" />
+                          <UserAvatar
+                            user={{
+                              id: owner.id,
+                              full_name: owner.full_name,
+                              email: owner.email,
+                              avatar_url: owner.avatar_url,
+                              avatar_seed: owner.avatar_seed,
+                            }}
+                            size="sm"
+                          />
                           <span className="text-sm text-slate-900">
                             {owner.full_name || owner.email}
                           </span>

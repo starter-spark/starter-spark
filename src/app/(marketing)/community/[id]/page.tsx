@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { formatRelativeTime } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { UserAvatar } from "@/components/ui/user-avatar"
 import {
   CheckCircle2,
   MessageSquare,
@@ -108,6 +109,7 @@ export default async function QuestionDetailPage({
         full_name,
         email,
         avatar_url,
+        avatar_seed,
         role
       ),
       product:products (
@@ -144,6 +146,7 @@ export default async function QuestionDetailPage({
         full_name,
         email,
         avatar_url,
+        avatar_seed,
         role
       )
     ` as const
@@ -163,6 +166,7 @@ export default async function QuestionDetailPage({
     full_name: string | null
     email: string
     avatar_url: string | null
+    avatar_seed: string | null
     role: string | null
   } | null
 
@@ -225,6 +229,7 @@ export default async function QuestionDetailPage({
     full_name: string | null
     email: string
     avatar_url: string | null
+    avatar_seed: string | null
     role: string | null
   } | null
 
@@ -314,11 +319,16 @@ export default async function QuestionDetailPage({
 
                 {/* Author Info */}
                 <div className="flex items-center gap-3 text-sm text-slate-500">
-                  <div className="w-8 h-8 bg-slate-200 rounded-full flex items-center justify-center">
-                    <span className="font-mono text-slate-600">
-                      {(author?.full_name || author?.email || "?")[0].toUpperCase()}
-                    </span>
-                  </div>
+                  <UserAvatar
+                    user={{
+                      id: author?.id || post.id,
+                      full_name: author?.full_name,
+                      email: author?.email,
+                      avatar_url: author?.avatar_url,
+                      avatar_seed: author?.avatar_seed,
+                    }}
+                    size="md"
+                  />
                   <div>
                     <span className="text-slate-700">
                       {author?.full_name || author?.email?.split("@")[0] || "Anonymous"}
@@ -449,6 +459,7 @@ function AnswerCard({
       full_name: string | null
       email: string
       avatar_url: string | null
+      avatar_seed: string | null
       role: string | null
     } | null
   }
@@ -478,11 +489,16 @@ function AnswerCard({
 
         {/* Author Info */}
         <div className="flex items-center gap-3 mt-4 pt-4 border-t border-slate-100 text-sm text-slate-500">
-          <div className="w-6 h-6 bg-slate-200 rounded-full flex items-center justify-center">
-            <span className="font-mono text-xs text-slate-600">
-              {(author?.full_name || author?.email || "?")[0].toUpperCase()}
-            </span>
-          </div>
+          <UserAvatar
+            user={{
+              id: author?.id || answer.id,
+              full_name: author?.full_name,
+              email: author?.email,
+              avatar_url: author?.avatar_url,
+              avatar_seed: author?.avatar_seed,
+            }}
+            size="sm"
+          />
           <span className="text-slate-700">
             {author?.full_name || author?.email?.split("@")[0] || "Anonymous"}
           </span>

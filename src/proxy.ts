@@ -88,6 +88,8 @@ function buildContentSecurityPolicy({
   }
   imageOrigins.add('https://images.unsplash.com')
   imageOrigins.add('https://avatars.githubusercontent.com')
+  // DiceBear for auto-generated avatars
+  imageOrigins.add('https://api.dicebear.com')
   fontOrigins.add('https://fonts.gstatic.com')
 
   const connectOrigins = new Set<string>()

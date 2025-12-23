@@ -2,6 +2,7 @@ import Link from "next/link"
 import { createClient } from "@/lib/supabase/server"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { UserAvatar } from "@/components/ui/user-avatar"
 import {
   Package,
   KeyRound,
@@ -56,7 +57,7 @@ async function getRecentActivity() {
   // Get recent open questions
   const { data: recentQuestions } = await supabase
     .from("posts")
-    .select("id, title, slug, created_at, status, profiles(full_name)")
+    .select("id, title, slug, created_at, status, profiles(id, full_name, email, avatar_url, avatar_seed)")
     .eq("status", "open")
     .order("created_at", { ascending: false })
     .limit(5)
@@ -233,10 +234,28 @@ export default async function AdminDashboard() {
                         <p className="truncate text-sm font-medium text-slate-900">
                           {question.title}
                         </p>
-                        <p className="text-xs text-slate-500">
-                          by {(question.profiles as unknown as { full_name: string | null } | null)?.full_name || "Unknown"} •{" "}
-                          {question.created_at ? new Date(question.created_at).toLocaleDateString() : "-"}
-                        </p>
+                        <div className="flex items-center gap-1.5 text-xs text-slate-500 mt-1">
+                          {(() => {
+                            const author = question.profiles as unknown as { id: string; full_name: string | null; email: string | null; avatar_url: string | null; avatar_seed: string | null } | null
+                            return (
+                              <>
+                                <UserAvatar
+                                  user={{
+                                    id: author?.id || question.id,
+                                    full_name: author?.full_name,
+                                    email: author?.email,
+                                    avatar_url: author?.avatar_url,
+                                    avatar_seed: author?.avatar_seed,
+                                  }}
+                                  size="sm"
+                                />
+                                <span>{author?.full_name || "Unknown"}</span>
+                              </>
+                            )
+                          })()}
+                          <span>•</span>
+                          <span>{question.created_at ? new Date(question.created_at).toLocaleDateString() : "-"}</span>
+                        </div>
                       </div>
                     </div>
                   </Link>

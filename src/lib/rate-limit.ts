@@ -44,6 +44,11 @@ export const rateLimitConfigs = {
   // Admin actions - moderate limits
   adminMutation: { requests: 20 * multiplier, window: "1 m" as const },
   learnUpload: { requests: 10 * multiplier, window: "1 m" as const },
+  // Profile/account actions
+  profileUpdate: { requests: 10 * multiplier, window: "1 m" as const },
+  accountDelete: { requests: 3 * multiplier, window: "1 h" as const },
+  // Easter eggs - limit to prevent counter spam
+  teapot: { requests: 1 * multiplier, window: "5 s" as const },
   // General API - more permissive
   default: { requests: 30 * multiplier, window: "1 m" as const },
 }
@@ -86,6 +91,12 @@ function getRateLimitConfig(configKey: RateLimitConfig) {
       return rateLimitConfigs.adminMutation
     case "learnUpload":
       return rateLimitConfigs.learnUpload
+    case "profileUpdate":
+      return rateLimitConfigs.profileUpdate
+    case "accountDelete":
+      return rateLimitConfigs.accountDelete
+    case "teapot":
+      return rateLimitConfigs.teapot
     case "default":
       return rateLimitConfigs.default
     default: {
