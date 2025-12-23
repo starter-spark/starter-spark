@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { formatRelativeTime } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { UserAvatar } from "@/components/ui/user-avatar"
 import {
   CheckCircle2,
   Circle,
@@ -106,7 +107,9 @@ export default async function CommunityPage({
           id,
           full_name,
           email,
-          role
+          role,
+          avatar_url,
+          avatar_seed
         ),
         product:products (
           id,
@@ -219,6 +222,8 @@ export default async function CommunityPage({
                       full_name: string | null
                       email: string
                       role: string | null
+                      avatar_url: string | null
+                      avatar_seed: string | null
                     } | null
                     const commentCount = (post.comments as unknown as { id: string }[])
                       ?.length || 0
@@ -291,6 +296,16 @@ export default async function CommunityPage({
 
                               {/* Meta */}
                               <div className="flex items-center gap-2 text-sm text-slate-500">
+                                <UserAvatar
+                                  user={{
+                                    id: author?.id || post.id,
+                                    full_name: author?.full_name,
+                                    email: author?.email,
+                                    avatar_url: author?.avatar_url,
+                                    avatar_seed: author?.avatar_seed,
+                                  }}
+                                  size="sm"
+                                />
                                 <span>
                                   {author?.full_name ||
                                     author?.email?.split("@")[0] ||

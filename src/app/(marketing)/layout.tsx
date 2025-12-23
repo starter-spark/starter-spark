@@ -2,12 +2,41 @@ import { Header } from "@/components/layout/Header"
 import { Footer } from "@/components/layout/Footer"
 import { CartSheet } from "@/components/commerce"
 import { SiteBanner } from "@/components/layout/SiteBanner"
+import { createClient } from "@/lib/supabase/server"
 
-export default function MarketingLayout({
+async function getUser() {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) return null
+
+  // Fetch profile for avatar and role info
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("full_name, avatar_url, avatar_seed, role")
+    .eq("id", user.id)
+    .maybeSingle()
+
+  return {
+    id: user.id,
+    email: user.email || "",
+    full_name: profile?.full_name || null,
+    avatar_url: profile?.avatar_url || null,
+    avatar_seed: profile?.avatar_seed || null,
+    role: profile?.role || null,
+  }
+}
+
+export default async function MarketingLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const user = await getUser()
+
   return (
     <div className="min-h-screen flex flex-col">
       {/* Skip link for keyboard navigation - hidden until focused */}
@@ -18,7 +47,7 @@ export default function MarketingLayout({
         Skip to main content
       </a>
       <SiteBanner />
-      <Header />
+      <Header user={user} />
       <main
         id="main-content"
         tabIndex={-1}

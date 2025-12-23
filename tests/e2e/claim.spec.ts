@@ -140,16 +140,14 @@ test.describe("Claim Flow - Redirect", () => {
 
     await page.goto("/claim/test-claim-token")
 
-    // Click sign in if visible
-    const signInLink = page.getByRole("link", { name: /sign in/i })
+    // Click sign in if visible - use first() to handle multiple links (header + page content)
+    const signInLink = page.getByRole("link", { name: /sign in/i }).first()
 
     if (await signInLink.isVisible()) {
       await signInLink.click()
 
-      // Should redirect to login with claim param
-      const currentUrl = page.url()
-      expect(currentUrl).toContain("/login")
-      // May contain claim token in URL
+      // Wait for navigation to login page
+      await expect(page).toHaveURL(/\/login/, { timeout: 10000 })
     }
   })
 })

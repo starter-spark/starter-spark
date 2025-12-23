@@ -10,6 +10,8 @@ export type AuditAction =
   // User management
   | 'user.role_changed'
   | 'user.deleted'
+  | 'user.banned_from_forums'
+  | 'user.unbanned_from_forums'
   // Product management
   | 'product.created'
   | 'product.updated'

@@ -32,7 +32,7 @@ const COLOR_SCHEMES: Record<string, {
   // Status banners
   info: {
     bg: "bg-cyan-50",
-    text: "text-cyan-800",
+    text: "text-slate-800",
     border: "border-cyan-200",
     icon: Info,
     linkStyle: "text-cyan-700 hover:text-cyan-900",
@@ -264,7 +264,7 @@ export function SiteBanner() {
               <div className="max-w-7xl mx-auto px-4 py-2.5 flex items-center justify-center gap-3 relative">
                 <div className="flex items-center gap-2.5">
                   <IconComponent className="w-4 h-4 flex-shrink-0" />
-                  <p className="text-sm font-medium">
+                  <p className={`text-sm font-medium ${scheme.text}`}>
                     {banner.message}
                   </p>
                 </div>

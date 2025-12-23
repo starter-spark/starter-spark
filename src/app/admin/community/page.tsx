@@ -2,6 +2,7 @@ import Link from "next/link"
 import { createClient } from "@/lib/supabase/server"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { UserAvatar } from "@/components/ui/user-avatar"
 import {
   Table,
   TableBody,
@@ -28,7 +29,7 @@ async function getPosts(status?: string) {
     .from("posts")
     .select(`
       *,
-      profiles(email, full_name),
+      profiles(id, email, full_name, avatar_url, avatar_seed),
       products(name)
     `)
     .order("created_at", { ascending: false })
@@ -154,7 +155,7 @@ export default async function CommunityPage({
             </TableHeader>
             <TableBody>
               {posts.map((post) => {
-                const author = post.profiles as unknown as { email: string; full_name: string | null } | null
+                const author = post.profiles as unknown as { id: string; email: string; full_name: string | null; avatar_url: string | null; avatar_seed: string | null } | null
                 const product = post.products as unknown as { name: string } | null
 
                 return (
@@ -173,8 +174,22 @@ export default async function CommunityPage({
                         )}
                       </div>
                     </TableCell>
-                    <TableCell className="text-sm text-slate-600">
-                      {author?.full_name || author?.email || "Unknown"}
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <UserAvatar
+                          user={{
+                            id: author?.id || post.id,
+                            full_name: author?.full_name,
+                            email: author?.email,
+                            avatar_url: author?.avatar_url,
+                            avatar_seed: author?.avatar_seed,
+                          }}
+                          size="sm"
+                        />
+                        <span className="text-sm text-slate-600">
+                          {author?.full_name || author?.email || "Unknown"}
+                        </span>
+                      </div>
                     </TableCell>
                     <TableCell className="text-sm text-slate-600">
                       {product?.name || "General"}

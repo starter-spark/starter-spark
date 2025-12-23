@@ -1090,11 +1090,16 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_seed: string | null
           avatar_url: string | null
+          ban_reason: string | null
+          banned_at: string | null
+          banned_by: string | null
           created_at: string | null
           email: string
           full_name: string | null
           id: string
+          is_banned_from_forums: boolean | null
           preferred_learning_style: string | null
           role: Database["public"]["Enums"]["user_role"] | null
           skill_level: string | null
@@ -1102,11 +1107,16 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          avatar_seed?: string | null
           avatar_url?: string | null
+          ban_reason?: string | null
+          banned_at?: string | null
+          banned_by?: string | null
           created_at?: string | null
           email: string
           full_name?: string | null
           id: string
+          is_banned_from_forums?: boolean | null
           preferred_learning_style?: string | null
           role?: Database["public"]["Enums"]["user_role"] | null
           skill_level?: string | null
@@ -1114,11 +1124,16 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          avatar_seed?: string | null
           avatar_url?: string | null
+          ban_reason?: string | null
+          banned_at?: string | null
+          banned_by?: string | null
           created_at?: string | null
           email?: string
           full_name?: string | null
           id?: string
+          is_banned_from_forums?: boolean | null
           preferred_learning_style?: string | null
           role?: Database["public"]["Enums"]["user_role"] | null
           skill_level?: string | null
@@ -1481,7 +1496,11 @@ export type Database = {
         }
         Returns: boolean
       }
-      cleanup_expired_tags: { Args: Record<PropertyKey, never>; Returns: undefined }
+      ban_user_from_forums: {
+        Args: { reason?: string; target_user_id: string }
+        Returns: boolean
+      }
+      cleanup_expired_tags: { Args: never; Returns: undefined }
       decrement_product_stock: {
         Args: { p_product_id: string; p_quantity: number }
         Returns: {
@@ -1493,7 +1512,7 @@ export type Database = {
         Returns: number
       }
       get_site_stats: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           key: string
           label: string
@@ -1506,11 +1525,20 @@ export type Database = {
         Returns: undefined
       }
       increment_post_view: { Args: { p_post_id: string }; Returns: undefined }
+      increment_stat: {
+        Args: { amount?: number; stat_key: string }
+        Returns: number
+      }
+      track_teapot_view: {
+        Args: Record<string, never>
+        Returns: number
+      }
       is_admin:
-        | { Args: Record<PropertyKey, never>; Returns: boolean }
+        | { Args: never; Returns: boolean }
         | { Args: { user_id: string }; Returns: boolean }
+      is_banned_from_forums: { Args: { user_id: string }; Returns: boolean }
       is_staff:
-        | { Args: Record<PropertyKey, never>; Returns: boolean }
+        | { Args: never; Returns: boolean }
         | { Args: { user_id: string }; Returns: boolean }
       record_article_feedback: {
         Args: { article_id: string; is_helpful: boolean }
@@ -1527,6 +1555,10 @@ export type Database = {
           slug: string
           title: string
         }[]
+      }
+      unban_user_from_forums: {
+        Args: { target_user_id: string }
+        Returns: boolean
       }
       update_comment_upvotes: {
         Args: { p_comment_id: string }

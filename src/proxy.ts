@@ -88,6 +88,8 @@ function buildContentSecurityPolicy({
   }
   imageOrigins.add('https://images.unsplash.com')
   imageOrigins.add('https://avatars.githubusercontent.com')
+  // DiceBear for auto-generated avatars
+  imageOrigins.add('https://api.dicebear.com')
   fontOrigins.add('https://fonts.gstatic.com')
 
   const connectOrigins = new Set<string>()
@@ -124,6 +126,8 @@ function buildContentSecurityPolicy({
     'https://www.youtube.com',
     'https://www.youtube-nocookie.com',
     'https://player.vimeo.com',
+    // Scratch embeds for easter egg games.
+    'https://scratch.mit.edu',
   ].join(' ')
 
   return [

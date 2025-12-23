@@ -169,13 +169,19 @@ test.describe("Protected Routes - Unauthenticated", () => {
     await workshopPage.expectPageLoaded()
 
     // Should see sign in required or redirect to login
-    const signInMessage = page.getByText(/sign in|login|must be logged in/i)
     const isOnWorkshop = page.url().includes("/workshop")
 
     if (isOnWorkshop) {
-      // Either shows sign-in message or redirects
-      const hasSignInMessage = await signInMessage.first().isVisible()
-      expect(hasSignInMessage).toBeTruthy()
+      // On mobile, the header "Sign In" text may be hidden (icon-only), so check multiple indicators
+      const mainContent = page.locator("main")
+      const mainSignInMessage = mainContent.getByText(/sign in|login|must be logged in/i)
+      const headerSignInLink = page.getByRole("banner").getByRole("link", { name: /sign in/i })
+
+      // Either main content has sign-in message OR header has sign-in link
+      const hasMainMessage = await mainSignInMessage.first().isVisible().catch(() => false)
+      const hasHeaderLink = await headerSignInLink.isVisible().catch(() => false)
+
+      expect(hasMainMessage || hasHeaderLink).toBeTruthy()
     }
   })
 
@@ -218,7 +224,8 @@ test.describe("Auth UI Components", () => {
   }) => {
     await page.goto("/workshop")
 
-    const signInLink = page.getByRole("link", { name: /sign in/i })
+    // Use first() to handle multiple sign-in links (header + page content)
+    const signInLink = page.getByRole("link", { name: /sign in/i }).first()
     if (await signInLink.isVisible()) {
       await expect(signInLink).toBeVisible()
     }
@@ -227,7 +234,8 @@ test.describe("Auth UI Components", () => {
   test("should navigate to login when clicking sign in", async ({ page }) => {
     await page.goto("/workshop")
 
-    const signInLink = page.getByRole("link", { name: /sign in/i })
+    // Use first() to handle multiple sign-in links (header + page content)
+    const signInLink = page.getByRole("link", { name: /sign in/i }).first()
     if (await signInLink.isVisible()) {
       await signInLink.click()
       await expect(page).toHaveURL(/\/login/)

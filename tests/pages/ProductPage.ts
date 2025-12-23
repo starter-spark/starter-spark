@@ -50,10 +50,10 @@ export class ProductPage {
     this.increaseQuantityBtn = page.getByLabel("Increase quantity")
     this.addToCartBtn = page.getByRole("button", { name: /add to cart/i })
 
-    // Trust signals
-    this.freeShippingNote = page.getByText(/free shipping/i)
-    this.returnsNote = page.getByText(/30-day returns/i)
-    this.secureCheckoutNote = page.getByText(/secure checkout/i)
+    // Trust signals - use first() to handle potential duplicates
+    this.freeShippingNote = page.getByText(/free shipping/i).first()
+    this.returnsNote = page.getByText(/30-day returns/i).first()
+    this.secureCheckoutNote = page.getByText(/secure checkout/i).first()
     this.charityNote = page.getByTestId("product-charity")
 
     // Tabs

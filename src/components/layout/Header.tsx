@@ -13,6 +13,16 @@ import { Menu, X, ShoppingCart, ChevronDown, Lock } from "lucide-react"
 import { useCartStore, selectCartCount } from "@/store/cart"
 import { documentationNav, communityNav, type NavItem } from "@/config/navigation"
 import { cn } from "@/lib/utils"
+import { UserMenu } from "./UserMenu"
+
+interface HeaderUser {
+  id: string
+  email: string
+  full_name: string | null
+  avatar_url: string | null
+  avatar_seed: string | null
+  role: string | null
+}
 
 const hydrationListeners = new Set<() => void>()
 let hasHydrated = false
@@ -139,7 +149,11 @@ function MobileNavSection({
   )
 }
 
-export function Header() {
+interface HeaderProps {
+  user?: HeaderUser | null
+}
+
+export function Header({ user }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [openSection, setOpenSection] = useState<string | null>(null)
   const isHydrated = useHydrated()
@@ -234,10 +248,12 @@ export function Header() {
             >
               Shop Kits
             </Link>
+            <UserMenu user={user ?? null} />
           </div>
 
           {/* Mobile Menu Button */}
           <div className="flex items-center gap-2 md:hidden">
+            <UserMenu user={user ?? null} />
             <Button
               variant="ghost"
               size="icon"

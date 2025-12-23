@@ -5,6 +5,18 @@ import { rateLimitAction } from "@/lib/rate-limit"
 import { revalidatePath } from "next/cache"
 import { isUuid } from "@/lib/uuid"
 
+/**
+ * Check if the current user is banned from forums
+ */
+async function checkBanStatus(supabase: Awaited<ReturnType<typeof createClient>>, userId: string): Promise<boolean> {
+  const { data, error } = await supabase.rpc("is_banned_from_forums", { user_id: userId })
+  if (error) {
+    console.error("Error checking ban status:", error)
+    return false // Fail open - let RLS handle it
+  }
+  return data === true
+}
+
 const TITLE_MIN = 10
 const TITLE_MAX = 200
 const CONTENT_MIN = 30
@@ -34,6 +46,11 @@ export async function createPost(input: {
 
   if (!user) {
     return { success: false, error: "You must be logged in to post.", requiresAuth: true }
+  }
+
+  // Check if user is banned from forums
+  if (await checkBanStatus(supabase, user.id)) {
+    return { success: false, error: "Your account has been restricted from posting in the community forums." }
   }
 
   const rateLimitResult = await rateLimitAction(user.id, "communityPost")
@@ -107,6 +124,11 @@ export async function createAnswer(input: { postId: string; content: string }) {
 
   if (!user) {
     return { success: false, error: "You must be logged in to post an answer.", requiresAuth: true }
+  }
+
+  // Check if user is banned from forums
+  if (await checkBanStatus(supabase, user.id)) {
+    return { success: false, error: "Your account has been restricted from posting in the community forums." }
   }
 
   const rateLimitResult = await rateLimitAction(user.id, "communityAnswer")

@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import { Toaster } from "@/components/ui/sonner"
+import { KonamiCode } from "@/components/KonamiCode"
 import { Providers } from "./providers"
 import { siteConfig } from "@/config/site"
 import { headers } from "next/headers"
@@ -57,17 +58,36 @@ export default async function RootLayout({
 }>) {
   const nonce = (await headers()).get("x-nonce") ?? undefined
 
+  const sourceComment = `
+<!--
+
+   ______________    ____  ________________  _____ ____  ___    ____  __ __
+  / ___/_  __/   |  / __ \\/_  __/ ____/ __ \\/ ___// __ \\/   |  / __ \\/ //_/
+  \\__ \\ / / / /| | / /_/ / / / / __/ / /_/ /\\__ \\/ /_/ / /| | / /_/ / ,<
+ ___/ // / / ___ |/ _, _/ / / / /___/ _, _/___/ / ____/ ___ |/ _, _/ /| |
+/____//_/ /_/  |_/_/ |_| /_/ /_____/_/ |_|/____/_/   /_/  |_/_/ |_/_/ |_|
+
+Made by Kai Stewart (normalday843812)
+https://github.com/normalday843812
+
+-->
+`
+
   return (
     <html lang="en">
-      <head>
-        {nonce ? <meta name="csp-nonce" content={nonce} /> : null}
-      </head>
+      <head
+        // eslint-disable-next-line react/no-danger
+        dangerouslySetInnerHTML={{
+          __html: sourceComment + (nonce ? `<meta name="csp-nonce" content="${nonce}" />` : ""),
+        }}
+      />
       <body
         data-csp-nonce={nonce}
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <Providers>{children}</Providers>
         <Toaster position="top-right" richColors closeButton />
+        <KonamiCode />
         <Analytics />
         <SpeedInsights />
       </body>

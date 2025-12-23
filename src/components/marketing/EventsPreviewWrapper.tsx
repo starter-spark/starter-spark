@@ -73,7 +73,11 @@ export async function EventsPreview() {
         upvotes,
         status,
         profiles:author_id (
-          full_name
+          id,
+          full_name,
+          email,
+          avatar_url,
+          avatar_seed
         )
       `)
       .order("upvotes", { ascending: false })
@@ -90,12 +94,16 @@ export async function EventsPreview() {
           .select("*", { count: "exact", head: true })
           .eq("post_id", post.id)
 
-        const profile = post.profiles as unknown as { full_name: string | null } | null
+        const profile = post.profiles as unknown as { id: string; full_name: string | null; email: string | null; avatar_url: string | null; avatar_seed: string | null } | null
         discussions.push({
           id: post.id,
           slug: post.slug,
           title: post.title,
+          author_id: profile?.id || null,
           author_name: profile?.full_name || null,
+          author_email: profile?.email || null,
+          author_avatar_url: profile?.avatar_url || null,
+          author_avatar_seed: profile?.avatar_seed || null,
           comment_count: count || 0,
           upvotes: post.upvotes || 0,
           status: post.status || "open",

@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { UserAvatar } from "@/components/ui/user-avatar"
 import { Calendar, MapPin, ArrowRight, MessageSquare, Users, PlusCircle, ChevronUp, CheckCircle2, Circle } from "lucide-react"
 import { motion } from "motion/react"
 import Link from "next/link"
@@ -19,7 +20,11 @@ export interface Discussion {
   id: string
   slug: string | null
   title: string
+  author_id: string | null
   author_name: string | null
+  author_email: string | null
+  author_avatar_url: string | null
+  author_avatar_seed: string | null
   comment_count: number
   upvotes: number
   status: string
@@ -286,6 +291,16 @@ export function EventsPreviewSection({
                               </h4>
                             </div>
                             <div className="flex items-center gap-2 text-xs text-slate-500">
+                              <UserAvatar
+                                user={{
+                                  id: discussion.author_id || discussion.id,
+                                  full_name: discussion.author_name,
+                                  email: discussion.author_email,
+                                  avatar_url: discussion.author_avatar_url,
+                                  avatar_seed: discussion.author_avatar_seed,
+                                }}
+                                size="sm"
+                              />
                               <span>{discussion.author_name || "Anonymous"}</span>
                               {discussion.tags && discussion.tags[0] && (
                                 <>

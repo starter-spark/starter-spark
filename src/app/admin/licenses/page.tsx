@@ -2,6 +2,7 @@ import Link from "next/link"
 import { createClient } from "@/lib/supabase/server"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { UserAvatar } from "@/components/ui/user-avatar"
 import {
   Table,
   TableBody,
@@ -10,7 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Plus, User } from "lucide-react"
+import { Plus } from "lucide-react"
 import { LicenseActions } from "./LicenseActions"
 import { ProductFilterClient } from "./ProductFilterClient"
 
@@ -31,7 +32,7 @@ async function getLicenses(filter?: string, productId?: string) {
     .select(`
       *,
       products(name, slug),
-      profiles(email, full_name)
+      profiles(id, email, full_name, avatar_url, avatar_seed)
     `)
     .order("created_at", { ascending: false })
 
@@ -158,7 +159,7 @@ export default async function LicensesPage({
             <TableBody>
               {licenses.map((license) => {
                 const product = license.products as unknown as { name: string; slug: string } | null
-                const owner = license.profiles as unknown as { email: string; full_name: string | null } | null
+                const owner = license.profiles as unknown as { id: string; email: string; full_name: string | null; avatar_url: string | null; avatar_seed: string | null } | null
 
                 return (
                   <TableRow key={license.id}>
@@ -175,7 +176,16 @@ export default async function LicensesPage({
                     <TableCell>
                       {owner ? (
                         <div className="flex items-center gap-2">
-                          <User className="h-4 w-4 text-slate-400" />
+                          <UserAvatar
+                            user={{
+                              id: owner.id,
+                              full_name: owner.full_name,
+                              email: owner.email,
+                              avatar_url: owner.avatar_url,
+                              avatar_seed: owner.avatar_seed,
+                            }}
+                            size="sm"
+                          />
                           <div>
                             <p className="text-sm text-slate-900">
                               {owner.full_name || owner.email}
