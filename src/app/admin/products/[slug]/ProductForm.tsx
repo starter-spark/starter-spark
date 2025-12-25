@@ -185,8 +185,8 @@ export function ProductForm({ product, initialTags = [], initialMedia = [] }: Pr
         return
       }
 
-      // Update tags
-      const tagsResult = await updateProductTags(product.id, selectedTags)
+      const manualTags = selectedTags.filter((t) => !AUTOMATED_TAGS.includes(t.tag))
+      const tagsResult = await updateProductTags(product.id, manualTags)
       if (tagsResult.error) {
         setError(tagsResult.error)
         return
