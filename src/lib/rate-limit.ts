@@ -1,103 +1,92 @@
-import { Ratelimit } from "@upstash/ratelimit"
-import { Redis } from "@upstash/redis"
-import { NextResponse } from "next/server"
+import { Ratelimit } from '@upstash/ratelimit'
+import { Redis } from '@upstash/redis'
+import { NextResponse } from 'next/server'
 
-// Check if we're in a development/local environment
-const isDevelopment = process.env.NODE_ENV === "development"
-const isLocalhost = process.env.NEXT_PUBLIC_SITE_URL?.includes("localhost")
+const isDevelopment = process.env.NODE_ENV === 'development'
+const isLocalhost = process.env.NEXT_PUBLIC_SITE_URL?.includes('localhost')
 
-// Validate Upstash configuration at startup
-const hasUpstashConfig = !!(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN)
-
-if (!hasUpstashConfig && !isDevelopment) {
-  console.warn(
-    "⚠️  UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN are not configured. " +
-    "Falling back to in-memory rate limiting (per instance)."
-  )
-}
-
+const hasUpstashConfig = !!(
+  process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
+)
 const redis = hasUpstashConfig ? Redis.fromEnv() : null
 const upstashLimiters = new Map<RateLimitConfig, Ratelimit>()
 
-// Rate limit configurations for different endpoints
-// More lenient in development/test/local environments
 const multiplier = isDevelopment || isLocalhost ? 10 : 1
 export const rateLimitConfigs = {
-  // Sensitive endpoints - stricter limits (but more lenient in test)
-  claimLicense: { requests: 5 * multiplier, window: "1 m" as const },
-  claimByToken: { requests: 5 * multiplier, window: "1 m" as const },
-  checkout: { requests: 10 * multiplier, window: "1 m" as const },
-  contactUpload: { requests: 5 * multiplier, window: "1 m" as const },
-  contactForm: { requests: 5 * multiplier, window: "1 m" as const },
-  supportFeedback: { requests: 20 * multiplier, window: "1 m" as const },
-  newsletter: { requests: 10 * multiplier, window: "1 m" as const },
-  ogImage: { requests: 60 * multiplier, window: "1 m" as const },
-  siteBanners: { requests: 60 * multiplier, window: "1 m" as const },
-  // Community actions
-  communityVote: { requests: 30 * multiplier, window: "1 m" as const },
-  communityReport: { requests: 5 * multiplier, window: "10 m" as const },
-  communityPost: { requests: 3 * multiplier, window: "10 m" as const },
-  communityAnswer: { requests: 10 * multiplier, window: "10 m" as const },
-  // Protected assets / downloads
-  certificate: { requests: 10 * multiplier, window: "10 m" as const },
-  learnAsset: { requests: 120 * multiplier, window: "1 m" as const },
-  // Admin actions - moderate limits
-  adminMutation: { requests: 20 * multiplier, window: "1 m" as const },
-  learnUpload: { requests: 10 * multiplier, window: "1 m" as const },
-  // Profile/account actions
-  profileUpdate: { requests: 10 * multiplier, window: "1 m" as const },
-  accountDelete: { requests: 3 * multiplier, window: "1 h" as const },
-  // Easter eggs - limit to prevent counter spam
-  teapot: { requests: 1 * multiplier, window: "5 s" as const },
-  // General API - more permissive
-  default: { requests: 30 * multiplier, window: "1 m" as const },
+  // Sensitive
+  claimLicense: { requests: 5 * multiplier, window: '1 m' as const },
+  claimByToken: { requests: 5 * multiplier, window: '1 m' as const },
+  checkout: { requests: 10 * multiplier, window: '1 m' as const },
+  contactUpload: { requests: 5 * multiplier, window: '1 m' as const },
+  contactForm: { requests: 5 * multiplier, window: '1 m' as const },
+  supportFeedback: { requests: 20 * multiplier, window: '1 m' as const },
+  newsletter: { requests: 10 * multiplier, window: '1 m' as const },
+  ogImage: { requests: 60 * multiplier, window: '1 m' as const },
+  siteBanners: { requests: 60 * multiplier, window: '1 m' as const },
+  // Community
+  communityVote: { requests: 30 * multiplier, window: '1 m' as const },
+  communityReport: { requests: 5 * multiplier, window: '10 m' as const },
+  communityPost: { requests: 3 * multiplier, window: '10 m' as const },
+  communityAnswer: { requests: 10 * multiplier, window: '10 m' as const },
+  // Assets
+  certificate: { requests: 10 * multiplier, window: '10 m' as const },
+  learnAsset: { requests: 120 * multiplier, window: '1 m' as const },
+  // Admin
+  adminMutation: { requests: 20 * multiplier, window: '1 m' as const },
+  learnUpload: { requests: 10 * multiplier, window: '1 m' as const },
+  // Profile
+  profileUpdate: { requests: 10 * multiplier, window: '1 m' as const },
+  accountDelete: { requests: 3 * multiplier, window: '1 h' as const },
+  // Misc
+  teapot: { requests: 1 * multiplier, window: '5 s' as const },
+  default: { requests: 30 * multiplier, window: '1 m' as const },
 }
 
 type RateLimitConfig = keyof typeof rateLimitConfigs
 
 function getRateLimitConfig(configKey: RateLimitConfig) {
   switch (configKey) {
-    case "claimLicense":
+    case 'claimLicense':
       return rateLimitConfigs.claimLicense
-    case "claimByToken":
+    case 'claimByToken':
       return rateLimitConfigs.claimByToken
-    case "checkout":
+    case 'checkout':
       return rateLimitConfigs.checkout
-    case "contactUpload":
+    case 'contactUpload':
       return rateLimitConfigs.contactUpload
-    case "contactForm":
+    case 'contactForm':
       return rateLimitConfigs.contactForm
-    case "supportFeedback":
+    case 'supportFeedback':
       return rateLimitConfigs.supportFeedback
-    case "newsletter":
+    case 'newsletter':
       return rateLimitConfigs.newsletter
-    case "ogImage":
+    case 'ogImage':
       return rateLimitConfigs.ogImage
-    case "siteBanners":
+    case 'siteBanners':
       return rateLimitConfigs.siteBanners
-    case "communityVote":
+    case 'communityVote':
       return rateLimitConfigs.communityVote
-    case "communityReport":
+    case 'communityReport':
       return rateLimitConfigs.communityReport
-    case "communityPost":
+    case 'communityPost':
       return rateLimitConfigs.communityPost
-    case "communityAnswer":
+    case 'communityAnswer':
       return rateLimitConfigs.communityAnswer
-    case "certificate":
+    case 'certificate':
       return rateLimitConfigs.certificate
-    case "learnAsset":
+    case 'learnAsset':
       return rateLimitConfigs.learnAsset
-    case "adminMutation":
+    case 'adminMutation':
       return rateLimitConfigs.adminMutation
-    case "learnUpload":
+    case 'learnUpload':
       return rateLimitConfigs.learnUpload
-    case "profileUpdate":
+    case 'profileUpdate':
       return rateLimitConfigs.profileUpdate
-    case "accountDelete":
+    case 'accountDelete':
       return rateLimitConfigs.accountDelete
-    case "teapot":
+    case 'teapot':
       return rateLimitConfigs.teapot
-    case "default":
+    case 'default':
       return rateLimitConfigs.default
     default: {
       const exhaustiveCheck: never = configKey
@@ -115,15 +104,15 @@ function parseWindowToMs(window: string): number {
 
   const unit = match[2].toLowerCase()
   switch (unit) {
-    case "ms":
+    case 'ms':
       return value
-    case "s":
+    case 's':
       return value * 1000
-    case "m":
+    case 'm':
       return value * 60_000
-    case "h":
+    case 'h':
       return value * 3_600_000
-    case "d":
+    case 'd':
       return value * 86_400_000
     default:
       return 60_000
@@ -131,15 +120,15 @@ function parseWindowToMs(window: string): number {
 }
 
 function getClientIp(request: Request): string {
-  const cfConnectingIp = request.headers.get("cf-connecting-ip")
+  const cfConnectingIp = request.headers.get('cf-connecting-ip')
   if (cfConnectingIp) return cfConnectingIp.trim()
 
-  const realIp = request.headers.get("x-real-ip")
+  const realIp = request.headers.get('x-real-ip')
   if (realIp) return realIp.trim()
 
-  const forwarded = request.headers.get("x-forwarded-for")
-  const ip = forwarded?.split(",")[0]?.trim()
-  return ip || "127.0.0.1"
+  const forwarded = request.headers.get('x-forwarded-for')
+  const ip = forwarded?.split(',')[0]?.trim()
+  return ip || '127.0.0.1'
 }
 
 interface MemoryRateLimitEntry {
@@ -154,7 +143,10 @@ type GlobalRateLimitStore = typeof globalThis & {
 const memoryStore: Map<string, MemoryRateLimitEntry> = (() => {
   const globalWithStore = globalThis as GlobalRateLimitStore
   if (!globalWithStore.__startersparkRateLimitStore) {
-    globalWithStore.__startersparkRateLimitStore = new Map<string, MemoryRateLimitEntry>()
+    globalWithStore.__startersparkRateLimitStore = new Map<
+      string,
+      MemoryRateLimitEntry
+    >()
   }
   return globalWithStore.__startersparkRateLimitStore
 })()
@@ -183,21 +175,15 @@ function getUpstashLimiter(configKey: RateLimitConfig): Ratelimit | null {
     redis,
     limiter: Ratelimit.slidingWindow(config.requests, config.window),
     analytics: true,
-    prefix: "starterspark",
+    prefix: 'starterspark',
   })
   upstashLimiters.set(configKey, limiter)
   return limiter
 }
 
-/**
- * Rate limit a request using Upstash Redis
- * @param request - The incoming request
- * @param configKey - Which rate limit config to use
- * @returns null if allowed, NextResponse if rate limited
- */
 export async function rateLimit(
   request: Request,
-  configKey: RateLimitConfig = "default"
+  configKey: RateLimitConfig = 'default',
 ): Promise<NextResponse | null> {
   const config = getRateLimitConfig(configKey)
   const ip = getClientIp(request)
@@ -213,18 +199,18 @@ export async function rateLimit(
         const retryAfter = Math.max(0, Math.ceil((reset - Date.now()) / 1000))
         return NextResponse.json(
           {
-            error: "Too many requests. Please try again later.",
+            error: 'Too many requests. Please try again later.',
             retryAfter,
           },
           {
             status: 429,
             headers: {
-              "X-RateLimit-Limit": limit.toString(),
-              "X-RateLimit-Remaining": "0",
-              "X-RateLimit-Reset": reset.toString(),
-              "Retry-After": retryAfter.toString(),
+              'X-RateLimit-Limit': limit.toString(),
+              'X-RateLimit-Remaining': '0',
+              'X-RateLimit-Reset': reset.toString(),
+              'Retry-After': retryAfter.toString(),
             },
-          }
+          },
         )
       }
 
@@ -246,51 +232,42 @@ export async function rateLimit(
       const retryAfter = Math.max(0, Math.ceil((existing.reset - nowMs) / 1000))
       return NextResponse.json(
         {
-          error: "Too many requests. Please try again later.",
+          error: 'Too many requests. Please try again later.',
           retryAfter,
         },
         {
           status: 429,
           headers: {
-            "X-RateLimit-Limit": config.requests.toString(),
-            "X-RateLimit-Remaining": "0",
-            "X-RateLimit-Reset": existing.reset.toString(),
-            "Retry-After": retryAfter.toString(),
+            'X-RateLimit-Limit': config.requests.toString(),
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': existing.reset.toString(),
+            'Retry-After': retryAfter.toString(),
           },
-        }
+        },
       )
     }
 
     existing.count += 1
     memoryStore.set(identifier, existing)
   } catch (error) {
-    // If rate limiting fails (e.g., Redis connection issue), allow the request
-    // but log the error for monitoring
-    console.error("Rate limiting error:", error)
+    console.error('Rate limiting error:', error)
   }
 
   return null
 }
 
-/**
- * Create rate limit headers for successful requests
- */
-export function rateLimitHeaders(configKey: RateLimitConfig = "default"): HeadersInit {
+export function rateLimitHeaders(
+  configKey: RateLimitConfig = 'default',
+): HeadersInit {
   const config = getRateLimitConfig(configKey)
   return {
-    "X-RateLimit-Limit": config.requests.toString(),
+    'X-RateLimit-Limit': config.requests.toString(),
   }
 }
 
-/**
- * Rate limit for server actions (without Request object)
- * @param identifier - Unique identifier (e.g., user ID)
- * @param configKey - Which rate limit config to use
- * @returns Object with success boolean and error message if rate limited
- */
 export async function rateLimitAction(
   identifier: string,
-  configKey: RateLimitConfig = "adminMutation"
+  configKey: RateLimitConfig = 'adminMutation',
 ): Promise<{ success: boolean; error: string | null }> {
   const key = `${configKey}:${identifier}`
   const config = getRateLimitConfig(configKey)
@@ -334,8 +311,7 @@ export async function rateLimitAction(
     memoryStore.set(key, existing)
     return { success: true, error: null }
   } catch (error) {
-    // If rate limiting fails, allow the request but log the error
-    console.error("Rate limiting error:", error)
+    console.error('Rate limiting error:', error)
     return { success: true, error: null }
   }
 }

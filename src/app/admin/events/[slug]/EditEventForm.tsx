@@ -1,13 +1,23 @@
-"use client"
+'use client'
 
-import { useState, useTransition } from "react"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Loader2 } from "lucide-react"
-import { updateEvent, deleteEvent } from "../actions"
+import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Loader2 } from 'lucide-react'
+import { updateEvent, deleteEvent } from '../actions'
+import {
+  AdminLabel,
+  AdminSelect,
+} from '@/components/admin/form-controls'
 
 interface Event {
   id: string
@@ -42,15 +52,19 @@ export function EditEventForm({ event }: EditEventFormProps) {
   // Form state
   const [title, setTitle] = useState(event.title)
   const [slug, setSlug] = useState(event.slug)
-  const [description, setDescription] = useState(event.description || "")
+  const [description, setDescription] = useState(event.description || '')
   const [location, setLocation] = useState(event.location)
-  const [address, setAddress] = useState(event.address || "")
-  const [eventDate, setEventDate] = useState(formatDateForInput(event.event_date))
-  const [endDate, setEndDate] = useState(event.end_date ? formatDateForInput(event.end_date) : "")
+  const [address, setAddress] = useState(event.address || '')
+  const [eventDate, setEventDate] = useState(
+    formatDateForInput(event.event_date),
+  )
+  const [endDate, setEndDate] = useState(
+    event.end_date ? formatDateForInput(event.end_date) : '',
+  )
   const [eventType, setEventType] = useState(event.event_type)
-  const [rsvpUrl, setRsvpUrl] = useState(event.rsvp_url || "")
-  const [imageUrl, setImageUrl] = useState(event.image_url || "")
-  const [capacity, setCapacity] = useState<number | "">(event.capacity || "")
+  const [rsvpUrl, setRsvpUrl] = useState(event.rsvp_url || '')
+  const [imageUrl, setImageUrl] = useState(event.image_url || '')
+  const [capacity, setCapacity] = useState<number | ''>(event.capacity || '')
   const [isPublic, setIsPublic] = useState(event.is_public)
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -76,13 +90,17 @@ export function EditEventForm({ event }: EditEventFormProps) {
       if (result.error) {
         setError(result.error)
       } else {
-        router.push("/admin/events")
+        router.push('/admin/events')
       }
     })
   }
 
   const handleDelete = () => {
-    if (!confirm("Are you sure you want to delete this event? This cannot be undone.")) {
+    if (
+      !confirm(
+        'Are you sure you want to delete this event? This cannot be undone.',
+      )
+    ) {
       return
     }
 
@@ -92,13 +110,18 @@ export function EditEventForm({ event }: EditEventFormProps) {
       if (result.error) {
         setError(result.error)
       } else {
-        router.push("/admin/events")
+        router.push('/admin/events')
       }
     })
   }
 
   return (
-    <form onSubmit={(e) => { handleSubmit(e); }} className="space-y-6">
+    <form
+      onSubmit={(e) => {
+        handleSubmit(e)
+      }}
+      className="space-y-6"
+    >
       {error && (
         <div className="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-600">
           {error}
@@ -113,70 +136,71 @@ export function EditEventForm({ event }: EditEventFormProps) {
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <label htmlFor="title" className="text-sm font-medium text-slate-900">
-                Title *
-              </label>
+              <AdminLabel htmlFor="title">Title *</AdminLabel>
               <Input
                 id="title"
                 value={title}
-                onChange={(e) => { setTitle(e.target.value); }}
+                onChange={(e) => {
+                  setTitle(e.target.value)
+                }}
                 required
               />
             </div>
             <div className="space-y-2">
-              <label htmlFor="slug" className="text-sm font-medium text-slate-900">
-                Slug *
-              </label>
+              <AdminLabel htmlFor="slug">Slug *</AdminLabel>
               <Input
                 id="slug"
                 value={slug}
-                onChange={(e) => { setSlug(e.target.value); }}
+                onChange={(e) => {
+                  setSlug(e.target.value)
+                }}
                 required
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="description" className="text-sm font-medium text-slate-900">
-              Description
-            </label>
+            <AdminLabel htmlFor="description">Description</AdminLabel>
             <Textarea
               id="description"
               value={description}
-              onChange={(e) => { setDescription(e.target.value); }}
+              onChange={(e) => {
+                setDescription(e.target.value)
+              }}
               rows={3}
             />
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <label htmlFor="event_type" className="text-sm font-medium text-slate-900">
-                Event Type *
-              </label>
-              <select
+              <AdminLabel htmlFor="event_type">Event Type *</AdminLabel>
+              <AdminSelect
                 id="event_type"
                 value={eventType}
-                onChange={(e) => { setEventType(e.target.value); }}
+                onChange={(e) => {
+                  setEventType(e.target.value)
+                }}
                 required
-                className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-700 focus:ring-offset-2"
               >
                 <option value="workshop">Workshop</option>
                 <option value="meetup">Meetup</option>
                 <option value="conference">Conference</option>
                 <option value="hackathon">Hackathon</option>
                 <option value="other">Other</option>
-              </select>
+              </AdminSelect>
             </div>
             <div className="space-y-2">
-              <label htmlFor="capacity" className="text-sm font-medium text-slate-900">
-                Capacity
-              </label>
+              <AdminLabel htmlFor="capacity">Capacity</AdminLabel>
               <Input
                 id="capacity"
                 type="number"
                 min="1"
                 value={capacity}
-                onChange={(e) => { setCapacity(e.target.value ? Number.parseInt(e.target.value) : ""); }}
+                onChange={(e) => {
+                  setCapacity(
+                    e.target.value ? Number.parseInt(e.target.value) : '',
+                  )
+                }}
                 placeholder="Leave empty for unlimited"
               />
             </div>
@@ -187,55 +211,59 @@ export function EditEventForm({ event }: EditEventFormProps) {
       <Card>
         <CardHeader>
           <CardTitle>Date & Location</CardTitle>
-          <CardDescription>When and where the event takes place</CardDescription>
+          <CardDescription>
+            When and where the event takes place
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <label htmlFor="event_date" className="text-sm font-medium text-slate-900">
+              <AdminLabel htmlFor="event_date">
                 Start Date & Time *
-              </label>
+              </AdminLabel>
               <Input
                 id="event_date"
                 type="datetime-local"
                 value={eventDate}
-                onChange={(e) => { setEventDate(e.target.value); }}
+                onChange={(e) => {
+                  setEventDate(e.target.value)
+                }}
                 required
               />
             </div>
             <div className="space-y-2">
-              <label htmlFor="end_date" className="text-sm font-medium text-slate-900">
-                End Date & Time
-              </label>
+              <AdminLabel htmlFor="end_date">End Date & Time</AdminLabel>
               <Input
                 id="end_date"
                 type="datetime-local"
                 value={endDate}
-                onChange={(e) => { setEndDate(e.target.value); }}
+                onChange={(e) => {
+                  setEndDate(e.target.value)
+                }}
               />
             </div>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <label htmlFor="location" className="text-sm font-medium text-slate-900">
-                Location Name *
-              </label>
+              <AdminLabel htmlFor="location">Location Name *</AdminLabel>
               <Input
                 id="location"
                 value={location}
-                onChange={(e) => { setLocation(e.target.value); }}
+                onChange={(e) => {
+                  setLocation(e.target.value)
+                }}
                 required
               />
             </div>
             <div className="space-y-2">
-              <label htmlFor="address" className="text-sm font-medium text-slate-900">
-                Address
-              </label>
+              <AdminLabel htmlFor="address">Address</AdminLabel>
               <Input
                 id="address"
                 value={address}
-                onChange={(e) => { setAddress(e.target.value); }}
+                onChange={(e) => {
+                  setAddress(e.target.value)
+                }}
               />
             </div>
           </div>
@@ -250,25 +278,25 @@ export function EditEventForm({ event }: EditEventFormProps) {
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <label htmlFor="rsvp_url" className="text-sm font-medium text-slate-900">
-                RSVP URL
-              </label>
+              <AdminLabel htmlFor="rsvp_url">RSVP URL</AdminLabel>
               <Input
                 id="rsvp_url"
                 type="url"
                 value={rsvpUrl}
-                onChange={(e) => { setRsvpUrl(e.target.value); }}
+                onChange={(e) => {
+                  setRsvpUrl(e.target.value)
+                }}
               />
             </div>
             <div className="space-y-2">
-              <label htmlFor="image_url" className="text-sm font-medium text-slate-900">
-                Image URL
-              </label>
+              <AdminLabel htmlFor="image_url">Image URL</AdminLabel>
               <Input
                 id="image_url"
                 type="url"
                 value={imageUrl}
-                onChange={(e) => { setImageUrl(e.target.value); }}
+                onChange={(e) => {
+                  setImageUrl(e.target.value)
+                }}
               />
             </div>
           </div>
@@ -278,7 +306,9 @@ export function EditEventForm({ event }: EditEventFormProps) {
               id="is_public"
               type="checkbox"
               checked={isPublic}
-              onChange={(e) => { setIsPublic(e.target.checked); }}
+              onChange={(e) => {
+                setIsPublic(e.target.checked)
+              }}
               className="h-4 w-4 rounded border-slate-300"
             />
             <label htmlFor="is_public" className="text-sm text-slate-700">
@@ -293,7 +323,9 @@ export function EditEventForm({ event }: EditEventFormProps) {
           type="button"
           variant="outline"
           className="text-red-600 hover:bg-red-50 hover:text-red-700"
-          onClick={() => { handleDelete(); }}
+          onClick={() => {
+            handleDelete()
+          }}
           disabled={isPending}
         >
           Delete Event
@@ -302,7 +334,9 @@ export function EditEventForm({ event }: EditEventFormProps) {
           <Button
             type="button"
             variant="outline"
-            onClick={() => { router.push("/admin/events"); }}
+            onClick={() => {
+              router.push('/admin/events')
+            }}
           >
             Cancel
           </Button>
@@ -311,7 +345,9 @@ export function EditEventForm({ event }: EditEventFormProps) {
             className="bg-cyan-700 hover:bg-cyan-600"
             disabled={isPending}
           >
-            {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            {isPending ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : null}
             Save Changes
           </Button>
         </div>

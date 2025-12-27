@@ -1,16 +1,23 @@
-"use client"
+'use client'
 
-import { useState, useEffect, use } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { ArrowLeft, Save, Eye, EyeOff, ExternalLink, Trash2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Switch } from "@/components/ui/switch"
-import { createClient } from "@/lib/supabase/client"
-import { updateDocPage, deleteDocPage } from "../actions"
+import { useState, useEffect, use } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import {
+  ArrowLeft,
+  Save,
+  Eye,
+  EyeOff,
+  ExternalLink,
+  Trash2,
+} from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Switch } from '@/components/ui/switch'
+import { createClient } from '@/lib/supabase/client'
+import { updateDocPage, deleteDocPage } from '../actions'
 
 interface Category {
   id: string
@@ -32,7 +39,11 @@ interface DocPage {
   }
 }
 
-export default function EditDocPage({ params }: { params: Promise<{ pageId: string }> }) {
+export default function EditDocPage({
+  params,
+}: {
+  params: Promise<{ pageId: string }>
+}) {
   const { pageId } = use(params)
   const router = useRouter()
 
@@ -43,12 +54,12 @@ export default function EditDocPage({ params }: { params: Promise<{ pageId: stri
   const [showPreview, setShowPreview] = useState(false)
 
   const [formData, setFormData] = useState({
-    category_id: "",
-    title: "",
-    slug: "",
-    content: "",
-    excerpt: "",
-    sort_order: "0",
+    category_id: '',
+    title: '',
+    slug: '',
+    content: '',
+    excerpt: '',
+    sort_order: '0',
     is_published: false,
   })
 
@@ -58,15 +69,16 @@ export default function EditDocPage({ params }: { params: Promise<{ pageId: stri
 
       // Load categories
       const { data: cats } = await supabase
-        .from("doc_categories")
-        .select("id, name, slug")
-        .order("sort_order", { ascending: true })
+        .from('doc_categories')
+        .select('id, name, slug')
+        .order('sort_order', { ascending: true })
       setCategories(cats || [])
 
       // Load page
       const { data: pageData } = await supabase
-        .from("doc_pages")
-        .select(`
+        .from('doc_pages')
+        .select(
+          `
           id,
           category_id,
           title,
@@ -78,8 +90,9 @@ export default function EditDocPage({ params }: { params: Promise<{ pageId: stri
           category:doc_categories!inner (
             slug
           )
-        `)
-        .eq("id", pageId)
+        `,
+        )
+        .eq('id', pageId)
         .single()
 
       if (pageData) {
@@ -89,8 +102,8 @@ export default function EditDocPage({ params }: { params: Promise<{ pageId: stri
           category_id: typedPage.category_id,
           title: typedPage.title,
           slug: typedPage.slug,
-          content: typedPage.content || "",
-          excerpt: typedPage.excerpt || "",
+          content: typedPage.content || '',
+          excerpt: typedPage.excerpt || '',
           sort_order: String(typedPage.sort_order || 0),
           is_published: typedPage.is_published ?? false,
         })
@@ -105,13 +118,13 @@ export default function EditDocPage({ params }: { params: Promise<{ pageId: stri
     setIsSaving(true)
 
     const data = new FormData()
-    data.append("category_id", formData.category_id)
-    data.append("title", formData.title)
-    data.append("slug", formData.slug)
-    data.append("content", formData.content)
-    data.append("excerpt", formData.excerpt)
-    data.append("sort_order", formData.sort_order)
-    data.append("is_published", String(formData.is_published))
+    data.append('category_id', formData.category_id)
+    data.append('title', formData.title)
+    data.append('slug', formData.slug)
+    data.append('content', formData.content)
+    data.append('excerpt', formData.excerpt)
+    data.append('sort_order', formData.sort_order)
+    data.append('is_published', String(formData.is_published))
 
     try {
       const result = await updateDocPage(pageId, data)
@@ -134,7 +147,7 @@ export default function EditDocPage({ params }: { params: Promise<{ pageId: stri
     if (result.error) {
       alert(result.error)
     } else {
-      router.push("/admin/docs")
+      router.push('/admin/docs')
     }
   }
 
@@ -171,7 +184,9 @@ export default function EditDocPage({ params }: { params: Promise<{ pageId: stri
             <ArrowLeft className="w-4 h-4" />
             Back to Documentation
           </Link>
-          <h1 className="font-mono text-2xl font-bold text-slate-900">Edit Page</h1>
+          <h1 className="font-mono text-2xl font-bold text-slate-900">
+            Edit Page
+          </h1>
         </div>
         <div className="flex items-center gap-2">
           {previewUrl && formData.is_published && (
@@ -187,8 +202,12 @@ export default function EditDocPage({ params }: { params: Promise<{ pageId: stri
             onClick={() => setShowPreview(!showPreview)}
             className="gap-2"
           >
-            {showPreview ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            {showPreview ? "Edit" : "Preview"}
+            {showPreview ? (
+              <EyeOff className="w-4 h-4" />
+            ) : (
+              <Eye className="w-4 h-4" />
+            )}
+            {showPreview ? 'Edit' : 'Preview'}
           </Button>
         </div>
       </div>
@@ -201,7 +220,9 @@ export default function EditDocPage({ params }: { params: Promise<{ pageId: stri
               <Label>Category</Label>
               <select
                 value={formData.category_id}
-                onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, category_id: e.target.value })
+                }
                 className="w-full h-10 rounded border border-slate-200 px-3"
                 required
               >
@@ -216,7 +237,9 @@ export default function EditDocPage({ params }: { params: Promise<{ pageId: stri
               <Label>Title</Label>
               <Input
                 value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, title: e.target.value })
+                }
                 placeholder="Getting Started with Arduino"
                 required
               />
@@ -229,7 +252,9 @@ export default function EditDocPage({ params }: { params: Promise<{ pageId: stri
               <Label>Slug</Label>
               <Input
                 value={formData.slug}
-                onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, slug: e.target.value })
+                }
                 placeholder="getting-started-with-arduino"
                 required
               />
@@ -239,7 +264,9 @@ export default function EditDocPage({ params }: { params: Promise<{ pageId: stri
               <Input
                 type="number"
                 value={formData.sort_order}
-                onChange={(e) => setFormData({ ...formData, sort_order: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, sort_order: e.target.value })
+                }
               />
             </div>
           </div>
@@ -249,7 +276,9 @@ export default function EditDocPage({ params }: { params: Promise<{ pageId: stri
             <Label>Excerpt (optional)</Label>
             <Textarea
               value={formData.excerpt}
-              onChange={(e) => setFormData({ ...formData, excerpt: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, excerpt: e.target.value })
+              }
               placeholder="Brief summary for search results..."
               rows={2}
             />
@@ -260,15 +289,17 @@ export default function EditDocPage({ params }: { params: Promise<{ pageId: stri
             <Label>Content (Markdown)</Label>
             {showPreview ? (
               <div className="min-h-[400px] p-4 border border-slate-200 rounded bg-slate-50 prose prose-slate max-w-none">
-                {/* Simple preview - in production you'd use a markdown renderer */}
+                {/* Preview (no markdown renderer) */}
                 <pre className="whitespace-pre-wrap text-sm">
-                  {formData.content || "No content yet..."}
+                  {formData.content || 'No content yet...'}
                 </pre>
               </div>
             ) : (
               <Textarea
                 value={formData.content}
-                onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, content: e.target.value })
+                }
                 placeholder="# Introduction&#10;&#10;Write your documentation here using Markdown..."
                 rows={20}
                 className="font-mono text-sm"
@@ -289,8 +320,8 @@ export default function EditDocPage({ params }: { params: Promise<{ pageId: stri
                 <Label className="mb-0">Published</Label>
                 <p className="text-xs text-slate-500">
                   {formData.is_published
-                    ? "Visible to the public"
-                    : "Draft (not visible)"}
+                    ? 'Visible to the public'
+                    : 'Draft (not visible)'}
                 </p>
               </div>
             </div>
@@ -306,7 +337,7 @@ export default function EditDocPage({ params }: { params: Promise<{ pageId: stri
               </Button>
               <Button type="submit" disabled={isSaving}>
                 <Save className="w-4 h-4 mr-2" />
-                {isSaving ? "Saving..." : "Save Changes"}
+                {isSaving ? 'Saving...' : 'Save Changes'}
               </Button>
             </div>
           </div>

@@ -1,14 +1,20 @@
-import { formatDuration } from "@/lib/utils"
-import { BookOpen, Clock, Target, ChevronRight, Lock } from "lucide-react"
-import Link from "next/link"
-import { AnimatedProgressFill } from "@/components/learn/AnimatedProgressFill"
-import { LearnFilters } from "../learn/LearnFilters"
+import { formatDuration } from '@/lib/utils'
+import { BookOpen, Clock, Target, ChevronRight, Lock } from 'lucide-react'
+import Link from 'next/link'
+import { AnimatedProgressFill } from '@/components/learn/AnimatedProgressFill'
+import { LearnFilters } from '../learn/LearnFilters'
 
 interface CourseModule {
   id: string
   title: string
   is_published: boolean | null
-  lessons: { id: string; is_optional: boolean | null; is_published: boolean | null }[] | null
+  lessons:
+    | {
+        id: string
+        is_optional: boolean | null
+        is_published: boolean | null
+      }[]
+    | null
 }
 
 interface Course {
@@ -66,14 +72,16 @@ export function CoursesTab({
         <div className="grid gap-6 md:grid-cols-2 mt-6">
           {courses.map((course) => {
             const product = course.product
-            const isOwned = product ? ownedProductIds.includes(product.id) : false
+            const isOwned = product
+              ? ownedProductIds.includes(product.id)
+              : false
 
             const courseModules = (course.modules ?? []).filter(
-              (m) => m.is_published !== false
+              (m) => m.is_published !== false,
             )
 
             const courseLessons = courseModules.flatMap((mod) =>
-              (mod.lessons ?? []).filter((l) => l.is_published !== false)
+              (mod.lessons ?? []).filter((l) => l.is_published !== false),
             )
             const allLessonIds = courseLessons.map((l) => l.id)
             const requiredLessonIds = courseLessons
@@ -82,12 +90,15 @@ export function CoursesTab({
             const totalLessons = allLessonIds.length
 
             // Calculate completed lessons for this course
-            const completedInCourse = requiredLessonIds.filter(
-              (id) => completedLessonIds.includes(id)
+            const completedInCourse = requiredLessonIds.filter((id) =>
+              completedLessonIds.includes(id),
             ).length
-            const progressPercent = requiredLessonIds.length > 0
-              ? Math.round((completedInCourse / requiredLessonIds.length) * 100)
-              : 0
+            const progressPercent =
+              requiredLessonIds.length > 0
+                ? Math.round(
+                    (completedInCourse / requiredLessonIds.length) * 100,
+                  )
+                : 0
 
             return (
               <div
@@ -141,7 +152,9 @@ export function CoursesTab({
                     <div className="mb-4">
                       <div className="flex items-center justify-between text-xs mb-1">
                         <span className="text-slate-500">Progress</span>
-                        <span className="font-mono text-slate-700">{progressPercent}%</span>
+                        <span className="font-mono text-slate-700">
+                          {progressPercent}%
+                        </span>
                       </div>
                       <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
                         <AnimatedProgressFill
@@ -163,8 +176,10 @@ export function CoursesTab({
                         >
                           <span className="text-slate-600">{module.title}</span>
                           <span className="text-slate-500 font-mono text-xs">
-                            {module.lessons?.length || 0}{" "}
-                            {(module.lessons?.length || 0) === 1 ? "lesson" : "lessons"}
+                            {module.lessons?.length || 0}{' '}
+                            {(module.lessons?.length || 0) === 1
+                              ? 'lesson'
+                              : 'lessons'}
                           </span>
                         </div>
                       ))}
@@ -177,7 +192,7 @@ export function CoursesTab({
                       href={`/learn/${product.slug}`}
                       className="flex items-center justify-center gap-2 w-full py-2 px-4 bg-cyan-700 hover:bg-cyan-600 text-white font-mono text-sm rounded transition-colors"
                     >
-                      {isOwned ? "Continue Learning" : "View Course"}
+                      {isOwned ? 'Continue Learning' : 'View Course'}
                       <ChevronRight className="w-4 h-4" />
                     </Link>
                   )}
@@ -192,9 +207,7 @@ export function CoursesTab({
           <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
             <BookOpen className="w-8 h-8 text-slate-500" />
           </div>
-          <p className="text-slate-600">
-            {emptyMessage}
-          </p>
+          <p className="text-slate-600">{emptyMessage}</p>
         </div>
       )}
     </div>

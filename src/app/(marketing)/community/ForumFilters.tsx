@@ -1,10 +1,10 @@
-"use client"
+'use client'
 
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Search, X, Loader2 } from "lucide-react"
-import { useRouter, useSearchParams } from "next/navigation"
-import { useState, useCallback, useTransition, useOptimistic } from "react"
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { Search, X, Loader2 } from 'lucide-react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { useState, useCallback, useTransition, useOptimistic } from 'react'
 
 interface Product {
   id: string
@@ -31,24 +31,27 @@ export function ForumFilters({
 }: ForumFiltersProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [search, setSearch] = useState(currentSearch || "")
+  const [search, setSearch] = useState(currentSearch || '')
   const [isPending, startTransition] = useTransition()
 
   // Optimistic state for immediate UI feedback
   const [optimisticFilters, setOptimisticFilters] = useOptimistic(
     { status: currentStatus, tag: currentTag, product: currentProduct },
     (state, update: { key: string; value: string | null }) => {
-      if (update.key === "status") return { ...state, status: update.value || undefined }
-      if (update.key === "tag") return { ...state, tag: update.value || undefined }
-      if (update.key === "product") return { ...state, product: update.value || undefined }
+      if (update.key === 'status')
+        return { ...state, status: update.value || undefined }
+      if (update.key === 'tag')
+        return { ...state, tag: update.value || undefined }
+      if (update.key === 'product')
+        return { ...state, product: update.value || undefined }
       return state
-    }
+    },
   )
 
   const updateFilter = useCallback(
     (key: string, value: string | null) => {
-      const params = new URLSearchParams(searchParams?.toString() || "")
-      if (value && value !== "all") {
+      const params = new URLSearchParams(searchParams?.toString() || '')
+      if (value && value !== 'all') {
         params.set(key, value)
       } else {
         params.delete(key)
@@ -62,13 +65,13 @@ export function ForumFilters({
         router.push(`/community?${params.toString()}`, { scroll: false })
       })
     },
-    [router, searchParams, setOptimisticFilters]
+    [router, searchParams, setOptimisticFilters],
   )
 
   const clearFilters = () => {
-    setSearch("")
+    setSearch('')
     startTransition(() => {
-      router.push("/community", { scroll: false })
+      router.push('/community', { scroll: false })
     })
   }
 
@@ -77,7 +80,8 @@ export function ForumFilters({
   const activeTag = optimisticFilters.tag
   const activeProduct = optimisticFilters.product
 
-  const hasActiveFilters = activeStatus || activeTag || activeProduct || currentSearch
+  const hasActiveFilters =
+    activeStatus || activeTag || activeProduct || currentSearch
 
   return (
     <div className="space-y-6">
@@ -100,10 +104,12 @@ export function ForumFilters({
             type="text"
             placeholder="Search questions..."
             value={search}
-            onChange={(e) => { setSearch(e.target.value); }}
+            onChange={(e) => {
+              setSearch(e.target.value)
+            }}
             onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                updateFilter("q", search.trim() || null)
+              if (e.key === 'Enter') {
+                updateFilter('q', search.trim() || null)
               }
             }}
             className="pl-10 pr-8 bg-white border-slate-200 focus:border-cyan-700"
@@ -112,8 +118,8 @@ export function ForumFilters({
             <button
               type="button"
               onClick={() => {
-                setSearch("")
-                updateFilter("q", null)
+                setSearch('')
+                updateFilter('q', null)
               }}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
               aria-label="Clear search"
@@ -131,23 +137,25 @@ export function ForumFilters({
           Status
         </label>
         <div className="flex flex-wrap gap-2">
-          {["all", "open", "solved"].map((status) => {
-            const isActive = (activeStatus || "all") === status
+          {['all', 'open', 'solved'].map((status) => {
+            const isActive = (activeStatus || 'all') === status
             return (
               <Button
                 key={status}
-                variant={isActive ? "default" : "outline"}
+                variant={isActive ? 'default' : 'outline'}
                 size="sm"
-                onClick={() => { updateFilter("status", status); }}
+                onClick={() => {
+                  updateFilter('status', status)
+                }}
                 disabled={isPending}
                 className={
                   isActive
-                    ? "bg-cyan-700 hover:bg-cyan-600 text-white font-mono cursor-pointer"
-                    : "border-slate-200 hover:border-cyan-700 text-slate-600 hover:text-cyan-700 font-mono cursor-pointer"
+                    ? 'bg-cyan-700 hover:bg-cyan-600 text-white font-mono cursor-pointer'
+                    : 'border-slate-200 hover:border-cyan-700 text-slate-600 hover:text-cyan-700 font-mono cursor-pointer'
                 }
               >
-                {status === "all"
-                  ? "All"
+                {status === 'all'
+                  ? 'All'
                   : status.charAt(0).toUpperCase() + status.slice(1)}
               </Button>
             )
@@ -167,16 +175,16 @@ export function ForumFilters({
               return (
                 <Button
                   key={tag}
-                  variant={isActive ? "default" : "outline"}
+                  variant={isActive ? 'default' : 'outline'}
                   size="sm"
-                  onClick={() =>
-                    { updateFilter("tag", activeTag === tag ? null : tag); }
-                  }
+                  onClick={() => {
+                    updateFilter('tag', activeTag === tag ? null : tag)
+                  }}
                   disabled={isPending}
                   className={
                     isActive
-                      ? "bg-cyan-700 hover:bg-cyan-600 text-white font-mono text-xs cursor-pointer"
-                      : "border-slate-200 hover:border-cyan-700 text-slate-600 hover:text-cyan-700 font-mono text-xs cursor-pointer"
+                      ? 'bg-cyan-700 hover:bg-cyan-600 text-white font-mono text-xs cursor-pointer'
+                      : 'border-slate-200 hover:border-cyan-700 text-slate-600 hover:text-cyan-700 font-mono text-xs cursor-pointer'
                   }
                 >
                   #{tag}
@@ -190,15 +198,20 @@ export function ForumFilters({
       {/* Product Filter */}
       {products.length > 0 && (
         <div>
-          <label htmlFor="product-filter" className="block text-sm font-mono text-slate-600 mb-2">
+          <label
+            htmlFor="product-filter"
+            className="block text-sm font-mono text-slate-600 mb-2"
+          >
             Product
           </label>
           <select
             id="product-filter"
             name="product-filter"
             aria-label="Product"
-            value={activeProduct || ""}
-            onChange={(e) => { updateFilter("product", e.target.value || null); }}
+            value={activeProduct || ''}
+            onChange={(e) => {
+              updateFilter('product', e.target.value || null)
+            }}
             disabled={isPending}
             className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm text-slate-700 focus:border-cyan-700 focus:outline-none cursor-pointer disabled:opacity-50"
           >

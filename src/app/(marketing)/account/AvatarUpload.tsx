@@ -1,19 +1,23 @@
-"use client"
+'use client'
 
-import { useState, useRef, useCallback, useEffect } from "react"
-import ReactCrop, { type Crop, centerCrop, makeAspectCrop } from "react-image-crop"
-import "react-image-crop/dist/ReactCrop.css"
-import { Button } from "@/components/ui/button"
+import { useState, useRef, useCallback, useEffect } from 'react'
+import ReactCrop, {
+  type Crop,
+  centerCrop,
+  makeAspectCrop,
+} from 'react-image-crop'
+import 'react-image-crop/dist/ReactCrop.css'
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { UserAvatar } from "@/components/ui/user-avatar"
-import { Camera, Loader2, Trash2, ZoomIn, ZoomOut } from "lucide-react"
-import { uploadAvatar, removeCustomAvatar } from "./actions"
+} from '@/components/ui/dialog'
+import { UserAvatar } from '@/components/ui/user-avatar'
+import { Camera, Loader2, Trash2, ZoomIn, ZoomOut } from 'lucide-react'
+import { uploadAvatar, removeCustomAvatar } from './actions'
 
 interface AvatarUploadProps {
   user: {
@@ -24,22 +28,26 @@ interface AvatarUploadProps {
     avatar_seed: string | null
   }
   onUpdate: () => void
-  onMessage: (message: { type: "success" | "error"; text: string }) => void
+  onMessage: (message: { type: 'success' | 'error'; text: string }) => void
 }
 
-function centerAspectCrop(mediaWidth: number, mediaHeight: number, aspect: number) {
+function centerAspectCrop(
+  mediaWidth: number,
+  mediaHeight: number,
+  aspect: number,
+) {
   return centerCrop(
     makeAspectCrop(
       {
-        unit: "%",
+        unit: '%',
         width: 80,
       },
       aspect,
       mediaWidth,
-      mediaHeight
+      mediaHeight,
     ),
     mediaWidth,
-    mediaHeight
+    mediaHeight,
   )
 }
 
@@ -58,7 +66,7 @@ export function AvatarUpload({ user, onUpdate, onMessage }: AvatarUploadProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const previewCanvasRef = useRef<HTMLCanvasElement>(null)
 
-  const hasCustomAvatar = user.avatar_url?.includes("/avatars/")
+  const hasCustomAvatar = user.avatar_url?.includes('/avatars/')
 
   // Generate preview when crop changes
   useEffect(() => {
@@ -66,7 +74,7 @@ export function AvatarUpload({ user, onUpdate, onMessage }: AvatarUploadProps) {
 
     const image = imgRef.current
     const canvas = previewCanvasRef.current
-    const ctx = canvas.getContext("2d")
+    const ctx = canvas.getContext('2d')
     if (!ctx) return
 
     const scaleX = image.naturalWidth / image.width
@@ -76,7 +84,7 @@ export function AvatarUpload({ user, onUpdate, onMessage }: AvatarUploadProps) {
     canvas.width = previewSize
     canvas.height = previewSize
 
-    ctx.imageSmoothingQuality = "high"
+    ctx.imageSmoothingQuality = 'high'
 
     const cropX = completedCrop.x * scaleX
     const cropY = completedCrop.y * scaleY
@@ -101,7 +109,7 @@ export function AvatarUpload({ user, onUpdate, onMessage }: AvatarUploadProps) {
       0,
       0,
       previewSize,
-      previewSize
+      previewSize,
     )
 
     setPreviewUrl(canvas.toDataURL())
@@ -112,15 +120,18 @@ export function AvatarUpload({ user, onUpdate, onMessage }: AvatarUploadProps) {
     if (!file) return
 
     // Validate file type
-    const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"]
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
     if (!allowedTypes.includes(file.type)) {
-      onMessage({ type: "error", text: "Please upload a JPEG, PNG, WebP, or GIF image." })
+      onMessage({
+        type: 'error',
+        text: 'Please upload a JPEG, PNG, WebP, or GIF image.',
+      })
       return
     }
 
     // Validate file size (2MB)
     if (file.size > 2 * 1024 * 1024) {
-      onMessage({ type: "error", text: "Image must be less than 2MB." })
+      onMessage({ type: 'error', text: 'Image must be less than 2MB.' })
       return
     }
 
@@ -134,20 +145,23 @@ export function AvatarUpload({ user, onUpdate, onMessage }: AvatarUploadProps) {
     reader.readAsDataURL(file)
 
     // Reset the input so the same file can be selected again
-    e.target.value = ""
+    e.target.value = ''
   }
 
-  const onImageLoad = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
-    const { width, height } = e.currentTarget
-    setCrop(centerAspectCrop(width, height, 1))
-  }, [])
+  const onImageLoad = useCallback(
+    (e: React.SyntheticEvent<HTMLImageElement>) => {
+      const { width, height } = e.currentTarget
+      setCrop(centerAspectCrop(width, height, 1))
+    },
+    [],
+  )
 
   const getCroppedImage = async (): Promise<Blob | null> => {
     if (!imgRef.current || !completedCrop) return null
 
     const image = imgRef.current
-    const canvas = document.createElement("canvas")
-    const ctx = canvas.getContext("2d")
+    const canvas = document.createElement('canvas')
+    const ctx = canvas.getContext('2d')
     if (!ctx) return null
 
     const scaleX = image.naturalWidth / image.width
@@ -158,7 +172,7 @@ export function AvatarUpload({ user, onUpdate, onMessage }: AvatarUploadProps) {
     canvas.width = outputSize
     canvas.height = outputSize
 
-    ctx.imageSmoothingQuality = "high"
+    ctx.imageSmoothingQuality = 'high'
 
     const cropX = completedCrop.x * scaleX
     const cropY = completedCrop.y * scaleY
@@ -174,15 +188,11 @@ export function AvatarUpload({ user, onUpdate, onMessage }: AvatarUploadProps) {
       0,
       0,
       outputSize,
-      outputSize
+      outputSize,
     )
 
     return new Promise((resolve) => {
-      canvas.toBlob(
-        (blob) => resolve(blob),
-        "image/jpeg",
-        0.9
-      )
+      canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.9)
     })
   }
 
@@ -192,24 +202,30 @@ export function AvatarUpload({ user, onUpdate, onMessage }: AvatarUploadProps) {
     try {
       const croppedBlob = await getCroppedImage()
       if (!croppedBlob) {
-        onMessage({ type: "error", text: "Failed to crop image. Please try again." })
+        onMessage({
+          type: 'error',
+          text: 'Failed to crop image. Please try again.',
+        })
         setIsUploading(false)
         return
       }
 
       const formData = new FormData()
-      formData.append("avatar", croppedBlob, "avatar.jpg")
+      formData.append('avatar', croppedBlob, 'avatar.jpg')
 
       const result = await uploadAvatar(formData)
 
       if (result.error) {
-        onMessage({ type: "error", text: result.error })
+        onMessage({ type: 'error', text: result.error })
       } else {
-        onMessage({ type: "success", text: "Avatar uploaded successfully!" })
+        onMessage({ type: 'success', text: 'Avatar uploaded successfully!' })
         onUpdate()
       }
     } catch {
-      onMessage({ type: "error", text: "Failed to upload avatar. Please try again." })
+      onMessage({
+        type: 'error',
+        text: 'Failed to upload avatar. Please try again.',
+      })
     }
 
     setIsUploading(false)
@@ -227,9 +243,12 @@ export function AvatarUpload({ user, onUpdate, onMessage }: AvatarUploadProps) {
     const result = await removeCustomAvatar()
 
     if (result.error) {
-      onMessage({ type: "error", text: result.error })
+      onMessage({ type: 'error', text: result.error })
     } else {
-      onMessage({ type: "success", text: "Custom avatar removed. Using generated avatar." })
+      onMessage({
+        type: 'success',
+        text: 'Custom avatar removed. Using generated avatar.',
+      })
       onUpdate()
     }
 
@@ -256,7 +275,7 @@ export function AvatarUpload({ user, onUpdate, onMessage }: AvatarUploadProps) {
           onMouseLeave={() => setIsHovering(false)}
           onClick={() => fileInputRef.current?.click()}
           onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
+            if (e.key === 'Enter' || e.key === ' ') {
               e.preventDefault()
               fileInputRef.current?.click()
             }
@@ -278,7 +297,7 @@ export function AvatarUpload({ user, onUpdate, onMessage }: AvatarUploadProps) {
           {/* Hover overlay */}
           <div
             className={`absolute inset-0 rounded-full bg-black/50 flex items-center justify-center transition-opacity ${
-              isHovering ? "opacity-100" : "opacity-0"
+              isHovering ? 'opacity-100' : 'opacity-0'
             }`}
           >
             <Camera className="h-8 w-8 text-white" />
@@ -289,8 +308,8 @@ export function AvatarUpload({ user, onUpdate, onMessage }: AvatarUploadProps) {
           <p className="text-sm font-medium text-slate-700">Profile Picture</p>
           <p className="text-xs text-slate-500">
             {hasCustomAvatar
-              ? "Click to change or remove your custom photo."
-              : "Click to upload a custom photo."}
+              ? 'Click to change or remove your custom photo.'
+              : 'Click to upload a custom photo.'}
           </p>
           {hasCustomAvatar && (
             <Button
@@ -352,10 +371,10 @@ export function AvatarUpload({ user, onUpdate, onMessage }: AvatarUploadProps) {
                       onLoad={onImageLoad}
                       style={{
                         transform: `scale(${scale})`,
-                        maxHeight: "368px",
-                        minHeight: "200px",
-                        minWidth: "200px",
-                        objectFit: "contain",
+                        maxHeight: '368px',
+                        minHeight: '200px',
+                        minWidth: '200px',
+                        objectFit: 'contain',
                       }}
                     />
                   </ReactCrop>
@@ -415,7 +434,9 @@ export function AvatarUpload({ user, onUpdate, onMessage }: AvatarUploadProps) {
                     />
                   ) : (
                     <div className="w-20 h-20 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center">
-                      <span className="text-xs text-slate-400">Drag to crop</span>
+                      <span className="text-xs text-slate-400">
+                        Drag to crop
+                      </span>
                     </div>
                   )}
                 </div>
@@ -444,7 +465,7 @@ export function AvatarUpload({ user, onUpdate, onMessage }: AvatarUploadProps) {
                   Uploading...
                 </>
               ) : (
-                "Save"
+                'Save'
               )}
             </Button>
           </DialogFooter>
@@ -482,7 +503,7 @@ export function AvatarUpload({ user, onUpdate, onMessage }: AvatarUploadProps) {
                   Removing...
                 </>
               ) : (
-                "Remove"
+                'Remove'
               )}
             </Button>
           </DialogFooter>

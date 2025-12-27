@@ -1,8 +1,8 @@
-"use client"
+'use client'
 
-import { useState } from "react"
-import { SkillAssessment } from "./SkillAssessment"
-import { X } from "lucide-react"
+import { useState } from 'react'
+import { SkillAssessment } from './SkillAssessment'
+import { X } from 'lucide-react'
 
 interface SkillAssessmentWrapperProps {
   userId: string

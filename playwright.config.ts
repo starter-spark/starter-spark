@@ -1,7 +1,7 @@
-import { defineConfig, devices } from '@playwright/test';
+import { defineConfig, devices } from '@playwright/test'
 
-import dotenv from 'dotenv';
-import path from 'node:path';
+import dotenv from 'dotenv'
+import path from 'node:path'
 
 dotenv.config({
   path: path.resolve(__dirname, '.env'),
@@ -49,11 +49,14 @@ export default defineConfig({
     },
   ],
 
-  webServer: process.env.PLAYWRIGHT_SKIP_WEBSERVER ? undefined : {
-    command: `npm run start -- -H 127.0.0.1 -p ${playwrightPort}`,
-    url: `http://localhost:${playwrightPort}`,
-    reuseExistingServer: process.env.PLAYWRIGHT_REUSE_SERVER === '1' && !process.env.CI,
-    stdout: 'pipe',
-    stderr: 'pipe',
-  },
-});
+  webServer: process.env.PLAYWRIGHT_SKIP_WEBSERVER
+    ? undefined
+    : {
+        command: `npm run start -- -H 127.0.0.1 -p ${playwrightPort}`,
+        url: `http://localhost:${playwrightPort}`,
+        reuseExistingServer:
+          process.env.PLAYWRIGHT_REUSE_SERVER === '1' && !process.env.CI,
+        stdout: 'pipe',
+        stderr: 'pipe',
+      },
+})

@@ -1,6 +1,6 @@
-import Link from "next/link"
-import { notFound } from "next/navigation"
-import { createClient } from "@/lib/supabase/server"
+import Link from 'next/link'
+import { notFound } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -8,11 +8,12 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
-import { CourseEditor } from "./CourseEditor"
+} from '@/components/ui/breadcrumb'
+import { CourseEditor } from './CourseEditor'
+import { resolveParams, type MaybePromise } from '@/lib/next-params'
 
 export const metadata = {
-  title: "Edit Course | Admin",
+  title: 'Edit Course | Admin',
 }
 
 interface Lesson {
@@ -61,8 +62,9 @@ async function getCourse(courseId: string): Promise<Course | null> {
   const supabase = await createClient()
 
   const { data, error } = await supabase
-    .from("courses")
-    .select(`
+    .from('courses')
+    .select(
+      `
       id,
       title,
       slug,
@@ -98,13 +100,14 @@ async function getCourse(courseId: string): Promise<Course | null> {
           sort_order
         )
       )
-    `)
-    .eq("id", courseId)
+    `,
+    )
+    .eq('id', courseId)
     .maybeSingle()
 
   if (error) {
-    console.error("Error fetching course:", error)
-    throw new Error("Failed to load course")
+    console.error('Error fetching course:', error)
+    throw new Error('Failed to load course')
   }
 
   if (!data) {
@@ -131,7 +134,7 @@ async function getCourse(courseId: string): Promise<Course | null> {
     is_published: data.is_published!,
     icon: data.icon,
     cover_image_url: data.cover_image_url,
-    product: data.product as Course["product"],
+    product: data.product as Course['product'],
     modules,
   }
 
@@ -141,9 +144,9 @@ async function getCourse(courseId: string): Promise<Course | null> {
 export default async function EditCoursePage({
   params,
 }: {
-  params: Promise<{ courseId: string }>
+  params: MaybePromise<{ courseId: string }>
 }) {
-  const { courseId } = await params
+  const { courseId } = await resolveParams(params)
   const course = await getCourse(courseId)
 
   if (!course) {
@@ -179,8 +182,8 @@ export default async function EditCoursePage({
           {course.title}
         </h1>
         <p className="text-slate-600">
-          {course.product?.name || "No product"} &middot;{" "}
-          {course.modules.length} modules &middot;{" "}
+          {course.product?.name || 'No product'} &middot;{' '}
+          {course.modules.length} modules &middot;{' '}
           {course.modules.reduce((acc, m) => acc + m.lessons.length, 0)} lessons
         </p>
       </div>

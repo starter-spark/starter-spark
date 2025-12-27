@@ -1,8 +1,8 @@
-"use client"
+'use client'
 
-import { useEffect } from "react"
-import { useCartStore } from "@/store/cart"
-import { trackPurchaseCompleted } from "@/lib/analytics"
+import { useEffect } from 'react'
+import { useCartStore } from '@/store/cart'
+import { trackPurchaseCompleted } from '@/lib/analytics'
 
 interface ClearCartProps {
   orderId: string

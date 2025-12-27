@@ -1,4 +1,4 @@
-import { Page, Locator, expect } from "@playwright/test"
+import { Page, Locator, expect } from '@playwright/test'
 
 /**
  * Page Object Model for the Product Detail Page
@@ -38,29 +38,32 @@ export class ProductPage {
     this.page = page
 
     // Product info
-    this.productTitle = page.getByRole("heading", { level: 1 })
-    this.productPrice = page.locator("text=/\\$\\d+/").first()
+    this.productTitle = page.getByRole('heading', { level: 1 })
+    this.productPrice = page.locator('text=/\\$\\d+/').first()
     this.stockBadge = page.getByText(/in stock|pre-order/i)
     this.productDescription = page.locator('[class*="text-slate-600"]').first()
 
     // Buy box
     this.buyBox = page.locator('[class*="sticky"]').first()
-    this.quantityDisplay = page.locator("text=/^\\d+$/").first()
-    this.decreaseQuantityBtn = page.getByLabel("Decrease quantity")
-    this.increaseQuantityBtn = page.getByLabel("Increase quantity")
-    this.addToCartBtn = page.getByRole("button", { name: /add to cart/i })
+    this.quantityDisplay = page.locator('text=/^\\d+$/').first()
+    this.decreaseQuantityBtn = page.getByLabel('Decrease quantity')
+    this.increaseQuantityBtn = page.getByLabel('Increase quantity')
+    this.addToCartBtn = page.getByRole('button', { name: /add to cart/i })
 
-    // Trust signals - use first() to handle potential duplicates
+    // Trust signals, use first() to handle potential duplicates
     this.freeShippingNote = page.getByText(/free shipping/i).first()
     this.returnsNote = page.getByText(/30-day returns/i).first()
     this.secureCheckoutNote = page.getByText(/secure checkout/i).first()
-    this.charityNote = page.getByTestId("product-charity")
+    this.charityNote = page
+      .locator('main')
+      .getByTestId('product-charity')
+      .first()
 
     // Tabs
-    this.descriptionTab = page.getByRole("tab", { name: /description/i })
-    this.learningTab = page.getByRole("tab", { name: /learning/i })
-    this.includedTab = page.getByRole("tab", { name: /included/i })
-    this.specsTab = page.getByRole("tab", { name: /specs/i })
+    this.descriptionTab = page.getByRole('tab', { name: /description/i })
+    this.learningTab = page.getByRole('tab', { name: /learning/i })
+    this.includedTab = page.getByRole('tab', { name: /included/i })
+    this.specsTab = page.getByRole('tab', { name: /specs/i })
 
     // Gallery
     this.productGallery = page.locator('[class*="gallery"], canvas').first()
@@ -80,8 +83,11 @@ export class ProductPage {
   }
 
   async getQuantity(): Promise<number> {
-    const text = await this.page.locator(".text-center.font-mono").first().textContent()
-    return parseInt(text || "1", 10)
+    const text = await this.page
+      .locator('.text-center.font-mono')
+      .first()
+      .textContent()
+    return parseInt(text || '1', 10)
   }
 
   async setQuantity(quantity: number) {
@@ -101,7 +107,9 @@ export class ProductPage {
     await this.setQuantity(quantity)
     await this.addToCartBtn.click()
     // Wait for cart dialog to open
-    await this.page.getByRole("dialog").waitFor({ state: "visible", timeout: 3000 })
+    await this.page
+      .getByRole('dialog')
+      .waitFor({ state: 'visible', timeout: 3000 })
   }
 
   async expectAddToCartEnabled() {
@@ -115,7 +123,7 @@ export class ProductPage {
     await expect(this.charityNote).toBeVisible()
   }
 
-  async clickTab(tabName: "description" | "learning" | "included" | "specs") {
+  async clickTab(tabName: 'description' | 'learning' | 'included' | 'specs') {
     const tabs = {
       description: this.descriptionTab,
       learning: this.learningTab,

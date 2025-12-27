@@ -1,10 +1,14 @@
-"use client"
+'use client'
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Loader2, CheckCircle, AlertCircle } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { useEffect, useRef, useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Loader2 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import {
+  ActionStatusBanner,
+  type ActionStatus,
+} from '@/components/ui/action-status'
 
 interface ClaimResponse {
   message?: string
@@ -14,22 +18,34 @@ interface ClaimResponse {
 // Format code as XXXX-XXXX-XXXX-XXXX
 function formatCode(value: string): string {
   // Strip everything except alphanumeric, convert to uppercase
-  const stripped = value.replaceAll(/[^A-Za-z0-9]/g, "").toUpperCase()
+  const stripped = value.replaceAll(/[^A-Za-z0-9]/g, '').toUpperCase()
   // Limit to 16 characters (4 groups of 4)
   const limited = stripped.slice(0, 16)
   // Add dashes every 4 characters
   const parts = limited.match(/.{1,4}/g) || []
-  return parts.join("-")
+  return parts.join('-')
 }
 
 export function ClaimCodeForm() {
-  const [code, setCode] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-  const [status, setStatus] = useState<"idle" | "success" | "error">("idle")
-  const [message, setMessage] = useState("")
+  const [code, setCode] = useState('')
+  const [status, setStatus] = useState<ActionStatus>('idle')
+  const [message, setMessage] = useState<string | undefined>(undefined)
   const router = useRouter()
+  const refreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (refreshTimer.current) {
+        clearTimeout(refreshTimer.current)
+      }
+    }
+  }, [])
 
   const handleCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (status !== 'idle') {
+      setStatus('idle')
+      setMessage(undefined)
+    }
     setCode(formatCode(e.target.value))
   }
 
@@ -38,15 +54,14 @@ export function ClaimCodeForm() {
 
     if (!code.trim()) return
 
-    setIsLoading(true)
-    setStatus("idle")
-    setMessage("")
+    setStatus('pending')
+    setMessage('Checking code…')
 
     try {
-      const response = await fetch("/api/claim-license", {
-        method: "POST",
+      const response = await fetch('/api/claim-license', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ code: code.trim().toUpperCase() }),
       })
@@ -54,20 +69,22 @@ export function ClaimCodeForm() {
       const data = (await response.json()) as ClaimResponse
 
       if (response.ok) {
-        setStatus("success")
-        setMessage(data.message ?? "Kit claimed successfully!")
-        setCode("")
-        // Refresh the page to show the new kit
-        router.refresh()
+        setStatus('success')
+        setMessage(data.message ?? 'Kit claimed successfully!')
+        setCode('')
+        if (refreshTimer.current) {
+          clearTimeout(refreshTimer.current)
+        }
+        refreshTimer.current = setTimeout(() => {
+          router.refresh()
+        }, 900)
       } else {
-        setStatus("error")
-        setMessage(data.error ?? "Failed to claim kit. Please try again.")
+        setStatus('error')
+        setMessage(data.error ?? 'Failed to claim kit. Please try again.')
       }
     } catch {
-      setStatus("error")
-      setMessage("An error occurred. Please try again.")
-    } finally {
-      setIsLoading(false)
+      setStatus('error')
+      setMessage('An error occurred. Please try again.')
     }
   }
 
@@ -80,36 +97,28 @@ export function ClaimCodeForm() {
         onChange={handleCodeChange}
         className="font-mono text-center tracking-widest uppercase bg-slate-50 border-slate-200 focus:border-cyan-700"
         maxLength={19}
-        disabled={isLoading}
+        disabled={status === 'pending'}
       />
       <Button
         type="submit"
-        disabled={!code.trim() || isLoading}
+        disabled={!code.trim() || status === 'pending'}
         className="w-full bg-cyan-700 hover:bg-cyan-600 text-white font-mono disabled:opacity-50"
       >
-        {isLoading ? (
+        {status === 'pending' ? (
           <>
             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
             Claiming...
           </>
         ) : (
-          "Activate"
+          'Activate'
         )}
       </Button>
 
-      {status === "success" && (
-        <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 p-2 rounded">
-          <CheckCircle className="w-4 h-4" />
-          {message}
-        </div>
-      )}
-
-      {status === "error" && (
-        <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 p-2 rounded">
-          <AlertCircle className="w-4 h-4" />
-          {message}
-        </div>
-      )}
+      <ActionStatusBanner
+        status={status}
+        message={message}
+        pendingLabel="Checking code…"
+      />
 
       <p className="text-xs text-slate-500 text-center">
         Find the code on your physical card or in your confirmation email.

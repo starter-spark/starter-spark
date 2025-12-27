@@ -1,8 +1,14 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { useCartStore, selectCartTotal, selectCartCount, selectCartSavings } from "@/store/cart"
+import { useState, useSyncExternalStore } from 'react'
+import { Button } from '@/components/ui/button'
+import { ActionStatusBanner } from '@/components/ui/action-status'
+import {
+  useCartStore,
+  selectCartTotal,
+  selectCartCount,
+  selectCartSavings,
+} from '@/store/cart'
 import {
   Minus,
   Plus,
@@ -13,8 +19,9 @@ import {
   Truck,
   Shield,
   Loader2,
-} from "lucide-react"
-import Link from "next/link"
+} from 'lucide-react'
+import Link from 'next/link'
+import { QuantityButton } from '@/components/commerce/QuantityButton'
 
 interface CheckoutResponse {
   url?: string
@@ -42,26 +49,31 @@ export interface CartContentProps {
 }
 
 export function CartContent({
-  title = "Your Cart",
-  continueShopping = "Continue Shopping",
-  emptyTitle = "Your cart is empty",
+  title = 'Your Cart',
+  continueShopping = 'Continue Shopping',
+  emptyTitle = 'Your cart is empty',
   emptyDescription = "Looks like you haven't added any kits yet. Browse our collection to get started on your robotics journey.",
-  emptyCta = "Browse Kits",
-  summaryTitle = "Order Summary",
-  subtotalLabel = "Subtotal",
-  savingsLabel = "Your Savings",
-  shippingLabel = "Shipping",
-  totalLabel = "Total",
-  freeShippingHint = "Add ${amount} more for free shipping",
-  checkoutButton = "Checkout",
-  processingText = "Processing...",
-  trustFreeShipping = "Free shipping on orders $75+",
-  trustSecureCheckout = "Secure checkout with Stripe",
-  charityNotice = "of your purchase supports Hawaii STEM education.",
-  charityPercentage = "67%",
+  emptyCta = 'Browse Kits',
+  summaryTitle = 'Order Summary',
+  subtotalLabel = 'Subtotal',
+  savingsLabel = 'Your Savings',
+  shippingLabel = 'Shipping',
+  totalLabel = 'Total',
+  freeShippingHint = 'Add ${amount} more for free shipping',
+  checkoutButton = 'Checkout',
+  processingText = 'Processing...',
+  trustFreeShipping = 'Free shipping on orders $75+',
+  trustSecureCheckout = 'Secure checkout with Stripe',
+  charityNotice = 'of your purchase supports Hawaii STEM education.',
+  charityPercentage = '67%',
 }: CartContentProps) {
   const [isLoading, setIsLoading] = useState(false)
-  const [isMounted, setIsMounted] = useState(false)
+  const [checkoutError, setCheckoutError] = useState<string | null>(null)
+  const hasHydrated = useSyncExternalStore(
+    useCartStore.persist.onFinishHydration,
+    () => useCartStore.persist.hasHydrated(),
+    () => false,
+  )
   const items = useCartStore((state) => state.items)
   const removeItem = useCartStore((state) => state.removeItem)
   const updateQuantity = useCartStore((state) => state.updateQuantity)
@@ -70,17 +82,16 @@ export function CartContent({
   const count = useCartStore(selectCartCount)
   const savings = useCartStore(selectCartSavings)
 
-  // Fix hydration mismatch with Zustand persist
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => { setIsMounted(true) }, [])
+  // Potentially janky: gate render until persisted cart data hydrates.
 
   const handleCheckout = async () => {
     setIsLoading(true)
+    setCheckoutError(null)
     try {
-      const response = await fetch("/api/checkout", {
-        method: "POST",
+      const response = await fetch('/api/checkout', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ items }),
       })
@@ -90,11 +101,11 @@ export function CartContent({
       if (data.url) {
         globalThis.location.href = data.url
       } else {
-        console.error("No checkout URL returned")
+        setCheckoutError(data.error || 'Unable to start checkout. Please try again.')
         setIsLoading(false)
       }
-    } catch (error) {
-      console.error("Checkout error:", error)
+    } catch {
+      setCheckoutError('Connection error. Please check your internet and try again.')
       setIsLoading(false)
     }
   }
@@ -104,7 +115,7 @@ export function CartContent({
   const amountForFreeShipping = (75 - total).toFixed(2)
 
   // Show loading state during hydration
-  if (!isMounted) {
+  if (!hasHydrated) {
     return (
       <div className="bg-slate-50">
         <section className="pt-32 pb-8 px-6 lg:px-20">
@@ -179,13 +190,13 @@ export function CartContent({
         <section className="pb-24 px-6 lg:px-20">
           <div className="max-w-7xl mx-auto">
             <div className="flex flex-col lg:flex-row gap-12">
-              {/* Cart Items (Left - 60%) */}
+              {/* Cart items (60%) */}
               <div className="w-full lg:w-3/5">
                 <div className="bg-white rounded border border-slate-200 overflow-hidden">
                   {/* Header */}
                   <div className="p-4 border-b border-slate-200 flex justify-between items-center">
                     <span className="font-mono text-slate-900">
-                      {count} {count === 1 ? "item" : "items"}
+                      {count} {count === 1 ? 'item' : 'items'}
                     </span>
                     <button
                       type="button"
@@ -218,7 +229,9 @@ export function CartContent({
                             </Link>
                             <button
                               type="button"
-                              onClick={() => { removeItem(item.slug); }}
+                              onClick={() => {
+                                removeItem(item.slug)
+                              }}
                               className="cursor-pointer p-1 text-slate-500 hover:text-red-600 transition-colors"
                               aria-label="Remove item"
                             >
@@ -233,8 +246,9 @@ export function CartContent({
                           {/* Quantity Controls */}
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                              <button
-                                type="button"
+                              <QuantityButton
+                                size="md"
+                                tone={item.quantity === 1 ? 'danger' : 'neutral'}
                                 onClick={() => {
                                   if (item.quantity === 1) {
                                     removeItem(item.slug)
@@ -242,32 +256,30 @@ export function CartContent({
                                     updateQuantity(item.slug, item.quantity - 1)
                                   }
                                 }}
-                                className={`cursor-pointer w-8 h-8 rounded border flex items-center justify-center transition-colors ${
+                                aria-label={
                                   item.quantity === 1
-                                    ? "border-red-200 hover:border-red-300 hover:bg-red-50"
-                                    : "border-slate-200 hover:border-slate-300"
-                                }`}
-                                aria-label={item.quantity === 1 ? "Remove item" : "Decrease quantity"}
+                                    ? 'Remove item'
+                                    : 'Decrease quantity'
+                                }
                               >
                                 {item.quantity === 1 ? (
                                   <Trash2 className="w-3 h-3 text-red-500" />
                                 ) : (
                                   <Minus className="w-3 h-3 text-slate-600" />
                                 )}
-                              </button>
+                              </QuantityButton>
                               <span className="w-10 text-center font-mono">
                                 {item.quantity}
                               </span>
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  { updateQuantity(item.slug, item.quantity + 1); }
-                                }
-                                className="cursor-pointer w-8 h-8 rounded border border-slate-200 flex items-center justify-center hover:border-slate-300 transition-colors"
+                              <QuantityButton
+                                size="md"
+                                onClick={() => {
+                                  updateQuantity(item.slug, item.quantity + 1)
+                                }}
                                 aria-label="Increase quantity"
                               >
                                 <Plus className="w-3 h-3 text-slate-600" />
-                              </button>
+                              </QuantityButton>
                             </div>
 
                             <span className="font-mono text-slate-900">
@@ -281,7 +293,7 @@ export function CartContent({
                 </div>
               </div>
 
-              {/* Order Summary (Right - 40%) */}
+              {/* Order summary (40%) */}
               <div className="w-full lg:w-2/5">
                 <div className="sticky top-24 bg-white rounded border border-slate-200 p-6 space-y-6">
                   <h2 className="font-mono text-xl text-slate-900">
@@ -316,7 +328,10 @@ export function CartContent({
                     </div>
                     {shipping > 0 && (
                       <p className="text-xs text-slate-500">
-                        {freeShippingHint.replace("${amount}", amountForFreeShipping)}
+                        {freeShippingHint.replace(
+                          '${amount}',
+                          amountForFreeShipping,
+                        )}
                       </p>
                     )}
                   </div>
@@ -324,12 +339,22 @@ export function CartContent({
                   {/* Divider */}
                   <div className="border-t border-slate-200 pt-4">
                     <div className="flex justify-between items-center">
-                      <span className="text-slate-900 font-medium">{totalLabel}</span>
+                      <span className="text-slate-900 font-medium">
+                        {totalLabel}
+                      </span>
                       <span className="text-2xl font-mono text-slate-900">
                         ${grandTotal.toFixed(2)}
                       </span>
                     </div>
                   </div>
+
+                  {/* Error State */}
+                  {checkoutError && (
+                    <ActionStatusBanner
+                      status="error"
+                      message={checkoutError}
+                    />
+                  )}
 
                   {/* Checkout Button */}
                   <Button
@@ -369,7 +394,7 @@ export function CartContent({
                   >
                     <span className="font-mono text-amber-600 font-semibold">
                       {charityPercentage}
-                    </span>{" "}
+                    </span>{' '}
                     {charityNotice}
                   </div>
                 </div>

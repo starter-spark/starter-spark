@@ -1,13 +1,24 @@
-"use client"
+'use client'
 
-import { useState, useTransition } from "react"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
-import { Loader2, Save, Plus, X } from "lucide-react"
-import { createProduct } from "../actions"
+import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Separator } from '@/components/ui/separator'
+import { Loader2, Save, Plus, X } from 'lucide-react'
+import { createProduct } from '../actions'
+import {
+  AdminLabel,
+  AdminTextArea,
+  adminHelperTextClass,
+} from '@/components/admin/form-controls'
 
 export function NewProductForm() {
   const router = useRouter()
@@ -15,19 +26,19 @@ export function NewProductForm() {
   const [error, setError] = useState<string | null>(null)
 
   // Form state
-  const [name, setName] = useState("")
-  const [slug, setSlug] = useState("")
-  const [description, setDescription] = useState("")
+  const [name, setName] = useState('')
+  const [slug, setSlug] = useState('')
+  const [description, setDescription] = useState('')
   const [priceCents, setPriceCents] = useState(0)
-  const [stripePriceId, setStripePriceId] = useState("")
+  const [stripePriceId, setStripePriceId] = useState('')
   const [specs, setSpecs] = useState<{ key: string; value: string }[]>([])
 
   // Auto-generate slug from name
   const generateSlug = (name: string) => {
     return name
       .toLowerCase()
-      .replaceAll(/[^a-z0-9]+/g, "-")
-      .replaceAll(/^-|-$/g, "")
+      .replaceAll(/[^a-z0-9]+/g, '-')
+      .replaceAll(/^-|-$/g, '')
   }
 
   const handleNameChange = (value: string) => {
@@ -39,19 +50,23 @@ export function NewProductForm() {
   }
 
   const handleAddSpec = () => {
-    setSpecs([...specs, { key: "", value: "" }])
+    setSpecs([...specs, { key: '', value: '' }])
   }
 
   const handleRemoveSpec = (index: number) => {
     setSpecs(specs.filter((_, i) => i !== index))
   }
 
-  const handleSpecChange = (index: number, field: "key" | "value", value: string) => {
+  const handleSpecChange = (
+    index: number,
+    field: 'key' | 'value',
+    value: string,
+  ) => {
     setSpecs((prev) =>
       prev.map((spec, i) => {
         if (i !== index) return spec
-        return field === "key" ? { ...spec, key: value } : { ...spec, value }
-      })
+        return field === 'key' ? { ...spec, key: value } : { ...spec, value }
+      }),
     )
   }
 
@@ -75,11 +90,11 @@ export function NewProductForm() {
         price_cents: priceCents,
         stripe_price_id: stripePriceId || null,
         specs: Object.keys(specsObject).length > 0 ? specsObject : null,
-        // Discount fields (Phase 14.3) - null for new products
+        // Discount fields, null for new products.
         discount_percent: null,
         discount_expires_at: null,
         original_price_cents: null,
-        // Inventory fields (Phase 14.4) - disabled by default for new products
+        // Inventory fields, disabled by default for new products.
         track_inventory: false,
         stock_quantity: null,
         low_stock_threshold: null,
@@ -88,14 +103,19 @@ export function NewProductForm() {
       if (result.error) {
         setError(result.error)
       } else {
-        router.push("/admin/products")
+        router.push('/admin/products')
         router.refresh()
       }
     })
   }
 
   return (
-    <form onSubmit={(e) => { handleSubmit(e); }} className="space-y-6">
+    <form
+      onSubmit={(e) => {
+        handleSubmit(e)
+      }}
+      className="space-y-6"
+    >
       {error && (
         <div className="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-600">
           {error}
@@ -111,24 +131,24 @@ export function NewProductForm() {
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <label htmlFor="name" className="text-sm font-medium text-slate-900">
-                Name
-              </label>
+              <AdminLabel htmlFor="name">Name</AdminLabel>
               <Input
                 id="name"
                 value={name}
-                onChange={(e) => { handleNameChange(e.target.value); }}
+                onChange={(e) => {
+                  handleNameChange(e.target.value)
+                }}
                 required
               />
             </div>
             <div className="space-y-2">
-              <label htmlFor="slug" className="text-sm font-medium text-slate-900">
-                Slug
-              </label>
+              <AdminLabel htmlFor="slug">Slug</AdminLabel>
               <Input
                 id="slug"
                 value={slug}
-                onChange={(e) => { setSlug(e.target.value); }}
+                onChange={(e) => {
+                  setSlug(e.target.value)
+                }}
                 required
                 pattern="[a-z0-9\-]+"
                 title="Lowercase letters, numbers, and hyphens only"
@@ -136,14 +156,14 @@ export function NewProductForm() {
             </div>
           </div>
           <div className="space-y-2">
-            <label htmlFor="description" className="text-sm font-medium text-slate-900">
-              Description
-            </label>
-            <textarea
+            <AdminLabel htmlFor="description">Description</AdminLabel>
+            <AdminTextArea
               id="description"
               value={description}
-              onChange={(e) => { setDescription(e.target.value); }}
-              className="min-h-[100px] w-full rounded-md border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-700 focus:ring-offset-2"
+              onChange={(e) => {
+                setDescription(e.target.value)
+              }}
+              className="min-h-[100px]"
             />
           </div>
         </CardContent>
@@ -158,29 +178,29 @@ export function NewProductForm() {
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <label htmlFor="price" className="text-sm font-medium text-slate-900">
-                Price (cents)
-              </label>
+              <AdminLabel htmlFor="price">Price (cents)</AdminLabel>
               <Input
                 id="price"
                 type="number"
                 min="0"
                 value={priceCents}
-                onChange={(e) => { setPriceCents(Number.parseInt(e.target.value) || 0); }}
+                onChange={(e) => {
+                  setPriceCents(Number.parseInt(e.target.value) || 0)
+                }}
                 required
               />
-              <p className="text-xs text-slate-500">
+              <p className={adminHelperTextClass}>
                 Display price: ${(priceCents / 100).toFixed(2)}
               </p>
             </div>
             <div className="space-y-2">
-              <label htmlFor="stripe" className="text-sm font-medium text-slate-900">
-                Stripe Price ID
-              </label>
+              <AdminLabel htmlFor="stripe">Stripe Price ID</AdminLabel>
               <Input
                 id="stripe"
                 value={stripePriceId}
-                onChange={(e) => { setStripePriceId(e.target.value); }}
+                onChange={(e) => {
+                  setStripePriceId(e.target.value)
+                }}
                 placeholder="price_..."
               />
             </div>
@@ -194,9 +214,16 @@ export function NewProductForm() {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>Specifications</CardTitle>
-              <CardDescription>Technical specifications (key-value pairs)</CardDescription>
+              <CardDescription>
+                Technical specifications (key-value pairs)
+              </CardDescription>
             </div>
-            <Button type="button" variant="outline" size="sm" onClick={handleAddSpec}>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleAddSpec}
+            >
               <Plus className="mr-2 h-4 w-4" />
               Add Spec
             </Button>
@@ -204,7 +231,9 @@ export function NewProductForm() {
         </CardHeader>
         <CardContent>
           {specs.length === 0 ? (
-            <p className="text-sm text-slate-500">No specifications added yet.</p>
+            <p className="text-sm text-slate-500">
+              No specifications added yet.
+            </p>
           ) : (
             <div className="space-y-3">
               {specs.map((spec, index) => (
@@ -212,20 +241,26 @@ export function NewProductForm() {
                   <Input
                     placeholder="Key"
                     value={spec.key}
-                    onChange={(e) => { handleSpecChange(index, "key", e.target.value); }}
+                    onChange={(e) => {
+                      handleSpecChange(index, 'key', e.target.value)
+                    }}
                     className="flex-1"
                   />
                   <Input
                     placeholder="Value"
                     value={spec.value}
-                    onChange={(e) => { handleSpecChange(index, "value", e.target.value); }}
+                    onChange={(e) => {
+                      handleSpecChange(index, 'value', e.target.value)
+                    }}
                     className="flex-1"
                   />
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon"
-                    onClick={() => { handleRemoveSpec(index); }}
+                    onClick={() => {
+                      handleRemoveSpec(index)
+                    }}
                   >
                     <X className="h-4 w-4" />
                   </Button>
@@ -242,7 +277,9 @@ export function NewProductForm() {
         <Button
           type="button"
           variant="outline"
-          onClick={() => { router.push("/admin/products"); }}
+          onClick={() => {
+            router.push('/admin/products')
+          }}
         >
           Cancel
         </Button>

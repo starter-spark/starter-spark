@@ -1,8 +1,18 @@
-"use client"
+'use client'
 
-import { Award, Lock, Star, BookOpen, Users, Hammer, HelpCircle, Zap, Moon } from "lucide-react"
-import { useState } from "react"
-import type { Achievement, UserAchievement } from "@/lib/achievements"
+import {
+  Award,
+  Lock,
+  Star,
+  BookOpen,
+  Users,
+  Hammer,
+  HelpCircle,
+  Zap,
+  Moon,
+} from 'lucide-react'
+import { useState } from 'react'
+import type { Achievement, UserAchievement } from '@/lib/achievements'
 
 // Map of icon names to components
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -39,8 +49,8 @@ export function AchievementsPanel({
   achievements,
   userAchievements,
   totalPoints,
-  title = "Achievements",
-  hint = "Complete lessons to unlock badges",
+  title = 'Achievements',
+  hint = 'Complete lessons to unlock badges',
 }: AchievementsPanelProps) {
   const [showAll, setShowAll] = useState(false)
 
@@ -97,10 +107,14 @@ export function AchievementsPanel({
               key={achievement.id}
               className={`group relative aspect-square rounded border flex items-center justify-center cursor-pointer transition-all ${
                 isEarned
-                  ? "border-amber-300 bg-amber-50 hover:border-amber-400 hover:bg-amber-100"
-                  : "border-slate-200 bg-slate-50 opacity-40 hover:opacity-60"
+                  ? 'border-amber-300 bg-amber-50 hover:border-amber-400 hover:bg-amber-100'
+                  : 'border-slate-200 bg-slate-50 opacity-40 hover:opacity-60'
               }`}
-              title={isEarned ? `${achievement.name}: ${achievement.description}` : achievement.name}
+              title={
+                isEarned
+                  ? `${achievement.name}: ${achievement.description}`
+                  : achievement.name
+              }
             >
               {isEarned ? (
                 <IconComponent className="w-6 h-6 text-amber-500" />
@@ -112,10 +126,14 @@ export function AchievementsPanel({
               <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-900 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 max-w-[200px]">
                 <div className="font-medium">{achievement.name}</div>
                 {isEarned ? (
-                  <div className="text-amber-400">+{achievement.points} pts</div>
+                  <div className="text-amber-400">
+                    +{achievement.points} pts
+                  </div>
                 ) : (
                   achievement.unlock_hint && (
-                    <div className="text-slate-400 text-[10px] mt-0.5 whitespace-normal">{achievement.unlock_hint}</div>
+                    <div className="text-slate-400 text-[10px] mt-0.5 whitespace-normal">
+                      {achievement.unlock_hint}
+                    </div>
                   )
                 )}
               </div>
@@ -126,10 +144,12 @@ export function AchievementsPanel({
 
       {sortedAchievements.length > 8 && (
         <button
-          onClick={() => { setShowAll(!showAll); }}
+          onClick={() => {
+            setShowAll(!showAll)
+          }}
           className="w-full mt-3 text-xs text-cyan-700 hover:text-cyan-800 font-mono"
         >
-          {showAll ? "Show Less" : `View All (${sortedAchievements.length})`}
+          {showAll ? 'Show Less' : `View All (${sortedAchievements.length})`}
         </button>
       )}
 

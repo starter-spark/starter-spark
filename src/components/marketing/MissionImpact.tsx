@@ -1,7 +1,8 @@
-"use client"
+'use client'
 
-import { motion, useInView } from "motion/react"
-import { useRef, useEffect, useState } from "react"
+import { motion, useInView } from 'motion/react'
+import { useRef, useEffect, useState } from 'react'
+import { SectionIntro } from './SectionIntro'
 
 export interface Stat {
   key: string
@@ -42,7 +43,9 @@ function AnimatedCounter({ value, suffix }: { value: number; suffix: string }) {
         }
       }, duration / steps)
 
-      return () => { clearInterval(timer); }
+      return () => {
+        clearInterval(timer)
+      }
     }
   }, [isInView, value])
 
@@ -60,76 +63,60 @@ interface MissionImpactSectionProps extends MissionContentProps {
 
 export function MissionImpactSection({
   stats,
-  title = "More Than a Kit",
+  title = 'More Than a Kit',
   subtitle = "We're building the next generation of Hawaii's engineers.",
-  story1 = "StarterSpark started as a classroom project: students teaching students how to build robots with whatever parts we could find. We saw how hands-on learning sparked curiosity in ways textbooks never could.",
+  story1 = 'StarterSpark started as a classroom project: students teaching students how to build robots with whatever parts we could find. We saw how hands-on learning sparked curiosity in ways textbooks never could.',
   story2 = "Now we're taking that experience and packaging it for anyone to access. Each kit represents hundreds of hours of curriculum development, testing with real students, and refinement based on their feedback.",
-  commitmentTitle = "Our Commitment",
-  commitmentText = "67% of every dollar goes directly to local STEM charities and school robotics programs. The rest funds new kit development and operations.",
+  commitmentTitle = 'Our Commitment',
+  commitmentText = '67% of every dollar goes directly to local STEM charities and school robotics programs. The rest funds new kit development and operations.',
   commitmentSubtext = "Your purchase directly impacts Hawaii's next generation of engineers.",
 }: MissionImpactSectionProps) {
   return (
     <section className="py-24 px-6 lg:px-20 bg-slate-50">
       <div className="max-w-7xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center mb-16"
-        >
-          <h2 className="font-mono text-3xl lg:text-4xl text-slate-900 mb-4 break-words">
-            {title}
-          </h2>
-          <p className="text-slate-600 max-w-2xl mx-auto break-words">
-            {subtitle}
-          </p>
-        </motion.div>
+        <SectionIntro title={title} description={subtitle} />
 
         <div className="flex flex-col lg:flex-row gap-12">
-          {/* Left - Mission Content (60%) */}
+          {/* Left (60%) */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             className="w-full lg:w-3/5 space-y-8 min-w-0"
           >
-            {/* The Story */}
+            {/* Story */}
             <div className="space-y-4 text-slate-600 leading-relaxed">
-              <p className="break-words">
-                {story1}
-              </p>
-              <p className="break-words">
-                {story2}
-              </p>
+              <p className="break-words">{story1}</p>
+              <p className="break-words">{story2}</p>
             </div>
 
-            {/* The 70/30 Model Callout */}
+            {/* 70/30 model */}
             <div className="bg-white rounded border-l-4 border-amber-500 p-6 shadow-sm">
               <h3 className="font-mono text-lg text-slate-900 mb-2 break-words">
                 {commitmentTitle}
               </h3>
-              <p className="text-slate-600 break-words">
-                {commitmentText}
-              </p>
+              <p className="text-slate-600 break-words">{commitmentText}</p>
               <p className="text-slate-500 text-sm mt-3 break-words">
                 {commitmentSubtext}
               </p>
             </div>
 
-            {/* Impact Stats - Dynamic from database */}
+            {/* Stats (DB) */}
             <div className="grid grid-cols-3 gap-6">
               {stats.map((stat) => (
                 <div key={stat.key} className="text-center">
                   <div className="text-4xl font-mono text-cyan-700 mb-1">
                     <AnimatedCounter value={stat.value} suffix={stat.suffix} />
                   </div>
-                  <div className="text-sm text-slate-500 break-words">{stat.label}</div>
+                  <div className="text-sm text-slate-500 break-words">
+                    {stat.label}
+                  </div>
                 </div>
               ))}
             </div>
           </motion.div>
 
-          {/* Right - Photo Gallery (40%) */}
+          {/* Right (40%) */}
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             whileInView={{ opacity: 1, x: 0 }}
@@ -137,22 +124,22 @@ export function MissionImpactSection({
             className="w-full lg:w-2/5"
           >
             <div className="grid grid-cols-2 gap-3">
-              {/* Photo placeholders - replace with actual images */}
+              {/* Placeholders */}
               {[
-                "FTC Competition",
-                "Workshop",
-                "Team Photo",
-                "Student Building",
-                "Presentation",
+                'FTC Competition',
+                'Workshop',
+                'Team Photo',
+                'Student Building',
+                'Presentation',
               ].map((label, idx) => (
                 <div
                   key={label}
                   className={`
                     relative bg-white rounded border border-slate-200 overflow-hidden
-                    ${idx === 0 ? "col-span-2 aspect-[2/1]" : "aspect-square"}
+                    ${idx === 0 ? 'col-span-2 aspect-[2/1]' : 'aspect-square'}
                   `}
                 >
-                  <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
+                  <div className="absolute inset-0 flex items-center justify-center bg-slate-50">
                     <div className="text-center p-2">
                       <div className="w-8 h-8 mx-auto mb-1 rounded bg-slate-200 flex items-center justify-center">
                         <svg
@@ -174,7 +161,7 @@ export function MissionImpactSection({
                       </p>
                     </div>
                   </div>
-                  {/* Uncomment when we have actual images */}
+                  {/* Enable when images exist */}
                   {/* <Image
                     src={`/assets/images/outreach-${idx + 1}.jpg`}
                     alt={label}

@@ -1,4 +1,4 @@
-import { Page, Locator, expect } from "@playwright/test"
+import { Page, Locator, expect } from '@playwright/test'
 
 /**
  * Page Object Model for the Login Page
@@ -20,38 +20,40 @@ export class LoginPage {
   constructor(page: Page) {
     this.page = page
 
-    this.pageTitle = page.getByRole("heading", { name: /sign in|login/i })
+    this.pageTitle = page.getByRole('heading', { name: /sign in|login/i })
     // Use #email id to avoid matching footer newsletter input
-    this.emailInput = page.locator("main input#email:visible").first()
-    this.submitButton = page.getByRole("button", { name: /send magic link/i })
-    this.errorMessage = page.locator("#login-email-error")
+    this.emailInput = page.locator('main input#email:visible').first()
+    this.submitButton = page.getByRole('button', { name: /send magic link/i })
+    this.errorMessage = page.locator('#login-email-error')
 
     // Success state
     this.successMessage = page.getByText(/check your email/i)
-    this.checkEmailTitle = page.getByRole("heading", { name: /check your email/i })
-    this.useDifferentEmailButton = page.getByRole("button", {
+    this.checkEmailTitle = page.getByRole('heading', {
+      name: /check your email/i,
+    })
+    this.useDifferentEmailButton = page.getByRole('button', {
       name: /different email/i,
     })
   }
 
   async goto(options?: { redirect?: string; claimToken?: string }) {
-    let url = "/login"
+    let url = '/login'
     const params = new URLSearchParams()
 
     if (options?.redirect) {
-      params.set("redirect", options.redirect)
+      params.set('redirect', options.redirect)
     }
     if (options?.claimToken) {
-      params.set("claim", options.claimToken)
+      params.set('claim', options.claimToken)
     }
 
     if (params.toString()) {
       url += `?${params.toString()}`
     }
 
-    await this.page.goto(url, { waitUntil: "domcontentloaded" })
+    await this.page.goto(url, { waitUntil: 'domcontentloaded' })
     // Wait for client hydration to attach handlers before interactions
-    await this.page.waitForLoadState("networkidle")
+    await this.page.waitForLoadState('networkidle')
   }
 
   async expectPageLoaded() {
@@ -91,7 +93,7 @@ export class LoginPage {
   }
 
   async expectLoadingState() {
-    const loadingButton = this.page.getByRole("button", { name: /sending/i })
+    const loadingButton = this.page.getByRole('button', { name: /sending/i })
     await expect(loadingButton).toBeVisible()
   }
 }

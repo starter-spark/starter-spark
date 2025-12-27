@@ -1,7 +1,7 @@
-"use client"
+'use client'
 
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import {
   ShoppingCart,
   Minus,
@@ -9,10 +9,12 @@ import {
   Truck,
   RotateCcw,
   Shield,
-} from "lucide-react"
-import { useId, useState } from "react"
-import { useCartStore } from "@/store/cart"
-import { trackAddToCart } from "@/lib/analytics"
+} from 'lucide-react'
+import { useId, useState } from 'react'
+import { useCartStore } from '@/store/cart'
+import { trackAddToCart } from '@/lib/analytics'
+import { cn } from '@/lib/utils'
+import { QuantityButton } from '@/components/commerce/QuantityButton'
 
 interface BuyBoxProps {
   id: string
@@ -22,14 +24,70 @@ interface BuyBoxProps {
   originalPrice?: number | null
   inStock: boolean
   image?: string
-  // Discount fields (Phase 14.3)
+  // Discount fields
   discountPercent?: number | null
   discountExpiresAt?: string | null
-  // Inventory fields (Phase 14.4)
+  // Inventory fields
   stockQuantity?: number | null
   isLimitedStock?: boolean
   // Charity percentage from site content
   charityPercentage?: string
+}
+
+const trustSignals = [
+  { icon: Truck, label: 'Free shipping on orders $75+' },
+  { icon: RotateCcw, label: '30-day returns' },
+  { icon: Shield, label: 'Secure checkout' },
+]
+
+function getDiscountTimeRemaining(discountExpiresAt?: string | null) {
+  if (!discountExpiresAt) return null
+  const now = new Date()
+  const expires = new Date(discountExpiresAt)
+  const diff = expires.getTime() - now.getTime()
+  if (diff <= 0) return null
+  if (diff > 7 * 24 * 60 * 60 * 1000) return null
+
+  const days = Math.floor(diff / (24 * 60 * 60 * 1000))
+  const hours = Math.floor((diff % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000))
+  const minutes = Math.floor((diff % (60 * 60 * 1000)) / (60 * 1000))
+
+  if (days > 0) return `${days}d ${hours}h left`
+  if (hours > 0) return `${hours}h ${minutes}m left`
+  return `${minutes}m left`
+}
+
+function getStockBadge({
+  inStock,
+  isLimitedStock,
+  stockQuantity,
+}: {
+  inStock: boolean
+  isLimitedStock?: boolean
+  stockQuantity?: number | null
+}) {
+  if (!inStock) {
+    return {
+      label: 'Out of Stock',
+      className: 'bg-red-50 text-red-700 border-red-200',
+    }
+  }
+
+  if (
+    isLimitedStock &&
+    stockQuantity !== null &&
+    stockQuantity !== undefined
+  ) {
+    return {
+      label: `Only ${stockQuantity} left`,
+      className: 'bg-amber-50 text-amber-700 border-amber-200',
+    }
+  }
+
+  return {
+    label: 'In Stock',
+    className: 'bg-green-50 text-green-700 border-green-200',
+  }
 }
 
 export function BuyBox({
@@ -44,40 +102,48 @@ export function BuyBox({
   discountExpiresAt,
   stockQuantity,
   isLimitedStock,
-  charityPercentage = "67%",
+  charityPercentage = '67%',
 }: BuyBoxProps) {
   const [quantity, setQuantity] = useState(1)
   const quantityLabelId = useId()
   const addItem = useCartStore((state) => state.addItem)
 
   // Check if discount is active (exists and not expired)
-  const hasActiveDiscount =
+  const hasActiveDiscount = Boolean(
     discountPercent &&
-    originalPrice &&
-    (!discountExpiresAt || new Date(discountExpiresAt) > new Date())
+      originalPrice &&
+      (!discountExpiresAt || new Date(discountExpiresAt) > new Date()),
+  )
 
   // Calculate time remaining for countdown (if discount expires within 7 days)
-  const getTimeRemaining = () => {
-    if (!discountExpiresAt) return null
-    const now = new Date()
-    const expires = new Date(discountExpiresAt)
-    const diff = expires.getTime() - now.getTime()
-    if (diff <= 0) return null
-    if (diff > 7 * 24 * 60 * 60 * 1000) return null // More than 7 days, don't show countdown
-
-    const days = Math.floor(diff / (24 * 60 * 60 * 1000))
-    const hours = Math.floor((diff % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000))
-    const minutes = Math.floor((diff % (60 * 60 * 1000)) / (60 * 1000))
-
-    if (days > 0) return `${days}d ${hours}h left`
-    if (hours > 0) return `${hours}h ${minutes}m left`
-    return `${minutes}m left`
-  }
-
-  const timeRemaining = hasActiveDiscount ? getTimeRemaining() : null
+  const timeRemaining = hasActiveDiscount
+    ? getDiscountTimeRemaining(discountExpiresAt)
+    : null
+  const stockBadge = getStockBadge({
+    inStock,
+    isLimitedStock,
+    stockQuantity,
+  })
+  const addToCartClassName = cn(
+    'w-full h-14 font-mono text-lg',
+    inStock
+      ? 'bg-cyan-700 hover:bg-cyan-600 text-white'
+      : 'bg-slate-200 text-slate-600 cursor-not-allowed',
+  )
 
   const handleAddToCart = () => {
-    addItem({ slug, name, price, image, originalPrice: hasActiveDiscount ? originalPrice ?? undefined : undefined }, quantity)
+    addItem(
+      {
+        slug,
+        name,
+        price,
+        image,
+        originalPrice: hasActiveDiscount
+          ? (originalPrice ?? undefined)
+          : undefined,
+      },
+      quantity,
+    )
 
     // Track add to cart event
     trackAddToCart({
@@ -92,7 +158,7 @@ export function BuyBox({
   }
 
   return (
-    <div className="sticky top-24 bg-white rounded border border-slate-200 shadow-md p-6 space-y-6">
+    <div className="lg:sticky lg:top-24 bg-white rounded border border-slate-200 shadow-md p-6 space-y-6">
       {/* Title */}
       <div>
         <h1 className="font-mono text-2xl lg:text-3xl text-slate-900 mb-2">
@@ -100,26 +166,18 @@ export function BuyBox({
         </h1>
         <Badge
           variant="outline"
-          className={`font-mono text-xs ${
-            inStock
-              ? isLimitedStock
-              ? "bg-amber-50 text-amber-700 border-amber-200"
-              : "bg-green-50 text-green-700 border-green-200"
-              : "bg-red-50 text-red-700 border-red-200"
-          }`}
+          className={cn('font-mono text-xs', stockBadge.className)}
         >
-          {inStock
-            ? isLimitedStock && stockQuantity !== null && stockQuantity !== undefined
-            ? `Only ${stockQuantity} left`
-            : "In Stock"
-            : "Out of Stock"}
+          {stockBadge.label}
         </Badge>
       </div>
 
       {/* Price */}
       <div className="space-y-2">
         <div className="flex items-baseline gap-3 flex-wrap">
-          <span className="text-4xl font-mono text-amber-600">${price.toFixed(2)}</span>
+          <span className="text-4xl font-mono text-amber-600">
+            ${price.toFixed(2)}
+          </span>
           {hasActiveDiscount && originalPrice && (
             <>
               <span className="text-xl font-mono text-slate-600 line-through">
@@ -149,21 +207,25 @@ export function BuyBox({
           Quantity
         </span>
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => { setQuantity(Math.max(1, quantity - 1)); }}
-            className="w-10 h-10 rounded border border-slate-200 flex items-center justify-center hover:border-slate-300 transition-colors cursor-pointer"
+          <QuantityButton
+            size="lg"
+            onClick={() => {
+              setQuantity(Math.max(1, quantity - 1))
+            }}
             aria-label="Decrease quantity"
           >
             <Minus className="w-4 h-4 text-slate-600" aria-hidden="true" />
-          </button>
+          </QuantityButton>
           <span className="w-12 text-center font-mono text-lg">{quantity}</span>
-          <button
-            onClick={() => { setQuantity(quantity + 1); }}
-            className="w-10 h-10 rounded border border-slate-200 flex items-center justify-center hover:border-slate-300 transition-colors cursor-pointer"
+          <QuantityButton
+            size="lg"
+            onClick={() => {
+              setQuantity(quantity + 1)
+            }}
             aria-label="Increase quantity"
           >
             <Plus className="w-4 h-4 text-slate-600" aria-hidden="true" />
-          </button>
+          </QuantityButton>
         </div>
       </div>
 
@@ -171,30 +233,23 @@ export function BuyBox({
       <Button
         onClick={handleAddToCart}
         disabled={!inStock}
-        className={`w-full h-14 font-mono text-lg ${
-          inStock
-            ? "bg-cyan-700 hover:bg-cyan-600 text-white"
-            : "bg-slate-200 text-slate-600 cursor-not-allowed"
-        }`}
+        className={addToCartClassName}
       >
         <ShoppingCart className="w-5 h-5 mr-2" aria-hidden="true" />
-        {inStock ? "Add to Cart" : "Out of Stock"}
+        {inStock ? 'Add to Cart' : 'Out of Stock'}
       </Button>
 
       {/* Trust Signals */}
       <div className="space-y-3 pt-4 border-t border-slate-200">
-        <div className="flex items-center gap-3 text-sm text-slate-700">
-          <Truck className="w-4 h-4 text-cyan-700" aria-hidden="true" />
-          <span>Free shipping on orders $75+</span>
-        </div>
-        <div className="flex items-center gap-3 text-sm text-slate-700">
-          <RotateCcw className="w-4 h-4 text-cyan-700" aria-hidden="true" />
-          <span>30-day returns</span>
-        </div>
-        <div className="flex items-center gap-3 text-sm text-slate-700">
-          <Shield className="w-4 h-4 text-cyan-700" aria-hidden="true" />
-          <span>Secure checkout</span>
-        </div>
+        {trustSignals.map(({ icon: Icon, label }) => (
+          <div
+            key={label}
+            className="flex items-center gap-3 text-sm text-slate-700"
+          >
+            <Icon className="w-4 h-4 text-cyan-700" aria-hidden="true" />
+            <span>{label}</span>
+          </div>
+        ))}
       </div>
 
       {/* Charity Notice */}
@@ -202,8 +257,10 @@ export function BuyBox({
         data-testid="product-charity"
         className="p-3 bg-amber-50 rounded border border-amber-200 text-sm text-slate-700"
       >
-        <span className="font-mono text-amber-700 font-semibold">{charityPercentage}</span> of
-        your purchase supports Hawaii STEM education.
+        <span className="font-mono text-amber-700 font-semibold">
+          {charityPercentage}
+        </span>{' '}
+        of your purchase supports Hawaii STEM education.
       </div>
     </div>
   )

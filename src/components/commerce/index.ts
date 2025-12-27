@@ -1,5 +1,5 @@
-export { ProductCard, type ProductTag } from "./ProductCard"
-export { ProductGallery } from "./ProductGallery"
-export { BuyBox } from "./BuyBox"
-export { ProductTabs } from "./ProductTabs"
-export { CartSheet } from "./CartSheet"
+export { ProductCard, type ProductTag } from './ProductCard'
+export { ProductGallery } from './ProductGallery'
+export { BuyBox } from './BuyBox'
+export { ProductTabs } from './ProductTabs'
+export { CartSheet } from './CartSheet'

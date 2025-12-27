@@ -1,24 +1,23 @@
 # StarterSpark
 
-Full-stack **EdTech + E-commerce platform** for selling STEM kits and delivering online courses. Built with Next.js 16, React 19, and Supabase. Includes learning management, community forum, Stripe payments, and admin dashboard.
----
+## Full-stack **EdTech + E-commerce platform** for selling STEM kits and delivering online courses. Built with Next.js 16, React 19, and Supabase. Includes learning management, community forum, Stripe payments, and admin dashboard.
 
 ## Tech Stack
 
-| Layer | Technologies |
-|-------|-------------|
-| **Framework** | Next.js 16 (App Router), React 19, TypeScript 5 |
-| **Database** | Supabase (PostgreSQL), Row-Level Security |
-| **Styling** | Tailwind CSS v4, shadcn/ui, Radix UI primitives |
-| **Payments** | Stripe Checkout, Webhooks with idempotency |
-| **Auth** | Supabase Auth (passwordless magic links) |
-| **Email** | Resend (transactional emails) |
-| **Analytics** | PostHog, Vercel Analytics, Vercel Speed Insights |
-| **Monitoring** | Sentry (error tracking with source maps) |
-| **Rate Limiting** | Upstash Redis (with in-memory fallback) |
-| **Testing** | Playwright (E2E), Vitest (unit), axe-core (a11y) |
-| **CI/CD** | GitHub Actions, Chromatic (visual regression) |
-| **Security** | Semgrep SAST, ESLint security plugins |
+| Layer             | Technologies                                     |
+| ----------------- | ------------------------------------------------ |
+| **Framework**     | Next.js 16 (App Router), React 19, TypeScript 5  |
+| **Database**      | Supabase (PostgreSQL), Row-Level Security        |
+| **Styling**       | Tailwind CSS v4, shadcn/ui, Radix UI primitives  |
+| **Payments**      | Stripe Checkout, Webhooks with idempotency       |
+| **Auth**          | Supabase Auth (passwordless magic links)         |
+| **Email**         | Resend (transactional emails)                    |
+| **Analytics**     | PostHog, Vercel Analytics, Vercel Speed Insights |
+| **Monitoring**    | Sentry (error tracking with source maps)         |
+| **Rate Limiting** | Upstash Redis (with in-memory fallback)          |
+| **Testing**       | Playwright (E2E), Vitest (unit), axe-core (a11y) |
+| **CI/CD**         | GitHub Actions, Chromatic (visual regression)    |
+| **Security**      | Semgrep SAST, ESLint security plugins            |
 
 ---
 
@@ -59,6 +58,7 @@ Full-stack **EdTech + E-commerce platform** for selling STEM kits and delivering
 ## Features
 
 ### E-Commerce Platform
+
 - Product catalog with inventory tracking and discount scheduling
 - Shopping cart (Zustand with localStorage persistence)
 - Stripe Checkout with webhook fulfillment
@@ -66,6 +66,7 @@ Full-stack **EdTech + E-commerce platform** for selling STEM kits and delivering
 - Guest purchase flow with email-based license claiming
 
 ### Learning Management System
+
 - Courses containing modules containing lessons
 - Multiple lesson types: content, code challenges, visual challenges, quizzes, projects
 - **CodeMirror 6** code editor with Arduino/C++ and JavaScript support
@@ -74,6 +75,7 @@ Full-stack **EdTech + E-commerce platform** for selling STEM kits and delivering
 - License-gated access (must own product to view lesson content)
 
 ### Community Forum
+
 - Q&A posts with tags, product association, and status tracking
 - Upvoting system with rate-limited interactions
 - Nested comment threads
@@ -81,6 +83,7 @@ Full-stack **EdTech + E-commerce platform** for selling STEM kits and delivering
 - Content moderation with flagging and ban system
 
 ### Admin Dashboard
+
 - Product, license, and order management
 - User management with role-based access (admin/staff/user)
 - Content management system for site-wide text
@@ -90,6 +93,7 @@ Full-stack **EdTech + E-commerce platform** for selling STEM kits and delivering
 - Site banner scheduling
 
 ### Other
+
 - Documentation system with hierarchical categories and full-text search
 - Event calendar with type filtering (workshops, competitions, meetups)
 - Contact form with file upload validation
@@ -107,15 +111,15 @@ Full-stack **EdTech + E-commerce platform** for selling STEM kits and delivering
 Request → CSP Nonce → Rate Limit → Auth Guard → RLS Policy → Response
 ```
 
-| Layer | Implementation |
-|-------|----------------|
-| **Transport** | HSTS (1 year), upgrade-insecure-requests |
-| **Content Security** | Per-request nonce, strict CSP directives |
-| **Rate Limiting** | Endpoint-specific limits via Upstash Redis |
-| **Authentication** | Supabase Auth with secure cookie handling |
-| **Authorization** | RBAC guards + Row-Level Security policies |
+| Layer                | Implementation                                  |
+| -------------------- | ----------------------------------------------- |
+| **Transport**        | HSTS (1 year), upgrade-insecure-requests        |
+| **Content Security** | Per-request nonce, strict CSP directives        |
+| **Rate Limiting**    | Endpoint-specific limits via Upstash Redis      |
+| **Authentication**   | Supabase Auth with secure cookie handling       |
+| **Authorization**    | RBAC guards + Row-Level Security policies       |
 | **Input Validation** | Type-safe validation, magic byte file detection |
-| **Audit Trail** | Admin action logging with IP/UA capture |
+| **Audit Trail**      | Admin action logging with IP/UA capture         |
 
 ### Security Headers (via proxy.ts)
 
@@ -157,20 +161,19 @@ Content-Security-Policy: [nonce-based, per-request]
 
 ### Testing
 
-| Type | Framework | Coverage |
-|------|-----------|----------|
-| **Unit** | Vitest | Utility functions, validation logic |
-| **E2E** | Playwright | User flows across all public pages |
-| **API** | Playwright | Route handler behavior |
-| **Accessibility** | axe-core | WCAG 2.1 AA compliance |
-| **Visual** | Chromatic | UI regression detection |
+| Type              | Framework  | Coverage                            |
+| ----------------- | ---------- | ----------------------------------- |
+| **Unit**          | Vitest     | Utility functions, validation logic |
+| **E2E**           | Playwright | User flows across all public pages  |
+| **API**           | Playwright | Route handler behavior              |
+| **Accessibility** | axe-core   | WCAG 2.1 AA compliance              |
+| **Visual**        | Chromatic  | UI regression detection             |
 
 ### CI/CD Pipeline
 
 ```yaml
 # Triggers: push/PR to development, daily schedule
-Jobs:
-  1. Build Next.js with caching
+Jobs: 1. Build Next.js with caching
   2. Run Playwright E2E tests (2 retries, 120min timeout)
   3. Upload artifacts (reports, logs)
 
@@ -183,16 +186,16 @@ Jobs:
 
 ### Core Tables (20+)
 
-| Domain | Tables |
-|--------|--------|
-| **Users** | profiles, admin_audit_log |
-| **Products** | products, product_media, product_tags |
-| **Licenses** | licenses, stripe_checkout_fulfillments |
-| **Learning** | courses, modules, lessons, lesson_content, lesson_progress |
-| **Gamification** | achievements, user_achievements, learning_stats |
-| **Community** | posts, comments, post_votes, comment_votes, post_reports |
-| **Content** | doc_categories, doc_pages, site_content, site_banners |
-| **Events** | events |
+| Domain           | Tables                                                     |
+| ---------------- | ---------------------------------------------------------- |
+| **Users**        | profiles, admin_audit_log                                  |
+| **Products**     | products, product_media, product_tags                      |
+| **Licenses**     | licenses, stripe_checkout_fulfillments                     |
+| **Learning**     | courses, modules, lessons, lesson_content, lesson_progress |
+| **Gamification** | achievements, user_achievements, learning_stats            |
+| **Community**    | posts, comments, post_votes, comment_votes, post_reports   |
+| **Content**      | doc_categories, doc_pages, site_content, site_banners      |
+| **Events**       | events                                                     |
 
 ### RPC Functions (66+)
 
@@ -256,13 +259,13 @@ src/
 
 Light mode only, slate + cyan color scheme.
 
-| Token | Value | Usage |
-|-------|-------|-------|
-| Primary | `oklch(0.52 0.105 211)` / `#0e7490` | CTAs, focus rings |
-| Background | Slate-50 | Page backgrounds |
-| Foreground | Slate-900 | Primary text |
-| Destructive | Amber-500 | Warnings, errors |
-| Radius | 4px | Border radius for all components |
+| Token       | Value                               | Usage                            |
+| ----------- | ----------------------------------- | -------------------------------- |
+| Primary     | `oklch(0.52 0.105 211)` / `#0e7490` | CTAs, focus rings                |
+| Background  | Slate-50                            | Page backgrounds                 |
+| Foreground  | Slate-900                           | Primary text                     |
+| Destructive | Amber-500                           | Warnings, errors                 |
+| Radius      | 4px                                 | Border radius for all components |
 
 ### Accessibility
 
@@ -277,15 +280,15 @@ Light mode only, slate + cyan color scheme.
 
 ## API Routes
 
-| Endpoint | Method | Purpose | Rate Limit |
-|----------|--------|---------|------------|
-| `/api/checkout` | POST | Create Stripe session | 10/min |
-| `/api/webhooks/stripe` | POST | Payment fulfillment | - |
-| `/api/claim-license` | POST | Claim by code | 5/min |
-| `/api/claim-by-token` | POST | Claim by token | 5/min |
-| `/api/learn/complete` | POST | Mark lesson done | - |
-| `/api/certificate` | GET | Generate PDF | 10/10min |
-| `/api/contact/upload` | POST | File attachments | 5/min |
+| Endpoint               | Method | Purpose               | Rate Limit |
+| ---------------------- | ------ | --------------------- | ---------- |
+| `/api/checkout`        | POST   | Create Stripe session | 10/min     |
+| `/api/webhooks/stripe` | POST   | Payment fulfillment   | -          |
+| `/api/claim-license`   | POST   | Claim by code         | 5/min      |
+| `/api/claim-by-token`  | POST   | Claim by token        | 5/min      |
+| `/api/learn/complete`  | POST   | Mark lesson done      | -          |
+| `/api/certificate`     | GET    | Generate PDF          | 10/10min   |
+| `/api/contact/upload`  | POST   | File attachments      | 5/min      |
 
 ---
 

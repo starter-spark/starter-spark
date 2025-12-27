@@ -1,4 +1,4 @@
-import { Skeleton } from "@/components/ui/skeleton"
+import { LoadingBlock } from '@/components/loading'
 
 export default function ProductsLoading() {
   return (
@@ -6,10 +6,10 @@ export default function ProductsLoading() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <Skeleton className="h-8 w-28" />
-          <Skeleton className="mt-2 h-4 w-48" />
+          <LoadingBlock className="h-8 w-28" tone="strong" />
+          <LoadingBlock className="mt-2 h-4 w-48" tone="soft" />
         </div>
-        <Skeleton className="h-10 w-32" />
+        <LoadingBlock className="h-10 w-32" tone="strong" />
       </div>
 
       {/* Table */}
@@ -17,7 +17,7 @@ export default function ProductsLoading() {
         <div className="p-4 border-b border-slate-200">
           <div className="flex gap-4">
             {Array.from({ length: 5 }, (_, i) => (
-              <Skeleton key={i} className="h-4 w-20" />
+              <LoadingBlock key={i} className="h-4 w-20" tone="soft" />
             ))}
           </div>
         </div>
@@ -25,13 +25,13 @@ export default function ProductsLoading() {
           {Array.from({ length: 5 }, (_, i) => (
             <div key={i} className="p-4 flex items-center gap-4">
               <div className="flex items-center gap-2">
-                <Skeleton className="h-5 w-40" />
-                <Skeleton className="h-4 w-4" />
+                <LoadingBlock className="h-5 w-40" tone="soft" />
+                <LoadingBlock className="h-4 w-4" tone="soft" />
               </div>
-              <Skeleton className="h-6 w-28 rounded" />
-              <Skeleton className="h-5 w-16" />
-              <Skeleton className="h-6 w-20" />
-              <Skeleton className="h-8 w-8" />
+              <LoadingBlock className="h-6 w-28 rounded" tone="soft" />
+              <LoadingBlock className="h-5 w-16" tone="soft" />
+              <LoadingBlock className="h-6 w-20" tone="soft" />
+              <LoadingBlock className="h-8 w-8" tone="soft" />
             </div>
           ))}
         </div>

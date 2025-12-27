@@ -1,6 +1,6 @@
-import { createClient } from "@/lib/supabase/server"
-import { redirect } from "next/navigation"
-import type { NextRequest } from "next/server"
+import { createClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
+import type { NextRequest } from 'next/server'
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient()
@@ -10,11 +10,14 @@ export async function POST(request: NextRequest) {
 
   // Check if there's a redirect URL in the request
   const formData = await request.formData().catch(() => null)
-  const redirectParam = formData?.get("redirect")
-  const redirectTo = typeof redirectParam === "string" ? redirectParam : "/"
+  const redirectParam = formData?.get('redirect')
+  const redirectTo = typeof redirectParam === 'string' ? redirectParam : '/'
 
   // Validate redirect URL to prevent open redirect
-  const safeRedirect = redirectTo.startsWith("/") && !redirectTo.startsWith("//") ? redirectTo : "/"
+  const safeRedirect =
+    redirectTo.startsWith('/') && !redirectTo.startsWith('//')
+      ? redirectTo
+      : '/'
 
   redirect(safeRedirect)
 }
@@ -28,10 +31,13 @@ export async function GET(request: NextRequest) {
 
   // Get redirect from query params
   const searchParams = request.nextUrl.searchParams
-  const redirectTo = searchParams.get("redirect") || "/"
+  const redirectTo = searchParams.get('redirect') || '/'
 
   // Validate redirect URL to prevent open redirect
-  const safeRedirect = redirectTo.startsWith("/") && !redirectTo.startsWith("//") ? redirectTo : "/"
+  const safeRedirect =
+    redirectTo.startsWith('/') && !redirectTo.startsWith('//')
+      ? redirectTo
+      : '/'
 
   redirect(safeRedirect)
 }

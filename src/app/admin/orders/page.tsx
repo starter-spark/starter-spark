@@ -1,6 +1,6 @@
-import { createClient } from "@/lib/supabase/server"
-import { Badge } from "@/components/ui/badge"
-import { UserAvatar } from "@/components/ui/user-avatar"
+import { createClient } from '@/lib/supabase/server'
+import { Badge } from '@/components/ui/badge'
+import { UserAvatar } from '@/components/ui/user-avatar'
 import {
   Table,
   TableBody,
@@ -8,11 +8,11 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { CreditCard } from "lucide-react"
+} from '@/components/ui/table'
+import { CreditCard } from 'lucide-react'
 
 export const metadata = {
-  title: "Orders | Admin",
+  title: 'Orders | Admin',
 }
 
 async function getOrders() {
@@ -20,18 +20,20 @@ async function getOrders() {
 
   // Orders are licenses with source = 'online_purchase'
   const { data, error } = await supabase
-    .from("licenses")
-    .select(`
+    .from('licenses')
+    .select(
+      `
       *,
       products(name, price_cents),
       profiles(id, email, full_name, avatar_url, avatar_seed)
-    `)
-    .eq("source", "online_purchase")
-    .order("created_at", { ascending: false })
+    `,
+    )
+    .eq('source', 'online_purchase')
+    .order('created_at', { ascending: false })
     .limit(100)
 
   if (error) {
-    console.error("Error fetching orders:", error)
+    console.error('Error fetching orders:', error)
     return []
   }
 
@@ -45,7 +47,10 @@ export default async function OrdersPage() {
   const totalOrders = orders.length
   const claimedOrders = orders.filter((o) => o.owner_id !== null).length
   const totalRevenue = orders.reduce((sum, order) => {
-    const product = order.products as unknown as { name: string; price_cents: number } | null
+    const product = order.products as unknown as {
+      name: string
+      price_cents: number
+    } | null
     return sum + (product?.price_cents || 0)
   }, 0)
 
@@ -54,18 +59,24 @@ export default async function OrdersPage() {
       {/* Header */}
       <div>
         <h1 className="font-mono text-2xl font-bold text-slate-900">Orders</h1>
-        <p className="text-slate-600">Online purchases and license fulfillment</p>
+        <p className="text-slate-600">
+          Online purchases and license fulfillment
+        </p>
       </div>
 
       {/* Stats */}
       <div className="grid gap-4 md:grid-cols-3">
         <div className="rounded-lg border border-slate-200 bg-white p-4">
           <p className="text-sm text-slate-600">Total Orders</p>
-          <p className="font-mono text-2xl font-bold text-slate-900">{totalOrders}</p>
+          <p className="font-mono text-2xl font-bold text-slate-900">
+            {totalOrders}
+          </p>
         </div>
         <div className="rounded-lg border border-slate-200 bg-white p-4">
           <p className="text-sm text-slate-600">Claimed</p>
-          <p className="font-mono text-2xl font-bold text-green-600">{claimedOrders}</p>
+          <p className="font-mono text-2xl font-bold text-green-600">
+            {claimedOrders}
+          </p>
         </div>
         <div className="rounded-lg border border-slate-200 bg-white p-4">
           <p className="text-sm text-slate-600">Total Revenue</p>
@@ -96,13 +107,24 @@ export default async function OrdersPage() {
             </TableHeader>
             <TableBody>
               {orders.map((order) => {
-                const product = order.products as unknown as { name: string; price_cents: number } | null
-                const owner = order.profiles as unknown as { id: string; email: string; full_name: string | null; avatar_url: string | null; avatar_seed: string | null } | null
+                const product = order.products as unknown as {
+                  name: string
+                  price_cents: number
+                } | null
+                const owner = order.profiles as unknown as {
+                  id: string
+                  email: string
+                  full_name: string | null
+                  avatar_url: string | null
+                  avatar_seed: string | null
+                } | null
 
                 return (
                   <TableRow key={order.id}>
                     <TableCell className="text-sm text-slate-500">
-                      {order.created_at ? new Date(order.created_at).toLocaleDateString() : "-"}
+                      {order.created_at
+                        ? new Date(order.created_at).toLocaleDateString()
+                        : '-'}
                     </TableCell>
                     <TableCell>
                       <code className="rounded bg-slate-100 px-2 py-1 font-mono text-xs">
@@ -110,7 +132,7 @@ export default async function OrdersPage() {
                       </code>
                     </TableCell>
                     <TableCell className="text-sm text-slate-900">
-                      {product?.name || "Unknown"}
+                      {product?.name || 'Unknown'}
                     </TableCell>
                     <TableCell className="font-mono text-sm text-slate-900">
                       ${((product?.price_cents || 0) / 100).toFixed(2)}
@@ -133,14 +155,21 @@ export default async function OrdersPage() {
                           </span>
                         </div>
                       ) : (
-                        <span className="text-sm text-slate-400">Unclaimed</span>
+                        <span className="text-sm text-slate-400">
+                          Unclaimed
+                        </span>
                       )}
                     </TableCell>
                     <TableCell>
                       {order.owner_id ? (
-                        <Badge className="bg-green-100 text-green-700">Fulfilled</Badge>
+                        <Badge className="bg-green-100 text-green-700">
+                          Fulfilled
+                        </Badge>
                       ) : (
-                        <Badge variant="outline" className="border-amber-300 text-amber-600">
+                        <Badge
+                          variant="outline"
+                          className="border-amber-300 text-amber-600"
+                        >
                           Pending Claim
                         </Badge>
                       )}

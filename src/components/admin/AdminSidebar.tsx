@@ -1,7 +1,7 @@
-"use client"
+'use client'
 
-import Link from "next/link"
-import { usePathname } from "next/navigation"
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard,
   Package,
@@ -18,26 +18,26 @@ import {
   Megaphone,
   LifeBuoy,
   GraduationCap,
-} from "lucide-react"
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Separator } from "@/components/ui/separator"
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { Separator } from '@/components/ui/separator'
 
 const navItems = [
-  { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin/products", label: "Products", icon: Package },
-  { href: "/admin/learn", label: "Learn", icon: GraduationCap },
-  { href: "/admin/licenses", label: "Licenses", icon: KeyRound },
-  { href: "/admin/orders", label: "Orders", icon: CreditCard },
-  { href: "/admin/support", label: "Support", icon: LifeBuoy },
-  { href: "/admin/community", label: "Community", icon: MessageSquare },
-  { href: "/admin/events", label: "Events", icon: Calendar },
-  { href: "/admin/content", label: "Content", icon: FileText },
-  { href: "/admin/banners", label: "Banners", icon: Megaphone },
-  { href: "/admin/users", label: "Users", icon: Users },
-  { href: "/admin/audit", label: "Audit Log", icon: ScrollText },
-  { href: "/admin/settings", label: "Settings", icon: Settings },
+  { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/admin/products', label: 'Products', icon: Package },
+  { href: '/admin/learn', label: 'Learn', icon: GraduationCap },
+  { href: '/admin/licenses', label: 'Licenses', icon: KeyRound },
+  { href: '/admin/orders', label: 'Orders', icon: CreditCard },
+  { href: '/admin/support', label: 'Support', icon: LifeBuoy },
+  { href: '/admin/community', label: 'Community', icon: MessageSquare },
+  { href: '/admin/events', label: 'Events', icon: Calendar },
+  { href: '/admin/content', label: 'Content', icon: FileText },
+  { href: '/admin/banners', label: 'Banners', icon: Megaphone },
+  { href: '/admin/users', label: 'Users', icon: Users },
+  { href: '/admin/audit', label: 'Audit Log', icon: ScrollText },
+  { href: '/admin/settings', label: 'Settings', icon: Settings },
 ]
 
 interface AdminSidebarProps {
@@ -56,15 +56,27 @@ export function AdminSidebar({ user }: AdminSidebarProps) {
       {/* Header */}
       <div className="flex h-16 items-center justify-between border-b border-slate-200 px-4">
         <div className="flex items-center gap-2">
-          <Link href="/" className="font-mono text-sm font-bold text-cyan-700 hover:text-cyan-600 transition-colors">
+          <Link
+            href="/"
+            className="font-mono text-sm font-bold text-cyan-700 hover:text-cyan-600 transition-colors"
+          >
             StarterSpark
           </Link>
           <span className="text-slate-300">/</span>
-          <Link href="/admin" className="font-mono text-sm font-semibold text-slate-900 hover:text-slate-600 transition-colors">
+          <Link
+            href="/admin"
+            className="font-mono text-sm font-semibold text-slate-900 hover:text-slate-600 transition-colors"
+          >
             Admin
           </Link>
         </div>
-        <Button asChild variant="ghost" size="icon" className="h-8 w-8" title="Back to site">
+        <Button
+          asChild
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          title="Back to site"
+        >
           <Link href="/" aria-label="Back to site">
             <ChevronLeft className="h-4 w-4" />
           </Link>
@@ -75,17 +87,18 @@ export function AdminSidebar({ user }: AdminSidebarProps) {
       <ScrollArea className="flex-1 px-3 py-4">
         <nav className="space-y-1">
           {navItems.map((item) => {
-            const isActive = pathname === item.href ||
-              (item.href !== "/admin" && pathname.startsWith(item.href))
+            const isActive =
+              pathname === item.href ||
+              (item.href !== '/admin' && pathname.startsWith(item.href))
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex items-center gap-3 rounded px-3 py-2 text-sm transition-colors",
+                  'flex items-center gap-3 rounded px-3 py-2 text-sm transition-colors',
                   isActive
-                    ? "bg-cyan-50 text-cyan-700 font-medium"
-                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                    ? 'bg-cyan-50 text-cyan-700 font-medium'
+                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900',
                 )}
               >
                 <item.icon className="h-4 w-4" />

@@ -1,9 +1,9 @@
-"use client"
+'use client'
 
-import { useSearchParams, usePathname } from "next/navigation"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { BookOpen, Wrench, Trophy } from "lucide-react"
-import { useCallback, useState } from "react"
+import { useSearchParams, usePathname } from 'next/navigation'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { BookOpen, Wrench, Trophy } from 'lucide-react'
+import { useCallback, useState } from 'react'
 
 interface WorkshopTabsProps {
   coursesContent: React.ReactNode
@@ -22,24 +22,24 @@ export function WorkshopTabs({
 
   // Use local state for instant tab switching
   const [activeTab, setActiveTab] = useState(
-    () => new URLSearchParams(search).get("tab") || "courses"
+    () => new URLSearchParams(search).get('tab') || 'courses',
   )
 
   const handleTabChange = useCallback(
     (value: string) => {
       setActiveTab(value)
       const params = new URLSearchParams(search)
-      params.set("tab", value)
-      if (value !== "courses") {
-        params.delete("difficulty")
+      params.set('tab', value)
+      if (value !== 'courses') {
+        params.delete('difficulty')
       }
       const nextSearch = params.toString()
       if (nextSearch === search) return
 
       const newUrl = nextSearch ? `${pathname}?${nextSearch}` : pathname
-      window.history.replaceState(null, "", newUrl)
+      window.history.replaceState(null, '', newUrl)
     },
-    [pathname, search]
+    [pathname, search],
   )
 
   return (

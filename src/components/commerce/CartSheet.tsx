@@ -1,16 +1,17 @@
-"use client"
+'use client'
 
-import { Button } from "@/components/ui/button"
+import { Button } from '@/components/ui/button'
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
   SheetFooter,
-} from "@/components/ui/sheet"
-import { useCartStore, selectCartTotal, selectCartCount } from "@/store/cart"
-import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react"
-import Link from "next/link"
+} from '@/components/ui/sheet'
+import { useCartStore, selectCartTotal, selectCartCount } from '@/store/cart'
+import { Minus, Plus, Trash2, ShoppingBag } from 'lucide-react'
+import Link from 'next/link'
+import { QuantityButton } from '@/components/commerce/QuantityButton'
 
 export function CartSheet() {
   const items = useCartStore((state) => state.items)
@@ -72,7 +73,9 @@ export function CartSheet() {
 
                     {/* Quantity Controls */}
                     <div className="flex items-center gap-2 mt-2">
-                      <button
+                      <QuantityButton
+                        size="sm"
+                        tone={item.quantity === 1 ? 'danger' : 'neutral'}
                         onClick={() => {
                           if (item.quantity === 1) {
                             removeItem(item.slug)
@@ -80,38 +83,30 @@ export function CartSheet() {
                             updateQuantity(item.slug, item.quantity - 1)
                           }
                         }}
-                        className={`cursor-pointer w-7 h-7 rounded border flex items-center justify-center transition-colors ${
+                        aria-label={
                           item.quantity === 1
-                            ? "border-red-200 hover:border-red-300 hover:bg-red-50"
-                            : "border-slate-200 hover:border-slate-300"
-                        }`}
-                        aria-label={item.quantity === 1 ? "Remove item" : "Decrease quantity"}
+                            ? 'Remove item'
+                            : 'Decrease quantity'
+                        }
                       >
                         {item.quantity === 1 ? (
                           <Trash2 className="w-3 h-3 text-red-500" />
                         ) : (
                           <Minus className="w-3 h-3 text-slate-600" />
                         )}
-                      </button>
+                      </QuantityButton>
                       <span className="w-8 text-center font-mono text-sm">
                         {item.quantity}
                       </span>
-                      <button
-                        onClick={() =>
-                          { updateQuantity(item.slug, item.quantity + 1); }
-                        }
-                        className="cursor-pointer w-7 h-7 rounded border border-slate-200 flex items-center justify-center hover:border-slate-300 transition-colors"
+                      <QuantityButton
+                        size="sm"
+                        onClick={() => {
+                          updateQuantity(item.slug, item.quantity + 1)
+                        }}
                         aria-label="Increase quantity"
                       >
                         <Plus className="w-3 h-3 text-slate-600" />
-                      </button>
-                      <button
-                        onClick={() => { removeItem(item.slug); }}
-                        className="cursor-pointer ml-auto p-1.5 text-slate-500 hover:text-red-600 transition-colors"
-                        aria-label="Remove item"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      </QuantityButton>
                     </div>
                   </div>
                 </div>

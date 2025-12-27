@@ -1,19 +1,23 @@
-"use client"
+'use client'
 
-import { useEffect, useState, useSyncExternalStore } from "react"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
+import { useEffect, useState, useSyncExternalStore } from 'react'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Menu, X, ShoppingCart, ChevronDown, Lock } from "lucide-react"
-import { useCartStore, selectCartCount } from "@/store/cart"
-import { documentationNav, communityNav, type NavItem } from "@/config/navigation"
-import { cn } from "@/lib/utils"
-import { UserMenu } from "./UserMenu"
+} from '@/components/ui/dropdown-menu'
+import { Menu, X, ShoppingCart, ChevronDown, Lock } from 'lucide-react'
+import { useCartStore, selectCartCount } from '@/store/cart'
+import {
+  documentationNav,
+  communityNav,
+  type NavItem,
+} from '@/config/navigation'
+import { cn } from '@/lib/utils'
+import { UserMenu } from './UserMenu'
 
 interface HeaderUser {
   id: string
@@ -27,6 +31,34 @@ interface HeaderUser {
 const hydrationListeners = new Set<() => void>()
 let hasHydrated = false
 
+const dropdownTriggerClass =
+  'font-mono text-sm text-slate-600 hover:text-cyan-700 bg-transparent hover:bg-slate-100 data-[state=open]:bg-slate-100 px-4 py-2 rounded-md transition-colors inline-flex items-center gap-1 outline-none'
+const navLinkClass =
+  'font-mono text-sm text-slate-600 hover:text-cyan-700 px-4 py-2 rounded-md hover:bg-slate-100 transition-colors inline-flex items-center'
+const cartButtonClass =
+  'relative text-slate-600 hover:text-cyan-700 hover:bg-slate-100'
+const desktopShopLinkClass =
+  'inline-flex items-center justify-center h-9 px-4 py-2 rounded-md bg-cyan-700 hover:bg-cyan-600 text-white font-mono text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-700 focus-visible:ring-offset-2'
+const mobileMenuButtonClass =
+  'p-2 text-slate-600 hover:text-cyan-700 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-700 focus-visible:ring-offset-2'
+const mobileShopLinkClass =
+  'block w-full text-center py-2.5 px-4 rounded-md bg-cyan-700 hover:bg-cyan-600 text-white font-mono text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-700 focus-visible:ring-offset-2'
+const mobileNavLinkClass =
+  'block py-3 font-mono text-sm text-slate-700 hover:text-cyan-700 transition-colors'
+const dropdownItemLinkClass =
+  'flex items-start gap-3 rounded-md p-3 hover:bg-slate-50 transition-colors group w-full'
+const dropdownIconWrapClass =
+  'flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-slate-100 group-hover:bg-cyan-100 transition-colors'
+const dropdownIconClass =
+  'h-4 w-4 text-slate-600 group-hover:text-cyan-700 transition-colors'
+const dropdownTitleClass =
+  'font-medium text-slate-900 group-hover:text-cyan-700 transition-colors text-sm'
+const dropdownDescriptionClass = 'text-xs text-slate-500 mt-0.5 leading-relaxed'
+const mobileSectionButtonClass =
+  'flex w-full items-center justify-between py-3 font-mono text-sm text-slate-700 hover:text-cyan-700 transition-colors'
+const mobileSectionLinkClass =
+  'flex items-center gap-3 rounded-md p-2 text-sm text-slate-600 hover:text-cyan-700 hover:bg-slate-50 transition-colors'
+
 function notifyHydration() {
   if (hasHydrated) return
   hasHydrated = true
@@ -37,14 +69,16 @@ function notifyHydration() {
 
 function subscribeHydration(listener: () => void) {
   hydrationListeners.add(listener)
-  return () => { hydrationListeners.delete(listener); }
+  return () => {
+    hydrationListeners.delete(listener)
+  }
 }
 
 function useHydrated() {
   const isHydrated = useSyncExternalStore(
     subscribeHydration,
     () => hasHydrated,
-    () => false
+    () => false,
   )
 
   useEffect(() => {
@@ -54,7 +88,13 @@ function useHydrated() {
   return isHydrated
 }
 
-function NavDropdownItem({ item, onSelect }: { item: NavItem; onSelect?: () => void }) {
+function NavDropdownItem({
+  item,
+  onSelect,
+}: {
+  item: NavItem
+  onSelect?: () => void
+}) {
   const Icon = item.icon
 
   return (
@@ -62,26 +102,20 @@ function NavDropdownItem({ item, onSelect }: { item: NavItem; onSelect?: () => v
       <Link
         href={item.href}
         onClick={onSelect}
-        className="flex items-start gap-3 rounded-md p-3 hover:bg-slate-50 transition-colors group w-full"
+        className={dropdownItemLinkClass}
       >
         {Icon && (
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-slate-100 group-hover:bg-cyan-100 transition-colors">
-            <Icon className="h-4 w-4 text-slate-600 group-hover:text-cyan-700 transition-colors" />
+          <div className={dropdownIconWrapClass}>
+            <Icon className={dropdownIconClass} />
           </div>
         )}
         <div className="flex-1">
           <div className="flex items-center gap-1.5">
-            <span className="font-medium text-slate-900 group-hover:text-cyan-700 transition-colors text-sm">
-              {item.title}
-            </span>
-            {item.requiresAuth && (
-              <Lock className="h-3 w-3 text-slate-400" />
-            )}
+            <span className={dropdownTitleClass}>{item.title}</span>
+            {item.requiresAuth && <Lock className="h-3 w-3 text-slate-400" />}
           </div>
           {item.description && (
-            <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
-              {item.description}
-            </p>
+            <p className={dropdownDescriptionClass}>{item.description}</p>
           )}
         </div>
       </Link>
@@ -108,21 +142,21 @@ function MobileNavSection({
       <button
         type="button"
         onClick={onToggle}
-        className="flex w-full items-center justify-between py-3 font-mono text-sm text-slate-700 hover:text-cyan-700 transition-colors"
+        className={mobileSectionButtonClass}
         aria-expanded={isOpen}
       >
         {title}
         <ChevronDown
           className={cn(
-            "h-4 w-4 transition-transform duration-200",
-            isOpen && "rotate-180"
+            'h-4 w-4 transition-transform duration-200',
+            isOpen && 'rotate-180',
           )}
         />
       </button>
       <div
         className={cn(
-          "overflow-hidden transition-all duration-200",
-          isOpen ? "max-h-96 pb-3" : "max-h-0"
+          'overflow-hidden transition-all duration-200',
+          isOpen ? 'max-h-96 pb-3' : 'max-h-0',
         )}
       >
         <div className="space-y-1 pl-2">
@@ -133,7 +167,7 @@ function MobileNavSection({
                 key={item.href + item.title}
                 href={item.href}
                 onClick={onNavigate}
-                className="flex items-center gap-3 rounded-md p-2 text-sm text-slate-600 hover:text-cyan-700 hover:bg-slate-50 transition-colors"
+                className={mobileSectionLinkClass}
               >
                 {Icon && <Icon className="h-4 w-4" />}
                 <span>{item.title}</span>
@@ -171,7 +205,7 @@ export function Header({ user }: HeaderProps) {
 
   return (
     <header
-      data-hydrated={isHydrated ? "true" : "false"}
+      data-hydrated={isHydrated ? 'true' : 'false'}
       className="sticky top-0 z-50 bg-slate-50/95 backdrop-blur-sm border-b border-slate-200"
     >
       <div className="max-w-7xl mx-auto px-6 lg:px-20">
@@ -190,11 +224,14 @@ export function Header({ user }: HeaderProps) {
           <nav className="hidden md:flex items-center gap-1">
             {/* Documentation Dropdown */}
             <DropdownMenu modal={false}>
-              <DropdownMenuTrigger className="font-mono text-sm text-slate-600 hover:text-cyan-700 bg-transparent hover:bg-slate-100 data-[state=open]:bg-slate-100 px-4 py-2 rounded-md transition-colors inline-flex items-center gap-1 outline-none">
+              <DropdownMenuTrigger className={dropdownTriggerClass}>
                 {documentationNav.title}
                 <ChevronDown className="h-4 w-4 transition-transform duration-200 [[data-state=open]>&]:rotate-180" />
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-[320px] bg-white border border-slate-200 shadow-lg p-1">
+              <DropdownMenuContent
+                align="start"
+                className="w-[320px] bg-white border border-slate-200 shadow-lg p-1"
+              >
                 {documentationNav.items.map((item) => (
                   <NavDropdownItem key={item.href + item.title} item={item} />
                 ))}
@@ -203,11 +240,14 @@ export function Header({ user }: HeaderProps) {
 
             {/* Community Dropdown */}
             <DropdownMenu modal={false}>
-              <DropdownMenuTrigger className="font-mono text-sm text-slate-600 hover:text-cyan-700 bg-transparent hover:bg-slate-100 data-[state=open]:bg-slate-100 px-4 py-2 rounded-md transition-colors inline-flex items-center gap-1 outline-none">
+              <DropdownMenuTrigger className={dropdownTriggerClass}>
                 {communityNav.title}
                 <ChevronDown className="h-4 w-4 transition-transform duration-200 [[data-state=open]>&]:rotate-180" />
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-[280px] bg-white border border-slate-200 shadow-lg p-1">
+              <DropdownMenuContent
+                align="start"
+                className="w-[280px] bg-white border border-slate-200 shadow-lg p-1"
+              >
                 {communityNav.items.map((item) => (
                   <NavDropdownItem key={item.href + item.title} item={item} />
                 ))}
@@ -217,7 +257,7 @@ export function Header({ user }: HeaderProps) {
             {/* Workshop Link (no dropdown) */}
             <Link
               href="/workshop"
-              className="font-mono text-sm text-slate-600 hover:text-cyan-700 px-4 py-2 rounded-md hover:bg-slate-100 transition-colors inline-flex items-center"
+              className={navLinkClass}
             >
               Workshop
             </Link>
@@ -228,8 +268,8 @@ export function Header({ user }: HeaderProps) {
             <Button
               variant="ghost"
               size="icon"
-              className="relative text-slate-600 hover:text-cyan-700 hover:bg-slate-100"
-              aria-label={`Shopping cart${cartCount > 0 ? `, ${cartCount} item${cartCount === 1 ? "" : "s"}` : ""}`}
+              className={cartButtonClass}
+              aria-label={`Shopping cart${cartCount > 0 ? `, ${cartCount} item${cartCount === 1 ? '' : 's'}` : ''}`}
               onClick={openCart}
             >
               <ShoppingCart className="w-5 h-5" />
@@ -238,13 +278,13 @@ export function Header({ user }: HeaderProps) {
                   aria-hidden="true"
                   className="absolute -top-1 -right-1 w-5 h-5 bg-cyan-700 text-white text-xs font-mono rounded-full flex items-center justify-center"
                 >
-                  {cartCount > 9 ? "9+" : cartCount}
+                  {cartCount > 9 ? '9+' : cartCount}
                 </span>
               )}
             </Button>
             <Link
               href="/shop"
-              className="inline-flex items-center justify-center h-9 px-4 py-2 rounded-md bg-cyan-700 hover:bg-cyan-600 text-white font-mono text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-700 focus-visible:ring-offset-2"
+              className={desktopShopLinkClass}
             >
               Shop Kits
             </Link>
@@ -257,8 +297,8 @@ export function Header({ user }: HeaderProps) {
             <Button
               variant="ghost"
               size="icon"
-              className="relative text-slate-600 hover:text-cyan-700 hover:bg-slate-100"
-              aria-label={`Shopping cart${cartCount > 0 ? `, ${cartCount} item${cartCount === 1 ? "" : "s"}` : ""}`}
+              className={cartButtonClass}
+              aria-label={`Shopping cart${cartCount > 0 ? `, ${cartCount} item${cartCount === 1 ? '' : 's'}` : ''}`}
               onClick={openCart}
             >
               <ShoppingCart className="w-5 h-5" />
@@ -267,14 +307,16 @@ export function Header({ user }: HeaderProps) {
                   aria-hidden="true"
                   className="absolute -top-1 -right-1 w-5 h-5 bg-cyan-700 text-white text-xs font-mono rounded-full flex items-center justify-center"
                 >
-                  {cartCount > 9 ? "9+" : cartCount}
+                  {cartCount > 9 ? '9+' : cartCount}
                 </span>
               )}
             </Button>
             <button
               type="button"
-              className="p-2 text-slate-600 hover:text-cyan-700 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-700 focus-visible:ring-offset-2"
-              onClick={() => { setMobileMenuOpen(!mobileMenuOpen); }}
+              className={mobileMenuButtonClass}
+              onClick={() => {
+                setMobileMenuOpen(!mobileMenuOpen)
+              }}
               aria-label="Toggle menu"
               aria-expanded={mobileMenuOpen}
               aria-controls="mobile-menu"
@@ -300,15 +342,19 @@ export function Header({ user }: HeaderProps) {
             <MobileNavSection
               title={documentationNav.title}
               items={documentationNav.items}
-              isOpen={openSection === "documentation"}
-              onToggle={() => { toggleSection("documentation"); }}
+              isOpen={openSection === 'documentation'}
+              onToggle={() => {
+                toggleSection('documentation')
+              }}
               onNavigate={closeMobileMenu}
             />
             <MobileNavSection
               title={communityNav.title}
               items={communityNav.items}
-              isOpen={openSection === "community"}
-              onToggle={() => { toggleSection("community"); }}
+              isOpen={openSection === 'community'}
+              onToggle={() => {
+                toggleSection('community')
+              }}
               onNavigate={closeMobileMenu}
             />
 
@@ -316,14 +362,14 @@ export function Header({ user }: HeaderProps) {
             <div className="pt-3 space-y-2">
               <Link
                 href="/workshop"
-                className="block py-3 font-mono text-sm text-slate-700 hover:text-cyan-700 transition-colors"
+                className={mobileNavLinkClass}
                 onClick={closeMobileMenu}
               >
                 Workshop
               </Link>
               <Link
                 href="/shop"
-                className="block w-full text-center py-2.5 px-4 rounded-md bg-cyan-700 hover:bg-cyan-600 text-white font-mono text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-700 focus-visible:ring-offset-2"
+                className={mobileShopLinkClass}
                 onClick={closeMobileMenu}
               >
                 Shop Kits

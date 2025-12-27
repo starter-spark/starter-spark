@@ -1,24 +1,46 @@
-import { Suspense } from "react"
-import { ContactForm } from "./ContactForm"
-import { Mail, Clock, MessageSquare, Github, Instagram, Youtube, Linkedin } from "lucide-react"
-import Link from "next/link"
-import type { Metadata } from "next"
+import { Suspense } from 'react'
+import { ContactForm } from './ContactForm'
+import {
+  Mail,
+  Clock,
+  MessageSquare,
+  Github,
+  Instagram,
+  Youtube,
+  Linkedin,
+} from 'lucide-react'
+import Link from 'next/link'
+import type { Metadata } from 'next'
+import { LoadingBlock } from '@/components/loading'
 
 export const metadata: Metadata = {
-  title: "Contact Us",
+  title: 'Contact Us',
   description:
     "Get in touch with the StarterSpark team. We're here to help with technical support, educator inquiries, partnerships, and more.",
   openGraph: {
-    title: "Contact Us | StarterSpark",
-    description: "Get in touch with the StarterSpark team for support, inquiries, and partnerships.",
+    title: 'Contact Us | StarterSpark',
+    description:
+      'Get in touch with the StarterSpark team for support, inquiries, and partnerships.',
   },
 }
 
 const SOCIAL_LINKS = [
-  { icon: Github, href: "https://github.com/starterspark", label: "GitHub" },
-  { icon: Instagram, href: "https://instagram.com/starterspark", label: "Instagram" },
-  { icon: Youtube, href: "https://youtube.com/@starterspark", label: "YouTube" },
-  { icon: Linkedin, href: "https://linkedin.com/company/starterspark", label: "LinkedIn" },
+  { icon: Github, href: 'https://github.com/starterspark', label: 'GitHub' },
+  {
+    icon: Instagram,
+    href: 'https://instagram.com/starterspark',
+    label: 'Instagram',
+  },
+  {
+    icon: Youtube,
+    href: 'https://youtube.com/@starterspark',
+    label: 'YouTube',
+  },
+  {
+    icon: Linkedin,
+    href: 'https://linkedin.com/company/starterspark',
+    label: 'LinkedIn',
+  },
 ]
 
 function ContactFormSkeleton() {
@@ -26,23 +48,23 @@ function ContactFormSkeleton() {
     <div className="bg-white border border-slate-200 rounded-lg p-6 md:p-8 space-y-6 animate-pulse">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">
-          <div className="h-4 w-16 bg-slate-200 rounded" />
-          <div className="h-10 bg-slate-100 rounded" />
+          <LoadingBlock className="h-4 w-16 rounded animate-none" tone="strong" />
+          <LoadingBlock className="h-10 rounded animate-none" tone="soft" />
         </div>
         <div className="space-y-2">
-          <div className="h-4 w-16 bg-slate-200 rounded" />
-          <div className="h-10 bg-slate-100 rounded" />
+          <LoadingBlock className="h-4 w-16 rounded animate-none" tone="strong" />
+          <LoadingBlock className="h-10 rounded animate-none" tone="soft" />
         </div>
       </div>
       <div className="space-y-2">
-        <div className="h-4 w-20 bg-slate-200 rounded" />
-        <div className="h-10 bg-slate-100 rounded" />
+        <LoadingBlock className="h-4 w-20 rounded animate-none" tone="strong" />
+        <LoadingBlock className="h-10 rounded animate-none" tone="soft" />
       </div>
       <div className="space-y-2">
-        <div className="h-4 w-20 bg-slate-200 rounded" />
-        <div className="h-32 bg-slate-100 rounded" />
+        <LoadingBlock className="h-4 w-20 rounded animate-none" tone="strong" />
+        <LoadingBlock className="h-32 rounded animate-none" tone="soft" />
       </div>
-      <div className="h-10 w-32 bg-slate-200 rounded" />
+      <LoadingBlock className="h-10 w-32 rounded animate-none" tone="strong" />
     </div>
   )
 }
@@ -60,8 +82,9 @@ export default function ContactPage() {
             Get in Touch
           </h1>
           <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-            Have a question, feedback, or want to collaborate? We&apos;d love to hear from you.
-            Fill out the form below and we&apos;ll get back to you as soon as possible.
+            Have a question, feedback, or want to collaborate? We&apos;d love to
+            hear from you. Fill out the form below and we&apos;ll get back to
+            you as soon as possible.
           </p>
         </div>
       </section>
@@ -106,7 +129,9 @@ export default function ContactPage() {
                       <Clock className="w-5 h-5 text-cyan-700" />
                     </div>
                     <div>
-                      <p className="font-medium text-slate-900">Response Time</p>
+                      <p className="font-medium text-slate-900">
+                        Response Time
+                      </p>
                       <p className="text-sm text-slate-600">
                         We typically respond within 24-48 hours
                       </p>
@@ -157,7 +182,8 @@ export default function ContactPage() {
                   Need Technical Help?
                 </h2>
                 <p className="text-sm text-slate-600 mb-4">
-                  Check our troubleshooting guide for common issues and solutions.
+                  Check our troubleshooting guide for common issues and
+                  solutions.
                 </p>
                 <Link
                   href="/support"

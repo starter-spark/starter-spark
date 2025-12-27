@@ -1,17 +1,38 @@
-"use client"
+'use client'
 
-import { useState, useTransition, type ChangeEvent } from "react"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ArrowLeft, Save, Eye, CheckCircle, Loader2, EyeOff, Trash2 } from "lucide-react"
-import Link from "next/link"
-import ReactMarkdown from "react-markdown"
-import { updatePageContent, unpublishPageContent, deleteCustomPage } from "../actions"
-import { isExternalHref, sanitizeMarkdownUrl, safeMarkdownUrlTransform } from "@/lib/safe-url"
+import { useState, useTransition, type ChangeEvent } from 'react'
+import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import {
+  ArrowLeft,
+  Save,
+  Eye,
+  CheckCircle,
+  Loader2,
+  EyeOff,
+  Trash2,
+} from 'lucide-react'
+import Link from 'next/link'
+import {
+  updatePageContent,
+  unpublishPageContent,
+  deleteCustomPage,
+} from '../actions'
+import { MarkdownPreview } from '@/components/markdown/MarkdownPreview'
+import {
+  AdminTextArea,
+  adminLabelClass,
+} from '@/components/admin/form-controls'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,7 +42,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+} from '@/components/ui/alert-dialog'
 
 interface PageContent {
   id: string
@@ -41,30 +62,33 @@ interface ContentEditorProps {
   page: PageContent
 }
 
-// Map page_key to actual live URL
-// About page sections don't have their own URLs - they appear on /about
+// Page URL map (about sections render on /about)
 const PAGE_URL_MAP: Record<string, { url: string; label: string } | null> = {
-  privacy: { url: "/privacy", label: "This page is live at" },
-  terms: { url: "/terms", label: "This page is live at" },
-  about_hero: { url: "/about", label: "This content appears on" },
-  about_story: { url: "/about", label: "This content appears on" },
+  privacy: { url: '/privacy', label: 'This page is live at' },
+  terms: { url: '/terms', label: 'This page is live at' },
+  about_hero: { url: '/about', label: 'This content appears on' },
+  about_story: { url: '/about', label: 'This content appears on' },
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null
+  return typeof value === 'object' && value !== null
 }
 
-function parseAboutHeroContent(rawContent: string): { headline: string; description: string } {
+function parseAboutHeroContent(rawContent: string): {
+  headline: string
+  description: string
+} {
   try {
     const parsed: unknown = JSON.parse(rawContent)
-    if (!isRecord(parsed)) return { headline: "", description: "" }
+    if (!isRecord(parsed)) return { headline: '', description: '' }
 
     return {
-      headline: typeof parsed.headline === "string" ? parsed.headline : "",
-      description: typeof parsed.description === "string" ? parsed.description : "",
+      headline: typeof parsed.headline === 'string' ? parsed.headline : '',
+      description:
+        typeof parsed.description === 'string' ? parsed.description : '',
     }
   } catch {
-    return { headline: "", description: "" }
+    return { headline: '', description: '' }
   }
 }
 
@@ -76,7 +100,7 @@ export function ContentEditor({ page }: ContentEditorProps) {
 
   const [title, setTitle] = useState(page.title)
   const [content, setContent] = useState(page.content)
-  const [activeTab, setActiveTab] = useState<string>("edit")
+  const [activeTab, setActiveTab] = useState<string>('edit')
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [showUnpublishDialog, setShowUnpublishDialog] = useState(false)
 
@@ -84,10 +108,16 @@ export function ContentEditor({ page }: ContentEditorProps) {
   const isCustomPage = page.is_custom_page === true
 
   // Parse about_hero JSON content for structured editing
-  const isAboutHero = page.page_key === "about_hero"
-  const aboutHeroInitial = isAboutHero ? parseAboutHeroContent(page.content) : null
-  const [heroHeadline, setHeroHeadline] = useState<string>(aboutHeroInitial?.headline ?? "")
-  const [heroDescription, setHeroDescription] = useState<string>(aboutHeroInitial?.description ?? "")
+  const isAboutHero = page.page_key === 'about_hero'
+  const aboutHeroInitial = isAboutHero
+    ? parseAboutHeroContent(page.content)
+    : null
+  const [heroHeadline, setHeroHeadline] = useState<string>(
+    aboutHeroInitial?.headline ?? '',
+  )
+  const [heroDescription, setHeroDescription] = useState<string>(
+    aboutHeroInitial?.description ?? '',
+  )
 
   // Update content when hero fields change
   const updateHeroContent = (headline: string, description: string) => {
@@ -110,7 +140,11 @@ export function ContentEditor({ page }: ContentEditorProps) {
       if (result.error) {
         setError(result.error)
       } else {
-        setSuccess(publish ? "Page published successfully!" : "Draft saved successfully!")
+        setSuccess(
+          publish
+            ? 'Page published successfully!'
+            : 'Draft saved successfully!',
+        )
         router.refresh()
       }
     })
@@ -127,7 +161,7 @@ export function ContentEditor({ page }: ContentEditorProps) {
       if (result.error) {
         setError(result.error)
       } else {
-        setSuccess("Page unpublished successfully!")
+        setSuccess('Page unpublished successfully!')
         router.refresh()
       }
     })
@@ -144,7 +178,7 @@ export function ContentEditor({ page }: ContentEditorProps) {
       if (result.error) {
         setError(result.error)
       } else {
-        router.push("/admin/content")
+        router.push('/admin/content')
       }
     })
   }
@@ -152,7 +186,7 @@ export function ContentEditor({ page }: ContentEditorProps) {
   // Get the live URL for this page
   const getLiveUrl = (): { url: string; label: string } | null => {
     if (isCustomPage && page.slug) {
-      return { url: `/p/${page.slug}`, label: "This page is live at" }
+      return { url: `/p/${page.slug}`, label: 'This page is live at' }
     }
     return PAGE_URL_MAP[page.page_key] || null
   }
@@ -171,12 +205,14 @@ export function ContentEditor({ page }: ContentEditorProps) {
             </Link>
           </Button>
           <div>
-            <h1 className="text-2xl font-mono text-slate-900">Edit {page.title}</h1>
+            <h1 className="text-2xl font-mono text-slate-900">
+              Edit {page.title}
+            </h1>
             <p className="text-sm text-slate-500">
-              Version {page.version || 1} &bull;{" "}
+              Version {page.version || 1} &bull;{' '}
               {page.updated_at
                 ? `Last updated ${new Date(page.updated_at).toLocaleDateString()}`
-                : "Never updated"}
+                : 'Never updated'}
             </p>
           </div>
         </div>
@@ -184,8 +220,8 @@ export function ContentEditor({ page }: ContentEditorProps) {
           variant="outline"
           className={
             isPublished
-              ? "bg-green-50 text-green-700 border-green-200"
-              : "bg-amber-50 text-amber-700 border-amber-200"
+              ? 'bg-green-50 text-green-700 border-green-200'
+              : 'bg-amber-50 text-amber-700 border-amber-200'
           }
         >
           {isPublished ? (
@@ -194,7 +230,7 @@ export function ContentEditor({ page }: ContentEditorProps) {
               Published
             </>
           ) : (
-            "Draft"
+            'Draft'
           )}
         </Badge>
       </div>
@@ -214,23 +250,30 @@ export function ContentEditor({ page }: ContentEditorProps) {
       {/* Editor */}
       <Card className="bg-white border-slate-200">
         <CardHeader>
-          <CardTitle>{isAboutHero ? "About Page Hero" : "Page Content"}</CardTitle>
+          <CardTitle>
+            {isAboutHero ? 'About Page Hero' : 'Page Content'}
+          </CardTitle>
           <CardDescription>
             {isAboutHero
-              ? "Edit the headline and description that appear at the top of the About page."
-              : "Edit the content using Markdown. Use the Preview tab to see how it will look."}
+              ? 'Edit the headline and description that appear at the top of the About page.'
+              : 'Edit the content using Markdown. Use the Preview tab to see how it will look.'}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Title */}
           <div className="space-y-2">
-            <label htmlFor="title" className="text-sm font-medium text-slate-900">
+            <label
+              htmlFor="title"
+              className={adminLabelClass}
+            >
               Page Title
             </label>
             <Input
               id="title"
               value={title}
-              onChange={(e) => { setTitle(e.target.value); }}
+              onChange={(e) => {
+                setTitle(e.target.value)
+              }}
               placeholder="Enter page title"
             />
           </div>
@@ -239,11 +282,15 @@ export function ContentEditor({ page }: ContentEditorProps) {
           {isAboutHero ? (
             <div className="space-y-4">
               <div className="space-y-2">
-                <label htmlFor="hero-headline" className="text-sm font-medium text-slate-900">
+                <label
+                  htmlFor="hero-headline"
+                  className={adminLabelClass}
+                >
                   Headline
                 </label>
                 <p className="text-xs text-slate-500">
-                  Use a colon (:) to split the headline. Text after the colon will be highlighted in cyan.
+                  Use a colon (:) to split the headline. Text after the colon
+                  will be highlighted in cyan.
                   <br />
                   Example: &quot;Our Mission: Ignite STEM Curiosity&quot;
                 </p>
@@ -258,41 +305,53 @@ export function ContentEditor({ page }: ContentEditorProps) {
                 />
               </div>
               <div className="space-y-2">
-                <label htmlFor="hero-description" className="text-sm font-medium text-slate-900">
+                <label
+                  htmlFor="hero-description"
+                  className={adminLabelClass}
+                >
                   Description
                 </label>
-                <textarea
+                <AdminTextArea
                   id="hero-description"
                   value={heroDescription}
                   onChange={(e: ChangeEvent<HTMLTextAreaElement>) => {
                     setHeroDescription(e.target.value)
                     updateHeroContent(heroHeadline, e.target.value)
                   }}
-                  className="w-full h-32 font-mono text-sm p-4 border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-700 focus:ring-offset-2"
+                  className="h-32 font-mono p-4"
                   placeholder="Enter a brief description of your mission..."
                 />
               </div>
               {/* Preview */}
               <div className="p-6 bg-slate-50 rounded border border-slate-200">
                 <p className="text-xs text-slate-500 mb-4">Preview:</p>
-                <p className="text-sm font-mono text-cyan-700 mb-2">Our Mission</p>
+                <p className="text-sm font-mono text-cyan-700 mb-2">
+                  Our Mission
+                </p>
                 <h1 className="font-mono text-2xl font-bold text-slate-900 mb-4">
-                  {heroHeadline.includes(":") ? (
+                  {heroHeadline.includes(':') ? (
                     <>
-                      {heroHeadline.split(":")[0]}:
-                      <span className="text-cyan-700"> {heroHeadline.split(":").slice(1).join(":").trim()}</span>
+                      {heroHeadline.split(':')[0]}:
+                      <span className="text-cyan-700">
+                        {' '}
+                        {heroHeadline.split(':').slice(1).join(':').trim()}
+                      </span>
                     </>
                   ) : (
-                    heroHeadline || "Your headline here"
+                    heroHeadline || 'Your headline here'
                   )}
                 </h1>
-                <p className="text-slate-600">{heroDescription || "Your description here"}</p>
+                <p className="text-slate-600">
+                  {heroDescription || 'Your description here'}
+                </p>
               </div>
             </div>
           ) : (
             /* Content Editor with Tabs for markdown pages */
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-900">Content (Markdown)</label>
+              <label className={adminLabelClass}>
+                Content (Markdown)
+              </label>
               <Tabs value={activeTab} onValueChange={setActiveTab}>
                 <TabsList>
                   <TabsTrigger value="edit">Edit</TabsTrigger>
@@ -302,37 +361,18 @@ export function ContentEditor({ page }: ContentEditorProps) {
                   </TabsTrigger>
                 </TabsList>
                 <TabsContent value="edit" className="mt-2">
-                  <textarea
+                  <AdminTextArea
                     value={content}
-                    onChange={(e) => { setContent(e.target.value); }}
-                    className="w-full h-[500px] font-mono text-sm p-4 border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-700 focus:ring-offset-2"
+                    onChange={(e) => {
+                      setContent(e.target.value)
+                    }}
+                    className="h-[500px] font-mono p-4"
                     placeholder="Enter Markdown content..."
                   />
                 </TabsContent>
                 <TabsContent value="preview" className="mt-2">
                   <div className="w-full min-h-[500px] p-6 border border-slate-200 rounded-md bg-slate-50 prose prose-slate max-w-none">
-                    <ReactMarkdown
-                      urlTransform={safeMarkdownUrlTransform}
-                      components={{
-                        a: ({ href, children }) => {
-                          const safeHref = sanitizeMarkdownUrl(href, "href")
-                          if (!safeHref) return <span>{children}</span>
-                          const external = isExternalHref(safeHref)
-                          return (
-                            <a
-                              href={safeHref}
-                              target={external ? "_blank" : undefined}
-                              rel={external ? "noopener noreferrer" : undefined}
-                              className="text-cyan-700 hover:underline"
-                            >
-                              {children}
-                            </a>
-                          )
-                        },
-                      }}
-                    >
-                      {content}
-                    </ReactMarkdown>
+                    <MarkdownPreview content={content} />
                   </div>
                 </TabsContent>
               </Tabs>
@@ -344,12 +384,14 @@ export function ContentEditor({ page }: ContentEditorProps) {
       {/* Actions */}
       <div className="flex items-center justify-between">
         <div className="flex gap-2">
-          {/* Only custom pages can be unpublished - system pages must remain published */}
+          {/* Custom pages only (system pages stay published) */}
           {isPublished && isCustomPage && (
             <Button
               type="button"
               variant="outline"
-              onClick={() => { setShowUnpublishDialog(true); }}
+              onClick={() => {
+                setShowUnpublishDialog(true)
+              }}
               disabled={isPending}
               className="text-amber-600 border-amber-300 hover:bg-amber-50"
             >
@@ -361,7 +403,9 @@ export function ContentEditor({ page }: ContentEditorProps) {
             <Button
               type="button"
               variant="outline"
-              onClick={() => { setShowDeleteDialog(true); }}
+              onClick={() => {
+                setShowDeleteDialog(true)
+              }}
               disabled={isPending}
               className="text-red-600 border-red-300 hover:bg-red-50"
             >
@@ -374,7 +418,9 @@ export function ContentEditor({ page }: ContentEditorProps) {
           <Button
             type="button"
             variant="outline"
-            onClick={() => { handleSave(false); }}
+            onClick={() => {
+              handleSave(false)
+            }}
             disabled={isPending}
           >
             {isPending ? (
@@ -386,7 +432,9 @@ export function ContentEditor({ page }: ContentEditorProps) {
           </Button>
           <Button
             type="button"
-            onClick={() => { handleSave(true); }}
+            onClick={() => {
+              handleSave(true)
+            }}
             disabled={isPending}
             className="bg-cyan-700 hover:bg-cyan-600"
           >
@@ -395,7 +443,7 @@ export function ContentEditor({ page }: ContentEditorProps) {
             ) : (
               <CheckCircle className="h-4 w-4 mr-2" />
             )}
-            {isPublished ? "Update & Publish" : "Publish"}
+            {isPublished ? 'Update & Publish' : 'Publish'}
           </Button>
         </div>
       </div>
@@ -405,7 +453,7 @@ export function ContentEditor({ page }: ContentEditorProps) {
         <Card className="bg-slate-50 border-slate-200">
           <CardContent className="py-4">
             <p className="text-sm text-slate-600">
-              {liveUrlInfo.label}:{" "}
+              {liveUrlInfo.label}:{' '}
               <a
                 href={liveUrlInfo.url}
                 target="_blank"
@@ -425,7 +473,8 @@ export function ContentEditor({ page }: ContentEditorProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete this page?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. The page and all its content will be permanently deleted.
+              This action cannot be undone. The page and all its content will be
+              permanently deleted.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -441,12 +490,16 @@ export function ContentEditor({ page }: ContentEditorProps) {
       </AlertDialog>
 
       {/* Unpublish Confirmation Dialog */}
-      <AlertDialog open={showUnpublishDialog} onOpenChange={setShowUnpublishDialog}>
+      <AlertDialog
+        open={showUnpublishDialog}
+        onOpenChange={setShowUnpublishDialog}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Unpublish this page?</AlertDialogTitle>
             <AlertDialogDescription>
-              The page will no longer be visible to the public. You can republish it at any time.
+              The page will no longer be visible to the public. You can
+              republish it at any time.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

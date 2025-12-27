@@ -1,15 +1,15 @@
-import type { Edge, Node } from "@xyflow/react"
+import type { Edge, Node } from '@xyflow/react'
 
 export type VisualBlockType =
-  | "setup"
-  | "loop"
-  | "variable"
-  | "servo_attach"
-  | "servo_write"
-  | "delay"
-  | "digital_write"
-  | "analog_write"
-  | "serial_print"
+  | 'setup'
+  | 'loop'
+  | 'variable'
+  | 'servo_attach'
+  | 'servo_write'
+  | 'delay'
+  | 'digital_write'
+  | 'analog_write'
+  | 'serial_print'
 
 export interface VisualNodeData {
   blockType?: VisualBlockType
@@ -24,7 +24,7 @@ export interface FlowState {
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null
+  return typeof value === 'object' && value !== null
 }
 
 function isUnknownArray(value: unknown): value is unknown[] {
@@ -35,13 +35,13 @@ export function parseFlowState(value: unknown): FlowState {
   if (!isRecord(value)) return { nodes: [], edges: [] }
   const nodesRaw = value.nodes
   const edgesRaw = value.edges
-  const nodes: FlowState["nodes"] = []
-  const edges: FlowState["edges"] = []
+  const nodes: FlowState['nodes'] = []
+  const edges: FlowState['edges'] = []
 
   if (isUnknownArray(nodesRaw)) {
     for (const item of nodesRaw) {
       if (!isRecord(item)) continue
-      if (typeof item.id !== "string") continue
+      if (typeof item.id !== 'string') continue
       nodes.push(item as unknown as Node<VisualNodeData>)
     }
   }
@@ -49,8 +49,9 @@ export function parseFlowState(value: unknown): FlowState {
   if (isUnknownArray(edgesRaw)) {
     for (const item of edgesRaw) {
       if (!isRecord(item)) continue
-      if (typeof item.id !== "string") continue
-      if (typeof item.source !== "string" || typeof item.target !== "string") continue
+      if (typeof item.id !== 'string') continue
+      if (typeof item.source !== 'string' || typeof item.target !== 'string')
+        continue
       edges.push(item as unknown as Edge)
     }
   }
@@ -100,7 +101,10 @@ function topoSort(nodes: Node[], edges: Edge[]): string[] {
   return sorted
 }
 
-export function generateArduinoCode(nodes: Node<VisualNodeData>[], edges: Edge[]): string {
+export function generateArduinoCode(
+  nodes: Node<VisualNodeData>[],
+  edges: Edge[],
+): string {
   const orderedIds = topoSort(nodes, edges)
   const byId = new Map(nodes.map((n) => [n.id, n]))
 
@@ -118,15 +122,16 @@ export function generateArduinoCode(nodes: Node<VisualNodeData>[], edges: Edge[]
     const type = data.blockType
     const params: Record<string, unknown> = data.params ?? {}
 
-    if (!type || type === "setup" || type === "loop") continue
+    if (!type || type === 'setup' || type === 'loop') continue
 
-    if (type === "variable") {
-      const name = typeof params.name === "string" ? params.name : "value"
-      const varType = typeof params.varType === "string" ? params.varType : "int"
+    if (type === 'variable') {
+      const name = typeof params.name === 'string' ? params.name : 'value'
+      const varType =
+        typeof params.varType === 'string' ? params.varType : 'int'
       const value =
-        typeof params.value === "string" || typeof params.value === "number"
+        typeof params.value === 'string' || typeof params.value === 'number'
           ? String(params.value)
-          : "0"
+          : '0'
       if (!declaredVars.has(name)) {
         declaredVars.add(name)
         globals.push(`${varType} ${name} = ${value};`)
@@ -134,13 +139,14 @@ export function generateArduinoCode(nodes: Node<VisualNodeData>[], edges: Edge[]
       continue
     }
 
-    if (type === "servo_attach") {
-      const variable = typeof params.variable === "string" ? params.variable : "servo"
+    if (type === 'servo_attach') {
+      const variable =
+        typeof params.variable === 'string' ? params.variable : 'servo'
       const rawPin = params.pin
       const pin =
-        typeof rawPin === "number" && Number.isFinite(rawPin)
+        typeof rawPin === 'number' && Number.isFinite(rawPin)
           ? rawPin
-          : typeof rawPin === "string" && Number.isFinite(Number(rawPin))
+          : typeof rawPin === 'string' && Number.isFinite(Number(rawPin))
             ? Number(rawPin)
             : 9
       servoVars.add(variable)
@@ -148,75 +154,77 @@ export function generateArduinoCode(nodes: Node<VisualNodeData>[], edges: Edge[]
       continue
     }
 
-    if (type === "servo_write") {
-      const variable = typeof params.variable === "string" ? params.variable : "servo"
+    if (type === 'servo_write') {
+      const variable =
+        typeof params.variable === 'string' ? params.variable : 'servo'
       const rawAngle = params.angle
       const angle =
-        typeof rawAngle === "number" && Number.isFinite(rawAngle)
+        typeof rawAngle === 'number' && Number.isFinite(rawAngle)
           ? rawAngle
-          : typeof rawAngle === "string" && Number.isFinite(Number(rawAngle))
+          : typeof rawAngle === 'string' && Number.isFinite(Number(rawAngle))
             ? Number(rawAngle)
             : 90
       loopLines.push(`${variable}.write(${angle});`)
       continue
     }
 
-    if (type === "delay") {
+    if (type === 'delay') {
       const rawMs = params.ms
       const ms =
-        typeof rawMs === "number" && Number.isFinite(rawMs)
+        typeof rawMs === 'number' && Number.isFinite(rawMs)
           ? rawMs
-          : typeof rawMs === "string" && Number.isFinite(Number(rawMs))
+          : typeof rawMs === 'string' && Number.isFinite(Number(rawMs))
             ? Number(rawMs)
             : 500
       loopLines.push(`delay(${ms});`)
       continue
     }
 
-    if (type === "digital_write") {
+    if (type === 'digital_write') {
       const rawPin = params.pin
       const pin =
-        typeof rawPin === "number" && Number.isFinite(rawPin)
+        typeof rawPin === 'number' && Number.isFinite(rawPin)
           ? rawPin
-          : typeof rawPin === "string" && Number.isFinite(Number(rawPin))
+          : typeof rawPin === 'string' && Number.isFinite(Number(rawPin))
             ? Number(rawPin)
             : 13
-      const value = typeof params.value === "string" ? params.value : "HIGH"
+      const value = typeof params.value === 'string' ? params.value : 'HIGH'
       setupLines.push(`pinMode(${pin}, OUTPUT);`)
       loopLines.push(`digitalWrite(${pin}, ${value});`)
       continue
     }
 
-    if (type === "analog_write") {
+    if (type === 'analog_write') {
       const rawPin = params.pin
       const pin =
-        typeof rawPin === "number" && Number.isFinite(rawPin)
+        typeof rawPin === 'number' && Number.isFinite(rawPin)
           ? rawPin
-          : typeof rawPin === "string" && Number.isFinite(Number(rawPin))
+          : typeof rawPin === 'string' && Number.isFinite(Number(rawPin))
             ? Number(rawPin)
             : 9
       const rawValue = params.value
       const value =
-        typeof rawValue === "number" && Number.isFinite(rawValue)
+        typeof rawValue === 'number' && Number.isFinite(rawValue)
           ? rawValue
-          : typeof rawValue === "string" && Number.isFinite(Number(rawValue))
+          : typeof rawValue === 'string' && Number.isFinite(Number(rawValue))
             ? Number(rawValue)
             : 128
       loopLines.push(`analogWrite(${pin}, ${value});`)
       continue
     }
 
-    if (type === "serial_print") {
-      const message = typeof params.message === "string" ? params.message : "Hello"
-      setupLines.push("Serial.begin(9600);")
+    if (type === 'serial_print') {
+      const message =
+        typeof params.message === 'string' ? params.message : 'Hello'
+      setupLines.push('Serial.begin(9600);')
       loopLines.push(`Serial.println(${JSON.stringify(message)});`)
       continue
     }
   }
 
   const header: string[] = []
-  if (servoVars.size > 0) header.push("#include <Servo.h>")
-  if (header.length) header.push("")
+  if (servoVars.size > 0) header.push('#include <Servo.h>')
+  if (header.length) header.push('')
 
   for (const v of servoVars) {
     globals.unshift(`Servo ${v};`)
@@ -225,16 +233,16 @@ export function generateArduinoCode(nodes: Node<VisualNodeData>[], edges: Edge[]
   const body: string[] = []
   body.push(...header)
   if (globals.length) {
-    body.push(...globals, "")
+    body.push(...globals, '')
   }
 
-  body.push("void setup() {")
-  if (setupLines.length === 0) body.push("  // setup")
+  body.push('void setup() {')
+  if (setupLines.length === 0) body.push('  // setup')
   else body.push(...setupLines.map((l) => `  ${l}`))
-  body.push("}", "", "void loop() {")
-  if (loopLines.length === 0) body.push("  // loop")
+  body.push('}', '', 'void loop() {')
+  if (loopLines.length === 0) body.push('  // loop')
   else body.push(...loopLines.map((l) => `  ${l}`))
-  body.push("}", "")
+  body.push('}', '')
 
-  return body.join("\n")
+  return body.join('\n')
 }

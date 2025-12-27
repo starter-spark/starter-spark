@@ -1,22 +1,24 @@
-"use client"
+'use client'
 
-import { Button } from "@/components/ui/button"
-import { ArrowRight, ImageIcon, ZoomIn } from "lucide-react"
-import { motion } from "motion/react"
-import Link from "next/link"
-import { useMemo, useState, useCallback } from "react"
-import { ProductImage, ThumbnailImage } from "@/components/ui/optimized-image"
-import { cn } from "@/lib/utils"
-import { ProductImageLightbox } from "@/components/commerce/ProductImageLightbox"
+import { Button } from '@/components/ui/button'
+import { ArrowRight, ImageIcon, ZoomIn } from 'lucide-react'
+import { motion } from 'motion/react'
+import Link from 'next/link'
+import { useMemo, useState, useCallback } from 'react'
+import { ProductImage, ThumbnailImage } from '@/components/ui/optimized-image'
+import { cn } from '@/lib/utils'
+import { ProductImageLightbox } from '@/components/commerce/ProductImageLightbox'
+import { SectionIntro } from './SectionIntro'
+import { ctaPrimaryCompact } from './cta-classes'
 
 // Default specs shown when product.specs is not available
 const defaultSpecs = [
-  { label: "Microcontroller", value: "Arduino Nano (ATmega328P)" },
-  { label: "Servos", value: "2× SG90, 3× MG996R" },
-  { label: "Degrees of Freedom", value: "4 (Base, Shoulder, Elbow, Gripper)" },
-  { label: "Power", value: "4× AA Battery Pack" },
-  { label: "Build Time", value: "~3 hours" },
-  { label: "Skill Level", value: "Beginner friendly" },
+  { label: 'Microcontroller', value: 'Arduino Nano (ATmega328P)' },
+  { label: 'Servos', value: '2× SG90, 3× MG996R' },
+  { label: 'Degrees of Freedom', value: '4 (Base, Shoulder, Elbow, Gripper)' },
+  { label: 'Power', value: '4× AA Battery Pack' },
+  { label: 'Build Time', value: '~3 hours' },
+  { label: 'Skill Level', value: 'Beginner friendly' },
 ]
 
 interface ProductSpotlightProps {
@@ -59,48 +61,44 @@ export function ProductSpotlightSection({ product }: ProductSpotlightProps) {
   return (
     <section className="py-24 px-6 lg:px-20 bg-slate-50">
       <div className="max-w-7xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center mb-16"
-        >
-          <p className="text-sm font-mono text-cyan-700 mb-2">Featured Kit</p>
-          <h2 className="font-mono text-3xl lg:text-4xl text-slate-900">
-            {product.name}
-          </h2>
-        </motion.div>
+        <SectionIntro
+          eyebrow="Featured Kit"
+          title={product.name}
+          className="mb-16"
+        />
 
         <div className="flex flex-col lg:flex-row gap-12 items-center">
-          {/* Left - Image (60%) */}
+          {/* Left (60%) */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             className="w-full lg:w-3/5"
           >
-	            <div className="relative aspect-[4/3] bg-white rounded border border-slate-200 shadow-sm overflow-hidden">
-	              {hasImages && displayImageSrc ? (
-	                <button
-	                  type="button"
-	                  onClick={() => { setLightboxOpen(true); }}
-	                  className="absolute inset-0 cursor-zoom-in group"
-	                  aria-label="Open image viewer"
-	                >
-                    <ProductImage
-                      src={displayImageSrc}
-                      alt={`${product.name} - Image ${displayImageIndex + 1}`}
-                      sizes="(max-width: 1024px) 100vw, 800px"
-                      quality={95}
-                      wrapperClassName="absolute inset-0"
+            <div className="relative aspect-[4/3] bg-white rounded border border-slate-200 shadow-sm overflow-hidden">
+              {hasImages && displayImageSrc ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLightboxOpen(true)
+                  }}
+                  className="absolute inset-0 cursor-zoom-in group"
+                  aria-label="Open image viewer"
+                >
+                  <ProductImage
+                    src={displayImageSrc}
+                    alt={`${product.name} - Image ${displayImageIndex + 1}`}
+                    sizes="(max-width: 1024px) 100vw, 800px"
+                    quality={95}
+                    wrapperClassName="absolute inset-0"
                     fallback={
-                      <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
+                      <div className="absolute inset-0 flex items-center justify-center bg-slate-50">
                         <div className="text-center p-8">
                           <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
-                            <ImageIcon className="w-12 h-12 text-slate-400" />
+                            <ImageIcon className="w-12 h-12 text-slate-500" />
                           </div>
-                          <p className="text-slate-400 font-mono text-sm">
-                            Failed to load image
+                          <p className="text-slate-600 font-mono text-sm">
+                            Image unavailable
                           </p>
                         </div>
                       </div>
@@ -118,7 +116,7 @@ export function ProductSpotlightSection({ product }: ProductSpotlightProps) {
                   </div>
                 </button>
               ) : (
-                <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
+                <div className="absolute inset-0 flex items-center justify-center bg-slate-50">
                   <div className="text-center p-8">
                     <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-cyan-50 flex items-center justify-center">
                       <ImageIcon className="w-12 h-12 text-cyan-700" />
@@ -131,19 +129,21 @@ export function ProductSpotlightSection({ product }: ProductSpotlightProps) {
               )}
             </div>
 
-            {/* Thumbnail strip - only show if we have multiple images */}
+            {/* Thumbnails */}
             {images.length > 1 && (
               <div className="flex gap-2 mt-4 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {images.map((imageUrl, idx) => (
                   <button
                     key={imageUrl + idx}
                     type="button"
-                    onClick={() => { handleSelectImage(idx); }}
+                    onClick={() => {
+                      handleSelectImage(idx)
+                    }}
                     className={cn(
-                      "shrink-0 size-20 rounded border overflow-hidden transition-all cursor-pointer relative",
+                      'shrink-0 size-20 rounded border overflow-hidden transition-all cursor-pointer relative',
                       selectedImage === idx
-                        ? "border-cyan-700 ring-2 ring-cyan-700/20"
-                        : "border-slate-200 hover:border-slate-300"
+                        ? 'border-cyan-700 ring-2 ring-cyan-700/20'
+                        : 'border-slate-200 hover:border-slate-300',
                     )}
                     aria-label={`View image ${idx + 1}`}
                   >
@@ -158,17 +158,17 @@ export function ProductSpotlightSection({ product }: ProductSpotlightProps) {
               </div>
             )}
 
-	            <ProductImageLightbox
-	              open={lightboxOpen}
-	              onOpenChange={setLightboxOpen}
-	              images={images}
-	              productName={product.name}
-	              activeIndex={displayImageIndex}
-	              onActiveIndexChange={handleSelectImage}
-	            />
+            <ProductImageLightbox
+              open={lightboxOpen}
+              onOpenChange={setLightboxOpen}
+              images={images}
+              productName={product.name}
+              activeIndex={displayImageIndex}
+              onActiveIndexChange={handleSelectImage}
+            />
           </motion.div>
 
-          {/* Right - Content (40%) */}
+          {/* Right (40%) */}
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             whileInView={{ opacity: 1, x: 0 }}
@@ -185,14 +185,16 @@ export function ProductSpotlightSection({ product }: ProductSpotlightProps) {
               ) : (
                 <>
                   <p>
-                    Build a fully functional robotic arm from scratch. Learn mechanical
-                    assembly, electronics wiring, and Arduino programming—skills that
-                    transfer directly to real engineering projects.
+                    Build a fully functional robotic arm from scratch. Learn
+                    mechanical assembly, electronics wiring, and Arduino
+                    programming—skills that transfer directly to real
+                    engineering projects.
                   </p>
                   <p>
-                    Each kit includes everything you need: pre-cut acrylic parts,
-                    high-torque servos, an Arduino Nano, and our step-by-step digital
-                    curriculum with interactive wiring diagrams.
+                    Each kit includes everything you need: pre-cut acrylic
+                    parts, high-torque servos, an Arduino Nano, and our
+                    step-by-step digital curriculum with interactive wiring
+                    diagrams.
                   </p>
                 </>
               )}
@@ -222,9 +224,14 @@ export function ProductSpotlightSection({ product }: ProductSpotlightProps) {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-500">Starting at</p>
-                <p className="text-3xl font-mono text-amber-600">${priceDisplay}</p>
+                <p className="text-3xl font-mono text-amber-600">
+                  ${priceDisplay}
+                </p>
               </div>
-              <Button asChild className="bg-cyan-700 hover:bg-cyan-600 text-white font-mono">
+              <Button
+                asChild
+                className={ctaPrimaryCompact}
+              >
                 <Link href={`/shop/${product.slug}`}>
                   View Details
                   <ArrowRight className="w-4 h-4 ml-2" />

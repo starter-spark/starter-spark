@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import {
   HeroWrapper,
   DifferentiatorsWrapper,
@@ -5,12 +6,24 @@ import {
   LearningPreviewWrapper,
   MissionImpact,
   EventsPreview,
-} from "@/components/marketing"
-import { getOrganizationSchema, getWebsiteSchema, jsonLdScript } from "@/lib/structured-data"
-import { headers } from "next/headers"
+} from '@/components/marketing'
+import {
+  getOrganizationSchema,
+  getWebsiteSchema,
+  jsonLdScript,
+} from '@/lib/structured-data'
+import { headers } from 'next/headers'
+import {
+  HeroSkeleton,
+  DifferentiatorsSkeleton,
+  FeaturedProductSkeleton,
+  LearningPreviewSkeleton,
+  MissionImpactSkeleton,
+  EventsPreviewSkeleton,
+} from './loading'
 
 export default async function Home() {
-  const nonce = (await headers()).get("x-nonce") ?? undefined
+  const nonce = (await headers()).get('x-nonce') ?? undefined
   const organizationSchema = getOrganizationSchema()
   const websiteSchema = getWebsiteSchema()
 
@@ -23,12 +36,24 @@ export default async function Home() {
       <script nonce={nonce} type="application/ld+json">
         {jsonLdScript(websiteSchema)}
       </script>
-      <HeroWrapper />
-      <DifferentiatorsWrapper />
-      <FeaturedProduct />
-      <LearningPreviewWrapper />
-      <MissionImpact />
-      <EventsPreview />
+      <Suspense fallback={<HeroSkeleton />}>
+        <HeroWrapper />
+      </Suspense>
+      <Suspense fallback={<DifferentiatorsSkeleton />}>
+        <DifferentiatorsWrapper />
+      </Suspense>
+      <Suspense fallback={<FeaturedProductSkeleton />}>
+        <FeaturedProduct />
+      </Suspense>
+      <Suspense fallback={<LearningPreviewSkeleton />}>
+        <LearningPreviewWrapper />
+      </Suspense>
+      <Suspense fallback={<MissionImpactSkeleton />}>
+        <MissionImpact />
+      </Suspense>
+      <Suspense fallback={<EventsPreviewSkeleton />}>
+        <EventsPreview />
+      </Suspense>
     </div>
   )
 }

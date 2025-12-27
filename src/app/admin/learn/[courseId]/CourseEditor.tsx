@@ -1,22 +1,22 @@
-"use client"
+'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { useRouter } from "next/navigation"
-import { toast } from "sonner"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Badge } from "@/components/ui/badge"
-import { Switch } from "@/components/ui/switch"
-import { Reorder, useDragControls } from "motion/react"
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Badge } from '@/components/ui/badge'
+import { Switch } from '@/components/ui/switch'
+import { Reorder, useDragControls } from 'motion/react'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from '@/components/ui/select'
 import {
   Dialog,
   DialogContent,
@@ -24,7 +24,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
+} from '@/components/ui/dialog'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,12 +35,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
+} from '@/components/ui/alert-dialog'
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@/components/ui/tooltip"
+} from '@/components/ui/tooltip'
 import {
   Save,
   Trash2,
@@ -56,7 +56,7 @@ import {
   Pencil,
   Eye,
   EyeOff,
-} from "lucide-react"
+} from 'lucide-react'
 import {
   updateCourse,
   deleteCourse,
@@ -67,7 +67,7 @@ import {
   deleteLesson,
   reorderModules,
   reorderLessons,
-} from "../actions"
+} from '../actions'
 
 interface Lesson {
   id: string
@@ -124,11 +124,11 @@ const lessonTypeIcons: Record<string, typeof FileText> = {
 }
 
 const lessonTypeLabels: Record<string, string> = {
-  content: "Content",
-  code_challenge: "Code Challenge",
-  visual_challenge: "Visual Challenge",
-  quiz: "Quiz",
-  project: "Project",
+  content: 'Content',
+  code_challenge: 'Code Challenge',
+  visual_challenge: 'Visual Challenge',
+  quiz: 'Quiz',
+  project: 'Project',
 }
 
 export function CourseEditor({ course }: CourseEditorProps) {
@@ -144,7 +144,7 @@ export function CourseEditor({ course }: CourseEditorProps) {
   // Keyboard shortcut: Cmd/Ctrl+S to save course
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "s") {
+      if ((e.metaKey || e.ctrlKey) && e.key === 's') {
         e.preventDefault()
         if (!saving && courseFormRef.current) {
           courseFormRef.current.requestSubmit()
@@ -152,14 +152,14 @@ export function CourseEditor({ course }: CourseEditorProps) {
       }
     }
 
-    window.addEventListener("keydown", handleKeyDown)
-    return () => window.removeEventListener("keydown", handleKeyDown)
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
   }, [saving])
   const [expandedModuleIds, setExpandedModuleIds] = useState<Set<string>>(
-    () => new Set(course.modules.map((m) => m.id))
+    () => new Set(course.modules.map((m) => m.id)),
   )
   const [moduleOrder, setModuleOrder] = useState<string[]>(() =>
-    course.modules.map((m) => m.id)
+    course.modules.map((m) => m.id),
   )
   const [lessonOrderByModule, setLessonOrderByModule] = useState<
     Record<string, string[]>
@@ -188,7 +188,8 @@ export function CourseEditor({ course }: CourseEditorProps) {
     }
 
     return base.map((mod) => {
-      const desiredOrder = lessonOrderByModule[mod.id] || mod.lessons.map((l) => l.id)
+      const desiredOrder =
+        lessonOrderByModule[mod.id] || mod.lessons.map((l) => l.id)
       const lessonById = new Map(mod.lessons.map((l) => [l.id, l]))
       const seenLessons = new Set<string>()
       const orderedLessons: Lesson[] = []
@@ -205,7 +206,10 @@ export function CourseEditor({ course }: CourseEditorProps) {
     })
   }, [course.modules, lessonOrderByModule, moduleOrder])
 
-  const moduleIds = useMemo(() => orderedModules.map((m) => m.id), [orderedModules])
+  const moduleIds = useMemo(
+    () => orderedModules.map((m) => m.id),
+    [orderedModules],
+  )
 
   useEffect(() => {
     moduleIdsRef.current = moduleIds
@@ -218,9 +222,9 @@ export function CourseEditor({ course }: CourseEditorProps) {
     void updateCourse(course.id, formData).then((result) => {
       setSaving(false)
       if (result.error) {
-        toast.error("Failed to save course", { description: result.error })
+        toast.error('Failed to save course', { description: result.error })
       } else {
-        toast.success("Course saved successfully")
+        toast.success('Course saved successfully')
         router.refresh()
       }
     })
@@ -231,9 +235,9 @@ export function CourseEditor({ course }: CourseEditorProps) {
     const result = await deleteCourse(course.id)
     if (result?.error) {
       setDeleting(false)
-      toast.error("Failed to delete course", { description: result.error })
+      toast.error('Failed to delete course', { description: result.error })
     } else {
-      toast.success("Course deleted")
+      toast.success('Course deleted')
     }
   }
 
@@ -242,10 +246,10 @@ export function CourseEditor({ course }: CourseEditorProps) {
     const formData = new FormData(e.currentTarget)
     void createModule(course.id, formData).then((result) => {
       if (result.error) {
-        toast.error("Failed to create module", { description: result.error })
+        toast.error('Failed to create module', { description: result.error })
       } else {
         setNewModuleOpen(false)
-        toast.success("Module created successfully")
+        toast.success('Module created successfully')
         router.refresh()
       }
     })
@@ -254,9 +258,9 @@ export function CourseEditor({ course }: CourseEditorProps) {
   const handleUpdateModule = async (moduleId: string, formData: FormData) => {
     const result = await updateModule(moduleId, course.id, formData)
     if (result.error) {
-      toast.error("Failed to update module", { description: result.error })
+      toast.error('Failed to update module', { description: result.error })
     } else {
-      toast.success("Module updated")
+      toast.success('Module updated')
       router.refresh()
     }
     return result
@@ -265,9 +269,9 @@ export function CourseEditor({ course }: CourseEditorProps) {
   const handleDeleteModule = async (moduleId: string) => {
     const result = await deleteModule(moduleId, course.id)
     if (result.error) {
-      toast.error("Failed to delete module", { description: result.error })
+      toast.error('Failed to delete module', { description: result.error })
     } else {
-      toast.success("Module deleted")
+      toast.success('Module deleted')
       router.refresh()
     }
   }
@@ -275,9 +279,9 @@ export function CourseEditor({ course }: CourseEditorProps) {
   const handleCreateLesson = async (moduleId: string, formData: FormData) => {
     const result = await createLesson(moduleId, course.id, formData)
     if (result.error) {
-      toast.error("Failed to create lesson", { description: result.error })
+      toast.error('Failed to create lesson', { description: result.error })
     } else {
-      toast.success("Lesson created successfully")
+      toast.success('Lesson created successfully')
       router.refresh()
     }
     return result
@@ -286,9 +290,9 @@ export function CourseEditor({ course }: CourseEditorProps) {
   const handleDeleteLesson = async (lessonId: string) => {
     const result = await deleteLesson(lessonId, course.id)
     if (result.error) {
-      toast.error("Failed to delete lesson", { description: result.error })
+      toast.error('Failed to delete lesson', { description: result.error })
     } else {
-      toast.success("Lesson deleted")
+      toast.success('Lesson deleted')
       router.refresh()
     }
   }
@@ -322,7 +326,7 @@ export function CourseEditor({ course }: CourseEditorProps) {
     const result = await reorderModules(course.id, moduleIdsRef.current)
     setReordering(false)
     if (result.error) {
-      toast.error("Failed to reorder modules", { description: result.error })
+      toast.error('Failed to reorder modules', { description: result.error })
     } else {
       router.refresh()
     }
@@ -337,7 +341,7 @@ export function CourseEditor({ course }: CourseEditorProps) {
     const result = await reorderLessons(moduleId, course.id, lessonIds)
     setReordering(false)
     if (result.error) {
-      toast.error("Failed to reorder lessons", { description: result.error })
+      toast.error('Failed to reorder lessons', { description: result.error })
     } else {
       router.refresh()
     }
@@ -348,9 +352,15 @@ export function CourseEditor({ course }: CourseEditorProps) {
       {/* Course Settings */}
       <div className="rounded-lg border border-slate-200 bg-white">
         <div className="border-b border-slate-200 px-6 py-4">
-          <h2 className="font-mono text-lg font-semibold text-slate-900">Course Settings</h2>
+          <h2 className="font-mono text-lg font-semibold text-slate-900">
+            Course Settings
+          </h2>
         </div>
-        <form ref={courseFormRef} onSubmit={handleSaveCourse} className="p-6 space-y-6">
+        <form
+          ref={courseFormRef}
+          onSubmit={handleSaveCourse}
+          className="p-6 space-y-6"
+        >
           <div className="grid gap-6 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="title">Title</Label>
@@ -363,7 +373,10 @@ export function CourseEditor({ course }: CourseEditorProps) {
             </div>
             <div className="space-y-2">
               <Label htmlFor="difficulty">Difficulty</Label>
-              <Select value={courseDifficulty} onValueChange={setCourseDifficulty}>
+              <Select
+                value={courseDifficulty}
+                onValueChange={setCourseDifficulty}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -382,7 +395,7 @@ export function CourseEditor({ course }: CourseEditorProps) {
             <Textarea
               id="description"
               name="description"
-              defaultValue={course.description || ""}
+              defaultValue={course.description || ''}
               rows={3}
             />
           </div>
@@ -407,7 +420,11 @@ export function CourseEditor({ course }: CourseEditorProps) {
               <Label htmlFor="is_published" className="cursor-pointer">
                 Published
               </Label>
-              <input type="hidden" name="is_published" value={coursePublished ? "true" : "false"} />
+              <input
+                type="hidden"
+                name="is_published"
+                value={coursePublished ? 'true' : 'false'}
+              />
             </div>
           </div>
 
@@ -416,14 +433,16 @@ export function CourseEditor({ course }: CourseEditorProps) {
               <AlertDialogTrigger asChild>
                 <Button type="button" variant="destructive" disabled={deleting}>
                   <Trash2 className="mr-2 h-4 w-4" />
-                  {deleting ? "Deleting..." : "Delete Course"}
+                  {deleting ? 'Deleting...' : 'Delete Course'}
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
                   <AlertDialogTitle>Delete Course</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Are you sure you want to delete this course? This will permanently delete all modules and lessons within it. This action cannot be undone.
+                    Are you sure you want to delete this course? This will
+                    permanently delete all modules and lessons within it. This
+                    action cannot be undone.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -437,9 +456,13 @@ export function CourseEditor({ course }: CourseEditorProps) {
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
-            <Button type="submit" className="bg-cyan-700 hover:bg-cyan-600" disabled={saving}>
+            <Button
+              type="submit"
+              className="bg-cyan-700 hover:bg-cyan-600"
+              disabled={saving}
+            >
               <Save className="mr-2 h-4 w-4" />
-              {saving ? "Saving..." : "Save Changes"}
+              {saving ? 'Saving...' : 'Save Changes'}
             </Button>
           </div>
         </form>
@@ -453,7 +476,9 @@ export function CourseEditor({ course }: CourseEditorProps) {
               Modules & Lessons
             </h2>
             {reordering && (
-              <span className="text-xs text-slate-500 animate-pulse">Saving order...</span>
+              <span className="text-xs text-slate-500 animate-pulse">
+                Saving order...
+              </span>
             )}
           </div>
           <div className="flex items-center gap-2">
@@ -479,62 +504,67 @@ export function CourseEditor({ course }: CourseEditorProps) {
                 </Button>
               </>
             )}
-          <Dialog open={newModuleOpen} onOpenChange={setNewModuleOpen}>
-            <DialogTrigger asChild>
-              <Button size="sm" className="bg-cyan-700 hover:bg-cyan-600">
-                <Plus className="mr-2 h-4 w-4" />
-                Add Module
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>New Module</DialogTitle>
-                <DialogDescription>
-                  Create a new module for this course
-                </DialogDescription>
-              </DialogHeader>
-	              <form onSubmit={handleCreateModule} className="space-y-4">
-	                <div className="space-y-2">
-	                  <Label htmlFor="module-title">Title</Label>
-	                  <Input
-	                    id="module-title"
-	                    name="title"
-	                    placeholder="Getting Started"
-	                    required
-	                  />
-	                </div>
-	                <div className="space-y-2">
-	                  <Label htmlFor="module-icon">Icon (optional)</Label>
-	                  <Input
-	                    id="module-icon"
-	                    name="icon"
-	                    placeholder="lucide icon name, emoji, etc."
-	                  />
-	                </div>
-	                <div className="space-y-2">
-	                  <Label htmlFor="module-description">Description</Label>
-	                  <Textarea
-	                    id="module-description"
-	                    name="description"
-                    placeholder="Introduction to the basics..."
-                    rows={2}
-                  />
-                </div>
-                <div className="flex justify-end gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => { setNewModuleOpen(false); }}
-                  >
-                    Cancel
-                  </Button>
-                  <Button type="submit" className="bg-cyan-700 hover:bg-cyan-600">
-                    Create Module
-                  </Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
+            <Dialog open={newModuleOpen} onOpenChange={setNewModuleOpen}>
+              <DialogTrigger asChild>
+                <Button size="sm" className="bg-cyan-700 hover:bg-cyan-600">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Module
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>New Module</DialogTitle>
+                  <DialogDescription>
+                    Create a new module for this course
+                  </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handleCreateModule} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="module-title">Title</Label>
+                    <Input
+                      id="module-title"
+                      name="title"
+                      placeholder="Getting Started"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="module-icon">Icon (optional)</Label>
+                    <Input
+                      id="module-icon"
+                      name="icon"
+                      placeholder="lucide icon name, emoji, etc."
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="module-description">Description</Label>
+                    <Textarea
+                      id="module-description"
+                      name="description"
+                      placeholder="Introduction to the basics..."
+                      rows={2}
+                    />
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setNewModuleOpen(false)
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="submit"
+                      className="bg-cyan-700 hover:bg-cyan-600"
+                    >
+                      Create Module
+                    </Button>
+                  </div>
+                </form>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
 
@@ -557,11 +587,17 @@ export function CourseEditor({ course }: CourseEditorProps) {
                   module={module}
                   courseId={course.id}
                   expanded={expandedModuleIds.has(module.id)}
-                  onToggleExpanded={() => { toggleModuleExpanded(module.id); }}
+                  onToggleExpanded={() => {
+                    toggleModuleExpanded(module.id)
+                  }}
                   onUpdateModule={handleUpdateModule}
                   onDeleteModule={() => void handleDeleteModule(module.id)}
-                  onCreateLesson={(formData) => handleCreateLesson(module.id, formData)}
-                  onDeleteLesson={(lessonId) => void handleDeleteLesson(lessonId)}
+                  onCreateLesson={(formData) =>
+                    handleCreateLesson(module.id, formData)
+                  }
+                  onDeleteLesson={(lessonId) =>
+                    void handleDeleteLesson(lessonId)
+                  }
                   onLessonReorder={handleLessonReorder}
                   onPersistLessonOrder={persistLessonOrder}
                   onPersistModuleOrder={persistModuleOrder}
@@ -592,7 +628,10 @@ function ModuleCard({
   courseId: string
   expanded: boolean
   onToggleExpanded: () => void
-  onUpdateModule: (moduleId: string, formData: FormData) => Promise<{ error?: string }>
+  onUpdateModule: (
+    moduleId: string,
+    formData: FormData,
+  ) => Promise<{ error?: string }>
   onDeleteModule: () => void
   onCreateLesson: (formData: FormData) => Promise<{ error?: string }>
   onDeleteLesson: (lessonId: string) => void
@@ -602,10 +641,13 @@ function ModuleCard({
 }) {
   const dragControls = useDragControls()
   const [modulePublished, setModulePublished] = useState(module.is_published)
-  const [newLessonType, setNewLessonType] = useState<string>("content")
+  const [newLessonType, setNewLessonType] = useState<string>('content')
   const [editModuleOpen, setEditModuleOpen] = useState(false)
   const [newLessonOpen, setNewLessonOpen] = useState(false)
-  const lessonIds = useMemo(() => module.lessons.map((l) => l.id), [module.lessons])
+  const lessonIds = useMemo(
+    () => module.lessons.map((l) => l.id),
+    [module.lessons],
+  )
   const lessonIdsRef = useRef<string[]>(lessonIds)
 
   useEffect(() => {
@@ -628,7 +670,7 @@ function ModuleCard({
     void onCreateLesson(formData).then((result) => {
       if (!result.error) {
         setNewLessonOpen(false)
-        setNewLessonType("content") // Reset the type
+        setNewLessonType('content') // Reset the type
       }
     })
   }
@@ -645,7 +687,9 @@ function ModuleCard({
       <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-100 bg-slate-50/50">
         <button
           type="button"
-          onPointerDown={(e) => { dragControls.start(e); }}
+          onPointerDown={(e) => {
+            dragControls.start(e)
+          }}
           className="text-slate-400 hover:text-slate-600 cursor-grab active:cursor-grabbing"
           aria-label="Reorder module"
         >
@@ -658,7 +702,9 @@ function ModuleCard({
           className="flex items-center gap-2 flex-1 min-w-0 text-left"
           aria-expanded={expanded}
         >
-          <span className="font-medium text-slate-900 truncate">{module.title}</span>
+          <span className="font-medium text-slate-900 truncate">
+            {module.title}
+          </span>
           <Badge variant="outline" className="ml-2">
             {module.lessons.length} lessons
           </Badge>
@@ -671,7 +717,7 @@ function ModuleCard({
         </button>
 
         <ChevronDown
-          className={`h-4 w-4 text-slate-400 transition-transform ${expanded ? "rotate-180" : ""}`}
+          className={`h-4 w-4 text-slate-400 transition-transform ${expanded ? 'rotate-180' : ''}`}
           aria-hidden="true"
         />
 
@@ -689,28 +735,39 @@ function ModuleCard({
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Edit Module</DialogTitle>
-              <DialogDescription>Update module details and publishing status.</DialogDescription>
+              <DialogDescription>
+                Update module details and publishing status.
+              </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleUpdateModule} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor={`module-title-${module.id}`}>Title</Label>
-                <Input id={`module-title-${module.id}`} name="title" defaultValue={module.title} required />
+                <Input
+                  id={`module-title-${module.id}`}
+                  name="title"
+                  defaultValue={module.title}
+                  required
+                />
               </div>
               <div className="space-y-2">
-                <Label htmlFor={`module-icon-${module.id}`}>Icon (optional)</Label>
+                <Label htmlFor={`module-icon-${module.id}`}>
+                  Icon (optional)
+                </Label>
                 <Input
                   id={`module-icon-${module.id}`}
                   name="icon"
-                  defaultValue={module.icon || ""}
+                  defaultValue={module.icon || ''}
                   placeholder="lucide icon name, emoji, etc."
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor={`module-description-${module.id}`}>Description</Label>
+                <Label htmlFor={`module-description-${module.id}`}>
+                  Description
+                </Label>
                 <Textarea
                   id={`module-description-${module.id}`}
                   name="description"
-                  defaultValue={module.description || ""}
+                  defaultValue={module.description || ''}
                   rows={3}
                 />
               </div>
@@ -720,17 +777,24 @@ function ModuleCard({
                   checked={modulePublished}
                   onCheckedChange={setModulePublished}
                 />
-                <Label htmlFor={`module-published-${module.id}`} className="cursor-pointer">
+                <Label
+                  htmlFor={`module-published-${module.id}`}
+                  className="cursor-pointer"
+                >
                   Published
                 </Label>
                 <input
                   type="hidden"
                   name="is_published"
-                  value={modulePublished ? "true" : "false"}
+                  value={modulePublished ? 'true' : 'false'}
                 />
               </div>
               <div className="flex justify-end gap-2">
-                <Button type="button" variant="outline" onClick={() => setEditModuleOpen(false)}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setEditModuleOpen(false)}
+                >
                   Cancel
                 </Button>
                 <Button type="submit" className="bg-cyan-700 hover:bg-cyan-600">
@@ -761,7 +825,8 @@ function ModuleCard({
             <AlertDialogHeader>
               <AlertDialogTitle>Delete Module</AlertDialogTitle>
               <AlertDialogDescription>
-                Are you sure you want to delete this module? This will also delete all lessons within it. This action cannot be undone.
+                Are you sure you want to delete this module? This will also
+                delete all lessons within it. This action cannot be undone.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -790,31 +855,51 @@ function ModuleCard({
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>New Lesson</DialogTitle>
-                  <DialogDescription>Add a lesson to {module.title}</DialogDescription>
+                  <DialogDescription>
+                    Add a lesson to {module.title}
+                  </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleCreateLesson} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor={`lesson-title-${module.id}`}>Title</Label>
-                    <Input id={`lesson-title-${module.id}`} name="title" placeholder="Introduction" required />
+                    <Input
+                      id={`lesson-title-${module.id}`}
+                      name="title"
+                      placeholder="Introduction"
+                      required
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor={`lesson-type-${module.id}`}>Type</Label>
-                    <Select value={newLessonType} onValueChange={setNewLessonType}>
+                    <Select
+                      value={newLessonType}
+                      onValueChange={setNewLessonType}
+                    >
                       <SelectTrigger id={`lesson-type-${module.id}`}>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="content">Content</SelectItem>
-                        <SelectItem value="code_challenge">Code Challenge</SelectItem>
-                        <SelectItem value="visual_challenge">Visual Challenge</SelectItem>
+                        <SelectItem value="code_challenge">
+                          Code Challenge
+                        </SelectItem>
+                        <SelectItem value="visual_challenge">
+                          Visual Challenge
+                        </SelectItem>
                         <SelectItem value="quiz">Quiz</SelectItem>
                         <SelectItem value="project">Project</SelectItem>
                       </SelectContent>
                     </Select>
-                    <input type="hidden" name="lesson_type" value={newLessonType} />
+                    <input
+                      type="hidden"
+                      name="lesson_type"
+                      value={newLessonType}
+                    />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor={`lesson-description-${module.id}`}>Description</Label>
+                    <Label htmlFor={`lesson-description-${module.id}`}>
+                      Description
+                    </Label>
                     <Textarea
                       id={`lesson-description-${module.id}`}
                       name="description"
@@ -823,10 +908,17 @@ function ModuleCard({
                     />
                   </div>
                   <div className="flex justify-end gap-2">
-                    <Button type="button" variant="outline" onClick={() => setNewLessonOpen(false)}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setNewLessonOpen(false)}
+                    >
                       Cancel
                     </Button>
-                    <Button type="submit" className="bg-cyan-700 hover:bg-cyan-600">
+                    <Button
+                      type="submit"
+                      className="bg-cyan-700 hover:bg-cyan-600"
+                    >
                       Create Lesson
                     </Button>
                   </div>
@@ -836,13 +928,17 @@ function ModuleCard({
           </div>
 
           {module.lessons.length === 0 ? (
-            <p className="text-sm text-slate-500 py-2">No lessons in this module yet.</p>
+            <p className="text-sm text-slate-500 py-2">
+              No lessons in this module yet.
+            </p>
           ) : (
             <Reorder.Group
               as="div"
               axis="y"
               values={lessonIds}
-              onReorder={(next) => { onLessonReorder(module.id, next); }}
+              onReorder={(next) => {
+                onLessonReorder(module.id, next)
+              }}
               className="space-y-2"
             >
               {module.lessons.map((lesson) => (
@@ -850,8 +946,12 @@ function ModuleCard({
                   key={lesson.id}
                   lesson={lesson}
                   courseId={courseId}
-                  onDelete={() => { onDeleteLesson(lesson.id); }}
-                  onPersistOrder={() => void onPersistLessonOrder(module.id, lessonIdsRef.current)}
+                  onDelete={() => {
+                    onDeleteLesson(lesson.id)
+                  }}
+                  onPersistOrder={() =>
+                    void onPersistLessonOrder(module.id, lessonIdsRef.current)
+                  }
                 />
               ))}
             </Reorder.Group>
@@ -887,7 +987,9 @@ function LessonRow({
     >
       <button
         type="button"
-        onPointerDown={(e) => { dragControls.start(e); }}
+        onPointerDown={(e) => {
+          dragControls.start(e)
+        }}
         className="text-slate-300 hover:text-slate-500 cursor-grab active:cursor-grabbing"
         aria-label="Reorder lesson"
       >
@@ -897,7 +999,8 @@ function LessonRow({
       <div className="flex-1 min-w-0">
         <p className="font-medium text-slate-900 truncate">{lesson.title}</p>
         <p className="text-xs text-slate-500">
-          {lessonTypeLabels[lesson.lesson_type]} &middot; {lesson.estimated_minutes} min
+          {lessonTypeLabels[lesson.lesson_type]} &middot;{' '}
+          {lesson.estimated_minutes} min
         </p>
       </div>
       <div className="flex items-center gap-2">
@@ -911,7 +1014,9 @@ function LessonRow({
               )}
             </span>
           </TooltipTrigger>
-          <TooltipContent>{lesson.is_published ? "Published" : "Draft"}</TooltipContent>
+          <TooltipContent>
+            {lesson.is_published ? 'Published' : 'Draft'}
+          </TooltipContent>
         </Tooltip>
         <AlertDialog>
           <Tooltip>
@@ -933,7 +1038,8 @@ function LessonRow({
             <AlertDialogHeader>
               <AlertDialogTitle>Delete Lesson</AlertDialogTitle>
               <AlertDialogDescription>
-                Are you sure you want to delete &quot;{lesson.title}&quot;? This action cannot be undone.
+                Are you sure you want to delete &quot;{lesson.title}&quot;? This
+                action cannot be undone.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -950,7 +1056,10 @@ function LessonRow({
         <Tooltip>
           <TooltipTrigger asChild>
             <Button size="sm" variant="ghost" asChild>
-              <a href={`/admin/learn/${courseId}/lesson/${lesson.id}`} aria-label="Edit lesson">
+              <a
+                href={`/admin/learn/${courseId}/lesson/${lesson.id}`}
+                aria-label="Edit lesson"
+              >
                 <ChevronRight className="h-4 w-4" />
               </a>
             </Button>

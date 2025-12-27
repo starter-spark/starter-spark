@@ -41,7 +41,6 @@ function websocketOriginFor(origin: string | null): string | null {
     return null
   }
 }
-
 function buildContentSecurityPolicy({
   nonce,
   requestOrigin,
@@ -61,16 +60,11 @@ function buildContentSecurityPolicy({
     ...(isStrictProduction
       ? ["'wasm-unsafe-eval'"]
       : ["'unsafe-eval'", "'wasm-unsafe-eval'"]),
-    // Vercel toolbar (preview cookie can persist to production visits)
     'https://vercel.live',
-    // PostHog analytics
+    // PostHog
     'https://us-assets.i.posthog.com',
   ].join(' ')
 
-  // CSS: React + animation/diagram libs rely on inline styles. We keep scripts
-  // strict (nonce-based) but allow inline styles - style injection is far less
-  // dangerous than script injection, and many third-party libs (PostHog, etc.)
-  // inject styles without nonce support.
   const styleSrc = ["'self'", "'unsafe-inline'"].join(' ')
   const styleSrcElem = ["'self'", "'unsafe-inline'"].join(' ')
   const styleSrcAttr = ["'unsafe-inline'"].join(' ')
@@ -78,9 +72,9 @@ function buildContentSecurityPolicy({
   const posthogOrigin = safeOrigin(process.env.NEXT_PUBLIC_POSTHOG_HOST)
   const sentryOrigin = safeOrigin(process.env.NEXT_PUBLIC_SENTRY_DSN)
   const supabaseOrigin = safeOrigin(supabaseUrl)
-  const imageOrigins = new Set<string>(["'self'", "data:", "blob:"])
-  const fontOrigins = new Set<string>(["'self'", "data:"])
-  const mediaOrigins = new Set<string>(["'self'", "blob:"])
+  const imageOrigins = new Set<string>(["'self'", 'data:', 'blob:'])
+  const fontOrigins = new Set<string>(["'self'", 'data:'])
+  const mediaOrigins = new Set<string>(["'self'", 'blob:'])
 
   if (supabaseOrigin) {
     imageOrigins.add(supabaseOrigin)
@@ -88,7 +82,7 @@ function buildContentSecurityPolicy({
   }
   imageOrigins.add('https://images.unsplash.com')
   imageOrigins.add('https://avatars.githubusercontent.com')
-  // DiceBear for auto-generated avatars
+  // Auto-generated avatars
   imageOrigins.add('https://api.dicebear.com')
   fontOrigins.add('https://fonts.gstatic.com')
 
@@ -96,14 +90,11 @@ function buildContentSecurityPolicy({
   for (const origin of [supabaseOrigin, posthogOrigin, sentryOrigin]) {
     if (origin) connectOrigins.add(origin)
   }
-  // Vercel Analytics and Speed Insights
   connectOrigins.add('https://vitals.vercel-insights.com')
   connectOrigins.add('https://va.vercel-scripts.com')
-  // PostHog assets CDN
   connectOrigins.add('https://us-assets.i.posthog.com')
-  // Draco decoder (gstatic)
+  // Draco decoder
   connectOrigins.add('https://www.gstatic.com')
-  // Vercel toolbar (preview cookie can persist to production visits)
   connectOrigins.add('https://vercel.live')
 
   const connectWsOrigins = new Set<string>()
@@ -111,7 +102,6 @@ function buildContentSecurityPolicy({
     const wsOrigin = websocketOriginFor(origin)
     if (wsOrigin) connectWsOrigins.add(wsOrigin)
   }
-  // Vercel toolbar websocket
   connectWsOrigins.add('wss://vercel.live')
 
   const connectSrc = [
@@ -122,12 +112,11 @@ function buildContentSecurityPolicy({
 
   const frameSrc = [
     "'self'",
-    // Video embeds supported by the learning platform.
+    // Video embeds supported by learning
     'https://www.youtube.com',
     'https://www.youtube-nocookie.com',
     'https://player.vimeo.com',
-    // Scratch embeds for easter egg games.
-    'https://scratch.mit.edu',
+    'https://scratch.mit.edu', // easter egg
   ].join(' ')
 
   return [
@@ -142,7 +131,6 @@ function buildContentSecurityPolicy({
     `style-src-elem ${styleSrcElem}`,
     `style-src-attr ${styleSrcAttr}`,
     `script-src ${scriptSrc}`,
-    // Explicitly disallow inline event handlers.
     "script-src-attr 'none'",
     `connect-src ${connectSrc}`,
     `frame-src ${frameSrc}`,
@@ -154,7 +142,8 @@ function buildContentSecurityPolicy({
 }
 
 export async function proxy(request: NextRequest) {
-  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseUrl =
+    process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
   if (!supabaseUrl) {
     throw new Error('Missing SUPABASE_URL')
   }
@@ -172,10 +161,7 @@ export async function proxy(request: NextRequest) {
 
   const buildRequestHeaders = () => {
     const headers = new Headers(request.headers)
-    // Next.js App Router reads CSP from request headers to derive the nonce for
-    // its own inline/required scripts.
     headers.set('Content-Security-Policy', csp)
-    // Convenience header for userland components (e.g. JSON-LD scripts).
     headers.set('x-nonce', nonce)
     return headers
   }
@@ -187,14 +173,9 @@ export async function proxy(request: NextRequest) {
   })
   supabaseResponse.headers.set('Content-Security-Policy', csp)
 
-  // Helper to create redirects that preserve Supabase auth cookies.
-  // When supabase.auth.getUser() refreshes an expired session, setAll() updates
-  // supabaseResponse with new cookies. We must copy these to any redirect response,
-  // otherwise the refreshed tokens are lost.
-  // See: https://supabase.com/docs/guides/auth/server-side/nextjs
   const createRedirect = (url: URL) => {
     const res = NextResponse.redirect(url)
-    // Copy all cookies from supabaseResponse (may include refreshed auth tokens)
+    // Copy all cookies
     for (const cookie of supabaseResponse.cookies.getAll()) {
       const { name, value, ...options } = cookie
       res.cookies.set(name, value, options)
@@ -215,30 +196,27 @@ export async function proxy(request: NextRequest) {
     return res
   }
 
-  const supabase = createServerClient(
-    supabaseUrl,
-    supabaseKey,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
-        setAll(cookiesToSet) {
-          // This is Next.js RequestCookies API, not Koa. SameSite is handled by Supabase auth options.
-          for (const { name, value } of cookiesToSet) request.cookies.set(name, value) // nosemgrep: cookies-default-koa
-          
-          supabaseResponse = NextResponse.next({
-            request: {
-              headers: buildRequestHeaders(),
-            },
-          })
-          supabaseResponse.headers.set('Content-Security-Policy', csp)
-          for (const { name, value, options } of cookiesToSet) supabaseResponse.cookies.set(name, value, options)
-          
-        },
+  const supabase = createServerClient(supabaseUrl, supabaseKey, {
+    cookies: {
+      getAll() {
+        return request.cookies.getAll()
       },
-    }
-  )
+      setAll(cookiesToSet) {
+        // Not Koa; SameSite is handled by Supabase auth options
+        for (const { name, value } of cookiesToSet)
+          request.cookies.set(name, value) // nosemgrep: cookies-default-koa
+
+        supabaseResponse = NextResponse.next({
+          request: {
+            headers: buildRequestHeaders(),
+          },
+        })
+        supabaseResponse.headers.set('Content-Security-Policy', csp)
+        for (const { name, value, options } of cookiesToSet)
+          supabaseResponse.cookies.set(name, value, options)
+      },
+    },
+  })
 
   // Refresh session if expired.
   let user: { id: string } | null = null
@@ -256,12 +234,13 @@ export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname
   const pathnameWithSearch = `${pathname}${request.nextUrl.search}`
   const isAdminRoute = pathname.startsWith('/admin')
-  const isWorkshopSubroute = pathname.startsWith('/workshop/') // e.g., /workshop/kit/123
+  const isWorkshopSubroute = pathname.startsWith('/workshop/') // e.g., /workshop/kit/676767
   const isWorkshopMainPage = pathname === '/workshop'
   const isProtectedRoute = isWorkshopSubroute && !isWorkshopMainPage
-  const isAuthRoute = pathname.startsWith('/login') || pathname.startsWith('/register')
+  const isAuthRoute =
+    pathname.startsWith('/login') || pathname.startsWith('/register')
 
-  // Admin route protection - requires admin or staff role
+  // Admin route prot
   if (isAdminRoute) {
     if (!user) {
       const url = request.nextUrl.clone()
@@ -270,7 +249,6 @@ export async function proxy(request: NextRequest) {
       return createRedirect(url)
     }
 
-    // Check user role
     let profile: { role: string | null } | null = null
     let profileError: Error | null = null
     try {
@@ -282,7 +260,8 @@ export async function proxy(request: NextRequest) {
       profile = data ?? null
       if (error) profileError = error
     } catch (error) {
-      profileError = error instanceof Error ? error : new Error('Profile lookup failed')
+      profileError =
+        error instanceof Error ? error : new Error('Profile lookup failed')
     }
 
     if (profileError) {
@@ -298,7 +277,6 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // Workshop subroute protection
   if (isProtectedRoute && !user) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
@@ -306,7 +284,6 @@ export async function proxy(request: NextRequest) {
     return createRedirect(url)
   }
 
-  // Redirect authenticated users away from auth pages
   if (isAuthRoute && user) {
     const url = request.nextUrl.clone()
     url.pathname = '/workshop'
@@ -318,15 +295,6 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder
-     * - api routes (no CSP nonce needed)
-     * - sentry tunnel (monitoring)
-     */
-    "/((?!api|monitoring|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|glb|gltf)$).*)",
+    '/((?!api|monitoring|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|glb|gltf)$).*)',
   ],
 }

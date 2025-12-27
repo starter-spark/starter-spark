@@ -1,13 +1,13 @@
-"use client"
+'use client'
 
-import { useRouter } from "next/navigation"
+import { useRouter } from 'next/navigation'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from '@/components/ui/select'
 
 interface ProductFilterClientProps {
   products: { id: string; name: string }[]
@@ -25,17 +25,17 @@ export function ProductFilterClient({
   const handleProductChange = (value: string) => {
     const params = new URLSearchParams()
     if (currentFilter) {
-      params.set("filter", currentFilter)
+      params.set('filter', currentFilter)
     }
-    if (value && value !== "all") {
-      params.set("product", value)
+    if (value && value !== 'all') {
+      params.set('product', value)
     }
     const queryString = params.toString()
-    router.push(`/admin/licenses${queryString ? `?${queryString}` : ""}`)
+    router.push(`/admin/licenses${queryString ? `?${queryString}` : ''}`)
   }
 
   return (
-    <Select value={currentProduct || "all"} onValueChange={handleProductChange}>
+    <Select value={currentProduct || 'all'} onValueChange={handleProductChange}>
       <SelectTrigger className="w-[180px] bg-white">
         <SelectValue placeholder="Filter by product" />
       </SelectTrigger>

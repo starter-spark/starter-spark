@@ -1,14 +1,14 @@
-import { NextResponse } from "next/server"
-import { resend, NEWSLETTER_AUDIENCE_ID } from "@/lib/resend"
-import { z } from "zod"
-import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit"
+import { NextResponse } from 'next/server'
+import { resend, NEWSLETTER_AUDIENCE_ID } from '@/lib/resend'
+import { z } from 'zod'
+import { rateLimit, rateLimitHeaders } from '@/lib/rate-limit'
 
 const subscribeSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
+  email: z.string().email('Please enter a valid email address'),
 })
 
 export async function POST(request: Request) {
-  const rateLimitResponse = await rateLimit(request, "newsletter")
+  const rateLimitResponse = await rateLimit(request, 'newsletter')
   if (rateLimitResponse) return rateLimitResponse
 
   try {
@@ -17,10 +17,10 @@ export async function POST(request: Request) {
 
     // Check if audience ID is configured
     if (!NEWSLETTER_AUDIENCE_ID) {
-      console.error("RESEND_AUDIENCE_ID not configured")
+      console.error('RESEND_AUDIENCE_ID not configured')
       return NextResponse.json(
-        { error: "Newsletter service not configured" },
-        { status: 500 }
+        { error: 'Newsletter service not configured' },
+        { status: 500 },
       )
     }
 
@@ -32,8 +32,8 @@ export async function POST(request: Request) {
 
     if (existingContact && !existingContact.unsubscribed) {
       return NextResponse.json(
-        { message: "Thanks for subscribing!" },
-        { status: 200, headers: rateLimitHeaders("newsletter") }
+        { message: 'Thanks for subscribing!' },
+        { status: 200, headers: rateLimitHeaders('newsletter') },
       )
     }
 
@@ -46,8 +46,8 @@ export async function POST(request: Request) {
       })
 
       return NextResponse.json(
-        { message: "Thanks for subscribing!" },
-        { status: 200, headers: rateLimitHeaders("newsletter") }
+        { message: 'Thanks for subscribing!' },
+        { status: 200, headers: rateLimitHeaders('newsletter') },
       )
     }
 
@@ -59,29 +59,29 @@ export async function POST(request: Request) {
     })
 
     if (error) {
-      console.error("Resend error:", error)
+      console.error('Resend error:', error)
       return NextResponse.json(
-        { error: "Failed to subscribe. Please try again." },
-        { status: 500 }
+        { error: 'Failed to subscribe. Please try again.' },
+        { status: 500 },
       )
     }
 
     return NextResponse.json(
-      { message: "Thanks for subscribing!" },
-      { status: 200, headers: rateLimitHeaders("newsletter") }
+      { message: 'Thanks for subscribing!' },
+      { status: 200, headers: rateLimitHeaders('newsletter') },
     )
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: error.issues[0].message },
-        { status: 400 }
+        { status: 400 },
       )
     }
 
-    console.error("Newsletter subscription error:", error)
+    console.error('Newsletter subscription error:', error)
     return NextResponse.json(
-      { error: "Something went wrong. Please try again." },
-      { status: 500 }
+      { error: 'Something went wrong. Please try again.' },
+      { status: 500 },
     )
   }
 }

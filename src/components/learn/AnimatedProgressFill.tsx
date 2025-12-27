@@ -1,8 +1,8 @@
-"use client"
+'use client'
 
-import { useLayoutEffect, useMemo, useRef } from "react"
-import type { CSSProperties } from "react"
-import { cn } from "@/lib/utils"
+import { useLayoutEffect, useMemo, useRef } from 'react'
+import type { CSSProperties } from 'react'
+import { cn } from '@/lib/utils'
 
 interface AnimatedProgressFillProps {
   progress: number
@@ -15,7 +15,7 @@ function clampProgress(value: number): number {
   return Math.min(100, Math.max(0, value))
 }
 
-const pendingSuffix = ":pending"
+const pendingSuffix = ':pending'
 
 function safeSessionStorageGet(key: string): string | null {
   if (globalThis.window === undefined) return null
@@ -39,10 +39,11 @@ function parsePendingProgress(raw: string | null): number | null {
   if (!raw) return null
   try {
     const parsed: unknown = JSON.parse(raw)
-    if (typeof parsed !== "object" || parsed === null) return null
+    if (typeof parsed !== 'object' || parsed === null) return null
     const progress = (parsed as Record<string, unknown>).progress
-    if (typeof progress === "number" && Number.isFinite(progress)) return progress
-    if (typeof progress === "string") {
+    if (typeof progress === 'number' && Number.isFinite(progress))
+      return progress
+    if (typeof progress === 'string') {
       const num = Number(progress)
       return Number.isFinite(num) ? num : null
     }
@@ -57,7 +58,7 @@ function safeSessionStorageSet(key: string, value: string) {
   try {
     sessionStorage.setItem(key, value)
   } catch {
-    // ignore (private mode, quota, etc.)
+    // Ignore (private mode, quota, etc.).
   }
 }
 
@@ -66,7 +67,7 @@ function safeSessionStorageRemove(key: string) {
   try {
     sessionStorage.removeItem(key)
   } catch {
-    // ignore
+    // Ignore.
   }
 }
 
@@ -78,7 +79,11 @@ export function AnimatedProgressFill({
   const targetFromProps = useMemo(() => clampProgress(progress), [progress])
   const { initial, target, shouldClearPending } = useMemo(() => {
     if (globalThis.window === undefined) {
-      return { initial: targetFromProps, target: targetFromProps, shouldClearPending: false }
+      return {
+        initial: targetFromProps,
+        target: targetFromProps,
+        shouldClearPending: false,
+      }
     }
 
     const storedRaw = safeSessionStorageGet(storageKey)
@@ -91,7 +96,7 @@ export function AnimatedProgressFill({
     const pending = pendingValue === null ? null : clampProgress(pendingValue)
 
     const nextTarget = clampProgress(
-      Math.max(targetFromProps, stored ?? 0, pending ?? 0)
+      Math.max(targetFromProps, stored ?? 0, pending ?? 0),
     )
 
     return {
@@ -116,13 +121,15 @@ export function AnimatedProgressFill({
       el.style.width = `${target}%`
     })
 
-    return () => { cancelAnimationFrame(raf); }
+    return () => {
+      cancelAnimationFrame(raf)
+    }
   }, [initial, shouldClearPending, storageKey, target])
 
   return (
     <div
       ref={ref}
-      className={cn("progress-bar-fill", className)}
+      className={cn('progress-bar-fill', className)}
       style={{ width: `${initial}%` } as CSSProperties}
     />
   )

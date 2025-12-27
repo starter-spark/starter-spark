@@ -3,57 +3,53 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import type { Json } from '@/lib/supabase/database.types'
 
-/**
- * Audit action types for admin operations
- */
 export type AuditAction =
-  // User management
+  // Users
   | 'user.role_changed'
   | 'user.deleted'
   | 'user.banned_from_forums'
   | 'user.unbanned_from_forums'
-  // Product management
+  // Products
   | 'product.created'
   | 'product.updated'
   | 'product.deleted'
   | 'product.tags_updated'
-  // License management
+  // Licenses
   | 'license.created'
   | 'license.bulk_created'
   | 'license.revoked'
   | 'license.assigned'
   | 'license.transferred'
-  // Event management
+  // Events
   | 'event.created'
   | 'event.updated'
   | 'event.deleted'
-  // Community moderation
+  // Community
   | 'post.deleted'
   | 'post.status_changed'
   | 'comment.deleted'
   | 'comment.verified'
-  // Content management
+  // Content
   | 'content.updated'
   | 'content.published'
   | 'content.unpublished'
   | 'content.created'
   | 'content.deleted'
-  // Site settings
+  // Settings
   | 'settings.updated'
   | 'stats.created'
   | 'stats.updated'
   | 'stats.deleted'
-  // Site content
   | 'site_content.updated'
   | 'site_content.reset'
-  // Banner management
+  // Banners
   | 'banner.created'
   | 'banner.updated'
   | 'banner.deleted'
   | 'banner.duplicated'
   | 'banner.activated'
   | 'banner.deactivated'
-  // Learning management
+  // Learning
   | 'course.created'
   | 'course.updated'
   | 'course.deleted'
@@ -65,7 +61,7 @@ export type AuditAction =
   | 'lesson.updated'
   | 'lesson.deleted'
   | 'lesson.reordered'
-  // Docs management
+  // Docs
   | 'doc_category.created'
   | 'doc_category.updated'
   | 'doc_category.deleted'
@@ -74,15 +70,12 @@ export type AuditAction =
   | 'doc_page.deleted'
   | 'doc_page.published'
   | 'doc_page.unpublished'
-  // Team management
+  // Team
   | 'team_member.created'
   | 'team_member.updated'
   | 'team_member.deleted'
   | 'team_member.reordered'
 
-/**
- * Resource types that can be audited
- */
 export type AuditResourceType =
   | 'user'
   | 'product'
@@ -110,18 +103,6 @@ interface AuditLogParams {
   details?: Record<string, unknown>
 }
 
-/**
- * Log an admin action to the audit log
- *
- * @example
- * await logAuditEvent({
- *   userId: adminUser.id,
- *   action: 'user.role_changed',
- *   resourceType: 'user',
- *   resourceId: targetUserId,
- *   details: { oldRole: 'user', newRole: 'staff' }
- * })
- */
 export async function logAuditEvent({
   userId,
   action,
@@ -130,7 +111,6 @@ export async function logAuditEvent({
   details,
 }: AuditLogParams): Promise<void> {
   try {
-    // Get request headers for IP and user agent
     const headersList = await headers()
     const ipAddress =
       headersList.get('x-forwarded-for')?.split(',')[0]?.trim() ||
@@ -149,19 +129,13 @@ export async function logAuditEvent({
     })
 
     if (error) {
-      // Log error but don't throw - audit logging should not break the main operation
       console.error('[Audit] Failed to log event:', error.message)
     }
   } catch (err) {
-    // Silently fail - audit logging should never break the main operation
     console.error('[Audit] Unexpected error:', err)
   }
 }
 
-/**
- * Fetch audit logs with optional filters
- * Only admins/staff can access this function (enforced in code before using service role)
- */
 export async function getAuditLogs(options?: {
   userId?: string
   action?: AuditAction
@@ -170,7 +144,14 @@ export async function getAuditLogs(options?: {
   limit?: number
   offset?: number
 }) {
-  const { userId, action, resourceType, resourceId, limit = 50, offset = 0 } = options || {}
+  const {
+    userId,
+    action,
+    resourceType,
+    resourceId,
+    limit = 50,
+    offset = 0,
+  } = options || {}
 
   const supabase = await createClient()
   const {

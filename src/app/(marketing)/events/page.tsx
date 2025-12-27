@@ -1,15 +1,27 @@
-import { createClient } from "@/lib/supabase/server"
-import { Calendar, MapPin, Clock, ExternalLink } from "lucide-react"
-import Link from "next/link"
-import { headers } from "next/headers"
-import { EventsToggle } from "./EventsToggle"
-import { getEventSchema, getBreadcrumbSchema, jsonLdScript } from "@/lib/structured-data"
-import { getContents } from "@/lib/content"
-import type { Metadata } from "next"
-import { siteConfig } from "@/config/site"
+import { createClient } from '@/lib/supabase/server'
+import { Calendar, MapPin, Clock, ExternalLink } from 'lucide-react'
+import Link from 'next/link'
+import { headers } from 'next/headers'
+import { EventsToggle } from './EventsToggle'
+import {
+  getEventSchema,
+  getBreadcrumbSchema,
+  jsonLdScript,
+} from '@/lib/structured-data'
+import { getContents } from '@/lib/content'
+import type { Metadata } from 'next'
+import { siteConfig } from '@/config/site'
+import {
+  formatEventDate,
+  formatEventRange,
+  formatEventMonth,
+  getEventTypeBadgeClasses,
+  getEventTypeLabel,
+} from '@/lib/events'
 
-const pageTitle = "Events & Workshops"
-const pageDescription = "Workshops, competitions, and community events in Hawaii. Learn robotics with hands-on experiences."
+const pageTitle = 'Events & Workshops'
+const pageDescription =
+  'Workshops, competitions, and community events in Hawaii. Learn robotics with hands-on experiences.'
 
 export const metadata: Metadata = {
   title: pageTitle,
@@ -27,13 +39,15 @@ export const metadata: Metadata = {
         alt: pageTitle,
       },
     ],
-    type: "website",
+    type: 'website',
   },
   twitter: {
-    card: "summary_large_image",
+    card: 'summary_large_image',
     title: pageTitle,
     description: pageDescription,
-    images: [`/api/og?title=${encodeURIComponent(pageTitle)}&subtitle=${encodeURIComponent(pageDescription)}&type=event`],
+    images: [
+      `/api/og?title=${encodeURIComponent(pageTitle)}&subtitle=${encodeURIComponent(pageDescription)}&type=event`,
+    ],
   },
 }
 
@@ -52,95 +66,31 @@ interface Event {
   capacity: number | null
 }
 
-function formatEventDate(dateString: string): string {
-  const date = new Date(dateString)
-  return date.toLocaleDateString("en-US", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  })
-}
-
-function formatEventTime(dateString: string): string {
-  const date = new Date(dateString)
-  return date.toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  })
-}
-
-function formatDateRange(start: string, end: string | null): string {
-  const startDate = new Date(start)
-  const endDate = end ? new Date(end) : null
-
-  // Same day event
-  if (endDate && startDate.toDateString() === endDate.toDateString()) {
-    return `${formatEventTime(start)} - ${formatEventTime(end!)}`
-  }
-
-  // Multi-day event
-  if (endDate) {
-    return `${formatEventDate(start)} - ${formatEventDate(end!)}`
-  }
-
-  return formatEventTime(start)
-}
-
-function getEventTypeLabel(type: string): string {
-  switch (type) {
-    case "workshop":
-      return "Workshop"
-    case "competition":
-      return "Competition"
-    case "meetup":
-      return "Meetup"
-    case "exhibition":
-      return "Exhibition"
-    case "other":
-      return "Event"
-    default:
-      return "Event"
-  }
-}
-
-function getEventTypeColor(type: string): string {
-  switch (type) {
-    case "workshop":
-      return "bg-cyan-100 text-cyan-700"
-    case "competition":
-      return "bg-amber-100 text-amber-700"
-    case "meetup":
-      return "bg-green-100 text-green-700"
-    case "exhibition":
-      return "bg-purple-100 text-purple-700"
-    case "other":
-      return "bg-slate-100 text-slate-600"
-    default:
-      return "bg-slate-100 text-slate-600"
-  }
-}
-
-function EventCard({ event, isPast = false }: { event: Event; isPast?: boolean }) {
+function EventCard({
+  event,
+  isPast = false,
+}: {
+  event: Event
+  isPast?: boolean
+}) {
   const eventDate = new Date(event.event_date)
 
   return (
     <div
       id={event.slug}
-      className={`relative pl-8 pb-12 last:pb-0 scroll-mt-32 ${isPast ? "opacity-60" : ""}`}
+      className={`relative pl-8 pb-12 last:pb-0 scroll-mt-32 ${isPast ? 'opacity-60' : ''}`}
     >
       {/* Timeline line */}
       <div
         className={`absolute left-0 top-2 bottom-0 w-px ${
-          isPast ? "bg-slate-200" : "bg-cyan-200"
+          isPast ? 'bg-slate-200' : 'bg-cyan-200'
         }`}
       />
 
       {/* Timeline dot */}
       <div
         className={`absolute left-0 top-2 w-2 h-2 rounded-full -translate-x-[3px] ${
-          isPast ? "bg-slate-400" : "bg-cyan-700"
+          isPast ? 'bg-slate-400' : 'bg-cyan-700'
         }`}
       />
 
@@ -152,14 +102,14 @@ function EventCard({ event, isPast = false }: { event: Event; isPast?: boolean }
             <div>
               <div
                 className={`font-mono text-sm ${
-                  isPast ? "text-slate-500" : "text-cyan-700"
+                  isPast ? 'text-slate-500' : 'text-cyan-700'
                 }`}
               >
                 {formatEventDate(event.event_date)}
               </div>
               <span
-                className={`inline-block mt-2 px-2 py-0.5 text-xs font-mono rounded ${getEventTypeColor(
-                  event.event_type
+                className={`inline-block mt-2 px-2 py-0.5 text-xs font-mono rounded ${getEventTypeBadgeClasses(
+                  event.event_type,
                 )}`}
               >
                 {getEventTypeLabel(event.event_type)}
@@ -170,7 +120,7 @@ function EventCard({ event, isPast = false }: { event: Event; isPast?: boolean }
             {!isPast && (
               <div className="flex flex-col items-center bg-slate-50 border border-slate-200 rounded px-3 py-2">
                 <span className="text-xs font-mono text-slate-500 uppercase">
-                  {eventDate.toLocaleDateString("en-US", { month: "short" })}
+                  {formatEventMonth(eventDate)}
                 </span>
                 <span className="text-2xl font-mono font-bold text-cyan-700">
                   {eventDate.getDate()}
@@ -182,7 +132,7 @@ function EventCard({ event, isPast = false }: { event: Event; isPast?: boolean }
           {/* Title */}
           <h3
             className={`font-mono text-xl mb-2 ${
-              isPast ? "text-slate-600" : "text-slate-900"
+              isPast ? 'text-slate-600' : 'text-slate-900'
             }`}
           >
             {event.title}
@@ -203,7 +153,9 @@ function EventCard({ event, isPast = false }: { event: Event; isPast?: boolean }
             </div>
             <div className="flex items-center gap-1.5">
               <Clock className="w-4 h-4" />
-              <span>{formatDateRange(event.event_date, event.end_date)}</span>
+              <span>
+                {formatEventRange(event.event_date, event.end_date)}
+              </span>
             </div>
           </div>
 
@@ -228,41 +180,43 @@ function EventCard({ event, isPast = false }: { event: Event; isPast?: boolean }
 }
 
 export default async function EventsPage() {
-  const nonce = (await headers()).get("x-nonce") ?? undefined
+  const nonce = (await headers()).get('x-nonce') ?? undefined
   const supabase = await createClient()
 
   // Fetch dynamic content
   const content = await getContents(
-    ["events.header.title", "events.header.description", "events.empty"],
+    ['events.header.title', 'events.header.description', 'events.empty'],
     {
-      "events.header.title": "Learn With Us",
-      "events.header.description": "Hands-on workshops, competitions, and community events throughout Hawaii. Join us to learn robotics, meet fellow builders, and grow your skills.",
-      "events.empty": "No upcoming events. Check back soon for new workshops and events!",
-    }
+      'events.header.title': 'Learn With Us',
+      'events.header.description':
+        'Hands-on workshops, competitions, and community events throughout Hawaii. Join us to learn robotics, meet fellow builders, and grow your skills.',
+      'events.empty':
+        'No upcoming events. Check back soon for new workshops and events!',
+    },
   )
 
   // Fetch all public events
   let events: Event[] = []
   try {
     const { data, error } = await supabase
-      .from("events")
-      .select("*")
-      .eq("is_public", true)
-      .order("event_date", { ascending: true })
+      .from('events')
+      .select('*')
+      .eq('is_public', true)
+      .order('event_date', { ascending: true })
 
     if (error) {
-      console.error("Error fetching events:", error)
+      console.error('Error fetching events:', error)
     }
     events = (data as Event[]) || []
   } catch (error) {
-    console.error("Error fetching events:", error)
+    console.error('Error fetching events:', error)
   }
 
   const now = new Date()
 
   // Split into upcoming and past events
   const upcomingEvents = (events || []).filter(
-    (e) => new Date(e.event_date) >= now
+    (e) => new Date(e.event_date) >= now,
   )
   const pastEvents = (events || [])
     .filter((e) => new Date(e.event_date) < now)
@@ -272,18 +226,18 @@ export default async function EventsPage() {
   const eventSchemas = upcomingEvents.map((event) =>
     getEventSchema({
       name: event.title,
-      description: event.description || "",
+      description: event.description || '',
       startDate: event.event_date,
       endDate: event.end_date || undefined,
       location: event.location,
       address: event.address || undefined,
       url: event.rsvp_url || undefined,
-    })
+    }),
   )
 
   const breadcrumbSchema = getBreadcrumbSchema([
-    { name: "Home", url: "/" },
-    { name: "Events", url: "/events" },
+    { name: 'Home', url: '/' },
+    { name: 'Events', url: '/events' },
   ])
 
   return (
@@ -305,10 +259,10 @@ export default async function EventsPage() {
             Events & Workshops
           </div>
           <h1 className="font-mono text-4xl lg:text-5xl text-slate-900 mb-4 break-words">
-            {content["events.header.title"]}
+            {content['events.header.title']}
           </h1>
           <p className="text-lg text-slate-600 max-w-2xl mx-auto break-words">
-            {content["events.header.description"]}
+            {content['events.header.description']}
           </p>
         </div>
       </section>
@@ -329,9 +283,7 @@ export default async function EventsPage() {
           ) : (
             <div className="bg-white border border-slate-200 rounded p-8 text-center">
               <Calendar className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-              <p className="text-slate-600">
-                {content["events.empty"]}
-              </p>
+              <p className="text-slate-600">{content['events.empty']}</p>
             </div>
           )}
         </div>

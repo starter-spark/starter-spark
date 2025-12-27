@@ -1,61 +1,45 @@
-// PostHog analytics event tracking utilities
-// https://posthog.com/docs/libraries/next-js
+// PostHog event tracking
 
-import posthog from "posthog-js"
+import posthog from 'posthog-js'
 
-// Event names for type safety
 export const AnalyticsEvents = {
-  // Page views (auto-captured by PostHog)
-  PAGE_VIEW: "$pageview",
-
-  // Product events
-  PRODUCT_VIEWED: "product_viewed",
-  ADD_TO_CART: "add_to_cart",
-  REMOVE_FROM_CART: "remove_from_cart",
-  UPDATE_CART_QUANTITY: "update_cart_quantity",
-
-  // Checkout events
-  CHECKOUT_STARTED: "checkout_started",
-  PURCHASE_COMPLETED: "purchase_completed",
-
-  // License events
-  LICENSE_CLAIMED: "license_claimed",
-  LICENSE_CLAIM_FAILED: "license_claim_failed",
-
-  // Learning events
-  LESSON_STARTED: "lesson_started",
-  LESSON_COMPLETED: "lesson_completed",
-  COURSE_STARTED: "course_started",
-  COURSE_COMPLETED: "course_completed",
-
-  // Community events
-  QUESTION_POSTED: "question_posted",
-  ANSWER_POSTED: "answer_posted",
-  VOTE_CAST: "vote_cast",
-
-  // Auth events
-  SIGN_UP_STARTED: "sign_up_started",
-  SIGN_UP_COMPLETED: "sign_up_completed",
-  LOGIN_STARTED: "login_started",
-  LOGIN_COMPLETED: "login_completed",
-
-  // Newsletter
-  NEWSLETTER_SUBSCRIBED: "newsletter_subscribed",
+  PAGE_VIEW: '$pageview',
+  PRODUCT_VIEWED: 'product_viewed',
+  ADD_TO_CART: 'add_to_cart',
+  REMOVE_FROM_CART: 'remove_from_cart',
+  UPDATE_CART_QUANTITY: 'update_cart_quantity',
+  CHECKOUT_STARTED: 'checkout_started',
+  PURCHASE_COMPLETED: 'purchase_completed',
+  LICENSE_CLAIMED: 'license_claimed',
+  LICENSE_CLAIM_FAILED: 'license_claim_failed',
+  LESSON_STARTED: 'lesson_started',
+  LESSON_COMPLETED: 'lesson_completed',
+  COURSE_STARTED: 'course_started',
+  COURSE_COMPLETED: 'course_completed',
+  QUESTION_POSTED: 'question_posted',
+  ANSWER_POSTED: 'answer_posted',
+  VOTE_CAST: 'vote_cast',
+  SIGN_UP_STARTED: 'sign_up_started',
+  SIGN_UP_COMPLETED: 'sign_up_completed',
+  LOGIN_STARTED: 'login_started',
+  LOGIN_COMPLETED: 'login_completed',
+  NEWSLETTER_SUBSCRIBED: 'newsletter_subscribed',
 } as const
 
-// Type for event names
-export type AnalyticsEvent = (typeof AnalyticsEvents)[keyof typeof AnalyticsEvents]
+export type AnalyticsEvent =
+  (typeof AnalyticsEvents)[keyof typeof AnalyticsEvents]
 
-const isBrowser = typeof window !== "undefined"
+const isBrowser = typeof window !== 'undefined'
 
-// Track a custom event
-export function trackEvent(event: AnalyticsEvent, properties?: Record<string, unknown>) {
+export function trackEvent(
+  event: AnalyticsEvent,
+  properties?: Record<string, unknown>,
+) {
   if (isBrowser) {
     posthog.capture(event, properties)
   }
 }
 
-// Product tracking
 export function trackProductViewed(product: {
   id: string
   name: string
@@ -93,7 +77,6 @@ export function trackRemoveFromCart(product: { id: string; name: string }) {
   })
 }
 
-// Checkout tracking
 export function trackCheckoutStarted(cart: {
   items: { id: string; name: string; quantity: number; price: number }[]
   total: number
@@ -128,11 +111,10 @@ export function trackPurchaseCompleted(order: {
   })
 }
 
-// License tracking
 export function trackLicenseClaimed(license: {
   licenseId: string
   productName: string
-  method: "code" | "token"
+  method: 'code' | 'token'
 }) {
   trackEvent(AnalyticsEvents.LICENSE_CLAIMED, {
     license_id: license.licenseId,
@@ -141,7 +123,6 @@ export function trackLicenseClaimed(license: {
   })
 }
 
-// Learning tracking
 export function trackLessonStarted(lesson: {
   lessonId: string
   lessonTitle: string
@@ -170,7 +151,6 @@ export function trackLessonCompleted(lesson: {
   })
 }
 
-// Community tracking
 export function trackQuestionPosted(question: {
   questionId: string
   title: string
@@ -183,7 +163,10 @@ export function trackQuestionPosted(question: {
   })
 }
 
-export function trackAnswerPosted(answer: { questionId: string; answerId: string }) {
+export function trackAnswerPosted(answer: {
+  questionId: string
+  answerId: string
+}) {
   trackEvent(AnalyticsEvents.ANSWER_POSTED, {
     question_id: answer.questionId,
     answer_id: answer.answerId,
@@ -191,9 +174,9 @@ export function trackAnswerPosted(answer: { questionId: string; answerId: string
 }
 
 export function trackVoteCast(vote: {
-  targetType: "question" | "answer"
+  targetType: 'question' | 'answer'
   targetId: string
-  voteType: "up" | "down"
+  voteType: 'up' | 'down'
 }) {
   trackEvent(AnalyticsEvents.VOTE_CAST, {
     target_type: vote.targetType,
@@ -202,14 +185,15 @@ export function trackVoteCast(vote: {
   })
 }
 
-// Identify user (call after login/signup)
-export function identifyUser(userId: string, properties?: Record<string, unknown>) {
+export function identifyUser(
+  userId: string,
+  properties?: Record<string, unknown>,
+) {
   if (isBrowser) {
     posthog.identify(userId, properties)
   }
 }
 
-// Reset user (call on logout)
 export function resetUser() {
   if (isBrowser) {
     posthog.reset()

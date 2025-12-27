@@ -1,17 +1,29 @@
-"use client"
+'use client'
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { MoreHorizontal, Shield, UserCog, User, Loader2, Ban, UserCheck } from "lucide-react"
-import { updateUserRole, banUserFromForums, unbanUserFromForums } from "./actions"
+} from '@/components/ui/dropdown-menu'
+import {
+  MoreHorizontal,
+  Shield,
+  UserCog,
+  User,
+  Loader2,
+  Ban,
+  UserCheck,
+} from 'lucide-react'
+import {
+  updateUserRole,
+  banUserFromForums,
+  unbanUserFromForums,
+} from './actions'
 
 interface UserActionsProps {
   userId: string
@@ -19,19 +31,23 @@ interface UserActionsProps {
   isBanned?: boolean | null
 }
 
-export function UserActions({ userId, currentRole, isBanned }: UserActionsProps) {
+export function UserActions({
+  userId,
+  currentRole,
+  isBanned,
+}: UserActionsProps) {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
 
-  const handleRoleChange = async (newRole: "admin" | "staff" | "user") => {
+  const handleRoleChange = async (newRole: 'admin' | 'staff' | 'user') => {
     if (newRole === currentRole) return
 
     const confirmMessage =
-      newRole === "admin"
-        ? "Are you sure you want to make this user an admin? They will have full access to all admin features."
-        : newRole === "staff"
-          ? "Are you sure you want to make this user a staff member?"
-          : "Are you sure you want to demote this user to a regular user?"
+      newRole === 'admin'
+        ? 'Are you sure you want to make this user an admin? They will have full access to all admin features.'
+        : newRole === 'staff'
+          ? 'Are you sure you want to make this user a staff member?'
+          : 'Are you sure you want to demote this user to a regular user?'
 
     if (!confirm(confirmMessage)) {
       return
@@ -50,7 +66,7 @@ export function UserActions({ userId, currentRole, isBanned }: UserActionsProps)
   }
 
   const handleBan = async () => {
-    const reason = prompt("Enter a reason for the ban (optional):")
+    const reason = prompt('Enter a reason for the ban (optional):')
     if (reason === null) return // User cancelled
 
     setIsLoading(true)
@@ -66,7 +82,7 @@ export function UserActions({ userId, currentRole, isBanned }: UserActionsProps)
   }
 
   const handleUnban = async () => {
-    if (!confirm("Are you sure you want to unban this user from the forums?")) {
+    if (!confirm('Are you sure you want to unban this user from the forums?')) {
       return
     }
 
@@ -83,7 +99,7 @@ export function UserActions({ userId, currentRole, isBanned }: UserActionsProps)
   }
 
   // Can't ban/unban admins or staff
-  const canModifyBanStatus = currentRole !== "admin" && currentRole !== "staff"
+  const canModifyBanStatus = currentRole !== 'admin' && currentRole !== 'staff'
 
   return (
     <DropdownMenu>
@@ -98,23 +114,23 @@ export function UserActions({ userId, currentRole, isBanned }: UserActionsProps)
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem
-          onClick={() => void handleRoleChange("admin")}
-          disabled={currentRole === "admin"}
+          onClick={() => void handleRoleChange('admin')}
+          disabled={currentRole === 'admin'}
         >
           <Shield className="mr-2 h-4 w-4 text-purple-600" />
           Make Admin
         </DropdownMenuItem>
         <DropdownMenuItem
-          onClick={() => void handleRoleChange("staff")}
-          disabled={currentRole === "staff"}
+          onClick={() => void handleRoleChange('staff')}
+          disabled={currentRole === 'staff'}
         >
           <UserCog className="mr-2 h-4 w-4 text-cyan-600" />
           Make Staff
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
-          onClick={() => void handleRoleChange("user")}
-          disabled={currentRole === "user"}
+          onClick={() => void handleRoleChange('user')}
+          disabled={currentRole === 'user'}
         >
           <User className="mr-2 h-4 w-4" />
           Make Regular User

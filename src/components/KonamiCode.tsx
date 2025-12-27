@@ -1,18 +1,18 @@
-"use client"
+'use client'
 
-import { useEffect, useRef, useCallback } from "react"
+import { useEffect, useRef, useCallback } from 'react'
 
 const KONAMI_CODE: readonly string[] = [
-  "ArrowUp",
-  "ArrowUp",
-  "ArrowDown",
-  "ArrowDown",
-  "ArrowLeft",
-  "ArrowRight",
-  "ArrowLeft",
-  "ArrowRight",
-  "KeyB",
-  "KeyA",
+  'ArrowUp',
+  'ArrowUp',
+  'ArrowDown',
+  'ArrowDown',
+  'ArrowLeft',
+  'ArrowRight',
+  'ArrowLeft',
+  'ArrowRight',
+  'KeyB',
+  'KeyA',
 ] as const
 
 export function KonamiCode() {
@@ -21,17 +21,17 @@ export function KonamiCode() {
 
   const triggerConfetti = useCallback(async () => {
     // Dynamically import confetti only when triggered
-    const confettiModule = await import("canvas-confetti")
+    const confettiModule = await import('canvas-confetti')
 
     // Create an absolutely-positioned canvas that scrolls with the page
-    const canvas = document.createElement("canvas")
-    canvas.style.position = "absolute"
+    const canvas = document.createElement('canvas')
+    canvas.style.position = 'absolute'
     canvas.style.top = `${window.scrollY}px`
-    canvas.style.left = "0"
-    canvas.style.width = "100vw"
-    canvas.style.height = "200vh"
-    canvas.style.pointerEvents = "none"
-    canvas.style.zIndex = "9999"
+    canvas.style.left = '0'
+    canvas.style.width = '100vw'
+    canvas.style.height = '200vh'
+    canvas.style.pointerEvents = 'none'
+    canvas.style.zIndex = '9999'
     document.body.appendChild(canvas)
 
     // Create confetti instance bound to our canvas
@@ -48,7 +48,7 @@ export function KonamiCode() {
         angle: 60,
         spread: 55,
         origin: { x: 0, y: 0.3 },
-        colors: ["#0e7490", "#06b6d4", "#22d3ee", "#67e8f9"],
+        colors: ['#0e7490', '#06b6d4', '#22d3ee', '#67e8f9'],
         ticks: 400,
       })
 
@@ -58,7 +58,7 @@ export function KonamiCode() {
         angle: 120,
         spread: 55,
         origin: { x: 1, y: 0.3 },
-        colors: ["#0e7490", "#06b6d4", "#22d3ee", "#67e8f9"],
+        colors: ['#0e7490', '#06b6d4', '#22d3ee', '#67e8f9'],
         ticks: 400,
       })
 
@@ -81,8 +81,8 @@ export function KonamiCode() {
       // Ignore if user is typing in an input/textarea
       const target = event.target as HTMLElement
       if (
-        target.tagName === "INPUT" ||
-        target.tagName === "TEXTAREA" ||
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
         target.isContentEditable
       ) {
         return
@@ -120,10 +120,10 @@ export function KonamiCode() {
       }, 2000)
     }
 
-    window.addEventListener("keydown", handleKeyDown)
+    window.addEventListener('keydown', handleKeyDown)
 
     return () => {
-      window.removeEventListener("keydown", handleKeyDown)
+      window.removeEventListener('keydown', handleKeyDown)
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current)
       }

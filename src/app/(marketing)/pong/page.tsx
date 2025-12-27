@@ -1,10 +1,14 @@
-import type { Metadata } from "next"
-import Link from "next/link"
+import type { Metadata } from 'next'
+import Link from 'next/link'
+import {
+  roomyPrimaryLink,
+  roomySecondaryLink,
+} from '@/components/marketing/link-classes'
 
 export const metadata: Metadata = {
-  title: "Pong Ping",
-  description: "NEW and IMPROVED (and low-effort) Pong Ping!",
-  robots: "noindex, nofollow",
+  title: 'Pong Ping',
+  description: 'NEW and IMPROVED (and low-effort) Pong Ping!',
+  robots: 'noindex, nofollow',
 }
 
 export default function PongPage() {
@@ -22,12 +26,12 @@ export default function PongPage() {
         <div className="w-full max-w-[1300px] mx-auto mb-8">
           <iframe
             style={{
-              display: "block",
-              margin: "0 auto",
-              borderRadius: "12px",
-              width: "100%",
-              height: "auto",
-              aspectRatio: "485/402",
+              display: 'block',
+              margin: '0 auto',
+              borderRadius: '12px',
+              width: '100%',
+              height: 'auto',
+              aspectRatio: '485/402',
             }}
             src="https://scratch.mit.edu/projects/958723642/embed"
             title="Pong Game"
@@ -35,17 +39,17 @@ export default function PongPage() {
         </div>
 
         <p className="text-slate-600 mb-8">
-          <b>Controls</b><br></br>
+          <b>Controls</b>
+          <br></br>
           left/right arrow — move paddle<br></br>
-          space — flick paddle<br></br>
-          S — use time slower (orange powerup)<br></br>
-          R — use score restore (pink powerup)<br></br>
+          space — flick paddle<br></br>S — use time slower (orange powerup)
+          <br></br>R — use score restore (pink powerup)<br></br>
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link
             href="/"
-            className="inline-flex items-center justify-center px-6 py-3 rounded-md bg-cyan-700 hover:bg-cyan-600 text-white font-mono text-sm transition-colors"
+            className={roomyPrimaryLink}
           >
             Back to home
           </Link>
@@ -53,7 +57,7 @@ export default function PongPage() {
             href="https://scratch.mit.edu/projects/958723642"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center justify-center px-6 py-3 rounded-md border border-slate-300 hover:bg-slate-100 text-slate-700 font-mono text-sm transition-colors"
+            className={roomySecondaryLink}
           >
             View on Scratch
           </Link>

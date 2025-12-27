@@ -1,43 +1,40 @@
-import { createClient } from "@/lib/supabase/server"
-import { formatRelativeTime } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { UserAvatar } from "@/components/ui/user-avatar"
-import {
-  CheckCircle2,
-  MessageSquare,
-  ArrowLeft,
-} from "lucide-react"
-import Link from "next/link"
-import { notFound } from "next/navigation"
-import type { Metadata } from "next"
-import { AnswerForm } from "./AnswerForm"
-import { MarkdownContent } from "./MarkdownContent"
-import { VoteButtons } from "./VoteButtons"
-import { PostActions } from "./PostActions"
-import { siteConfig } from "@/config/site"
-import { isUuid } from "@/lib/uuid"
+import { createClient } from '@/lib/supabase/server'
+import { formatRelativeTime } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
+import { UserAvatar } from '@/components/ui/user-avatar'
+import { CheckCircle2, MessageSquare, ArrowLeft } from 'lucide-react'
+import Link from 'next/link'
+import { notFound } from 'next/navigation'
+import type { Metadata } from 'next'
+import { AnswerForm } from './AnswerForm'
+import { MarkdownContent } from './MarkdownContent'
+import { VoteButtons } from './VoteButtons'
+import { PostActions } from './PostActions'
+import { siteConfig } from '@/config/site'
+import { isUuid } from '@/lib/uuid'
+import { resolveParams, type MaybePromise } from '@/lib/next-params'
 
-type PageParams = Promise<{ id: string }>
+type PageParams = MaybePromise<{ id: string }>
 
 export async function generateMetadata({
   params,
 }: {
   params: PageParams
 }): Promise<Metadata> {
-  const { id } = await params
+  const { id } = await resolveParams(params)
   const supabase = await createClient()
 
   // Check if id looks like a UUID, otherwise treat as slug
   const isUUID = isUuid(id)
 
   const { data: post, error } = await supabase
-    .from("posts")
-    .select("title, content")
-    .eq(isUUID ? "id" : "slug", id)
+    .from('posts')
+    .select('title, content')
+    .eq(isUUID ? 'id' : 'slug', id)
     .maybeSingle()
 
   if (error || !post) {
-    return { title: "Question Not Found" }
+    return { title: 'Question Not Found' }
   }
 
   const title = post.title
@@ -46,8 +43,8 @@ export async function generateMetadata({
   // Build OG image URL with post info
   const ogParams = new URLSearchParams({
     title,
-    subtitle: "Community Question in The Lab",
-    type: "post",
+    subtitle: 'Community Question in The Lab',
+    type: 'post',
   })
   const ogImageUrl = `/api/og?${ogParams.toString()}`
 
@@ -67,10 +64,10 @@ export async function generateMetadata({
           alt: title,
         },
       ],
-      type: "article",
+      type: 'article',
     },
     twitter: {
-      card: "summary_large_image",
+      card: 'summary_large_image',
       title,
       description,
       images: [ogImageUrl],
@@ -83,7 +80,7 @@ export default async function QuestionDetailPage({
 }: {
   params: PageParams
 }) {
-  const { id } = await params
+  const { id } = await resolveParams(params)
   const supabase = await createClient()
 
   // Fetch the post with author and comments
@@ -91,7 +88,7 @@ export default async function QuestionDetailPage({
   const isUUID = isUuid(id)
 
   const { data: post, error } = await supabase
-    .from("posts")
+    .from('posts')
     .select(
       `
       id,
@@ -117,14 +114,14 @@ export default async function QuestionDetailPage({
         name,
         slug
       )
-    `
+    `,
     )
-    .eq(isUUID ? "id" : "slug", id)
+    .eq(isUUID ? 'id' : 'slug', id)
     .maybeSingle()
 
   if (error) {
-    console.error("Error fetching community post:", error)
-    throw new Error("Failed to load post")
+    console.error('Error fetching community post:', error)
+    throw new Error('Failed to load post')
   }
 
   if (!post) {
@@ -152,13 +149,13 @@ export default async function QuestionDetailPage({
     ` as const
 
   const { data: comments } = await supabase
-    .from("comments")
+    .from('comments')
     .select(commentsSelect)
-    .eq("post_id", post.id)
-    .is("parent_id", null) // Only top-level comments
-    .order("is_verified_answer", { ascending: false })
-    .order("upvotes", { ascending: false })
-    .order("created_at", { ascending: true })
+    .eq('post_id', post.id)
+    .is('parent_id', null) // Only top-level comments
+    .order('is_verified_answer', { ascending: false })
+    .order('upvotes', { ascending: false })
+    .order('created_at', { ascending: true })
 
   // Transform comments to properly type the author field
   type CommentAuthor = {
@@ -187,14 +184,14 @@ export default async function QuestionDetailPage({
   if (user) {
     // Fetch post vote
     const { data: postVoteData, error: postVoteError } = await supabase
-      .from("post_votes")
-      .select("vote_type")
-      .eq("post_id", post.id)
-      .eq("user_id", user.id)
+      .from('post_votes')
+      .select('vote_type')
+      .eq('post_id', post.id)
+      .eq('user_id', user.id)
       .maybeSingle()
 
     if (postVoteError) {
-      console.error("Error fetching post vote:", postVoteError)
+      console.error('Error fetching post vote:', postVoteError)
     }
 
     if (postVoteData) {
@@ -205,10 +202,10 @@ export default async function QuestionDetailPage({
     if (comments && comments.length > 0) {
       const commentIds = comments.map((c) => c.id)
       const { data: commentVotesData } = await supabase
-        .from("comment_votes")
-        .select("comment_id, vote_type")
-        .eq("user_id", user.id)
-        .in("comment_id", commentIds)
+        .from('comment_votes')
+        .select('comment_id, vote_type')
+        .eq('user_id', user.id)
+        .in('comment_id', commentIds)
 
       if (commentVotesData) {
         for (const vote of commentVotesData) {
@@ -219,9 +216,11 @@ export default async function QuestionDetailPage({
   }
 
   // Increment view count (safe + RLS-compatible)
-  const { error: viewCountError } = await supabase.rpc("increment_post_view", { p_post_id: post.id })
+  const { error: viewCountError } = await supabase.rpc('increment_post_view', {
+    p_post_id: post.id,
+  })
   if (viewCountError) {
-    console.error("Error incrementing post view count:", viewCountError)
+    console.error('Error incrementing post view count:', viewCountError)
   }
 
   const author = post.author as unknown as {
@@ -277,7 +276,7 @@ export default async function QuestionDetailPage({
               <div className="flex-1 min-w-0">
                 {/* Status Badge */}
                 <div className="flex items-center gap-3 mb-3">
-                  {post.status === "solved" ? (
+                  {post.status === 'solved' ? (
                     <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 text-sm font-mono rounded">
                       <CheckCircle2 className="w-4 h-4" />
                       Solved
@@ -331,13 +330,16 @@ export default async function QuestionDetailPage({
                   />
                   <div>
                     <span className="text-slate-700">
-                      {author?.full_name || author?.email?.split("@")[0] || "Anonymous"}
+                      {author?.full_name ||
+                        author?.email?.split('@')[0] ||
+                        'Anonymous'}
                     </span>
-                    {author?.role && ["admin", "staff"].includes(author.role) && (
-                      <span className="ml-2 px-1.5 py-0.5 bg-cyan-100 text-cyan-700 text-xs font-mono rounded">
-                        Staff
-                      </span>
-                    )}
+                    {author?.role &&
+                      ['admin', 'staff'].includes(author.role) && (
+                        <span className="ml-2 px-1.5 py-0.5 bg-cyan-100 text-cyan-700 text-xs font-mono rounded">
+                          Staff
+                        </span>
+                      )}
                     <span className="mx-2 text-slate-300">·</span>
                     <span>
                       {post.created_at && formatRelativeTime(post.created_at)}
@@ -364,7 +366,8 @@ export default async function QuestionDetailPage({
       <section className="pb-8 px-6 lg:px-20">
         <div className="max-w-4xl mx-auto">
           <h2 className="font-mono text-xl text-slate-900 mb-4">
-            {typedComments?.length || 0} Answer{(typedComments?.length || 0) !== 1 && "s"}
+            {typedComments?.length || 0} Answer
+            {(typedComments?.length || 0) !== 1 && 's'}
           </h2>
 
           {/* Verified Answer (pinned) */}
@@ -427,10 +430,11 @@ export default async function QuestionDetailPage({
             <AnswerForm postId={post.id} />
           ) : (
             <div className="bg-white border border-slate-200 rounded p-8 text-center">
-              <p className="text-slate-600 mb-4">
-                Sign in to post an answer
-              </p>
-              <Button asChild className="bg-cyan-700 hover:bg-cyan-600 text-white font-mono">
+              <p className="text-slate-600 mb-4">Sign in to post an answer</p>
+              <Button
+                asChild
+                className="bg-cyan-700 hover:bg-cyan-600 text-white font-mono"
+              >
                 <Link href="/login">Sign In</Link>
               </Button>
             </div>
@@ -500,10 +504,10 @@ function AnswerCard({
             size="sm"
           />
           <span className="text-slate-700">
-            {author?.full_name || author?.email?.split("@")[0] || "Anonymous"}
+            {author?.full_name || author?.email?.split('@')[0] || 'Anonymous'}
           </span>
           {(answer.is_staff_reply ||
-            (author?.role && ["admin", "staff"].includes(author.role))) && (
+            (author?.role && ['admin', 'staff'].includes(author.role))) && (
             <span className="px-1.5 py-0.5 bg-cyan-100 text-cyan-700 text-xs font-mono rounded">
               Staff
             </span>

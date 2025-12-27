@@ -1,4 +1,4 @@
-import { Page, Locator, expect } from "@playwright/test"
+import { Page, Locator, expect } from '@playwright/test'
 
 /**
  * Page Object Model for the Workshop Page
@@ -13,11 +13,11 @@ export class WorkshopPage {
   readonly signInRequired: Locator
   readonly signInButton: Locator
 
-  // Authenticated - empty state
+  // Authenticated, empty state
   readonly emptyState: Locator
   readonly shopButton: Locator
 
-  // Authenticated - with kits
+  // Authenticated, with kits
   readonly myKitsSection: Locator
   readonly kitCards: Locator
   readonly claimSection: Locator
@@ -33,16 +33,19 @@ export class WorkshopPage {
   constructor(page: Page) {
     this.page = page
 
-    this.pageTitle = page.getByRole("heading", { name: /workshop|my kits/i })
+    this.pageTitle = page.getByRole('heading', { name: /workshop|my kits/i })
 
     // Unauthenticated
     this.signInRequired = page.getByText(/sign in required|must be logged in/i)
-    this.signInButton = page.getByRole("link", { name: /sign in/i })
+    this.signInButton = page.getByRole('link', { name: /sign in/i })
 
     // Empty state
     this.emptyState = page.getByText(/no kits yet|haven't claimed/i)
     // Scope to main to avoid matching header nav links
-    this.shopButton = page.locator("main").getByRole("link", { name: /shop|browse/i }).first()
+    this.shopButton = page
+      .locator('main')
+      .getByRole('link', { name: /shop|browse/i })
+      .first()
 
     // With kits
     this.myKitsSection = page.getByText(/my kits/i)
@@ -51,7 +54,7 @@ export class WorkshopPage {
     })
     this.claimSection = page.getByText(/claim a kit/i)
     this.claimCodeInput = page.getByPlaceholder(/xxxx-xxxx-xxxx-xxxx/i)
-    this.activateButton = page.getByRole("button", { name: /activate/i })
+    this.activateButton = page.getByRole('button', { name: /activate/i })
     this.quickToolsSection = page.getByText(/quick tools/i)
     this.achievementsSection = page.getByText(/achievements/i)
 
@@ -61,7 +64,7 @@ export class WorkshopPage {
   }
 
   async goto() {
-    await this.page.goto("/workshop")
+    await this.page.goto('/workshop')
     await this.page
       .locator('header[data-hydrated="true"]')
       .waitFor({ timeout: 5000 })
@@ -69,7 +72,7 @@ export class WorkshopPage {
   }
 
   async expectPageLoaded() {
-    await expect(this.page.locator("main")).toBeVisible()
+    await expect(this.page.locator('main')).toBeVisible()
     await expect(this.pageTitle.first()).toBeVisible()
   }
 

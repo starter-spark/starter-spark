@@ -1,11 +1,18 @@
-"use client"
+'use client'
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { createPost } from "@/app/(marketing)/community/actions"
-import { useRouter } from "next/navigation"
-import { Send, Code, Bold, Italic, Link as LinkIcon, HelpCircle } from "lucide-react"
+import { useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { createPost } from '@/app/(marketing)/community/actions'
+import { useRouter } from 'next/navigation'
+import {
+  Send,
+  Code,
+  Bold,
+  Italic,
+  Link as LinkIcon,
+  HelpCircle,
+} from 'lucide-react'
 
 interface Product {
   id: string
@@ -19,22 +26,22 @@ interface NewQuestionFormProps {
 
 // Common tags for suggestions
 const SUGGESTED_TAGS = [
-  "hardware",
-  "code",
-  "assembly",
-  "troubleshooting",
-  "servos",
-  "arduino",
-  "wiring",
-  "calibration",
-  "showcase",
-  "tips",
+  'hardware',
+  'code',
+  'assembly',
+  'troubleshooting',
+  'servos',
+  'arduino',
+  'wiring',
+  'calibration',
+  'showcase',
+  'tips',
 ]
 
 export function NewQuestionForm({ products }: NewQuestionFormProps) {
-  const [title, setTitle] = useState("")
-  const [content, setContent] = useState("")
-  const [productId, setProductId] = useState<string>("")
+  const [title, setTitle] = useState('')
+  const [content, setContent] = useState('')
+  const [productId, setProductId] = useState<string>('')
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -46,22 +53,24 @@ export function NewQuestionForm({ products }: NewQuestionFormProps) {
 
     // Validation
     if (!title.trim()) {
-      setError("Please enter a title for your question.")
+      setError('Please enter a title for your question.')
       return
     }
 
     if (title.trim().length < 10) {
-      setError("Title should be at least 10 characters long.")
+      setError('Title should be at least 10 characters long.')
       return
     }
 
     if (!content.trim()) {
-      setError("Please describe your question in detail.")
+      setError('Please describe your question in detail.')
       return
     }
 
     if (content.trim().length < 30) {
-      setError("Please provide more detail about your question (at least 30 characters).")
+      setError(
+        'Please provide more detail about your question (at least 30 characters).',
+      )
       return
     }
 
@@ -76,14 +85,16 @@ export function NewQuestionForm({ products }: NewQuestionFormProps) {
       })
 
       if (!result.success) {
-        setError(result.error || "Failed to post your question. Please try again.")
+        setError(
+          result.error || 'Failed to post your question. Please try again.',
+        )
         return
       }
 
       router.push(`/community/${result.postId}`)
     } catch (err) {
-      console.error("Error:", err)
-      setError("An unexpected error occurred. Please try again.")
+      console.error('Error:', err)
+      setError('An unexpected error occurred. Please try again.')
     } finally {
       setIsSubmitting(false)
     }
@@ -99,14 +110,20 @@ export function NewQuestionForm({ products }: NewQuestionFormProps) {
 
   // Insert formatting helpers
   const insertFormatting = (before: string, after: string) => {
-    const textarea = document.getElementById("question-content") as HTMLTextAreaElement
+    const textarea = document.getElementById(
+      'question-content',
+    ) as HTMLTextAreaElement
     if (!textarea) return
 
     const start = textarea.selectionStart
     const end = textarea.selectionEnd
     const selectedText = content.slice(start, end)
     const newContent =
-      content.slice(0, start) + before + selectedText + after + content.slice(end)
+      content.slice(0, start) +
+      before +
+      selectedText +
+      after +
+      content.slice(end)
 
     setContent(newContent)
 
@@ -114,7 +131,7 @@ export function NewQuestionForm({ products }: NewQuestionFormProps) {
       textarea.focus()
       textarea.setSelectionRange(
         start + before.length,
-        start + before.length + selectedText.length
+        start + before.length + selectedText.length,
       )
     }, 0)
   }
@@ -133,7 +150,9 @@ export function NewQuestionForm({ products }: NewQuestionFormProps) {
           id="title"
           type="text"
           value={title}
-          onChange={(e) => { setTitle(e.target.value); }}
+          onChange={(e) => {
+            setTitle(e.target.value)
+          }}
           placeholder="What's your question? Be specific."
           className="bg-white border-slate-200 focus:border-cyan-700"
           maxLength={200}
@@ -154,7 +173,9 @@ export function NewQuestionForm({ products }: NewQuestionFormProps) {
         <select
           id="product"
           value={productId}
-          onChange={(e) => { setProductId(e.target.value); }}
+          onChange={(e) => {
+            setProductId(e.target.value)
+          }}
           className="w-full px-3 py-2 bg-white border border-slate-200 rounded text-sm text-slate-700 focus:border-cyan-700 focus:outline-none"
         >
           <option value="">Select a product...</option>
@@ -176,11 +197,13 @@ export function NewQuestionForm({ products }: NewQuestionFormProps) {
             <button
               key={tag}
               type="button"
-              onClick={() => { toggleTag(tag); }}
+              onClick={() => {
+                toggleTag(tag)
+              }}
               className={`cursor-pointer px-3 py-1 text-sm font-mono rounded transition-colors ${
                 selectedTags.includes(tag)
-                  ? "bg-cyan-700 text-white"
-                  : "bg-slate-100 text-slate-600 hover:bg-cyan-100 hover:text-cyan-700"
+                  ? 'bg-cyan-700 text-white'
+                  : 'bg-slate-100 text-slate-600 hover:bg-cyan-100 hover:text-cyan-700'
               }`}
             >
               #{tag}
@@ -202,7 +225,9 @@ export function NewQuestionForm({ products }: NewQuestionFormProps) {
         <div className="flex items-center gap-2 mb-2 p-2 bg-slate-50 border border-b-0 border-slate-200 rounded-t">
           <button
             type="button"
-            onClick={() => { insertFormatting("**", "**"); }}
+            onClick={() => {
+              insertFormatting('**', '**')
+            }}
             className="cursor-pointer p-2 text-slate-500 hover:text-cyan-700 hover:bg-white rounded transition-colors"
             title="Bold"
           >
@@ -210,7 +235,9 @@ export function NewQuestionForm({ products }: NewQuestionFormProps) {
           </button>
           <button
             type="button"
-            onClick={() => { insertFormatting("*", "*"); }}
+            onClick={() => {
+              insertFormatting('*', '*')
+            }}
             className="cursor-pointer p-2 text-slate-500 hover:text-cyan-700 hover:bg-white rounded transition-colors"
             title="Italic"
           >
@@ -218,7 +245,9 @@ export function NewQuestionForm({ products }: NewQuestionFormProps) {
           </button>
           <button
             type="button"
-            onClick={() => { insertFormatting("`", "`"); }}
+            onClick={() => {
+              insertFormatting('`', '`')
+            }}
             className="cursor-pointer p-2 text-slate-500 hover:text-cyan-700 hover:bg-white rounded transition-colors"
             title="Inline Code"
           >
@@ -226,15 +255,19 @@ export function NewQuestionForm({ products }: NewQuestionFormProps) {
           </button>
           <button
             type="button"
-            onClick={() => { insertFormatting("\n```cpp\n", "\n```\n"); }}
+            onClick={() => {
+              insertFormatting('\n```cpp\n', '\n```\n')
+            }}
             className="cursor-pointer p-2 text-slate-500 hover:text-cyan-700 hover:bg-white rounded transition-colors text-xs font-mono"
             title="Code Block"
           >
-            {"</>"}
+            {'</>'}
           </button>
           <button
             type="button"
-            onClick={() => { insertFormatting("[", "](url)"); }}
+            onClick={() => {
+              insertFormatting('[', '](url)')
+            }}
             className="cursor-pointer p-2 text-slate-500 hover:text-cyan-700 hover:bg-white rounded transition-colors"
             title="Link"
           >
@@ -245,7 +278,9 @@ export function NewQuestionForm({ products }: NewQuestionFormProps) {
         <textarea
           id="question-content"
           value={content}
-          onChange={(e) => { setContent(e.target.value); }}
+          onChange={(e) => {
+            setContent(e.target.value)
+          }}
           placeholder="Describe your question in detail...
 
 Include:
@@ -260,7 +295,8 @@ The more detail you provide, the better we can help!"
         />
 
         <p className="mt-1 text-xs text-slate-500">
-          Supports Markdown: **bold**, *italic*, `code`, ```code blocks```, [links](url)
+          Supports Markdown: **bold**, *italic*, `code`, ```code blocks```,
+          [links](url)
         </p>
       </div>
 
@@ -293,7 +329,9 @@ The more detail you provide, the better we can help!"
         <Button
           type="button"
           variant="outline"
-          onClick={() => { router.back(); }}
+          onClick={() => {
+            router.back()
+          }}
           className="border-slate-200 text-slate-600 hover:text-slate-900"
         >
           Cancel
@@ -304,7 +342,7 @@ The more detail you provide, the better we can help!"
           className="bg-cyan-700 hover:bg-cyan-600 text-white font-mono disabled:opacity-50"
         >
           {isSubmitting ? (
-            "Posting..."
+            'Posting...'
           ) : (
             <>
               <Send className="w-4 h-4 mr-2" />

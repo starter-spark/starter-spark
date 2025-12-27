@@ -1,20 +1,20 @@
-import { test, expect } from "@chromatic-com/playwright"
-import { LoginPage, WorkshopPage } from "../pages"
+import { test, expect } from '@chromatic-com/playwright'
+import { LoginPage, WorkshopPage } from '../pages'
 
 /**
  * E2E Tests for Authentication
  * Tests login page, magic link flow, and auth-protected routes
  */
 
-test.describe("Login Page", () => {
-  test("should load login page", async ({ page }) => {
+test.describe('Login Page', () => {
+  test('should load login page', async ({ page }) => {
     const loginPage = new LoginPage(page)
     await loginPage.goto()
 
     await loginPage.expectPageLoaded()
   })
 
-  test("should display email input field", async ({ page }) => {
+  test('should display email input field', async ({ page }) => {
     const loginPage = new LoginPage(page)
     await loginPage.goto()
 
@@ -22,7 +22,7 @@ test.describe("Login Page", () => {
     await expect(loginPage.emailInput).toBeEnabled()
   })
 
-  test("should display send magic link button", async ({ page }) => {
+  test('should display send magic link button', async ({ page }) => {
     const loginPage = new LoginPage(page)
     await loginPage.goto()
 
@@ -30,16 +30,16 @@ test.describe("Login Page", () => {
     await expect(loginPage.submitButton).toHaveText(/send magic link/i)
   })
 
-  test("should accept email input", async ({ page }) => {
+  test('should accept email input', async ({ page }) => {
     const loginPage = new LoginPage(page)
     await loginPage.goto()
 
-    await loginPage.fillEmail("test@example.com")
+    await loginPage.fillEmail('test@example.com')
 
-    await expect(loginPage.emailInput).toHaveValue("test@example.com")
+    await expect(loginPage.emailInput).toHaveValue('test@example.com')
   })
 
-  test("should show error for empty email submission", async ({ page }) => {
+  test('should show error for empty email submission', async ({ page }) => {
     const loginPage = new LoginPage(page)
     await loginPage.goto()
 
@@ -50,57 +50,59 @@ test.describe("Login Page", () => {
     await expect(loginPage.errorMessage).toHaveText(/enter your email address/i)
   })
 
-  test("should show error for invalid email format", async ({ page }) => {
+  test('should show error for invalid email format', async ({ page }) => {
     const loginPage = new LoginPage(page)
     await loginPage.goto()
 
-    await loginPage.fillEmail("invalid-email")
+    await loginPage.fillEmail('invalid-email')
     await loginPage.submitForm()
 
     await expect(loginPage.errorMessage).toBeVisible()
     await expect(loginPage.errorMessage).toHaveText(/valid email address/i)
   })
 
-  test("should show loading state when submitting", async ({ page }) => {
+  test('should show loading state when submitting', async ({ page }) => {
     const loginPage = new LoginPage(page)
     await loginPage.goto()
 
-    await loginPage.fillEmail("test@example.com")
+    await loginPage.fillEmail('test@example.com')
     await loginPage.submitForm()
 
     // Should briefly show loading state
-    const loadingButton = page.getByRole("button", { name: /sending/i })
+    const loadingButton = page.getByRole('button', { name: /sending/i })
     // This happens quickly, so we just verify the button changes state
   })
 
-  test("should show success message after valid submission", async ({
+  test('should show success message after valid submission', async ({
     page,
   }) => {
     const loginPage = new LoginPage(page)
     await loginPage.goto()
 
-    await loginPage.fillEmail("test@example.com")
+    await loginPage.fillEmail('test@example.com')
     await loginPage.submitForm()
 
     // Wait for either success state or error state (API might fail in test environment)
     // Include rate limit message "please wait" as valid error state
-    const successOrError = page.locator("text=/check your email|failed to send|please wait/i").first()
+    const successOrError = page
+      .locator('text=/check your email|failed to send|please wait/i')
+      .first()
     await expect(successOrError).toBeVisible({ timeout: 10000 })
   })
 
-  test("should allow using different email after success", async ({ page }) => {
+  test('should allow using different email after success', async ({ page }) => {
     const loginPage = new LoginPage(page)
     await loginPage.goto()
 
-    await loginPage.fillEmail("test@example.com")
+    await loginPage.fillEmail('test@example.com')
     await loginPage.submitForm()
 
     // Wait for either success or error state
     const successMessage = loginPage.successMessage
     // Include rate limit message "please wait" as valid error state
-    const errorMessage = page.locator("text=/failed to send|please wait/i")
+    const errorMessage = page.locator('text=/failed to send|please wait/i')
 
-    // Check for success - if success, test the different email flow
+    // Check for success, if success test the different email flow
     try {
       await expect(successMessage).toBeVisible({ timeout: 10000 })
 
@@ -117,48 +119,50 @@ test.describe("Login Page", () => {
         await expect(loginPage.emailInput).toBeVisible()
       } else {
         // If neither success nor error, something else went wrong
-        throw new Error("Expected either success or error message after form submission")
+        throw new Error(
+          'Expected either success or error message after form submission',
+        )
       }
     }
   })
 })
 
-test.describe("Login Page - Query Parameters", () => {
-  test("should accept redirect parameter", async ({ page }) => {
-    await page.goto("/login?redirect=/workshop")
+test.describe('Login Page - Query Parameters', () => {
+  test('should accept redirect parameter', async ({ page }) => {
+    await page.goto('/login?redirect=/workshop')
 
     const loginPage = new LoginPage(page)
     await loginPage.expectPageLoaded()
 
     // Page should load with redirect param
-    expect(page.url()).toContain("redirect")
+    expect(page.url()).toContain('redirect')
   })
 
-  test("should accept claim token parameter", async ({ page }) => {
-    await page.goto("/login?claim=test-token-123")
+  test('should accept claim token parameter', async ({ page }) => {
+    await page.goto('/login?claim=test-token-123')
 
     const loginPage = new LoginPage(page)
     await loginPage.expectPageLoaded()
 
     // Page should load with claim param or show claim-specific copy
-    const hasClaimParam = page.url().includes("claim")
+    const hasClaimParam = page.url().includes('claim')
     const claimCopy = page.getByText(/claim your kit license/i)
     const hasClaimCopy = await claimCopy.isVisible().catch(() => false)
     expect(hasClaimParam || hasClaimCopy).toBeTruthy()
   })
 
-  test("should accept both redirect and claim parameters", async ({ page }) => {
-    await page.goto("/login?redirect=/workshop&claim=test-token-123")
+  test('should accept both redirect and claim parameters', async ({ page }) => {
+    await page.goto('/login?redirect=/workshop&claim=test-token-123')
 
     const loginPage = new LoginPage(page)
     await loginPage.expectPageLoaded()
   })
 })
 
-test.describe("Protected Routes - Unauthenticated", () => {
-  test("should show sign in required on workshop page", async ({ page }) => {
+test.describe('Protected Routes - Unauthenticated', () => {
+  test('should show sign in required on workshop page', async ({ page }) => {
     // Clear any existing auth
-    await page.goto("/")
+    await page.goto('/')
     await page.evaluate(() => {
       localStorage.clear()
       sessionStorage.clear()
@@ -169,73 +173,80 @@ test.describe("Protected Routes - Unauthenticated", () => {
     await workshopPage.expectPageLoaded()
 
     // Should see sign in required or redirect to login
-    const isOnWorkshop = page.url().includes("/workshop")
+    const isOnWorkshop = page.url().includes('/workshop')
 
     if (isOnWorkshop) {
-      // On mobile, the header "Sign In" text may be hidden (icon-only), so check multiple indicators
-      const mainContent = page.locator("main")
-      const mainSignInMessage = mainContent.getByText(/sign in|login|must be logged in/i)
-      const headerSignInLink = page.getByRole("banner").getByRole("link", { name: /sign in/i })
+      // Wait for header to finish loading (Suspense boundary)
+      await page.waitForSelector('header[data-hydrated="true"]', {
+        timeout: 5000,
+      })
 
-      // Either main content has sign-in message OR header has sign-in link
-      const hasMainMessage = await mainSignInMessage.first().isVisible().catch(() => false)
-      const hasHeaderLink = await headerSignInLink.isVisible().catch(() => false)
-
-      expect(hasMainMessage || hasHeaderLink).toBeTruthy()
+      // Workshop page shows "Sign in to access your kits" message for unauthenticated users
+      const mainContent = page.locator('main')
+      await expect(
+        mainContent.getByText(/sign in to access/i),
+      ).toBeVisible({ timeout: 5000 })
     }
   })
 
-  test("should redirect claim page to login for unauthenticated users", async ({
+  test('should redirect claim page to login for unauthenticated users', async ({
     page,
   }) => {
-    await page.goto("/claim/test-token-123")
+    await page.goto('/claim/test-token-123')
 
     // Wait for initial render to complete
-    await page.waitForLoadState("domcontentloaded")
+    await page.waitForLoadState('domcontentloaded')
 
     // Wait for content to load (page may show Loading... initially)
-    const invalidHeading = page.getByRole("heading", { name: /invalid/i })
-    const claimHeading = page.getByRole("heading", { name: /claim/i })
+    const invalidHeading = page.getByRole('heading', { name: /invalid/i })
+    const claimHeading = page.getByRole('heading', { name: /claim/i })
     const signInText = page.getByText(/sign in|login/i).first()
 
     await Promise.race([
       invalidHeading.waitFor({ timeout: 10000 }),
       claimHeading.waitFor({ timeout: 10000 }),
       signInText.waitFor({ timeout: 10000 }),
-      expect(page).toHaveURL(/\/login/, { timeout: 10000 })
+      expect(page).toHaveURL(/\/login/, { timeout: 10000 }),
     ]).catch(() => {})
 
     // With invalid token: shows "Invalid Claim Link" with shop buttons
     // With valid token: shows "Sign In to Claim" or redirects to /login
     const currentUrl = page.url()
-    const hasLoginRedirect = currentUrl.includes("/login")
+    const hasLoginRedirect = currentUrl.includes('/login')
     const hasSignInPrompt = await signInText.isVisible().catch(() => false)
-    const hasInvalidMessage = await invalidHeading.isVisible().catch(() => false)
+    const hasInvalidMessage = await invalidHeading
+      .isVisible()
+      .catch(() => false)
     const hasClaimHeading = await claimHeading.isVisible().catch(() => false)
 
     // Any of these states is valid for an unauthenticated user
-    expect(hasLoginRedirect || hasSignInPrompt || hasInvalidMessage || hasClaimHeading).toBeTruthy()
+    expect(
+      hasLoginRedirect ||
+        hasSignInPrompt ||
+        hasInvalidMessage ||
+        hasClaimHeading,
+    ).toBeTruthy()
   })
 })
 
-test.describe("Auth UI Components", () => {
-  test("should display sign in link in workshop for unauthenticated users", async ({
+test.describe('Auth UI Components', () => {
+  test('should display sign in link in workshop for unauthenticated users', async ({
     page,
   }) => {
-    await page.goto("/workshop")
+    await page.goto('/workshop')
 
     // Use first() to handle multiple sign-in links (header + page content)
-    const signInLink = page.getByRole("link", { name: /sign in/i }).first()
+    const signInLink = page.getByRole('link', { name: /sign in/i }).first()
     if (await signInLink.isVisible()) {
       await expect(signInLink).toBeVisible()
     }
   })
 
-  test("should navigate to login when clicking sign in", async ({ page }) => {
-    await page.goto("/workshop")
+  test('should navigate to login when clicking sign in', async ({ page }) => {
+    await page.goto('/workshop')
 
     // Use first() to handle multiple sign-in links (header + page content)
-    const signInLink = page.getByRole("link", { name: /sign in/i }).first()
+    const signInLink = page.getByRole('link', { name: /sign in/i }).first()
     if (await signInLink.isVisible()) {
       await signInLink.click()
       await expect(page).toHaveURL(/\/login/)
@@ -243,9 +254,9 @@ test.describe("Auth UI Components", () => {
   })
 })
 
-test.describe("Session Handling", () => {
-  test("should handle page reload without errors", async ({ page }) => {
-    await page.goto("/login")
+test.describe('Session Handling', () => {
+  test('should handle page reload without errors', async ({ page }) => {
+    await page.goto('/login')
     await page.reload()
 
     // Page should still work
@@ -253,15 +264,15 @@ test.describe("Session Handling", () => {
     await loginPage.expectPageLoaded()
   })
 
-  test("should handle navigation between auth and non-auth pages", async ({
+  test('should handle navigation between auth and non-auth pages', async ({
     page,
   }) => {
     // Navigate between pages
-    await page.goto("/")
-    await page.goto("/login")
-    await page.goto("/workshop")
-    await page.goto("/")
-    await page.goto("/login")
+    await page.goto('/')
+    await page.goto('/login')
+    await page.goto('/workshop')
+    await page.goto('/')
+    await page.goto('/login')
 
     // Should not crash
     const loginPage = new LoginPage(page)

@@ -1,12 +1,23 @@
-"use client"
+'use client'
 
-import { useState, useTransition } from "react"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Loader2, Download, Copy, Check } from "lucide-react"
-import { generateLicenses } from "../actions"
+import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Loader2, Download, Copy, Check } from 'lucide-react'
+import { generateLicenses } from '../actions'
+import {
+  AdminLabel,
+  AdminSelect,
+  adminHelperTextClass,
+} from '@/components/admin/form-controls'
 
 interface GenerateLicensesFormProps {
   products: { id: string; name: string }[]
@@ -20,9 +31,11 @@ export function GenerateLicensesForm({ products }: GenerateLicensesFormProps) {
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null)
 
   // Form state
-  const [productId, setProductId] = useState(products[0]?.id || "")
+  const [productId, setProductId] = useState(products[0]?.id || '')
   const [quantity, setQuantity] = useState(1)
-  const [source, setSource] = useState<"online_purchase" | "physical_card">("physical_card")
+  const [source, setSource] = useState<'online_purchase' | 'physical_card'>(
+    'physical_card',
+  )
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -43,28 +56,30 @@ export function GenerateLicensesForm({ products }: GenerateLicensesFormProps) {
   const handleCopyCode = async (code: string, index: number) => {
     await navigator.clipboard.writeText(code)
     setCopiedIndex(index)
-    setTimeout(() => { setCopiedIndex(null); }, 2000)
+    setTimeout(() => {
+      setCopiedIndex(null)
+    }, 2000)
   }
 
   const handleCopyAll = async () => {
-    await navigator.clipboard.writeText(generatedCodes.join("\n"))
-    alert("All codes copied to clipboard!")
+    await navigator.clipboard.writeText(generatedCodes.join('\n'))
+    alert('All codes copied to clipboard!')
   }
 
   const handleDownloadCSV = () => {
     const product = products.find((p) => p.id === productId)
     const csv = [
-      "Code,Product,Source",
-      ...generatedCodes.map((code) =>
-        `${code},"${product?.name || "Unknown"}",${source}`
+      'Code,Product,Source',
+      ...generatedCodes.map(
+        (code) => `${code},"${product?.name || 'Unknown'}",${source}`,
       ),
-    ].join("\n")
+    ].join('\n')
 
-    const blob = new Blob([csv], { type: "text/csv" })
+    const blob = new Blob([csv], { type: 'text/csv' })
     const url = URL.createObjectURL(blob)
-    const a = document.createElement("a")
+    const a = document.createElement('a')
     a.href = url
-    a.download = `licenses-${new Date().toISOString().split("T")[0]}.csv`
+    a.download = `licenses-${new Date().toISOString().split('T')[0]}.csv`
     a.click()
     URL.revokeObjectURL(url)
   }
@@ -84,7 +99,12 @@ export function GenerateLicensesForm({ products }: GenerateLicensesFormProps) {
               <Copy className="mr-2 h-4 w-4" />
               Copy All
             </Button>
-            <Button variant="outline" onClick={() => { handleDownloadCSV(); }}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                handleDownloadCSV()
+              }}
+            >
               <Download className="mr-2 h-4 w-4" />
               Download CSV
             </Button>
@@ -124,7 +144,9 @@ export function GenerateLicensesForm({ products }: GenerateLicensesFormProps) {
             </Button>
             <Button
               className="bg-cyan-700 hover:bg-cyan-600"
-              onClick={() => { router.push("/admin/licenses"); }}
+              onClick={() => {
+                router.push('/admin/licenses')
+              }}
             >
               View All Licenses
             </Button>
@@ -135,7 +157,12 @@ export function GenerateLicensesForm({ products }: GenerateLicensesFormProps) {
   }
 
   return (
-    <form onSubmit={(e) => { handleSubmit(e); }} className="space-y-6">
+    <form
+      onSubmit={(e) => {
+        handleSubmit(e)
+      }}
+      className="space-y-6"
+    >
       {error && (
         <div className="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-600">
           {error}
@@ -151,58 +178,56 @@ export function GenerateLicensesForm({ products }: GenerateLicensesFormProps) {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <label htmlFor="product" className="text-sm font-medium text-slate-900">
-              Product
-            </label>
-            <select
+            <AdminLabel htmlFor="product">Product</AdminLabel>
+            <AdminSelect
               id="product"
               value={productId}
-              onChange={(e) => { setProductId(e.target.value); }}
+              onChange={(e) => {
+                setProductId(e.target.value)
+              }}
               required
-              className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-700 focus:ring-offset-2"
             >
               {products.map((product) => (
                 <option key={product.id} value={product.id}>
                   {product.name}
                 </option>
               ))}
-            </select>
+            </AdminSelect>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <label htmlFor="quantity" className="text-sm font-medium text-slate-900">
-                Quantity
-              </label>
+              <AdminLabel htmlFor="quantity">Quantity</AdminLabel>
               <Input
                 id="quantity"
                 type="number"
                 min="1"
                 max="100"
                 value={quantity}
-                onChange={(e) => { setQuantity(Number.parseInt(e.target.value) || 1); }}
+                onChange={(e) => {
+                  setQuantity(Number.parseInt(e.target.value) || 1)
+                }}
                 required
               />
-              <p className="text-xs text-slate-500">Max 100 per batch</p>
+              <p className={adminHelperTextClass}>Max 100 per batch</p>
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="source" className="text-sm font-medium text-slate-900">
-                Source
-              </label>
-              <select
+              <AdminLabel htmlFor="source">Source</AdminLabel>
+              <AdminSelect
                 id="source"
                 value={source}
-                onChange={(e) =>
-                  { setSource(e.target.value as "online_purchase" | "physical_card"); }
-                }
+                onChange={(e) => {
+                  setSource(
+                    e.target.value as 'online_purchase' | 'physical_card',
+                  )
+                }}
                 required
-                className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-700 focus:ring-offset-2"
               >
                 <option value="physical_card">Physical Card</option>
                 <option value="online_purchase">Online Purchase</option>
-              </select>
-              <p className="text-xs text-slate-500">
+              </AdminSelect>
+              <p className={adminHelperTextClass}>
                 Physical cards are typically for retail distribution
               </p>
             </div>
@@ -214,7 +239,9 @@ export function GenerateLicensesForm({ products }: GenerateLicensesFormProps) {
         <Button
           type="button"
           variant="outline"
-          onClick={() => { router.push("/admin/licenses"); }}
+          onClick={() => {
+            router.push('/admin/licenses')
+          }}
         >
           Cancel
         </Button>
@@ -223,10 +250,8 @@ export function GenerateLicensesForm({ products }: GenerateLicensesFormProps) {
           className="bg-cyan-700 hover:bg-cyan-600"
           disabled={isPending || !productId}
         >
-          {isPending ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : null}
-          Generate {quantity} License{quantity > 1 ? "s" : ""}
+          {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+          Generate {quantity} License{quantity > 1 ? 's' : ''}
         </Button>
       </div>
     </form>

@@ -1,5 +1,9 @@
-import { create } from "zustand"
-import { createJSONStorage, persist, type StateStorage } from "zustand/middleware"
+import { create } from 'zustand'
+import {
+  createJSONStorage,
+  persist,
+  type StateStorage,
+} from 'zustand/middleware'
 
 export interface CartItem {
   slug: string
@@ -7,7 +11,7 @@ export interface CartItem {
   price: number
   quantity: number
   image?: string
-  originalPrice?: number // For showing savings when discounted
+  originalPrice?: number
 }
 
 interface CartState {
@@ -16,7 +20,7 @@ interface CartState {
 }
 
 interface CartActions {
-  addItem: (item: Omit<CartItem, "quantity">, quantity?: number) => void
+  addItem: (item: Omit<CartItem, 'quantity'>, quantity?: number) => void
   removeItem: (slug: string) => void
   updateQuantity: (slug: string, quantity: number) => void
   clearCart: () => void
@@ -42,7 +46,7 @@ const memoryStorage = (() => {
 })()
 
 const storage = createJSONStorage(() => {
-  if (typeof window === "undefined") return memoryStorage
+  if (typeof window === 'undefined') return memoryStorage
   return window.localStorage
 })
 
@@ -61,7 +65,7 @@ export const useCartStore = create<CartStore>()(
             items: items.map((i) =>
               i.slug === item.slug
                 ? { ...i, quantity: i.quantity + quantity }
-                : i
+                : i,
             ),
           })
         } else {
@@ -70,7 +74,6 @@ export const useCartStore = create<CartStore>()(
           })
         }
 
-        // Open cart when adding item
         set({ isOpen: true })
       },
 
@@ -88,7 +91,7 @@ export const useCartStore = create<CartStore>()(
 
         set({
           items: get().items.map((i) =>
-            i.slug === slug ? { ...i, quantity } : i
+            i.slug === slug ? { ...i, quantity } : i,
           ),
         })
       },
@@ -110,15 +113,15 @@ export const useCartStore = create<CartStore>()(
       },
     }),
     {
-      name: "starterspark-cart",
+      name: 'starterspark-cart',
       storage,
-      // Only persist items, not the open/closed state
       partialize: (state) => ({ items: state.items }),
-    }
-  )
+    },
+  ),
 )
 
 // Selectors
+
 export const selectCartTotal = (state: CartStore) =>
   state.items.reduce((total, item) => total + item.price * item.quantity, 0)
 

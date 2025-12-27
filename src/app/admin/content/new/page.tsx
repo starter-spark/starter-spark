@@ -1,7 +1,7 @@
-import { NewCustomPageForm } from "./NewCustomPageForm"
+import { NewCustomPageForm } from './NewCustomPageForm'
 
 export const metadata = {
-  title: "Create Custom Page | Admin",
+  title: 'Create Custom Page | Admin',
 }
 
 export default function NewCustomPagePage() {

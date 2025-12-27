@@ -1,9 +1,9 @@
-"use client"
+'use client'
 
-import Link from "next/link"
-import { useCallback } from "react"
-import { Button } from "@/components/ui/button"
-import { CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react"
+import Link from 'next/link'
+import { useCallback } from 'react'
+import { Button } from '@/components/ui/button'
+import { CheckCircle2, ChevronLeft, ChevronRight } from 'lucide-react'
 
 interface LessonNavigationProps {
   prevHref?: string | null
@@ -18,15 +18,16 @@ function safeSessionStorageSet(key: string, value: string) {
   try {
     sessionStorage.setItem(key, value)
   } catch {
-    // ignore
+    // Ignore.
   }
 }
 
 function shouldSendCompletion(event: React.MouseEvent<HTMLElement>): boolean {
   // Only send for a normal left click navigation (avoid new tab/window, etc.)
   if (event.defaultPrevented) return false
-  if ("button" in event && event.button !== 0) return false
-  if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return false
+  if ('button' in event && event.button !== 0) return false
+  if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
+    return false
   return true
 }
 
@@ -50,27 +51,27 @@ export function LessonNavigation({
           progress: nextProgressPercent,
           createdAt: Date.now(),
           attempts: 0,
-        })
+        }),
       )
 
       const payload = JSON.stringify({ lessonId })
 
       if (navigator.sendBeacon) {
-        const blob = new Blob([payload], { type: "application/json" })
-        navigator.sendBeacon("/api/learn/complete", blob)
+        const blob = new Blob([payload], { type: 'application/json' })
+        navigator.sendBeacon('/api/learn/complete', blob)
         return
       }
 
-      void fetch("/api/learn/complete", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
+      void fetch('/api/learn/complete', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
         body: payload,
         keepalive: true,
       }).catch(() => {
-        // non-blocking best-effort
+        // Best-effort, non-blocking.
       })
     },
-    [lessonId, nextProgressPercent, progressStorageKey]
+    [lessonId, nextProgressPercent, progressStorageKey],
   )
 
   return (
@@ -91,8 +92,8 @@ export function LessonNavigation({
         asChild
         className={
           isLastLesson
-            ? "bg-green-600 hover:bg-green-500 text-white font-mono"
-            : "bg-cyan-700 hover:bg-cyan-600 text-white font-mono"
+            ? 'bg-green-600 hover:bg-green-500 text-white font-mono'
+            : 'bg-cyan-700 hover:bg-cyan-600 text-white font-mono'
         }
       >
         <Link href={nextHref} onClick={markComplete}>

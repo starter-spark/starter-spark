@@ -1,8 +1,8 @@
-"use client"
+'use client'
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { createClient } from "@/lib/supabase/client"
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,16 +10,28 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Button } from "@/components/ui/button"
+} from '@/components/ui/dropdown-menu'
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { MoreHorizontal, Eye, Mail, CheckCircle, Clock, XCircle, Paperclip, FileImage, FileVideo, ExternalLink } from "lucide-react"
+} from '@/components/ui/dialog'
+import {
+  MoreHorizontal,
+  Eye,
+  Mail,
+  CheckCircle,
+  Clock,
+  XCircle,
+  Paperclip,
+  FileImage,
+  FileVideo,
+  ExternalLink,
+} from 'lucide-react'
+import { formatFileSize } from '@/lib/file-size'
 
 interface Attachment {
   name: string
@@ -34,23 +46,27 @@ const SESSION_ATTACHMENT_PATH_RE =
   /^contact\/[a-f0-9]{32}\/\d{4}\/\d{2}\/\d{2}\/[a-f0-9]{32}_\d+\.(?:jpg|png|gif|webp|mp4|webm|mov)$/i
 
 function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null
+  return typeof value === 'object' && value !== null
 }
 
 function isValidAttachmentPath(path: string): boolean {
   if (!path || path.length > 500) return false
-  if (path.startsWith("/") || path.includes("..") || path.includes("\\")) return false
+  if (path.startsWith('/') || path.includes('..') || path.includes('\\'))
+    return false
 
-  return LEGACY_ATTACHMENT_PATH_RE.test(path) || SESSION_ATTACHMENT_PATH_RE.test(path)
+  return (
+    LEGACY_ATTACHMENT_PATH_RE.test(path) ||
+    SESSION_ATTACHMENT_PATH_RE.test(path)
+  )
 }
 
 function isAttachment(value: unknown): value is Attachment {
   return (
     isRecord(value) &&
-    typeof value.name === "string" &&
-    typeof value.path === "string" &&
-    typeof value.size === "number" &&
-    typeof value.type === "string" &&
+    typeof value.name === 'string' &&
+    typeof value.path === 'string' &&
+    typeof value.size === 'number' &&
+    typeof value.type === 'string' &&
     isValidAttachmentPath(value.path)
   )
 }
@@ -93,7 +109,7 @@ export function SupportActions({ submission }: SupportActionsProps) {
         const urls: Record<string, string> = {}
         for (const attachment of attachments) {
           const { data } = await supabase.storage
-            .from("contact-attachments")
+            .from('contact-attachments')
             .createSignedUrl(attachment.path, 3600) // 1 hour expiry
 
           if (data?.signedUrl) {
@@ -102,50 +118,49 @@ export function SupportActions({ submission }: SupportActionsProps) {
         }
         setSignedUrls(urls)
       } catch (err) {
-        console.error("Failed to get signed URLs:", err)
+        console.error('Failed to get signed URLs:', err)
       } finally {
         setLoadingUrls(false)
       }
     }
   }
 
-  const formatFileSize = (bytes: number) => {
-    if (bytes < 1024) return `${bytes} B`
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
-  }
-
   const updateStatus = async (newStatus: string) => {
     setIsLoading(true)
     try {
       const { error } = await supabase
-        .from("contact_submissions")
+        .from('contact_submissions')
         .update({ status: newStatus })
-        .eq("id", submission.id)
+        .eq('id', submission.id)
 
       if (error) throw error
       router.refresh()
     } catch {
-      console.error("Failed to update status")
+      console.error('Failed to update status')
     } finally {
       setIsLoading(false)
     }
   }
 
   const subjectLabels: Record<string, string> = {
-    general: "General Inquiry",
-    order: "Order Help",
-    technical: "Technical Support",
-    educator: "Educator Program",
-    feedback: "Feedback",
-    other: "Other",
+    general: 'General Inquiry',
+    order: 'Order Help',
+    technical: 'Technical Support',
+    educator: 'Educator Program',
+    feedback: 'Feedback',
+    other: 'Other',
   }
 
   return (
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-8 w-8" disabled={isLoading}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            disabled={isLoading}
+          >
             <MoreHorizontal className="h-4 w-4" />
             <span className="sr-only">Open menu</span>
           </Button>
@@ -158,7 +173,9 @@ export function SupportActions({ submission }: SupportActionsProps) {
             View Details
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <a href={`mailto:${submission.email}?subject=Re: ${submission.subject}`}>
+            <a
+              href={`mailto:${submission.email}?subject=Re: ${submission.subject}`}
+            >
               <Mail className="mr-2 h-4 w-4" />
               Reply via Email
             </a>
@@ -166,29 +183,29 @@ export function SupportActions({ submission }: SupportActionsProps) {
           <DropdownMenuSeparator />
           <DropdownMenuLabel>Update Status</DropdownMenuLabel>
           <DropdownMenuItem
-            onClick={() => void updateStatus("pending")}
-            disabled={(submission.status || "pending") === "pending"}
+            onClick={() => void updateStatus('pending')}
+            disabled={(submission.status || 'pending') === 'pending'}
           >
             <Clock className="mr-2 h-4 w-4 text-amber-500" />
             Mark Pending
           </DropdownMenuItem>
           <DropdownMenuItem
-            onClick={() => void updateStatus("in_progress")}
-            disabled={(submission.status || "pending") === "in_progress"}
+            onClick={() => void updateStatus('in_progress')}
+            disabled={(submission.status || 'pending') === 'in_progress'}
           >
             <Clock className="mr-2 h-4 w-4 text-cyan-500" />
             Mark In Progress
           </DropdownMenuItem>
           <DropdownMenuItem
-            onClick={() => void updateStatus("resolved")}
-            disabled={(submission.status || "pending") === "resolved"}
+            onClick={() => void updateStatus('resolved')}
+            disabled={(submission.status || 'pending') === 'resolved'}
           >
             <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
             Mark Resolved
           </DropdownMenuItem>
           <DropdownMenuItem
-            onClick={() => void updateStatus("closed")}
-            disabled={(submission.status || "pending") === "closed"}
+            onClick={() => void updateStatus('closed')}
+            disabled={(submission.status || 'pending') === 'closed'}
           >
             <XCircle className="mr-2 h-4 w-4 text-slate-500" />
             Close
@@ -226,13 +243,15 @@ export function SupportActions({ submission }: SupportActionsProps) {
               <p className="text-slate-900">
                 {submission.created_at
                   ? new Date(submission.created_at).toLocaleString()
-                  : "-"}
+                  : '-'}
               </p>
             </div>
             <div>
               <p className="text-sm font-medium text-slate-500 mb-2">Message</p>
               <div className="rounded-lg bg-slate-50 p-4">
-                <p className="text-slate-700 whitespace-pre-wrap">{submission.message}</p>
+                <p className="text-slate-700 whitespace-pre-wrap">
+                  {submission.message}
+                </p>
               </div>
             </div>
 
@@ -245,11 +264,13 @@ export function SupportActions({ submission }: SupportActionsProps) {
                 </p>
                 <div className="space-y-2">
                   {loadingUrls ? (
-                    <p className="text-sm text-slate-500">Loading attachments...</p>
+                    <p className="text-sm text-slate-500">
+                      Loading attachments...
+                    </p>
                   ) : (
                     attachments.map((attachment, index) => {
-                      const isImage = attachment.type.startsWith("image/")
-                      const isVideo = attachment.type.startsWith("video/")
+                      const isImage = attachment.type.startsWith('image/')
+                      const isVideo = attachment.type.startsWith('video/')
                       const signedUrl = signedUrls[attachment.path]
 
                       return (
@@ -289,7 +310,8 @@ export function SupportActions({ submission }: SupportActionsProps) {
                                   {attachment.name}
                                 </p>
                                 <p className="text-xs text-slate-500">
-                                  {formatFileSize(attachment.size)} · {attachment.type}
+                                  {formatFileSize(attachment.size)} ·{' '}
+                                  {attachment.type}
                                 </p>
                               </div>
                             </div>
@@ -315,7 +337,9 @@ export function SupportActions({ submission }: SupportActionsProps) {
 
             <div className="flex justify-end">
               <Button asChild>
-                <a href={`mailto:${submission.email}?subject=Re: ${submission.subject}`}>
+                <a
+                  href={`mailto:${submission.email}?subject=Re: ${submission.subject}`}
+                >
                   <Mail className="mr-2 h-4 w-4" />
                   Reply via Email
                 </a>

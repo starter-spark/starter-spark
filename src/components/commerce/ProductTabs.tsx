@@ -1,6 +1,6 @@
-"use client"
+'use client'
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Table,
   TableBody,
@@ -8,9 +8,18 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { FileDown } from "lucide-react"
-import { Button } from "@/components/ui/button"
+} from '@/components/ui/table'
+import { FileDown } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+
+const tabTriggerClassName =
+  'cursor-pointer font-mono text-sm data-[state=active]:text-cyan-700 data-[state=active]:border-b-2 data-[state=active]:border-cyan-700 rounded-none px-6 py-3 data-[state=active]:shadow-none flex-none sm:flex-1 whitespace-normal sm:whitespace-nowrap text-center'
+
+const tabItems = [
+  { value: 'overview', label: 'Overview' },
+  { value: 'included', label: "What's Included" },
+  { value: 'specs', label: 'Technical Specs' },
+]
 
 interface ProductTabsProps {
   description: string
@@ -34,30 +43,27 @@ export function ProductTabs({
   specs,
   datasheetUrl,
 }: ProductTabsProps) {
+  const quickStats = [
+    { label: 'Build Time', value: '~3 hours' },
+    { label: 'Skill Level', value: 'Beginner' },
+    { label: 'Age Range', value: '10+' },
+  ]
+
   return (
     <Tabs defaultValue="overview" className="w-full">
       <TabsList
         aria-label="Product details"
         className="w-full justify-start border-b border-slate-200 bg-transparent h-auto p-0 rounded-none flex-wrap gap-2"
       >
-        <TabsTrigger
-          value="overview"
-          className="cursor-pointer font-mono text-sm data-[state=active]:text-cyan-700 data-[state=active]:border-b-2 data-[state=active]:border-cyan-700 rounded-none px-6 py-3 data-[state=active]:shadow-none flex-none sm:flex-1 whitespace-normal sm:whitespace-nowrap text-center"
-        >
-          Overview
-        </TabsTrigger>
-        <TabsTrigger
-          value="included"
-          className="cursor-pointer font-mono text-sm data-[state=active]:text-cyan-700 data-[state=active]:border-b-2 data-[state=active]:border-cyan-700 rounded-none px-6 py-3 data-[state=active]:shadow-none flex-none sm:flex-1 whitespace-normal sm:whitespace-nowrap text-center"
-        >
-          What&apos;s Included
-        </TabsTrigger>
-        <TabsTrigger
-          value="specs"
-          className="cursor-pointer font-mono text-sm data-[state=active]:text-cyan-700 data-[state=active]:border-b-2 data-[state=active]:border-cyan-700 rounded-none px-6 py-3 data-[state=active]:shadow-none flex-none sm:flex-1 whitespace-normal sm:whitespace-nowrap text-center"
-        >
-          Technical Specs
-        </TabsTrigger>
+        {tabItems.map((tab) => (
+          <TabsTrigger
+            key={tab.value}
+            value={tab.value}
+            className={tabTriggerClassName}
+          >
+            {tab.label}
+          </TabsTrigger>
+        ))}
       </TabsList>
 
       {/* Overview Tab */}
@@ -90,11 +96,7 @@ export function ProductTabs({
 
           {/* Quick Stats */}
           <div className="mt-8 grid grid-cols-3 gap-4">
-            {[
-              { label: "Build Time", value: "~3 hours" },
-              { label: "Skill Level", value: "Beginner" },
-              { label: "Age Range", value: "10+" },
-            ].map((stat) => (
+            {quickStats.map((stat) => (
               <div
                 key={stat.label}
                 className="p-4 bg-slate-50 rounded border border-slate-200 text-center"
@@ -111,7 +113,7 @@ export function ProductTabs({
       <TabsContent value="included" className="pt-8">
         <div className="max-w-4xl">
           {/* Knolling Photo Placeholder */}
-          <div className="relative aspect-[2/1] mb-8 bg-gradient-to-br from-slate-50 to-slate-100 rounded border border-slate-200 overflow-hidden">
+          <div className="relative aspect-[2/1] mb-8 bg-slate-50 rounded border border-slate-200 overflow-hidden">
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <div className="w-20 h-20 mb-4 rounded-full bg-slate-200 flex items-center justify-center">
                 <svg
@@ -178,7 +180,7 @@ export function ProductTabs({
               <div
                 key={spec.label}
                 className={`flex justify-between p-4 ${
-                  idx === specs.length - 1 ? "" : "border-b border-slate-100"
+                  idx === specs.length - 1 ? '' : 'border-b border-slate-100'
                 }`}
               >
                 <span className="text-slate-700">{spec.label}</span>
@@ -194,7 +196,12 @@ export function ProductTabs({
               className="mt-6 border-slate-200 text-slate-700 hover:text-cyan-700 hover:border-cyan-700 font-mono w-full sm:w-auto whitespace-normal break-words text-center leading-snug h-auto py-3 flex-wrap"
               asChild
             >
-              <a href={datasheetUrl} target="_blank" rel="noopener noreferrer" download>
+              <a
+                href={datasheetUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                download
+              >
                 <FileDown className="w-4 h-4 mr-2" aria-hidden="true" />
                 Download Datasheet (PDF)
               </a>

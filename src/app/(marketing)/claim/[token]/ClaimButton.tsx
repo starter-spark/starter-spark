@@ -1,9 +1,13 @@
-"use client"
+'use client'
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Loader2, CheckCircle, AlertCircle } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { useEffect, useRef, useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { Loader2 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import {
+  ActionStatusBanner,
+  type ActionStatus,
+} from '@/components/ui/action-status'
 
 interface ClaimResponse {
   message?: string
@@ -15,20 +19,29 @@ interface ClaimButtonProps {
 }
 
 export function ClaimButton({ token }: ClaimButtonProps) {
-  const [isLoading, setIsLoading] = useState(false)
-  const [status, setStatus] = useState<"idle" | "success" | "error">("idle")
-  const [message, setMessage] = useState("")
+  const [status, setStatus] = useState<ActionStatus>('idle')
+  const [message, setMessage] = useState<string | undefined>(undefined)
   const router = useRouter()
+  const redirectTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    router.prefetch('/workshop')
+    return () => {
+      if (redirectTimer.current) {
+        clearTimeout(redirectTimer.current)
+      }
+    }
+  }, [router])
 
   const handleClaim = async () => {
-    setIsLoading(true)
-    setStatus("idle")
+    setStatus('pending')
+    setMessage('Claiming your kit…')
 
     try {
-      const response = await fetch("/api/claim-by-token", {
-        method: "POST",
+      const response = await fetch('/api/claim-by-token', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ token }),
       })
@@ -36,59 +49,41 @@ export function ClaimButton({ token }: ClaimButtonProps) {
       const data = (await response.json()) as ClaimResponse
 
       if (response.ok) {
-        setStatus("success")
-        setMessage(data.message ?? "Kit claimed successfully!")
-        // Redirect to workshop after a brief delay
-        setTimeout(() => {
-          router.push("/workshop?claimed=true")
-        }, 1500)
+        setStatus('success')
+        setMessage(data.message ?? 'Kit claimed. Redirecting to Workshop…')
+        if (redirectTimer.current) {
+          clearTimeout(redirectTimer.current)
+        }
+        redirectTimer.current = setTimeout(() => {
+          router.push('/workshop?claimed=true')
+        }, 1200)
       } else {
-        setStatus("error")
-        setMessage(data.error ?? "Failed to claim kit. Please try again.")
+        setStatus('error')
+        setMessage(data.error ?? 'Failed to claim kit. Please try again.')
       }
     } catch {
-      setStatus("error")
-      setMessage("An error occurred. Please try again.")
-    } finally {
-      setIsLoading(false)
+      setStatus('error')
+      setMessage('An error occurred. Please try again.')
     }
-  }
-
-  if (status === "success") {
-    return (
-      <div className="text-center py-4">
-        <div className="flex items-center justify-center gap-2 text-green-600 mb-2">
-          <CheckCircle className="w-5 h-5" />
-          <span className="font-mono">{message}</span>
-        </div>
-        <p className="text-sm text-slate-500">Redirecting to Workshop...</p>
-      </div>
-    )
   }
 
   return (
     <div className="space-y-4">
       <Button
         onClick={() => void handleClaim()}
-        disabled={isLoading}
+        disabled={status === 'pending'}
         className="w-full bg-cyan-700 hover:bg-cyan-600 text-white font-mono"
       >
-        {isLoading ? (
+        {status === 'pending' ? (
           <>
             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
             Claiming...
           </>
         ) : (
-          "Claim Kit"
+          'Claim Kit'
         )}
       </Button>
-
-      {status === "error" && (
-        <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 p-3 rounded">
-          <AlertCircle className="w-4 h-4 flex-shrink-0" />
-          {message}
-        </div>
-      )}
+      <ActionStatusBanner status={status} message={message} />
     </div>
   )
 }

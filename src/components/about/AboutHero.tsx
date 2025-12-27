@@ -1,6 +1,6 @@
-"use client"
+'use client'
 
-import { motion } from "motion/react"
+import { motion } from 'motion/react'
 
 interface AboutHeroProps {
   headline?: string
@@ -8,13 +8,13 @@ interface AboutHeroProps {
 }
 
 export function AboutHero({
-  headline = "Making Robotics Education Accessible to Everyone",
+  headline = 'Making Robotics Education Accessible to Everyone',
   description = "We believe every student deserves the chance to build, code, and create—regardless of their background or resources. That's why we donate 67% of every dollar to local STEM programs.",
 }: AboutHeroProps) {
   // Split headline to highlight the second part in cyan
   // Look for text after a colon or newline, otherwise use the whole thing
-  const headlineParts = headline.includes(":")
-    ? headline.split(":").map((s) => s.trim())
+  const headlineParts = headline.includes(':')
+    ? headline.split(':').map((s) => s.trim())
     : [headline]
 
   return (

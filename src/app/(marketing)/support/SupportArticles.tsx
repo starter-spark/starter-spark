@@ -1,13 +1,23 @@
-"use client"
+'use client'
 
-import { useState } from "react"
+import { useState } from 'react'
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/components/ui/collapsible"
-import { ChevronDown, ThumbsUp, ThumbsDown, Wrench, Cpu, Code, User, Truck, HelpCircle } from "lucide-react"
-import { cn } from "@/lib/utils"
+} from '@/components/ui/collapsible'
+import {
+  ChevronDown,
+  ThumbsUp,
+  ThumbsDown,
+  Wrench,
+  Cpu,
+  Code,
+  User,
+  Truck,
+  HelpCircle,
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface Article {
   id: string
@@ -42,37 +52,44 @@ interface SupportArticlesProps {
   categories: readonly Category[]
 }
 
-export function SupportArticles({ articlesByCategory, categories }: SupportArticlesProps) {
+export function SupportArticles({
+  articlesByCategory,
+  categories,
+}: SupportArticlesProps) {
   const [openArticle, setOpenArticle] = useState<string | null>(null)
-  const [feedback, setFeedback] = useState<Record<string, "helpful" | "not_helpful">>({})
+  const [feedback, setFeedback] = useState<
+    Record<string, 'helpful' | 'not_helpful'>
+  >({})
 
   const handleFeedback = async (articleId: string, isHelpful: boolean) => {
     // Optimistic update
     setFeedback((prev) => ({
       ...prev,
-      [articleId]: isHelpful ? "helpful" : "not_helpful",
+      [articleId]: isHelpful ? 'helpful' : 'not_helpful',
     }))
 
     // Call RPC function to record feedback
     try {
-      await fetch("/api/support/feedback", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      await fetch('/api/support/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ articleId, isHelpful }),
       })
     } catch {
-      // Silently fail - feedback is non-critical
+      // Silently fail, feedback is non-critical.
     }
   }
 
   const categoriesWithArticles = categories.filter(
-    (cat) => articlesByCategory[cat.key]?.length > 0
+    (cat) => articlesByCategory[cat.key]?.length > 0,
   )
 
   if (categoriesWithArticles.length === 0) {
     return (
       <div className="bg-white border border-slate-200 rounded-lg p-8 text-center">
-        <p className="text-slate-600">No troubleshooting articles available yet.</p>
+        <p className="text-slate-600">
+          No troubleshooting articles available yet.
+        </p>
       </div>
     )
   }
@@ -85,7 +102,9 @@ export function SupportArticles({ articlesByCategory, categories }: SupportArtic
             <div className="w-8 h-8 bg-cyan-50 rounded-lg flex items-center justify-center text-cyan-700">
               {CATEGORY_ICONS[category.key]}
             </div>
-            <h3 className="text-lg font-semibold text-slate-900">{category.label}</h3>
+            <h3 className="text-lg font-semibold text-slate-900">
+              {category.label}
+            </h3>
           </div>
 
           <div className="space-y-3">
@@ -93,18 +112,24 @@ export function SupportArticles({ articlesByCategory, categories }: SupportArtic
               <Collapsible
                 key={article.id}
                 open={openArticle === article.id}
-                onOpenChange={(open) => { setOpenArticle(open ? article.id : null); }}
+                onOpenChange={(open) => {
+                  setOpenArticle(open ? article.id : null)
+                }}
               >
                 <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
                   <CollapsibleTrigger className="w-full px-5 py-4 flex items-center justify-between text-left hover:bg-slate-50 transition-colors">
                     <div>
-                      <h4 className="font-medium text-slate-900">{article.title}</h4>
-                      <p className="text-sm text-slate-500 mt-0.5">{article.problem}</p>
+                      <h4 className="font-medium text-slate-900">
+                        {article.title}
+                      </h4>
+                      <p className="text-sm text-slate-500 mt-0.5">
+                        {article.problem}
+                      </p>
                     </div>
                     <ChevronDown
                       className={cn(
-                        "w-5 h-5 text-slate-400 transition-transform flex-shrink-0 ml-4",
-                        openArticle === article.id && "transform rotate-180"
+                        'w-5 h-5 text-slate-400 transition-transform flex-shrink-0 ml-4',
+                        openArticle === article.id && 'transform rotate-180',
                       )}
                     />
                   </CollapsibleTrigger>
@@ -135,33 +160,39 @@ export function SupportArticles({ articlesByCategory, categories }: SupportArtic
 
                       {/* Feedback */}
                       <div className="mt-6 pt-4 border-t border-slate-100">
-                        <p className="text-sm text-slate-600 mb-3">Was this helpful?</p>
-	                        <div className="flex gap-2">
-	                          <button
-	                            onClick={() => void handleFeedback(article.id, true)}
-	                            disabled={!!feedback[article.id]}
-	                            className={cn(
-	                              "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors",
-                              feedback[article.id] === "helpful"
-                                ? "bg-emerald-100 text-emerald-700"
+                        <p className="text-sm text-slate-600 mb-3">
+                          Was this helpful?
+                        </p>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() =>
+                              void handleFeedback(article.id, true)
+                            }
+                            disabled={!!feedback[article.id]}
+                            className={cn(
+                              'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors',
+                              feedback[article.id] === 'helpful'
+                                ? 'bg-emerald-100 text-emerald-700'
                                 : feedback[article.id]
-                                ? "bg-slate-100 text-slate-400 cursor-not-allowed"
-                                : "bg-slate-100 text-slate-600 hover:bg-emerald-50 hover:text-emerald-700"
+                                  ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                                  : 'bg-slate-100 text-slate-600 hover:bg-emerald-50 hover:text-emerald-700',
                             )}
                           >
                             <ThumbsUp className="w-4 h-4" />
                             Yes
-	                          </button>
-	                          <button
-	                            onClick={() => void handleFeedback(article.id, false)}
-	                            disabled={!!feedback[article.id]}
-	                            className={cn(
-	                              "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors",
-                              feedback[article.id] === "not_helpful"
-                                ? "bg-red-100 text-red-700"
+                          </button>
+                          <button
+                            onClick={() =>
+                              void handleFeedback(article.id, false)
+                            }
+                            disabled={!!feedback[article.id]}
+                            className={cn(
+                              'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors',
+                              feedback[article.id] === 'not_helpful'
+                                ? 'bg-red-100 text-red-700'
                                 : feedback[article.id]
-                                ? "bg-slate-100 text-slate-400 cursor-not-allowed"
-                                : "bg-slate-100 text-slate-600 hover:bg-red-50 hover:text-red-700"
+                                  ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                                  : 'bg-slate-100 text-slate-600 hover:bg-red-50 hover:text-red-700',
                             )}
                           >
                             <ThumbsDown className="w-4 h-4" />
@@ -194,27 +225,39 @@ function SolutionsContent({ content }: { content: string }) {
     if (listItems.length > 0 && listType) {
       const ListTag = listType
       elements.push(
-        <ListTag key={elements.length} className={cn("my-2 space-y-1", listType === 'ul' ? "list-disc list-inside" : "list-decimal list-inside")}>
+        <ListTag
+          key={elements.length}
+          className={cn(
+            'my-2 space-y-1',
+            listType === 'ul'
+              ? 'list-disc list-inside'
+              : 'list-decimal list-inside',
+          )}
+        >
           {listItems.map((item, i) => (
-            <li key={i} className="text-sm text-slate-600">{formatInlineText(item)}</li>
+            <li key={i} className="text-sm text-slate-600">
+              {formatInlineText(item)}
+            </li>
           ))}
-        </ListTag>
+        </ListTag>,
       )
       listItems = []
       listType = null
     }
   }
 
-	  for (const line of lines) {
-
-	    // Code block start/end
-	    if (line.startsWith('```')) {
+  for (const line of lines) {
+    // Code block start/end
+    if (line.startsWith('```')) {
       if (inCodeBlock) {
         // End code block
         elements.push(
-          <pre key={elements.length} className="bg-slate-900 text-slate-100 p-3 rounded-lg overflow-x-auto text-xs my-3">
+          <pre
+            key={elements.length}
+            className="bg-slate-900 text-slate-100 p-3 rounded-lg overflow-x-auto text-xs my-3"
+          >
             <code>{codeContent.join('\n')}</code>
-          </pre>
+          </pre>,
         )
         codeContent = []
         inCodeBlock = false
@@ -235,9 +278,12 @@ function SolutionsContent({ content }: { content: string }) {
     if (line.startsWith('## ')) {
       flushList()
       elements.push(
-        <h2 key={elements.length} className="text-base font-semibold text-slate-900 mt-4 mb-2">
+        <h2
+          key={elements.length}
+          className="text-base font-semibold text-slate-900 mt-4 mb-2"
+        >
           {line.slice(3)}
-        </h2>
+        </h2>,
       )
       continue
     }
@@ -245,9 +291,12 @@ function SolutionsContent({ content }: { content: string }) {
     if (line.startsWith('### ')) {
       flushList()
       elements.push(
-        <h3 key={elements.length} className="text-sm font-semibold text-slate-800 mt-3 mb-1">
+        <h3
+          key={elements.length}
+          className="text-sm font-semibold text-slate-800 mt-3 mb-1"
+        >
           {line.slice(4)}
-        </h3>
+        </h3>,
       )
       continue
     }
@@ -279,7 +328,7 @@ function SolutionsContent({ content }: { content: string }) {
       elements.push(
         <p key={elements.length} className="text-sm text-slate-600 my-2">
           {formatInlineText(line)}
-        </p>
+        </p>,
       )
     }
   }
@@ -304,9 +353,12 @@ function formatInlineText(text: string): React.ReactNode {
         key += 10
       }
       parts.push(
-        <code key={key++} className="bg-slate-100 text-slate-800 px-1.5 py-0.5 rounded text-xs">
+        <code
+          key={key++}
+          className="bg-slate-100 text-slate-800 px-1.5 py-0.5 rounded text-xs"
+        >
           {codeMatch[2]}
-        </code>
+        </code>,
       )
       remaining = codeMatch[3]
       continue

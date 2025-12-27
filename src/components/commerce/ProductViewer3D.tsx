@@ -1,9 +1,9 @@
-"use client"
+'use client'
 
-import { Canvas } from "@react-three/fiber"
-import { OrbitControls, Stage, useGLTF } from "@react-three/drei"
-import { Suspense, useState, useEffect } from "react"
-import { ClientErrorBoundary } from "@/components/ui/client-error-boundary"
+import { Canvas } from '@react-three/fiber'
+import { OrbitControls, Stage, useGLTF } from '@react-three/drei'
+import { Suspense, useState, useEffect } from 'react'
+import { ClientErrorBoundary } from '@/components/ui/client-error-boundary'
 
 interface ProductViewer3DProps {
   modelPath: string
@@ -13,7 +13,7 @@ function Model({ path, onLoad }: { path: string; onLoad: () => void }) {
   const { scene } = useGLTF(path, true)
 
   useEffect(() => {
-    // Once the model is loaded and the scene is available, trigger onLoad
+    // Scene loaded, call onLoad
     if (scene) {
       onLoad()
     }
@@ -22,35 +22,34 @@ function Model({ path, onLoad }: { path: string; onLoad: () => void }) {
   return <primitive object={scene} />
 }
 
-export default function ProductViewer3D({
-  modelPath,
-}: ProductViewer3DProps) {
+export default function ProductViewer3D({ modelPath }: ProductViewer3DProps) {
   const [isLoaded, setIsLoaded] = useState(false)
   const [canRender3d, setCanRender3d] = useState(() => {
-    const isWebdriver =
-      typeof navigator !== "undefined" && navigator.webdriver
+    const isWebdriver = typeof navigator !== 'undefined' && navigator.webdriver
     return !isWebdriver && supportsWebGL()
   })
 
   if (!canRender3d) {
     return (
       <div
-        className="relative w-full h-full overflow-hidden bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center"
+        className="relative w-full h-full overflow-hidden bg-slate-50 flex items-center justify-center"
         role="img"
         aria-label="3D preview unavailable"
       >
-        <p className="text-sm font-mono text-slate-600">3D preview unavailable</p>
+        <p className="text-sm font-mono text-slate-600">
+          3D preview unavailable
+        </p>
       </div>
     )
   }
 
   return (
     <div
-      className="relative w-full h-full overflow-hidden bg-gradient-to-br from-slate-50 to-slate-100"
+      className="relative w-full h-full overflow-hidden bg-slate-50"
       role="img"
       aria-label="Interactive 3D product viewer - use mouse to rotate and zoom"
     >
-      {/* Loading indicator */}
+      {/* Loading */}
       {!isLoaded && (
         <div
           className="absolute inset-0 flex items-center justify-center z-20"
@@ -66,7 +65,7 @@ export default function ProductViewer3D({
         </div>
       )}
 
-      {/* 3D Canvas - no fade transitions (instant) */}
+      {/* 3D canvas (no fades) */}
       <div className="absolute inset-0">
         <ClientErrorBoundary
           fallback={
@@ -74,7 +73,9 @@ export default function ProductViewer3D({
               className="absolute inset-0 flex items-center justify-center"
               aria-hidden="true"
             >
-              <p className="text-sm font-mono text-slate-600">3D preview unavailable</p>
+              <p className="text-sm font-mono text-slate-600">
+                3D preview unavailable
+              </p>
             </div>
           }
           onError={() => {
@@ -90,7 +91,12 @@ export default function ProductViewer3D({
                 shadows="contact"
                 adjustCamera={false}
               >
-                <Model path={modelPath} onLoad={() => { setIsLoaded(true); }} />
+                <Model
+                  path={modelPath}
+                  onLoad={() => {
+                    setIsLoaded(true)
+                  }}
+                />
               </Stage>
               <OrbitControls
                 enableZoom={true}
@@ -108,14 +114,14 @@ export default function ProductViewer3D({
 
 function supportsWebGL(): boolean {
   if (globalThis.window === undefined) return false
-  if (typeof document === "undefined") return false
-  if (typeof WebGLRenderingContext === "undefined") return false
+  if (typeof document === 'undefined') return false
+  if (typeof WebGLRenderingContext === 'undefined') return false
   try {
-    const canvas = document.createElement("canvas")
+    const canvas = document.createElement('canvas')
     return Boolean(
-      canvas.getContext("webgl2") ||
-        canvas.getContext("webgl") ||
-        canvas.getContext("experimental-webgl")
+      canvas.getContext('webgl2') ||
+      canvas.getContext('webgl') ||
+      canvas.getContext('experimental-webgl'),
     )
   } catch {
     return false

@@ -1,33 +1,33 @@
-import { createClient } from "@/lib/supabase/server"
-import {
-  ChevronRight,
-  Home,
-} from "lucide-react"
-import Link from "next/link"
-import { notFound, redirect } from "next/navigation"
-import { LessonSidebar } from "./LessonSidebar"
-import { LessonContent } from "@/components/learn/LessonContent"
-import { LessonPrefetch } from "./LessonPrefetch"
-import { LessonNavigation } from "./LessonNavigation"
+import { createClient } from '@/lib/supabase/server'
+import { ChevronRight, Home } from 'lucide-react'
+import Link from 'next/link'
+import { notFound, redirect } from 'next/navigation'
+import { LessonSidebar } from './LessonSidebar'
+import { LessonContent } from '@/components/learn/LessonContent'
+import { LessonPrefetch } from './LessonPrefetch'
+import { LessonNavigation } from './LessonNavigation'
+import { resolveParams, type MaybePromise } from '@/lib/next-params'
 
 export default async function LessonPage({
   params,
 }: {
-  params: Promise<{ product: string; lesson: string }>
+  params: MaybePromise<{ product: string; lesson: string }>
 }) {
-  const { product: productSlug, lesson: lessonSlug } = await params
+  const { product: productSlug, lesson: lessonSlug } = await resolveParams(
+    params,
+  )
   const supabase = await createClient()
 
   // First fetch the product by slug
   const { data: product, error: productError } = await supabase
-    .from("products")
-    .select("id, slug, name")
-    .eq("slug", productSlug)
+    .from('products')
+    .select('id, slug, name')
+    .eq('slug', productSlug)
     .maybeSingle()
 
   if (productError) {
-    console.error("Error fetching product:", productError)
-    throw new Error("Failed to load product")
+    console.error('Error fetching product:', productError)
+    throw new Error('Failed to load product')
   }
 
   if (!product) {
@@ -36,8 +36,9 @@ export default async function LessonPage({
 
   // Then fetch the published course structure by product_id
   const { data: courseData, error: courseError } = await supabase
-    .from("courses")
-    .select(`
+    .from('courses')
+    .select(
+      `
       id,
       title,
       is_published,
@@ -59,14 +60,15 @@ export default async function LessonPage({
           is_published
         )
       )
-    `)
-    .eq("product_id", product.id)
-    .eq("is_published", true)
+    `,
+    )
+    .eq('product_id', product.id)
+    .eq('is_published', true)
     .maybeSingle()
 
   if (courseError) {
-    console.error("Error fetching course structure:", courseError)
-    throw new Error("Failed to load course")
+    console.error('Error fetching course structure:', courseError)
+    throw new Error('Failed to load course')
   }
 
   if (!courseData) {
@@ -79,33 +81,36 @@ export default async function LessonPage({
     title: string
     sort_order: number
     is_published: boolean | null
-    lessons: {
-      id: string
-      slug: string
-      title: string
-      description: string | null
-      lesson_type: string | null
-      difficulty: string | null
-      duration_minutes: number
-      sort_order: number
-      is_optional: boolean | null
-      is_published: boolean | null
-    }[] | null
+    lessons:
+      | {
+          id: string
+          slug: string
+          title: string
+          description: string | null
+          lesson_type: string | null
+          difficulty: string | null
+          duration_minutes: number
+          sort_order: number
+          is_optional: boolean | null
+          is_published: boolean | null
+        }[]
+      | null
   }
   const modules = courseData.modules as unknown as ModuleWithLessons[] | null
-  const sortedModules = modules
-    ?.filter((m) => m.is_published !== false)
-    ?.sort((a, b) => a.sort_order - b.sort_order)
-    .map((mod) => ({
-      ...mod,
-      lessons:
-        mod.lessons
-          ?.filter((l) => l.is_published !== false)
-          .sort((a, b) => a.sort_order - b.sort_order) || [],
-    })) || []
+  const sortedModules =
+    modules
+      ?.filter((m) => m.is_published !== false)
+      ?.sort((a, b) => a.sort_order - b.sort_order)
+      .map((mod) => ({
+        ...mod,
+        lessons:
+          mod.lessons
+            ?.filter((l) => l.is_published !== false)
+            .sort((a, b) => a.sort_order - b.sort_order) || [],
+      })) || []
 
   const flatLessons = sortedModules.flatMap((mod) =>
-    mod.lessons.map((l) => ({ ...l, moduleId: mod.id }))
+    mod.lessons.map((l) => ({ ...l, moduleId: mod.id })),
   )
 
   const lesson = flatLessons.find((l) => l.slug === lessonSlug)
@@ -120,28 +125,33 @@ export default async function LessonPage({
     currentIndex >= 0 && currentIndex < flatLessons.length - 1
       ? flatLessons[currentIndex + 1]
       : null
-  const nextHref = nextLesson ? `/learn/${productSlug}/${nextLesson.slug}` : `/learn/${productSlug}`
-  const prefetchHrefs = nextHref === `/learn/${productSlug}`
-    ? [nextHref]
-    : [nextHref, `/learn/${productSlug}`]
+  const nextHref = nextLesson
+    ? `/learn/${productSlug}/${nextLesson.slug}`
+    : `/learn/${productSlug}`
+  const prefetchHrefs =
+    nextHref === `/learn/${productSlug}`
+      ? [nextHref]
+      : [nextHref, `/learn/${productSlug}`]
 
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect(`/login?redirect=${encodeURIComponent(`/learn/${productSlug}/${lessonSlug}`)}`)
+    redirect(
+      `/login?redirect=${encodeURIComponent(`/learn/${productSlug}/${lessonSlug}`)}`,
+    )
   }
 
   // Check if user owns this product
   let isOwned = false
   if (user) {
-    // Use limit(1) instead of single() - user may have multiple licenses for same product
+    // Use limit(1) instead of single(), multiple licenses possible.
     const { data: licenses } = await supabase
-      .from("licenses")
-      .select("id")
-      .eq("owner_id", user.id)
-      .eq("product_id", product.id)
+      .from('licenses')
+      .select('id')
+      .eq('owner_id', user.id)
+      .eq('product_id', product.id)
       .limit(1)
 
     if (licenses && licenses.length > 0) {
@@ -163,13 +173,13 @@ export default async function LessonPage({
   }
 
   const { data: lessonContentRaw, error: lessonContentError } = await supabase
-    .from("lesson_content")
-    .select("content, content_blocks, video_url, code_starter, code_solution")
-    .eq("lesson_id", lesson.id)
+    .from('lesson_content')
+    .select('content, content_blocks, video_url, code_starter, code_solution')
+    .eq('lesson_id', lesson.id)
     .maybeSingle()
 
   if (lessonContentError) {
-    console.error("Error fetching lesson content:", lessonContentError)
+    console.error('Error fetching lesson content:', lessonContentError)
   }
 
   const lessonContent = lessonContentRaw as LessonContentData | null
@@ -177,13 +187,16 @@ export default async function LessonPage({
   // Fetch user's lesson progress for this course
   const completedLessonIds = new Set<string>()
   if (user) {
-    const courseLessonIds = sortedModules.flatMap((mod) => mod.lessons.map((l) => l.id))
-    const lessonIdsForProgress = courseLessonIds.length > 0 ? courseLessonIds : [lesson.id]
+    const courseLessonIds = sortedModules.flatMap((mod) =>
+      mod.lessons.map((l) => l.id),
+    )
+    const lessonIdsForProgress =
+      courseLessonIds.length > 0 ? courseLessonIds : [lesson.id]
     const { data: progressData } = await supabase
-      .from("lesson_progress")
-      .select("lesson_id")
-      .eq("user_id", user.id)
-      .in("lesson_id", lessonIdsForProgress)
+      .from('lesson_progress')
+      .select('lesson_id')
+      .eq('user_id', user.id)
+      .in('lesson_id', lessonIdsForProgress)
 
     if (progressData) {
       for (const p of progressData) completedLessonIds.add(p.lesson_id)
@@ -204,16 +217,17 @@ export default async function LessonPage({
   }
 
   // Calculate progress based on required (non-optional) lessons
-	  const requiredLessonIds = sortedModules.flatMap((mod) =>
-	    mod.lessons.filter((l) => !l.is_optional).map((l) => l.id)
-	  )
+  const requiredLessonIds = sortedModules.flatMap((mod) =>
+    mod.lessons.filter((l) => !l.is_optional).map((l) => l.id),
+  )
   const totalRequiredLessons = requiredLessonIds.length
   const completedRequiredCount = requiredLessonIds.filter((id) =>
-    completedLessonIds.has(id)
+    completedLessonIds.has(id),
   ).length
-	  const progressPercent = totalRequiredLessons > 0
-	    ? Math.round((completedRequiredCount / totalRequiredLessons) * 100)
-	    : 0
+  const progressPercent =
+    totalRequiredLessons > 0
+      ? Math.round((completedRequiredCount / totalRequiredLessons) * 100)
+      : 0
 
   const currentLessonMeta = sortedModules
     .flatMap((mod) => mod.lessons)
@@ -270,7 +284,10 @@ export default async function LessonPage({
               Learn
             </Link>
             <ChevronRight className="w-4 h-4" />
-            <Link href={`/learn/${productSlug}`} className="hover:text-cyan-700">
+            <Link
+              href={`/learn/${productSlug}`}
+              className="hover:text-cyan-700"
+            >
               {courseData.title}
             </Link>
             <ChevronRight className="w-4 h-4" />
@@ -282,11 +299,11 @@ export default async function LessonPage({
             {lesson.title}
           </h1>
 
-          {/* Lesson Content - renders markdown/HTML from database */}
+          {/* Lesson content (from DB) */}
           <LessonContent
-            content={lessonContent?.content || ""}
+            content={lessonContent?.content || ''}
             contentBlocks={contentBlocks}
-            lessonType={lesson.lesson_type || "content"}
+            lessonType={lesson.lesson_type || 'content'}
             videoUrl={lessonContent?.video_url}
             codeStarter={lessonContent?.code_starter}
             codeSolution={lessonContent?.code_solution}
@@ -294,7 +311,9 @@ export default async function LessonPage({
 
           {/* Navigation */}
           <LessonNavigation
-            prevHref={prevLesson ? `/learn/${productSlug}/${prevLesson.slug}` : null}
+            prevHref={
+              prevLesson ? `/learn/${productSlug}/${prevLesson.slug}` : null
+            }
             nextHref={
               nextLesson
                 ? `/learn/${productSlug}/${nextLesson.slug}`

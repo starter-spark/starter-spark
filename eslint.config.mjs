@@ -1,50 +1,51 @@
-import { defineConfig, globalIgnores } from "eslint/config";
-import nextVitals from "eslint-config-next/core-web-vitals";
-import nextTs from "eslint-config-next/typescript";
-import tseslint from "typescript-eslint";
+import { defineConfig, globalIgnores } from 'eslint/config'
+import nextVitals from 'eslint-config-next/core-web-vitals'
+import nextTs from 'eslint-config-next/typescript'
+import tseslint from 'typescript-eslint'
+import prettier from 'eslint-config-prettier/flat'
 
-import security from "eslint-plugin-security";
-import noSecrets from "eslint-plugin-no-secrets";
+import security from 'eslint-plugin-security'
+import noSecrets from 'eslint-plugin-no-secrets'
 
-const TS_FILES = ["**/*.{ts,tsx,mts,cts}"];
+const TS_FILES = ['**/*.{ts,tsx,mts,cts}']
 
 export default defineConfig([
   ...nextVitals,
+  prettier,
   ...nextTs,
 
   globalIgnores([
-    ".next/**",
-    "out/**",
-    "build/**",
-    "next-env.d.ts",
-    "tests/**",
-    "test-results/**",
-    "playwright-report/**",
-    "chromatic-archives/**",
+    '.next/**',
+    'out/**',
+    'build/**',
+    'next-env.d.ts',
+    'tests/**',
+    'test-results/**',
+    'playwright-report/**',
+    'chromatic-archives/**',
 
-    // ignore test files anywhere
-    "**/*.test.{ts,tsx,js,jsx}",
-    "**/*.spec.{ts,tsx,js,jsx}",
+    // Test files
+    '**/*.test.{ts,tsx,js,jsx}',
+    '**/*.spec.{ts,tsx,js,jsx}',
 
-    // auto-generated files
-    "src/lib/supabase/database.types.ts",
+    // Generated files
+    'src/lib/supabase/database.types.ts',
   ]),
-
 
   {
     plugins: {
       security,
-      "no-secrets": noSecrets,
+      'no-secrets': noSecrets,
     },
     rules: {
-      "react/no-danger": "error",
-      "react/no-danger-with-children": "error",
-      "no-restricted-globals": ["error", "eval", "Function"],
-      "security/detect-eval-with-expression": "error",
-      "security/detect-non-literal-regexp": "warn",
-      "security/detect-unsafe-regex": "warn",
-      "security/detect-object-injection": "warn",
-      "no-secrets/no-secrets": "warn",
+      'react/no-danger': 'error',
+      'react/no-danger-with-children': 'error',
+      'no-restricted-globals': ['error', 'eval', 'Function'],
+      'security/detect-eval-with-expression': 'error',
+      'security/detect-non-literal-regexp': 'warn',
+      'security/detect-unsafe-regex': 'warn',
+      'security/detect-object-injection': 'warn',
+      'no-secrets/no-secrets': 'warn',
     },
   },
 
@@ -61,4 +62,4 @@ export default defineConfig([
       },
     },
   },
-]);
+])

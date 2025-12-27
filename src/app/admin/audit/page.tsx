@@ -1,10 +1,11 @@
-import { supabaseAdmin } from "@/lib/supabase/admin"
-import { createClient } from "@/lib/supabase/server"
-import { AuditLogTable } from "./AuditLogTable"
+import { supabaseAdmin } from '@/lib/supabase/admin'
+import { createClient } from '@/lib/supabase/server'
+import { AuditLogTable } from './AuditLogTable'
+import { resolveParams, type MaybePromise } from '@/lib/next-params'
 
 export const metadata = {
-  title: "Audit Log | Admin",
-  description: "Track all admin actions and changes",
+  title: 'Audit Log | Admin',
+  description: 'Track all admin actions and changes',
 }
 
 async function getAuditLogs(searchParams: {
@@ -23,55 +24,60 @@ async function getAuditLogs(searchParams: {
   }
 
   const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
     .maybeSingle()
 
-  if (!profile || (profile.role !== "admin" && profile.role !== "staff")) {
+  if (!profile || (profile.role !== 'admin' && profile.role !== 'staff')) {
     return { logs: [], count: 0, userEmails: {} }
   }
 
-  const page = Number.parseInt(searchParams.page || "1")
+  const page = Number.parseInt(searchParams.page || '1')
   const limit = 25
   const offset = (page - 1) * limit
 
   let query = supabaseAdmin
-    .from("admin_audit_log")
-    .select("*", { count: "exact" })
-    .order("created_at", { ascending: false })
+    .from('admin_audit_log')
+    .select('*', { count: 'exact' })
+    .order('created_at', { ascending: false })
     .range(offset, offset + limit - 1)
 
-  if (searchParams.resource && searchParams.resource !== "all") {
-    query = query.eq("resource_type", searchParams.resource)
+  if (searchParams.resource && searchParams.resource !== 'all') {
+    query = query.eq('resource_type', searchParams.resource)
   }
 
-  if (searchParams.action && searchParams.action !== "all") {
-    query = query.eq("action", searchParams.action)
+  if (searchParams.action && searchParams.action !== 'all') {
+    query = query.eq('action', searchParams.action)
   }
 
   const { data: logs, count, error } = await query
 
   if (error) {
-    console.error("Failed to fetch audit logs:", error)
+    console.error('Failed to fetch audit logs:', error)
     return { logs: [], count: 0, userEmails: {} }
   }
 
   // Fetch user emails for all user_ids
-  const userIds = [...new Set(logs?.map((l) => l.user_id).filter((id): id is string => id !== null))]
+  const userIds = [
+    ...new Set(
+      logs?.map((l) => l.user_id).filter((id): id is string => id !== null),
+    ),
+  ]
   const userEmails: Record<string, string> = {}
 
   if (userIds.length > 0) {
     const { data: profiles } = await supabaseAdmin
-      .from("profiles")
-      .select("id, email")
-      .in("id", userIds)
+      .from('profiles')
+      .select('id, email')
+      .in('id', userIds)
 
-    if (profiles) for (const p of profiles) {
-      if (p.id && p.email) {
-        userEmails[p.id] = p.email
+    if (profiles)
+      for (const p of profiles) {
+        if (p.id && p.email) {
+          userEmails[p.id] = p.email
+        }
       }
-    }
   }
 
   return { logs: logs || [], count: count || 0, userEmails }
@@ -80,22 +86,24 @@ async function getAuditLogs(searchParams: {
 export default async function AuditLogPage({
   searchParams,
 }: {
-  searchParams: Promise<{
+  searchParams: MaybePromise<{
     page?: string
     resource?: string
     action?: string
     user?: string
   }>
 }) {
-  const params = await searchParams
+  const params = await resolveParams(searchParams)
   const { logs, count, userEmails } = await getAuditLogs(params)
-  const currentPage = Number.parseInt(params.page || "1")
+  const currentPage = Number.parseInt(params.page || '1')
   const totalPages = Math.ceil(count / 25)
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-mono font-bold text-slate-900">Audit Log</h1>
+        <h1 className="text-2xl font-mono font-bold text-slate-900">
+          Audit Log
+        </h1>
         <p className="text-slate-600 mt-1">
           Complete history of all admin actions. {count} total entries.
         </p>
@@ -107,8 +115,8 @@ export default async function AuditLogPage({
         currentPage={currentPage}
         totalPages={totalPages}
         filters={{
-          resource: params.resource || "all",
-          action: params.action || "all",
+          resource: params.resource || 'all',
+          action: params.action || 'all',
         }}
       />
     </div>

@@ -1,57 +1,59 @@
-"use server"
+'use server'
 
-import { revalidatePath } from "next/cache"
-import { createClient } from "@/lib/supabase/server"
-import { supabaseAdmin } from "@/lib/supabase/admin"
-import { generateLicenseCode, isValidEmail } from "@/lib/validation"
-import { logAuditEvent } from "@/lib/audit"
-import { requireAdmin, requireAdminOrStaff } from "@/lib/auth"
+import { revalidatePath } from 'next/cache'
+import { createClient } from '@/lib/supabase/server'
+import { supabaseAdmin } from '@/lib/supabase/admin'
+import { generateLicenseCode, isValidEmail } from '@/lib/validation'
+import { logAuditEvent } from '@/lib/audit'
+import { requireAdmin, requireAdminOrStaff } from '@/lib/auth'
 
 export async function revokeLicense(
-  licenseId: string
+  licenseId: string,
 ): Promise<{ error: string | null }> {
   const supabase = await createClient()
 
   const guard = await requireAdmin(supabase)
   if (!guard.ok) {
-    return { error: guard.user ? "Only admins can revoke licenses" : guard.error }
+    return {
+      error: guard.user ? 'Only admins can revoke licenses' : guard.error,
+    }
   }
   const user = guard.user
 
   // Get license info before revoking for audit log
   const { data: license, error: licenseError } = await supabaseAdmin
-    .from("licenses")
-    .select("code, owner_id, product_id")
-    .eq("id", licenseId)
+    .from('licenses')
+    .select('code, owner_id, product_id')
+    .eq('id', licenseId)
     .maybeSingle()
 
   if (licenseError) {
-    console.error("Error fetching license:", licenseError)
+    console.error('Error fetching license:', licenseError)
     return { error: licenseError.message }
   }
 
   if (!license) {
-    return { error: "License not found" }
+    return { error: 'License not found' }
   }
 
   // Use admin client to bypass RLS
   const { data: revoked, error: revokeError } = await supabaseAdmin
-    .from("licenses")
+    .from('licenses')
     .update({
       owner_id: null,
       claimed_at: null,
     })
-    .eq("id", licenseId)
-    .select("id")
+    .eq('id', licenseId)
+    .select('id')
     .maybeSingle()
 
   if (revokeError) {
-    console.error("Error revoking license:", revokeError)
+    console.error('Error revoking license:', revokeError)
     return { error: revokeError.message }
   }
 
   if (!revoked) {
-    return { error: "License not found" }
+    return { error: 'License not found' }
   }
 
   // Log audit event
@@ -67,7 +69,7 @@ export async function revokeLicense(
     },
   })
 
-  revalidatePath("/admin/licenses")
+  revalidatePath('/admin/licenses')
 
   return { error: null }
 }
@@ -75,7 +77,7 @@ export async function revokeLicense(
 export async function generateLicenses(
   productId: string,
   quantity: number,
-  source: "online_purchase" | "physical_card"
+  source: 'online_purchase' | 'physical_card',
 ): Promise<{ error: string | null; codes: string[] }> {
   const supabase = await createClient()
 
@@ -85,20 +87,23 @@ export async function generateLicenses(
 
   const safeQuantity = Number.isFinite(quantity) ? Math.trunc(quantity) : 0
   if (safeQuantity < 1) {
-    return { error: "Quantity must be at least 1", codes: [] }
+    return { error: 'Quantity must be at least 1', codes: [] }
   }
 
   // Avoid accidental huge inserts from the UI.
   if (safeQuantity > 500) {
-    return { error: "Quantity too large (max 500)", codes: [] }
+    return { error: 'Quantity too large (max 500)', codes: [] }
   }
 
-  // Generate and insert codes in rounds using upsert(ignoreDuplicates) so we don't
-  // spam the DB with per-code existence checks.
+  // Insert in rounds via upsert(ignoreDuplicates) to avoid per-code existence checks.
   const insertedCodes: string[] = []
   const maxRounds = 10
 
-  for (let round = 0; round < maxRounds && insertedCodes.length < safeQuantity; round++) {
+  for (
+    let round = 0;
+    round < maxRounds && insertedCodes.length < safeQuantity;
+    round++
+  ) {
     const remaining = safeQuantity - insertedCodes.length
     const batchSize = Math.min(Math.max(remaining * 2, 10), 200)
     const batch = new Set<string>()
@@ -112,15 +117,15 @@ export async function generateLicenses(
     }))
 
     const { data: inserted, error: insertError } = await supabaseAdmin
-      .from("licenses")
+      .from('licenses')
       .upsert(licensesToInsert, {
-        onConflict: "code",
+        onConflict: 'code',
         ignoreDuplicates: true,
       })
-      .select("code")
+      .select('code')
 
     if (insertError) {
-      console.error("Error generating licenses:", insertError)
+      console.error('Error generating licenses:', insertError)
       return { error: insertError.message, codes: [] }
     }
 
@@ -130,7 +135,7 @@ export async function generateLicenses(
   }
 
   if (insertedCodes.length < safeQuantity) {
-    return { error: "Could not generate enough unique codes", codes: [] }
+    return { error: 'Could not generate enough unique codes', codes: [] }
   }
 
   // Log audit event for bulk license creation
@@ -143,23 +148,23 @@ export async function generateLicenses(
       quantity: safeQuantity,
       source,
       productId,
-      // Don't log all codes - could be sensitive
+      // Don't log all codes, could be sensitive.
       sampleCodes: insertedCodes.slice(0, 3),
     },
   })
 
-  revalidatePath("/admin/licenses")
+  revalidatePath('/admin/licenses')
 
   return { error: null, codes: insertedCodes.slice(0, safeQuantity) }
 }
 
 export async function assignLicense(
   licenseId: string,
-  userEmail: string
+  userEmail: string,
 ): Promise<{ error: string | null }> {
   const normalizedEmail = userEmail.trim().toLowerCase()
   if (!isValidEmail(normalizedEmail)) {
-    return { error: "Invalid email" }
+    return { error: 'Invalid email' }
   }
 
   const supabase = await createClient()
@@ -170,39 +175,39 @@ export async function assignLicense(
 
   // Find user by email
   const { data: targetUser, error: targetUserError } = await supabaseAdmin
-    .from("profiles")
-    .select("id")
-    .ilike("email", normalizedEmail)
+    .from('profiles')
+    .select('id')
+    .ilike('email', normalizedEmail)
     .maybeSingle()
 
   if (targetUserError) {
-    console.error("Error looking up user by email:", targetUserError)
+    console.error('Error looking up user by email:', targetUserError)
     return { error: targetUserError.message }
   }
 
   if (!targetUser) {
-    return { error: "User not found" }
+    return { error: 'User not found' }
   }
 
   // Assign license
   const { data: updatedLicense, error: assignError } = await supabaseAdmin
-    .from("licenses")
+    .from('licenses')
     .update({
       owner_id: targetUser.id,
       claimed_at: new Date().toISOString(),
     })
-    .eq("id", licenseId)
-    .is("owner_id", null) // Only if unclaimed
-    .select("id, code, product_id")
+    .eq('id', licenseId)
+    .is('owner_id', null) // Only if unclaimed
+    .select('id, code, product_id')
     .maybeSingle()
 
   if (assignError) {
-    console.error("Error assigning license:", assignError)
+    console.error('Error assigning license:', assignError)
     return { error: assignError.message }
   }
 
   if (!updatedLicense) {
-    return { error: "License not found or already claimed" }
+    return { error: 'License not found or already claimed' }
   }
 
   // Log audit event
@@ -219,7 +224,7 @@ export async function assignLicense(
     },
   })
 
-  revalidatePath("/admin/licenses")
+  revalidatePath('/admin/licenses')
 
   return { error: null }
 }

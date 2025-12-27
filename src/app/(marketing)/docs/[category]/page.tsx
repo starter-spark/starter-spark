@@ -1,25 +1,27 @@
-import { createClient } from "@/lib/supabase/server"
-import { notFound } from "next/navigation"
-import Link from "next/link"
-import { ChevronRight, FileText, ArrowLeft, BookOpen } from "lucide-react"
+import { createClient } from '@/lib/supabase/server'
+import { notFound } from 'next/navigation'
+import Link from 'next/link'
+import { ChevronRight, FileText, ArrowLeft, BookOpen } from 'lucide-react'
+import { formatShortDate } from '@/lib/utils'
+import {
+  fetchDocCategoryMeta,
+  fetchDocCategoryWithPages,
+  type DocCategoryPage,
+} from '@/lib/docs'
+import { resolveParams, type MaybePromise } from '@/lib/next-params'
 
 interface Props {
-  params: Promise<{ category: string }>
+  params: MaybePromise<{ category: string }>
 }
 
 export async function generateMetadata({ params }: Props) {
-  const { category: categorySlug } = await params
+  const { category: categorySlug } = await resolveParams(params)
   const supabase = await createClient()
 
-  const { data: category } = await supabase
-    .from("doc_categories")
-    .select("name, description")
-    .eq("slug", categorySlug)
-    .eq("is_published", true)
-    .single()
+  const category = await fetchDocCategoryMeta(supabase, categorySlug)
 
   if (!category) {
-    return { title: "Category Not Found" }
+    return { title: 'Category Not Found' }
   }
 
   return {
@@ -29,39 +31,20 @@ export async function generateMetadata({ params }: Props) {
 }
 
 export default async function DocCategoryPage({ params }: Props) {
-  const { category: categorySlug } = await params
+  const { category: categorySlug } = await resolveParams(params)
   const supabase = await createClient()
 
   // Fetch category with its pages
-  const { data: category, error } = await supabase
-    .from("doc_categories")
-    .select(`
-      id,
-      name,
-      slug,
-      description,
-      pages:doc_pages (
-        id,
-        title,
-        slug,
-        excerpt,
-        sort_order,
-        updated_at
-      )
-    `)
-    .eq("slug", categorySlug)
-    .eq("is_published", true)
-    .single()
+  const category = await fetchDocCategoryWithPages(supabase, categorySlug)
 
-  if (error || !category) {
+  if (!category) {
     notFound()
   }
 
+  const typedCategory = category
+
   // Sort pages by sort_order
-  const sortedPages = (category.pages || []).sort(
-    (a: { sort_order: number | null }, b: { sort_order: number | null }) =>
-      (a.sort_order || 0) - (b.sort_order || 0)
-  )
+  const sortedPages = sortCategoryPages(typedCategory.pages || [])
 
   return (
     <div className="bg-slate-50 min-h-screen">
@@ -69,11 +52,14 @@ export default async function DocCategoryPage({ params }: Props) {
       <section className="pt-28 pb-4 px-6 lg:px-20">
         <div className="max-w-4xl mx-auto">
           <nav className="flex items-center gap-2 text-sm text-slate-500">
-            <Link href="/docs" className="hover:text-cyan-700 transition-colors">
+            <Link
+              href="/docs"
+              className="hover:text-cyan-700 transition-colors"
+            >
               Documentation
             </Link>
             <ChevronRight className="w-4 h-4" />
-            <span className="text-slate-900">{category.name}</span>
+            <span className="text-slate-900">{typedCategory.name}</span>
           </nav>
         </div>
       </section>
@@ -89,10 +75,12 @@ export default async function DocCategoryPage({ params }: Props) {
             Back to Documentation
           </Link>
           <h1 className="font-mono text-3xl lg:text-4xl font-bold text-slate-900 mb-3">
-            {category.name}
+            {typedCategory.name}
           </h1>
-          {category.description && (
-            <p className="text-lg text-slate-600">{category.description}</p>
+          {typedCategory.description && (
+            <p className="text-lg text-slate-600">
+              {typedCategory.description}
+            </p>
           )}
         </div>
       </section>
@@ -112,47 +100,58 @@ export default async function DocCategoryPage({ params }: Props) {
             </div>
           ) : (
             <div className="space-y-3">
-              {sortedPages.map((page: {
-                id: string
-                title: string
-                slug: string
-                excerpt: string | null
-                updated_at: string | null
-              }) => (
-                <Link
+              {sortedPages.map((page) => (
+                <DocCategoryPageCard
                   key={page.id}
-                  href={`/docs/${category.slug}/${page.slug}`}
-                  className="group flex items-start gap-4 p-5 bg-white rounded border border-slate-200 hover:border-cyan-300 hover:shadow-sm transition-all"
-                >
-                  <div className="w-10 h-10 rounded bg-cyan-50 flex items-center justify-center flex-shrink-0 group-hover:bg-cyan-100 transition-colors">
-                    <FileText className="w-5 h-5 text-cyan-700" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h2 className="font-mono text-lg text-slate-900 mb-1 group-hover:text-cyan-700 transition-colors">
-                      {page.title}
-                    </h2>
-                    {page.excerpt && (
-                      <p className="text-sm text-slate-600 line-clamp-2 mb-2">
-                        {page.excerpt}
-                      </p>
-                    )}
-                    <p className="text-xs text-slate-400">
-                      {page.updated_at
-                        ? `Updated ${new Date(page.updated_at).toLocaleDateString("en-US", {
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                          })}`
-                        : "Recently updated"}
-                    </p>
-                  </div>
-                  <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-cyan-600 flex-shrink-0 mt-2 transition-colors" />
-                </Link>
+                  page={page}
+                  categorySlug={typedCategory.slug}
+                />
               ))}
             </div>
           )}
         </div>
       </section>
     </div>
+  )
+}
+
+function sortCategoryPages(pages: DocCategoryPage[]) {
+  return [...pages].sort(
+    (a, b) => (a.sort_order || 0) - (b.sort_order || 0),
+  )
+}
+
+function DocCategoryPageCard({
+  page,
+  categorySlug,
+}: {
+  page: DocCategoryPage
+  categorySlug: string
+}) {
+  const updatedLabel = page.updated_at
+    ? `Updated ${formatShortDate(page.updated_at)}`
+    : 'Recently updated'
+
+  return (
+    <Link
+      href={`/docs/${categorySlug}/${page.slug}`}
+      className="group flex items-start gap-4 p-5 bg-white rounded border border-slate-200 hover:border-cyan-300 hover:shadow-sm transition-all"
+    >
+      <div className="w-10 h-10 rounded bg-cyan-50 flex items-center justify-center flex-shrink-0 group-hover:bg-cyan-100 transition-colors">
+        <FileText className="w-5 h-5 text-cyan-700" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <h2 className="font-mono text-lg text-slate-900 mb-1 group-hover:text-cyan-700 transition-colors">
+          {page.title}
+        </h2>
+        {page.excerpt && (
+          <p className="text-sm text-slate-600 line-clamp-2 mb-2">
+            {page.excerpt}
+          </p>
+        )}
+        <p className="text-xs text-slate-400">{updatedLabel}</p>
+      </div>
+      <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-cyan-600 flex-shrink-0 mt-2 transition-colors" />
+    </Link>
   )
 }

@@ -1,9 +1,10 @@
-"use client"
+'use client'
 
-import { Card, CardContent } from "@/components/ui/card"
-import { Package, GraduationCap, Users, MapPin } from "lucide-react"
-import { motion } from "motion/react"
-import type { LucideIcon } from "lucide-react"
+import { Card, CardContent } from '@/components/ui/card'
+import { Package, GraduationCap, Users, MapPin } from 'lucide-react'
+import { motion } from 'motion/react'
+import type { LucideIcon } from 'lucide-react'
+import { SectionIntro } from './SectionIntro'
 
 interface DifferentiatorCard {
   icon: LucideIcon
@@ -25,16 +26,16 @@ export interface DifferentiatorsSectionProps {
 }
 
 export function DifferentiatorsSection({
-  title = "Why StarterSpark?",
-  description = "We built the kit we wished existed when we started learning robotics.",
-  card1Title = "Complete Package",
-  card1Description = "Everything you need in one box: pre-cut parts, electronics, fasteners, and our step-by-step digital curriculum. No hunting for components or compatibility issues.",
-  card2Title = "Interactive Curriculum",
-  card2Description = "Learn by doing with our web-based platform featuring interactive wiring diagrams, code editors with real-time feedback, and progress tracking across lessons.",
-  card3Title = "Support for Schools and Clubs",
+  title = 'Why StarterSpark?',
+  description = 'We built the kit we wished existed when we started learning robotics.',
+  card1Title = 'Complete Package',
+  card1Description = 'Everything you need in one box: pre-cut parts, electronics, fasteners, and our step-by-step digital curriculum. No hunting for components or compatibility issues.',
+  card2Title = 'Interactive Curriculum',
+  card2Description = 'Learn by doing with our web-based platform featuring interactive wiring diagrams, code editors with real-time feedback, and progress tracking across lessons.',
+  card3Title = 'Support for Schools and Clubs',
   card3Description = "We offer bulk discounts and classroom-ready kits to help educators bring hands-on STEM learning to their students. Whether you're running a robotics club, teaching a STEM unit, or hosting a workshop, StarterSpark provides guidance, resources, and affordable tools to make it happen.",
-  card4Title = "Hawaii Roots",
-  card4Description = "Founded by students from Hawaii who wanted to give back. Every kit sold directly supports local STEM education programs and school robotics teams across the islands.",
+  card4Title = 'Hawaii Roots',
+  card4Description = 'Founded by students from Hawaii who wanted to give back. Every kit sold directly supports local STEM education programs and school robotics teams across the islands.',
 }: DifferentiatorsSectionProps) {
   const differentiators: DifferentiatorCard[] = [
     { icon: Package, title: card1Title, description: card1Description },
@@ -46,19 +47,7 @@ export function DifferentiatorsSection({
   return (
     <section className="py-24 px-6 lg:px-20 bg-white">
       <div className="max-w-7xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center mb-16"
-        >
-          <h2 className="font-mono text-3xl lg:text-4xl text-slate-900 mb-4 break-words">
-            {title}
-          </h2>
-          <p className="text-slate-600 max-w-2xl mx-auto break-words">
-            {description}
-          </p>
-        </motion.div>
+        <SectionIntro title={title} description={description} />
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {differentiators.map((item, idx) => (

@@ -1,17 +1,17 @@
-"use client"
+'use client'
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { MoreHorizontal, Check, X, Flag, Trash2, Loader2 } from "lucide-react"
-import { updatePostStatus, deletePost } from "./actions"
+} from '@/components/ui/dropdown-menu'
+import { MoreHorizontal, Check, X, Flag, Trash2, Loader2 } from 'lucide-react'
+import { updatePostStatus, deletePost } from './actions'
 
 interface CommunityActionsProps {
   postId: string
@@ -36,7 +36,11 @@ export function CommunityActions({ postId, status }: CommunityActionsProps) {
   }
 
   const handleDelete = async () => {
-    if (!confirm("Are you sure you want to delete this post? This cannot be undone.")) {
+    if (
+      !confirm(
+        'Are you sure you want to delete this post? This cannot be undone.',
+      )
+    ) {
       return
     }
 
@@ -64,20 +68,22 @@ export function CommunityActions({ postId, status }: CommunityActionsProps) {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        {status !== "published" && (
-          <DropdownMenuItem onClick={() => void handleStatusChange("published")}>
+        {status !== 'published' && (
+          <DropdownMenuItem
+            onClick={() => void handleStatusChange('published')}
+          >
             <Check className="mr-2 h-4 w-4 text-green-600" />
             Approve
           </DropdownMenuItem>
         )}
-        {status !== "pending" && (
-          <DropdownMenuItem onClick={() => void handleStatusChange("pending")}>
+        {status !== 'pending' && (
+          <DropdownMenuItem onClick={() => void handleStatusChange('pending')}>
             <X className="mr-2 h-4 w-4" />
             Set Pending
           </DropdownMenuItem>
         )}
-        {status !== "flagged" && (
-          <DropdownMenuItem onClick={() => void handleStatusChange("flagged")}>
+        {status !== 'flagged' && (
+          <DropdownMenuItem onClick={() => void handleStatusChange('flagged')}>
             <Flag className="mr-2 h-4 w-4 text-amber-600" />
             Flag
           </DropdownMenuItem>

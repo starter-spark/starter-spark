@@ -1,7 +1,7 @@
-import Link from "next/link"
-import { createClient } from "@/lib/supabase/server"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
+import Link from 'next/link'
+import { createClient } from '@/lib/supabase/server'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import {
   Table,
   TableBody,
@@ -9,24 +9,24 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { Plus, Calendar, MapPin, Users } from "lucide-react"
-import { EventActions } from "./EventActions"
+} from '@/components/ui/table'
+import { Plus, Calendar, MapPin, Users } from 'lucide-react'
+import { EventActions } from './EventActions'
 
 export const metadata = {
-  title: "Events | Admin",
+  title: 'Events | Admin',
 }
 
 async function getEvents() {
   const supabase = await createClient()
 
   const { data, error } = await supabase
-    .from("events")
-    .select("*")
-    .order("event_date", { ascending: true })
+    .from('events')
+    .select('*')
+    .order('event_date', { ascending: true })
 
   if (error) {
-    console.error("Error fetching events:", error)
+    console.error('Error fetching events:', error)
     return []
   }
 
@@ -45,8 +45,12 @@ export default async function EventsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-mono text-2xl font-bold text-slate-900">Events</h1>
-          <p className="text-slate-600">Manage workshops and community events</p>
+          <h1 className="font-mono text-2xl font-bold text-slate-900">
+            Events
+          </h1>
+          <p className="text-slate-600">
+            Manage workshops and community events
+          </p>
         </div>
         <Button asChild className="bg-cyan-700 hover:bg-cyan-600">
           <Link href="/admin/events/new">
@@ -60,15 +64,21 @@ export default async function EventsPage() {
       <div className="grid gap-4 md:grid-cols-3">
         <div className="rounded-lg border border-slate-200 bg-white p-4">
           <p className="text-sm text-slate-600">Total Events</p>
-          <p className="font-mono text-2xl font-bold text-slate-900">{events.length}</p>
+          <p className="font-mono text-2xl font-bold text-slate-900">
+            {events.length}
+          </p>
         </div>
         <div className="rounded-lg border border-slate-200 bg-white p-4">
           <p className="text-sm text-slate-600">Upcoming</p>
-          <p className="font-mono text-2xl font-bold text-cyan-700">{upcomingEvents.length}</p>
+          <p className="font-mono text-2xl font-bold text-cyan-700">
+            {upcomingEvents.length}
+          </p>
         </div>
         <div className="rounded-lg border border-slate-200 bg-white p-4">
           <p className="text-sm text-slate-600">Past Events</p>
-          <p className="font-mono text-2xl font-bold text-slate-500">{pastEvents.length}</p>
+          <p className="font-mono text-2xl font-bold text-slate-500">
+            {pastEvents.length}
+          </p>
         </div>
       </div>
 
@@ -102,12 +112,19 @@ export default async function EventsPage() {
                 const isToday = eventDate.toDateString() === now.toDateString()
 
                 return (
-                  <TableRow key={event.id} className={isPast ? "opacity-60" : ""}>
+                  <TableRow
+                    key={event.id}
+                    className={isPast ? 'opacity-60' : ''}
+                  >
                     <TableCell>
                       <div className="max-w-[200px]">
-                        <p className="truncate font-medium text-slate-900">{event.title}</p>
+                        <p className="truncate font-medium text-slate-900">
+                          {event.title}
+                        </p>
                         {event.description && (
-                          <p className="truncate text-xs text-slate-500">{event.description}</p>
+                          <p className="truncate text-xs text-slate-500">
+                            {event.description}
+                          </p>
                         )}
                       </div>
                     </TableCell>
@@ -115,11 +132,11 @@ export default async function EventsPage() {
                       <Badge
                         variant="outline"
                         className={
-                          event.event_type === "workshop"
-                            ? "border-purple-300 text-purple-700"
-                            : event.event_type === "meetup"
-                              ? "border-cyan-300 text-cyan-700"
-                              : "border-slate-300 text-slate-700"
+                          event.event_type === 'workshop'
+                            ? 'border-purple-300 text-purple-700'
+                            : event.event_type === 'meetup'
+                              ? 'border-cyan-300 text-cyan-700'
+                              : 'border-slate-300 text-slate-700'
                         }
                       >
                         {event.event_type}
@@ -134,8 +151,8 @@ export default async function EventsPage() {
                           </p>
                           <p className="text-xs text-slate-500">
                             {eventDate.toLocaleTimeString([], {
-                              hour: "2-digit",
-                              minute: "2-digit",
+                              hour: '2-digit',
+                              minute: '2-digit',
                             })}
                           </p>
                         </div>
@@ -154,20 +171,32 @@ export default async function EventsPage() {
                           {event.capacity}
                         </div>
                       ) : (
-                        <span className="text-sm text-slate-400">Unlimited</span>
+                        <span className="text-sm text-slate-400">
+                          Unlimited
+                        </span>
                       )}
                     </TableCell>
                     <TableCell>
                       {isPast ? (
-                        <Badge variant="outline" className="border-slate-300 text-slate-500">
+                        <Badge
+                          variant="outline"
+                          className="border-slate-300 text-slate-500"
+                        >
                           Past
                         </Badge>
                       ) : isToday ? (
-                        <Badge className="bg-green-100 text-green-700">Today</Badge>
+                        <Badge className="bg-green-100 text-green-700">
+                          Today
+                        </Badge>
                       ) : event.is_public ? (
-                        <Badge className="bg-cyan-100 text-cyan-700">Public</Badge>
+                        <Badge className="bg-cyan-100 text-cyan-700">
+                          Public
+                        </Badge>
                       ) : (
-                        <Badge variant="outline" className="border-amber-300 text-amber-700">
+                        <Badge
+                          variant="outline"
+                          className="border-amber-300 text-amber-700"
+                        >
                           Draft
                         </Badge>
                       )}

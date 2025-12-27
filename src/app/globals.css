@@ -1,42 +1,41 @@
-@import "tailwindcss";
-@import "tw-animate-css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  /* Color Palette: Architectural Blueprint Theme (Light Mode) */
-  
+  /* Palette (light) */
   /* Accents */
-  --color-cyan-700: oklch(0.52 0.105 211); /* Deep Cyan - #0e7490 */
+  --color-cyan-700: oklch(0.52 0.105 211); /* Deep cyan (#0e7490) */
   --color-cyan-600: oklch(0.609 0.126 221.723);
   --color-cyan-500: oklch(0.715 0.143 215.221);
   --color-amber-500: oklch(0.769 0.188 70.08);
-  
-  /* Semantic Mapping */
+
+  /* Semantic */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  
+
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
-  
+
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
-  
+
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
-  
+
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
-  
+
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
-  
+
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
-  
+
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
-  
+
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -45,54 +44,54 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 
-  /* Border Radius */
+  /* Radius */
   --radius-sm: calc(var(--radius) - 2px);
   --radius-md: var(--radius);
   --radius-lg: calc(var(--radius) + 2px);
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-/* Root Variables - Architectural Light Mode */
+/* Root */
 :root {
-  /* Force Light Mode Scheme */
+  /* Light scheme */
   color-scheme: light;
 
-  /* Radius: Sharp Engineering Feel */
+  /* Radius (sharp) */
   --radius: 0.25rem; /* 4px */
 
-  /* Base Colors (Slate-50 / Slate-900) - OKLCH */
+  /* Base colors (OKLCH) */
   --background: oklch(0.984 0.003 247.858); /* Slate 50 */
   --foreground: oklch(0.208 0.042 265.755); /* Slate 900 */
 
-  /* Card Surface (White) */
+  /* Card */
   --card: oklch(1 0 0); /* White */
   --card-foreground: oklch(0.208 0.042 265.755);
 
-  /* Popover (White) */
+  /* Popover */
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.208 0.042 265.755);
 
-  /* Primary: Deep Cyan (700) */
+  /* Primary (cyan 700) */
   --primary: oklch(0.52 0.105 211);
   --primary-foreground: oklch(1 0 0);
 
-  /* Secondary: Slate-100 */
+  /* Secondary (slate 100) */
   --secondary: oklch(0.968 0.007 247.896);
   --secondary-foreground: oklch(0.208 0.042 265.755);
 
-  /* Muted: Slate-100 / Slate-500 */
+  /* Muted (slate 100/500) */
   --muted: oklch(0.968 0.007 247.896);
   --muted-foreground: oklch(0.554 0.046 257.417);
 
-  /* Accent: Slate-100 */
+  /* Accent (slate 100) */
   --accent: oklch(0.968 0.007 247.896);
   --accent-foreground: oklch(0.208 0.042 265.755);
 
-  /* Destructive/Warning: Amber LED */
+  /* Destructive (amber) */
   --destructive: oklch(0.769 0.188 70.08);
   --destructive-foreground: oklch(1 0 0);
 
-  /* Border: Slate-200 */
+  /* Border (slate 200) */
   --border: oklch(0.929 0.013 255.508);
   --input: oklch(0.929 0.013 255.508);
   --ring: oklch(0.52 0.105 211);
@@ -106,15 +105,15 @@
   --sidebar-border: oklch(0.929 0.013 255.508);
   --sidebar-ring: oklch(0.52 0.105 211);
 
-  /* Grid Color: Slate-300 */
-  --grid-color: #cbd5e1; 
+  /* Grid color (slate 300) */
+  --grid-color: #cbd5e1;
 }
 
 html {
   position: relative;
 }
 
-/* Force Light Mode Variables even if system prefers dark */
+/* Force light vars */
 @media (prefers-color-scheme: dark) {
   :root {
     --background: oklch(0.984 0.003 247.858);
@@ -139,29 +138,29 @@ html {
   }
 }
 
-/* The Blueprint Grid Texture (Light Mode) - Marketing pages only */
+/* Grid texture (marketing only) */
 body {
   @apply bg-background text-foreground font-sans antialiased overflow-x-hidden;
   position: relative;
-  /* Slate-300 dots, 1.5px size, 32px spacing - Corrected Syntax */
+  /* Slate 300 dots (1.5px, 32px) */
   background-image: radial-gradient(var(--grid-color) 1.5px, transparent 1.5px);
   background-size: 32px 32px;
 }
 
-/* Remove grid pattern from admin pages and constrain height */
+/* Admin (no grid, lock height) */
 body:has(.admin-layout) {
   background-image: none;
   height: 100vh;
   overflow: hidden;
 }
 
-/* Ensure html doesn't create extra scroll on admin */
+/* Admin (lock html height) */
 html:has(.admin-layout) {
   height: 100vh;
   overflow: hidden;
 }
 
-/* Custom Scrollbar (Webkit) */
+/* Scrollbar (webkit) */
 ::-webkit-scrollbar {
   width: 10px;
 }
@@ -183,27 +182,27 @@ html:has(.admin-layout) {
     @apply border-border outline-ring/50;
   }
 
-  /* Interactive elements should always show pointer cursor */
+  /* Interactive (pointer cursor) */
   button,
-  [role="button"],
+  [role='button'],
   a,
-  input[type="checkbox"],
-  input[type="radio"],
+  input[type='checkbox'],
+  input[type='radio'],
   select,
   label[for],
   .interactive,
-  [data-interactive="true"] {
+  [data-interactive='true'] {
     cursor: pointer;
   }
 
-  /* Disabled states should show not-allowed cursor */
+  /* Disabled (not-allowed cursor) */
   button:disabled,
-  [aria-disabled="true"],
+  [aria-disabled='true'],
   .disabled {
     cursor: not-allowed;
   }
 
-  /* Global focus-visible styles for accessibility */
+  /* Focus visible (global) */
   a:focus-visible {
     @apply outline-none ring-2 ring-cyan-700 ring-offset-2 rounded;
   }
@@ -213,7 +212,7 @@ html:has(.admin-layout) {
   }
 }
 
-/* Image loading shimmer animation */
+/* Shimmer animation */
 @keyframes shimmer {
   0% {
     background-position: -200% 0;
@@ -232,7 +231,7 @@ html:has(.admin-layout) {
   will-change: width;
 }
 
-/* Reduced motion preferences */
+/* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -249,7 +248,7 @@ html:has(.admin-layout) {
   }
 }
 
-/* PhotoSwipe: prevent image distortion when slide dimensions are unknown */
+/* PhotoSwipe (prevent distortion) */
 .pswp__img {
   object-fit: contain !important;
   object-position: center !important;

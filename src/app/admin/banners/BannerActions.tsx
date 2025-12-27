@@ -1,15 +1,15 @@
-"use client"
+'use client'
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu"
+} from '@/components/ui/dropdown-menu'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,9 +19,16 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
-import { MoreHorizontal, Pencil, Trash2, Power, PowerOff, Copy } from "lucide-react"
-import { deleteBanner, toggleBannerActive, duplicateBanner } from "./actions"
+} from '@/components/ui/alert-dialog'
+import {
+  MoreHorizontal,
+  Pencil,
+  Trash2,
+  Power,
+  PowerOff,
+  Copy,
+} from 'lucide-react'
+import { deleteBanner, toggleBannerActive, duplicateBanner } from './actions'
 
 interface BannerActionsProps {
   bannerId: string
@@ -41,7 +48,7 @@ export function BannerActions({ bannerId, isActive }: BannerActionsProps) {
       await deleteBanner(bannerId)
       router.refresh()
     } catch (error) {
-      console.error("Failed to delete banner:", error)
+      console.error('Failed to delete banner:', error)
     } finally {
       setIsDeleting(false)
       setShowDeleteDialog(false)
@@ -54,7 +61,7 @@ export function BannerActions({ bannerId, isActive }: BannerActionsProps) {
       await toggleBannerActive(bannerId, !isActive)
       router.refresh()
     } catch (error) {
-      console.error("Failed to toggle banner:", error)
+      console.error('Failed to toggle banner:', error)
     } finally {
       setIsToggling(false)
     }
@@ -66,7 +73,7 @@ export function BannerActions({ bannerId, isActive }: BannerActionsProps) {
       await duplicateBanner(bannerId)
       router.refresh()
     } catch (error) {
-      console.error("Failed to duplicate banner:", error)
+      console.error('Failed to duplicate banner:', error)
     } finally {
       setIsDuplicating(false)
     }
@@ -82,30 +89,42 @@ export function BannerActions({ bannerId, isActive }: BannerActionsProps) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => { router.push(`/admin/banners/${bannerId}`); }}>
+          <DropdownMenuItem
+            onClick={() => {
+              router.push(`/admin/banners/${bannerId}`)
+            }}
+          >
             <Pencil className="mr-2 h-4 w-4" />
             Edit
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => void handleDuplicate()} disabled={isDuplicating}>
+          <DropdownMenuItem
+            onClick={() => void handleDuplicate()}
+            disabled={isDuplicating}
+          >
             <Copy className="mr-2 h-4 w-4" />
-            {isDuplicating ? "Duplicating..." : "Duplicate"}
+            {isDuplicating ? 'Duplicating...' : 'Duplicate'}
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => void handleToggle()} disabled={isToggling}>
+          <DropdownMenuItem
+            onClick={() => void handleToggle()}
+            disabled={isToggling}
+          >
             {isActive ? (
               <>
                 <PowerOff className="mr-2 h-4 w-4" />
-                {isToggling ? "Deactivating..." : "Deactivate"}
+                {isToggling ? 'Deactivating...' : 'Deactivate'}
               </>
             ) : (
               <>
                 <Power className="mr-2 h-4 w-4" />
-                {isToggling ? "Activating..." : "Activate"}
+                {isToggling ? 'Activating...' : 'Activate'}
               </>
             )}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
-            onClick={() => { setShowDeleteDialog(true); }}
+            onClick={() => {
+              setShowDeleteDialog(true)
+            }}
             className="text-red-600 focus:text-red-600"
           >
             <Trash2 className="mr-2 h-4 w-4" />
@@ -119,7 +138,8 @@ export function BannerActions({ bannerId, isActive }: BannerActionsProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Banner</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this banner? This action cannot be undone.
+              Are you sure you want to delete this banner? This action cannot be
+              undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -129,7 +149,7 @@ export function BannerActions({ bannerId, isActive }: BannerActionsProps) {
               disabled={isDeleting}
               className="bg-red-600 hover:bg-red-700"
             >
-              {isDeleting ? "Deleting..." : "Delete"}
+              {isDeleting ? 'Deleting...' : 'Delete'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

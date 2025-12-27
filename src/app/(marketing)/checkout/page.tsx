@@ -1,9 +1,13 @@
-import Link from "next/link"
-import type { Metadata } from "next"
+import Link from 'next/link'
+import type { Metadata } from 'next'
+import {
+  compactPrimaryLink,
+  compactSecondaryLink,
+} from '@/components/marketing/link-classes'
 
 export const metadata: Metadata = {
-  title: "Checkout",
-  description: "Checkout starts from your cart after selecting a kit.",
+  title: 'Checkout',
+  description: 'Checkout starts from your cart after selecting a kit.',
 }
 
 export default function CheckoutPage() {
@@ -21,13 +25,13 @@ export default function CheckoutPage() {
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Link
             href="/cart"
-            className="inline-flex items-center justify-center rounded bg-cyan-700 px-4 py-2 text-white font-mono text-sm hover:bg-cyan-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-700 focus-visible:ring-offset-2"
+            className={compactPrimaryLink}
           >
             Go to Cart
           </Link>
           <Link
             href="/shop"
-            className="inline-flex items-center justify-center rounded border border-slate-200 px-4 py-2 text-slate-700 font-mono text-sm hover:border-slate-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-700 focus-visible:ring-offset-2"
+            className={compactSecondaryLink}
           >
             Browse Kits
           </Link>

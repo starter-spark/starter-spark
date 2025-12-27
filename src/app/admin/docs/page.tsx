@@ -1,12 +1,12 @@
-import { createClient } from "@/lib/supabase/server"
-import Link from "next/link"
-import { Plus, FileText, FolderOpen, Pencil } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { DeleteDocPageButton } from "./DeleteDocPageButton"
-import { TogglePublishButton } from "./TogglePublishButton"
+import { createClient } from '@/lib/supabase/server'
+import Link from 'next/link'
+import { Plus, FileText, FolderOpen, Pencil } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { DeleteDocPageButton } from './DeleteDocPageButton'
+import { TogglePublishButton } from './TogglePublishButton'
 
 export const metadata = {
-  title: "Documentation - Admin",
+  title: 'Documentation - Admin',
 }
 
 export default async function AdminDocsPage() {
@@ -14,8 +14,9 @@ export default async function AdminDocsPage() {
 
   // Fetch all categories with their pages
   const { data: categories } = await supabase
-    .from("doc_categories")
-    .select(`
+    .from('doc_categories')
+    .select(
+      `
       id,
       name,
       slug,
@@ -30,24 +31,31 @@ export default async function AdminDocsPage() {
         sort_order,
         updated_at
       )
-    `)
-    .order("sort_order", { ascending: true })
+    `,
+    )
+    .order('sort_order', { ascending: true })
 
   // Count stats
-  const totalPages = categories?.reduce((acc, cat) => acc + (cat.pages?.length || 0), 0) || 0
-  const publishedPages = categories?.reduce(
-    (acc, cat) =>
-      acc +
-      (cat.pages?.filter((p: { is_published: boolean | null }) => p.is_published)?.length || 0),
-    0
-  ) || 0
+  const totalPages =
+    categories?.reduce((acc, cat) => acc + (cat.pages?.length || 0), 0) || 0
+  const publishedPages =
+    categories?.reduce(
+      (acc, cat) =>
+        acc +
+        (cat.pages?.filter(
+          (p: { is_published: boolean | null }) => p.is_published,
+        )?.length || 0),
+      0,
+    ) || 0
 
   return (
     <div className="p-6 lg:p-10 max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="font-mono text-2xl font-bold text-slate-900">Documentation</h1>
+          <h1 className="font-mono text-2xl font-bold text-slate-900">
+            Documentation
+          </h1>
           <p className="text-sm text-slate-600 mt-1">
             Manage documentation pages and categories
           </p>
@@ -72,7 +80,9 @@ export default async function AdminDocsPage() {
       <div className="grid grid-cols-3 gap-4 mb-8">
         <div className="p-4 bg-white rounded border border-slate-200">
           <p className="text-sm text-slate-500">Categories</p>
-          <p className="font-mono text-2xl text-slate-900">{categories?.length || 0}</p>
+          <p className="font-mono text-2xl text-slate-900">
+            {categories?.length || 0}
+          </p>
         </div>
         <div className="p-4 bg-white rounded border border-slate-200">
           <p className="text-sm text-slate-500">Total Pages</p>
@@ -94,7 +104,9 @@ export default async function AdminDocsPage() {
             <div className="p-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <FolderOpen className="w-5 h-5 text-slate-500" />
-                <span className="font-mono text-slate-900">{category.name}</span>
+                <span className="font-mono text-slate-900">
+                  {category.name}
+                </span>
                 {!category.is_published && (
                   <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded">
                     Draft
@@ -107,15 +119,17 @@ export default async function AdminDocsPage() {
             </div>
             {category.pages && category.pages.length > 0 ? (
               <div className="divide-y divide-slate-100">
-                {(category.pages as Array<{
-                  id: string
-                  title: string
-                  slug: string
-                  excerpt: string | null
-                  is_published: boolean | null
-                  sort_order: number | null
-                  updated_at: string | null
-                }>)
+                {(
+                  category.pages as Array<{
+                    id: string
+                    title: string
+                    slug: string
+                    excerpt: string | null
+                    is_published: boolean | null
+                    sort_order: number | null
+                    updated_at: string | null
+                  }>
+                )
                   .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
                   .map((page) => (
                     <div
@@ -125,7 +139,9 @@ export default async function AdminDocsPage() {
                       <div className="flex items-center gap-3">
                         <FileText className="w-4 h-4 text-slate-400" />
                         <div>
-                          <p className="font-mono text-sm text-slate-900">{page.title}</p>
+                          <p className="font-mono text-sm text-slate-900">
+                            {page.title}
+                          </p>
                           <p className="text-xs text-slate-500">
                             /docs/{category.slug}/{page.slug}
                           </p>
@@ -141,7 +157,10 @@ export default async function AdminDocsPage() {
                             <Pencil className="w-4 h-4" />
                           </Link>
                         </Button>
-                        <DeleteDocPageButton pageId={page.id} pageTitle={page.title} />
+                        <DeleteDocPageButton
+                          pageId={page.id}
+                          pageTitle={page.title}
+                        />
                       </div>
                     </div>
                   ))}
@@ -163,7 +182,9 @@ export default async function AdminDocsPage() {
         {(!categories || categories.length === 0) && (
           <div className="p-12 text-center bg-white rounded border border-slate-200">
             <FolderOpen className="w-12 h-12 mx-auto mb-4 text-slate-300" />
-            <h2 className="font-mono text-lg text-slate-900 mb-2">No Categories Yet</h2>
+            <h2 className="font-mono text-lg text-slate-900 mb-2">
+              No Categories Yet
+            </h2>
             <p className="text-sm text-slate-500 mb-4">
               Create your first category to start organizing documentation.
             </p>

@@ -1,28 +1,75 @@
-"use client"
+'use client'
 
-import { useState, useTransition } from "react"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
-import { Loader2, Save, Trash2, Plus, X, Package, AlertTriangle, Image as ImageIcon } from "lucide-react"
-import { updateProduct, deleteProduct, updateProductTags, saveProductMedia } from "../actions"
-import { MediaUploader, type MediaItem } from "@/components/admin/MediaUploader"
-import { type Database } from "@/lib/supabase/database.types"
+import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Separator } from '@/components/ui/separator'
+import {
+  Loader2,
+  Save,
+  Trash2,
+  Plus,
+  X,
+  Package,
+  AlertTriangle,
+  Image as ImageIcon,
+} from 'lucide-react'
+import {
+  updateProduct,
+  deleteProduct,
+  updateProductTags,
+  saveProductMedia,
+} from '../actions'
+import { MediaUploader, type MediaItem } from '@/components/admin/MediaUploader'
+import { type Database } from '@/lib/supabase/database.types'
+import {
+  AdminTextArea,
+  adminLabelClass,
+  adminHelperTextClass,
+} from '@/components/admin/form-controls'
 
-type ProductTagType = Database["public"]["Enums"]["product_tag_type"]
+type ProductTagType = Database['public']['Enums']['product_tag_type']
 
-const ALL_TAGS: { type: ProductTagType; label: string; description: string }[] = [
-  { type: "featured", label: "Featured", description: "Highlights in shop + homepage (highest priority = homepage)" },
-  { type: "bestseller", label: "Bestseller", description: "Top selling product" },
-  { type: "bundle", label: "Bundle", description: "Product bundle/kit" },
-  // Automated tags - managed by system:
-  { type: "new", label: "New", description: "Auto-added for new products (expires after 7 days)" },
-  { type: "limited", label: "Limited", description: "Auto-managed by inventory (low stock)" },
-  { type: "out_of_stock", label: "Out of Stock", description: "Auto-managed by inventory (0 stock)" },
-  // Note: "discount" tag is auto-managed by the "On Sale" toggle in Pricing section
-]
+const ALL_TAGS: { type: ProductTagType; label: string; description: string }[] =
+  [
+    {
+      type: 'featured',
+      label: 'Featured',
+      description:
+        'Highlights in shop + homepage (highest priority = homepage)',
+    },
+    {
+      type: 'bestseller',
+      label: 'Bestseller',
+      description: 'Top selling product',
+    },
+    { type: 'bundle', label: 'Bundle', description: 'Product bundle/kit' },
+    // Automated tags (system-managed):
+    {
+      type: 'new',
+      label: 'New',
+      description: 'Auto-added for new products (expires after 7 days)',
+    },
+    {
+      type: 'limited',
+      label: 'Limited',
+      description: 'Auto-managed by inventory (low stock)',
+    },
+    {
+      type: 'out_of_stock',
+      label: 'Out of Stock',
+      description: 'Auto-managed by inventory (0 stock)',
+    },
+    // Note: "discount" tag is auto-managed by the "On Sale" toggle in Pricing section
+  ]
 
 interface TagState {
   tag: ProductTagType
@@ -31,7 +78,12 @@ interface TagState {
 }
 
 // Automated tags that are managed by database triggers or system
-const AUTOMATED_TAGS: ProductTagType[] = ["out_of_stock", "limited", "new", "discount"]
+const AUTOMATED_TAGS: ProductTagType[] = [
+  'out_of_stock',
+  'limited',
+  'new',
+  'discount',
+]
 
 interface ProductFormProps {
   product: {
@@ -42,11 +94,11 @@ interface ProductFormProps {
     price_cents: number
     stripe_price_id: string | null
     specs: unknown
-    // Discount fields (Phase 14.3)
+    // Discount fields
     discount_percent: number | null
     discount_expires_at: string | null
     original_price_cents: number | null
-    // Inventory fields (Phase 14.4)
+    // Inventory fields
     track_inventory: boolean | null
     stock_quantity: number | null
     low_stock_threshold: number | null
@@ -55,7 +107,11 @@ interface ProductFormProps {
   initialMedia?: MediaItem[]
 }
 
-export function ProductForm({ product, initialTags = [], initialMedia = [] }: ProductFormProps) {
+export function ProductForm({
+  product,
+  initialTags = [],
+  initialMedia = [],
+}: ProductFormProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [isDeleting, setIsDeleting] = useState(false)
@@ -64,37 +120,59 @@ export function ProductForm({ product, initialTags = [], initialMedia = [] }: Pr
   // Form state
   const [name, setName] = useState(product.name)
   const [slug, setSlug] = useState(product.slug)
-  const [description, setDescription] = useState(product.description || "")
-  const [stripePriceId, setStripePriceId] = useState(product.stripe_price_id || "")
+  const [description, setDescription] = useState(product.description || '')
+  const [stripePriceId, setStripePriceId] = useState(
+    product.stripe_price_id || '',
+  )
 
-  // Pricing state (Phase 14.3) - simple: enter price, optionally toggle sale
+  // Pricing state, enter price, optional sale toggle.
   const [priceCents, setPriceCents] = useState(
-    product.original_price_cents || product.price_cents
+    product.original_price_cents || product.price_cents,
   )
   const [isOnSale, setIsOnSale] = useState(
-    !!(product.discount_percent && product.original_price_cents)
+    !!(product.discount_percent && product.original_price_cents),
   )
-  const [discountPercent, setDiscountPercent] = useState<number | null>(product.discount_percent)
-  const [discountExpiresAt, setDiscountExpiresAt] = useState(product.discount_expires_at || "")
+  const [discountPercent, setDiscountPercent] = useState<number | null>(
+    product.discount_percent,
+  )
+  const [discountExpiresAt, setDiscountExpiresAt] = useState(
+    product.discount_expires_at || '',
+  )
 
   // Calculate sale price from price and discount
-  const salePriceCents = isOnSale && discountPercent
-    ? Math.round(priceCents * (1 - discountPercent / 100))
-    : priceCents
+  const salePriceCents =
+    isOnSale && discountPercent
+      ? Math.round(priceCents * (1 - discountPercent / 100))
+      : priceCents
 
-  // Inventory state (Phase 14.4)
-  const [trackInventory, setTrackInventory] = useState(product.track_inventory || false)
-  const [stockQuantity, setStockQuantity] = useState<number | null>(product.stock_quantity)
-  const [lowStockThreshold, setLowStockThreshold] = useState(product.low_stock_threshold || 10)
+  // Inventory state
+  const [trackInventory, setTrackInventory] = useState(
+    product.track_inventory || false,
+  )
+  const [stockQuantity, setStockQuantity] = useState<number | null>(
+    product.stock_quantity,
+  )
+  const [lowStockThreshold, setLowStockThreshold] = useState(
+    product.low_stock_threshold || 10,
+  )
 
   const [specs, setSpecs] = useState<{ key: string; value: string }[]>(() => {
-    if (product.specs && typeof product.specs === "object" && !Array.isArray(product.specs)) {
-      return Object.entries(product.specs as Record<string, unknown>).map(([key, value]) => ({
-        key,
-        value: typeof value === "string" || typeof value === "number" || typeof value === "boolean"
-          ? String(value)
-          : "",
-      }))
+    if (
+      product.specs &&
+      typeof product.specs === 'object' &&
+      !Array.isArray(product.specs)
+    ) {
+      return Object.entries(product.specs as Record<string, unknown>).map(
+        ([key, value]) => ({
+          key,
+          value:
+            typeof value === 'string' ||
+            typeof value === 'number' ||
+            typeof value === 'boolean'
+              ? String(value)
+              : '',
+        }),
+      )
     }
     return []
   })
@@ -117,7 +195,7 @@ export function ProductForm({ product, initialTags = [], initialMedia = [] }: Pr
 
   const updateTagPriority = (tagType: ProductTagType, priority: number) => {
     setSelectedTags((prev) =>
-      prev.map((t) => (t.tag === tagType ? { ...t, priority } : t))
+      prev.map((t) => (t.tag === tagType ? { ...t, priority } : t)),
     )
   }
 
@@ -132,19 +210,23 @@ export function ProductForm({ product, initialTags = [], initialMedia = [] }: Pr
     AUTOMATED_TAGS.includes(tagType)
 
   const handleAddSpec = () => {
-    setSpecs([...specs, { key: "", value: "" }])
+    setSpecs([...specs, { key: '', value: '' }])
   }
 
   const handleRemoveSpec = (index: number) => {
     setSpecs(specs.filter((_, i) => i !== index))
   }
 
-  const handleSpecChange = (index: number, field: "key" | "value", value: string) => {
+  const handleSpecChange = (
+    index: number,
+    field: 'key' | 'value',
+    value: string,
+  ) => {
     setSpecs((prev) =>
       prev.map((spec, i) => {
         if (i !== index) return spec
-        return field === "key" ? { ...spec, key: value } : { ...spec, value }
-      })
+        return field === 'key' ? { ...spec, key: value } : { ...spec, value }
+      }),
     )
   }
 
@@ -170,11 +252,12 @@ export function ProductForm({ product, initialTags = [], initialMedia = [] }: Pr
         price_cents: isOnSale && discountPercent ? salePriceCents : priceCents,
         stripe_price_id: stripePriceId || null,
         specs: Object.keys(specsObject).length > 0 ? specsObject : null,
-        // Discount fields (Phase 14.3) - only set if on sale
+        // Discount fields, set only if on sale.
         discount_percent: isOnSale ? discountPercent : null,
-        discount_expires_at: isOnSale && discountExpiresAt ? discountExpiresAt : null,
+        discount_expires_at:
+          isOnSale && discountExpiresAt ? discountExpiresAt : null,
         original_price_cents: isOnSale && discountPercent ? priceCents : null,
-        // Inventory fields (Phase 14.4)
+        // Inventory fields
         track_inventory: trackInventory,
         stock_quantity: trackInventory ? stockQuantity : null,
         low_stock_threshold: trackInventory ? lowStockThreshold : null,
@@ -185,8 +268,10 @@ export function ProductForm({ product, initialTags = [], initialMedia = [] }: Pr
         return
       }
 
-      // Update tags
-      const tagsResult = await updateProductTags(product.id, selectedTags)
+      const manualTags = selectedTags.filter(
+        (t) => !AUTOMATED_TAGS.includes(t.tag),
+      )
+      const tagsResult = await updateProductTags(product.id, manualTags)
       if (tagsResult.error) {
         setError(tagsResult.error)
         return
@@ -199,13 +284,17 @@ export function ProductForm({ product, initialTags = [], initialMedia = [] }: Pr
         return
       }
 
-      router.push("/admin/products")
+      router.push('/admin/products')
       router.refresh()
     })
   }
 
   const handleDelete = async () => {
-    if (!confirm("Are you sure you want to delete this product? This cannot be undone.")) {
+    if (
+      !confirm(
+        'Are you sure you want to delete this product? This cannot be undone.',
+      )
+    ) {
       return
     }
 
@@ -216,13 +305,18 @@ export function ProductForm({ product, initialTags = [], initialMedia = [] }: Pr
       setError(result.error)
       setIsDeleting(false)
     } else {
-      router.push("/admin/products")
+      router.push('/admin/products')
       router.refresh()
     }
   }
 
   return (
-    <form onSubmit={(e) => { handleSubmit(e); }} className="space-y-6">
+    <form
+      onSubmit={(e) => {
+        handleSubmit(e)
+      }}
+      className="space-y-6"
+    >
       {error && (
         <div className="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-600">
           {error}
@@ -238,24 +332,34 @@ export function ProductForm({ product, initialTags = [], initialMedia = [] }: Pr
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <label htmlFor="name" className="text-sm font-medium text-slate-900">
+              <label
+                htmlFor="name"
+                className={adminLabelClass}
+              >
                 Name
               </label>
               <Input
                 id="name"
                 value={name}
-                onChange={(e) => { setName(e.target.value); }}
+                onChange={(e) => {
+                  setName(e.target.value)
+                }}
                 required
               />
             </div>
             <div className="space-y-2">
-              <label htmlFor="slug" className="text-sm font-medium text-slate-900">
+              <label
+                htmlFor="slug"
+                className={adminLabelClass}
+              >
                 Slug
               </label>
               <Input
                 id="slug"
                 value={slug}
-                onChange={(e) => { setSlug(e.target.value); }}
+                onChange={(e) => {
+                  setSlug(e.target.value)
+                }}
                 required
                 pattern="[a-z0-9\-]+"
                 title="Lowercase letters, numbers, and hyphens only"
@@ -263,14 +367,19 @@ export function ProductForm({ product, initialTags = [], initialMedia = [] }: Pr
             </div>
           </div>
           <div className="space-y-2">
-            <label htmlFor="description" className="text-sm font-medium text-slate-900">
+            <label
+              htmlFor="description"
+              className={adminLabelClass}
+            >
               Description
             </label>
-            <textarea
+            <AdminTextArea
               id="description"
               value={description}
-              onChange={(e) => { setDescription(e.target.value); }}
-              className="min-h-[100px] w-full rounded-md border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-700 focus:ring-offset-2"
+              onChange={(e) => {
+                setDescription(e.target.value)
+              }}
+              className="min-h-[100px]"
             />
           </div>
         </CardContent>
@@ -286,7 +395,10 @@ export function ProductForm({ product, initialTags = [], initialMedia = [] }: Pr
           {/* Price */}
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <label htmlFor="price" className="text-sm font-medium text-slate-900">
+              <label
+                htmlFor="price"
+                className={adminLabelClass}
+              >
                 Price (cents)
               </label>
               <Input
@@ -294,21 +406,28 @@ export function ProductForm({ product, initialTags = [], initialMedia = [] }: Pr
                 type="number"
                 min="0"
                 value={priceCents}
-                onChange={(e) => { setPriceCents(Number.parseInt(e.target.value) || 0); }}
+                onChange={(e) => {
+                  setPriceCents(Number.parseInt(e.target.value) || 0)
+                }}
                 required
               />
-              <p className="text-xs text-slate-500">
+              <p className={adminHelperTextClass}>
                 ${(priceCents / 100).toFixed(2)}
               </p>
             </div>
             <div className="space-y-2">
-              <label htmlFor="stripe" className="text-sm font-medium text-slate-900">
+              <label
+                htmlFor="stripe"
+                className={adminLabelClass}
+              >
                 Stripe Price ID
               </label>
               <Input
                 id="stripe"
                 value={stripePriceId}
-                onChange={(e) => { setStripePriceId(e.target.value); }}
+                onChange={(e) => {
+                  setStripePriceId(e.target.value)
+                }}
                 placeholder="price_..."
               />
             </div>
@@ -325,12 +444,15 @@ export function ProductForm({ product, initialTags = [], initialMedia = [] }: Pr
                   setIsOnSale(e.target.checked)
                   if (!e.target.checked) {
                     setDiscountPercent(null)
-                    setDiscountExpiresAt("")
+                    setDiscountExpiresAt('')
                   }
                 }}
                 className="h-4 w-4 rounded border-slate-300 text-cyan-700 focus:ring-cyan-700"
               />
-              <label htmlFor="onSale" className="text-sm font-medium text-slate-900">
+              <label
+                htmlFor="onSale"
+                className={adminLabelClass}
+              >
                 On Sale
               </label>
             </div>
@@ -340,7 +462,10 @@ export function ProductForm({ product, initialTags = [], initialMedia = [] }: Pr
               <div className="mt-4 p-4 bg-amber-50 rounded-md border border-amber-200 space-y-4">
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
-                    <label htmlFor="discountPercent" className="text-sm font-medium text-slate-900">
+                    <label
+                      htmlFor="discountPercent"
+                      className={adminLabelClass}
+                    >
                       Discount %
                     </label>
                     <Input
@@ -348,21 +473,38 @@ export function ProductForm({ product, initialTags = [], initialMedia = [] }: Pr
                       type="number"
                       min="1"
                       max="99"
-                      value={discountPercent ?? ""}
-                      onChange={(e) => { setDiscountPercent(e.target.value ? Number.parseInt(e.target.value) : null); }}
+                      value={discountPercent ?? ''}
+                      onChange={(e) => {
+                        setDiscountPercent(
+                          e.target.value
+                            ? Number.parseInt(e.target.value)
+                            : null,
+                        )
+                      }}
                       placeholder="e.g., 20"
                       className="bg-white"
                     />
                   </div>
                   <div className="space-y-2">
-                    <label htmlFor="discountExpires" className="text-sm font-medium text-slate-900">
+                    <label
+                      htmlFor="discountExpires"
+                      className={adminLabelClass}
+                    >
                       Expires At (optional)
                     </label>
                     <Input
                       id="discountExpires"
                       type="datetime-local"
-                      value={discountExpiresAt ? discountExpiresAt.slice(0, 16) : ""}
-                      onChange={(e) => { setDiscountExpiresAt(e.target.value ? new Date(e.target.value).toISOString() : ""); }}
+                      value={
+                        discountExpiresAt ? discountExpiresAt.slice(0, 16) : ''
+                      }
+                      onChange={(e) => {
+                        setDiscountExpiresAt(
+                          e.target.value
+                            ? new Date(e.target.value).toISOString()
+                            : '',
+                        )
+                      }}
                       className="bg-white"
                     />
                   </div>
@@ -372,14 +514,19 @@ export function ProductForm({ product, initialTags = [], initialMedia = [] }: Pr
                 {discountPercent && (
                   <div className="p-3 bg-white rounded border border-amber-300">
                     <p className="text-sm">
-                      <span className="line-through text-slate-400">${(priceCents / 100).toFixed(2)}</span>
+                      <span className="line-through text-slate-400">
+                        ${(priceCents / 100).toFixed(2)}
+                      </span>
                       <span className="mx-2">→</span>
-                      <span className="font-mono font-semibold text-amber-600 text-lg">${(salePriceCents / 100).toFixed(2)}</span>
+                      <span className="font-mono font-semibold text-amber-600 text-lg">
+                        ${(salePriceCents / 100).toFixed(2)}
+                      </span>
                       <span className="ml-2 px-2 py-0.5 bg-red-500 text-white text-xs font-mono rounded">
                         {discountPercent}% OFF
                       </span>
                       <span className="text-green-600 ml-2 text-sm">
-                        (saves ${((priceCents - salePriceCents) / 100).toFixed(2)})
+                        (saves $
+                        {((priceCents - salePriceCents) / 100).toFixed(2)})
                       </span>
                     </p>
                   </div>
@@ -387,7 +534,6 @@ export function ProductForm({ product, initialTags = [], initialMedia = [] }: Pr
               </div>
             )}
           </div>
-
         </CardContent>
       </Card>
 
@@ -398,7 +544,9 @@ export function ProductForm({ product, initialTags = [], initialMedia = [] }: Pr
             <Package className="h-5 w-5" />
             Inventory
           </CardTitle>
-          <CardDescription>Track stock levels and automate availability tags</CardDescription>
+          <CardDescription>
+            Track stock levels and automate availability tags
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Track Inventory Toggle */}
@@ -415,12 +563,16 @@ export function ProductForm({ product, initialTags = [], initialMedia = [] }: Pr
               }}
               className="h-4 w-4 rounded border-slate-300 text-cyan-700 focus:ring-cyan-700"
             />
-            <label htmlFor="trackInventory" className="text-sm font-medium text-slate-900">
+            <label
+              htmlFor="trackInventory"
+              className={adminLabelClass}
+            >
               Track Inventory
             </label>
           </div>
           <p className="text-xs text-slate-500">
-            When enabled, stock tags (Out of Stock, Limited) are automatically managed based on quantity.
+            When enabled, stock tags (Out of Stock, Limited) are automatically
+            managed based on quantity.
           </p>
 
           {/* Inventory Fields (shown when tracking is enabled) */}
@@ -428,20 +580,30 @@ export function ProductForm({ product, initialTags = [], initialMedia = [] }: Pr
             <div className="mt-4 p-4 bg-slate-50 rounded-md border border-slate-200 space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <label htmlFor="stockQuantity" className="text-sm font-medium text-slate-900">
+                  <label
+                    htmlFor="stockQuantity"
+                    className={adminLabelClass}
+                  >
                     Stock Quantity
                   </label>
                   <Input
                     id="stockQuantity"
                     type="number"
                     min="0"
-                    value={stockQuantity ?? ""}
-                    onChange={(e) => { setStockQuantity(e.target.value ? Number.parseInt(e.target.value) : null); }}
+                    value={stockQuantity ?? ''}
+                    onChange={(e) => {
+                      setStockQuantity(
+                        e.target.value ? Number.parseInt(e.target.value) : null,
+                      )
+                    }}
                     placeholder="e.g., 50"
                   />
                 </div>
                 <div className="space-y-2">
-                  <label htmlFor="lowStockThreshold" className="text-sm font-medium text-slate-900">
+                  <label
+                    htmlFor="lowStockThreshold"
+                    className={adminLabelClass}
+                  >
                     Low Stock Threshold
                   </label>
                   <Input
@@ -449,29 +611,40 @@ export function ProductForm({ product, initialTags = [], initialMedia = [] }: Pr
                     type="number"
                     min="1"
                     value={lowStockThreshold}
-                    onChange={(e) => { setLowStockThreshold(Number.parseInt(e.target.value) || 10); }}
+                    onChange={(e) => {
+                      setLowStockThreshold(
+                        Number.parseInt(e.target.value) || 10,
+                      )
+                    }}
                   />
                   <p className="text-xs text-slate-500">
-                    Product shows &quot;Limited&quot; when stock falls to or below this number
+                    Product shows &quot;Limited&quot; when stock falls to or
+                    below this number
                   </p>
                 </div>
               </div>
 
               {/* Stock Status Preview */}
               {stockQuantity !== null && (
-                <div className={`p-3 rounded border ${
-                  stockQuantity <= 0
-                    ? "bg-red-50 border-red-200"
-                    : stockQuantity <= lowStockThreshold
-                    ? "bg-amber-50 border-amber-200"
-                    : "bg-green-50 border-green-200"
-                }`}>
+                <div
+                  className={`p-3 rounded border ${
+                    stockQuantity <= 0
+                      ? 'bg-red-50 border-red-200'
+                      : stockQuantity <= lowStockThreshold
+                        ? 'bg-amber-50 border-amber-200'
+                        : 'bg-green-50 border-green-200'
+                  }`}
+                >
                   <div className="flex items-center gap-2">
                     {stockQuantity <= 0 ? (
                       <>
                         <AlertTriangle className="h-4 w-4 text-red-600" />
-                        <span className="text-sm font-medium text-red-600">Out of Stock</span>
-                        <span className="text-xs text-red-500">(auto-tagged)</span>
+                        <span className="text-sm font-medium text-red-600">
+                          Out of Stock
+                        </span>
+                        <span className="text-xs text-red-500">
+                          (auto-tagged)
+                        </span>
                       </>
                     ) : stockQuantity <= lowStockThreshold ? (
                       <>
@@ -479,7 +652,9 @@ export function ProductForm({ product, initialTags = [], initialMedia = [] }: Pr
                         <span className="text-sm font-medium text-amber-600">
                           Low Stock ({stockQuantity} remaining)
                         </span>
-                        <span className="text-xs text-amber-500">(auto-tagged as &quot;Limited&quot;)</span>
+                        <span className="text-xs text-amber-500">
+                          (auto-tagged as &quot;Limited&quot;)
+                        </span>
                       </>
                     ) : (
                       <>
@@ -501,7 +676,9 @@ export function ProductForm({ product, initialTags = [], initialMedia = [] }: Pr
       <Card>
         <CardHeader>
           <CardTitle>Product Tags</CardTitle>
-          <CardDescription>Select tags to display on the product card (max 3 shown)</CardDescription>
+          <CardDescription>
+            Select tags to display on the product card (max 3 shown)
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
@@ -514,10 +691,10 @@ export function ProductForm({ product, initialTags = [], initialMedia = [] }: Pr
                   className={`flex items-start gap-3 p-3 rounded-md border transition-colors ${
                     isTagSelected(tagInfo.type)
                       ? isDisabled
-                        ? "border-slate-300 bg-slate-100"
-                        : "border-cyan-700 bg-cyan-50"
-                      : "border-slate-200 hover:border-slate-300"
-                  } ${isDisabled ? "opacity-60" : ""}`}
+                        ? 'border-slate-300 bg-slate-100'
+                        : 'border-cyan-700 bg-cyan-50'
+                      : 'border-slate-200 hover:border-slate-300'
+                  } ${isDisabled ? 'opacity-60' : ''}`}
                 >
                   <input
                     type="checkbox"
@@ -531,7 +708,7 @@ export function ProductForm({ product, initialTags = [], initialMedia = [] }: Pr
                     <label
                       htmlFor={`tag-${tagInfo.type}`}
                       className={`block text-sm font-medium cursor-pointer ${
-                        isDisabled ? "text-slate-500" : "text-slate-900"
+                        isDisabled ? 'text-slate-500' : 'text-slate-900'
                       }`}
                     >
                       {tagInfo.label}
@@ -541,7 +718,9 @@ export function ProductForm({ product, initialTags = [], initialMedia = [] }: Pr
                         </span>
                       )}
                     </label>
-                    <p className="text-xs text-slate-500">{tagInfo.description}</p>
+                    <p className="text-xs text-slate-500">
+                      {tagInfo.description}
+                    </p>
                     {isDisabled && (
                       <p className="text-xs text-amber-600 mt-1">
                         Managed automatically by inventory tracking
@@ -551,19 +730,26 @@ export function ProductForm({ product, initialTags = [], initialMedia = [] }: Pr
                     {/* Show priority input when selected and not automated */}
                     {isTagSelected(tagInfo.type) && !isDisabled && (
                       <div className="mt-2 flex items-center gap-2">
-                        <label className="text-xs text-slate-600">Priority:</label>
+                        <label className="text-xs text-slate-600">
+                          Priority:
+                        </label>
                         <Input
                           type="number"
                           min="0"
                           max="100"
                           value={getTagPriority(tagInfo.type)}
-                          onChange={(e) =>
-                            { updateTagPriority(tagInfo.type, Number.parseInt(e.target.value) || 0); }
-                          }
+                          onChange={(e) => {
+                            updateTagPriority(
+                              tagInfo.type,
+                              Number.parseInt(e.target.value) || 0,
+                            )
+                          }}
                           className="w-20 h-7 text-xs"
                         />
-                        {tagInfo.type === "featured" && (
-                          <span className="text-xs text-slate-500">(highest = homepage)</span>
+                        {tagInfo.type === 'featured' && (
+                          <span className="text-xs text-slate-500">
+                            (highest = homepage)
+                          </span>
                         )}
                       </div>
                     )}
@@ -573,7 +759,9 @@ export function ProductForm({ product, initialTags = [], initialMedia = [] }: Pr
             })}
           </div>
           <p className="text-xs text-slate-500">
-            Higher priority Featured tag = shown on homepage. Tags marked &quot;(auto)&quot; are managed automatically. Discount tag is controlled by the &quot;On Sale&quot; toggle in Pricing.
+            Higher priority Featured tag = shown on homepage. Tags marked
+            &quot;(auto)&quot; are managed automatically. Discount tag is
+            controlled by the &quot;On Sale&quot; toggle in Pricing.
           </p>
         </CardContent>
       </Card>
@@ -584,9 +772,16 @@ export function ProductForm({ product, initialTags = [], initialMedia = [] }: Pr
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>Specifications</CardTitle>
-              <CardDescription>Technical specifications (key-value pairs)</CardDescription>
+              <CardDescription>
+                Technical specifications (key-value pairs)
+              </CardDescription>
             </div>
-            <Button type="button" variant="outline" size="sm" onClick={handleAddSpec}>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleAddSpec}
+            >
               <Plus className="mr-2 h-4 w-4" />
               Add Spec
             </Button>
@@ -594,7 +789,9 @@ export function ProductForm({ product, initialTags = [], initialMedia = [] }: Pr
         </CardHeader>
         <CardContent>
           {specs.length === 0 ? (
-            <p className="text-sm text-slate-500">No specifications added yet.</p>
+            <p className="text-sm text-slate-500">
+              No specifications added yet.
+            </p>
           ) : (
             <div className="space-y-3">
               {specs.map((spec, index) => (
@@ -602,20 +799,26 @@ export function ProductForm({ product, initialTags = [], initialMedia = [] }: Pr
                   <Input
                     placeholder="Key"
                     value={spec.key}
-                    onChange={(e) => { handleSpecChange(index, "key", e.target.value); }}
+                    onChange={(e) => {
+                      handleSpecChange(index, 'key', e.target.value)
+                    }}
                     className="flex-1"
                   />
                   <Input
                     placeholder="Value"
                     value={spec.value}
-                    onChange={(e) => { handleSpecChange(index, "value", e.target.value); }}
+                    onChange={(e) => {
+                      handleSpecChange(index, 'value', e.target.value)
+                    }}
                     className="flex-1"
                   />
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon"
-                    onClick={() => { handleRemoveSpec(index); }}
+                    onClick={() => {
+                      handleRemoveSpec(index)
+                    }}
                   >
                     <X className="h-4 w-4" />
                   </Button>
@@ -633,7 +836,9 @@ export function ProductForm({ product, initialTags = [], initialMedia = [] }: Pr
             <ImageIcon className="h-5 w-5 text-slate-600" />
             <div>
               <CardTitle>Media</CardTitle>
-              <CardDescription>Product images, videos, 3D models, and documents</CardDescription>
+              <CardDescription>
+                Product images, videos, 3D models, and documents
+              </CardDescription>
             </div>
           </div>
         </CardHeader>
@@ -666,7 +871,9 @@ export function ProductForm({ product, initialTags = [], initialMedia = [] }: Pr
           <Button
             type="button"
             variant="outline"
-            onClick={() => { router.push("/admin/products"); }}
+            onClick={() => {
+              router.push('/admin/products')
+            }}
           >
             Cancel
           </Button>

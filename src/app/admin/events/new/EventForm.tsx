@@ -1,13 +1,23 @@
-"use client"
+'use client'
 
-import { useState, useTransition } from "react"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Loader2 } from "lucide-react"
-import { createEvent } from "../actions"
+import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Loader2 } from 'lucide-react'
+import { createEvent } from '../actions'
+import {
+  AdminLabel,
+  AdminSelect,
+} from '@/components/admin/form-controls'
 
 export function EventForm() {
   const router = useRouter()
@@ -15,24 +25,24 @@ export function EventForm() {
   const [error, setError] = useState<string | null>(null)
 
   // Form state
-  const [title, setTitle] = useState("")
-  const [slug, setSlug] = useState("")
-  const [description, setDescription] = useState("")
-  const [location, setLocation] = useState("")
-  const [address, setAddress] = useState("")
-  const [eventDate, setEventDate] = useState("")
-  const [endDate, setEndDate] = useState("")
-  const [eventType, setEventType] = useState("workshop")
-  const [rsvpUrl, setRsvpUrl] = useState("")
-  const [imageUrl, setImageUrl] = useState("")
-  const [capacity, setCapacity] = useState<number | "">("")
+  const [title, setTitle] = useState('')
+  const [slug, setSlug] = useState('')
+  const [description, setDescription] = useState('')
+  const [location, setLocation] = useState('')
+  const [address, setAddress] = useState('')
+  const [eventDate, setEventDate] = useState('')
+  const [endDate, setEndDate] = useState('')
+  const [eventType, setEventType] = useState('workshop')
+  const [rsvpUrl, setRsvpUrl] = useState('')
+  const [imageUrl, setImageUrl] = useState('')
+  const [capacity, setCapacity] = useState<number | ''>('')
   const [isPublic, setIsPublic] = useState(true)
 
   const generateSlug = (text: string) => {
     return text
       .toLowerCase()
-      .replaceAll(/[^a-z0-9]+/g, "-")
-      .replaceAll(/(^-|-$)/g, "")
+      .replaceAll(/[^a-z0-9]+/g, '-')
+      .replaceAll(/(^-|-$)/g, '')
   }
 
   const handleTitleChange = (value: string) => {
@@ -65,13 +75,18 @@ export function EventForm() {
       if (result.error) {
         setError(result.error)
       } else {
-        router.push("/admin/events")
+        router.push('/admin/events')
       }
     })
   }
 
   return (
-    <form onSubmit={(e) => { handleSubmit(e); }} className="space-y-6">
+    <form
+      onSubmit={(e) => {
+        handleSubmit(e)
+      }}
+      className="space-y-6"
+    >
       {error && (
         <div className="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-600">
           {error}
@@ -86,25 +101,25 @@ export function EventForm() {
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <label htmlFor="title" className="text-sm font-medium text-slate-900">
-                Title *
-              </label>
+              <AdminLabel htmlFor="title">Title *</AdminLabel>
               <Input
                 id="title"
                 value={title}
-                onChange={(e) => { handleTitleChange(e.target.value); }}
+                onChange={(e) => {
+                  handleTitleChange(e.target.value)
+                }}
                 placeholder="Arduino Workshop"
                 required
               />
             </div>
             <div className="space-y-2">
-              <label htmlFor="slug" className="text-sm font-medium text-slate-900">
-                Slug *
-              </label>
+              <AdminLabel htmlFor="slug">Slug *</AdminLabel>
               <Input
                 id="slug"
                 value={slug}
-                onChange={(e) => { setSlug(e.target.value); }}
+                onChange={(e) => {
+                  setSlug(e.target.value)
+                }}
                 placeholder="arduino-workshop"
                 required
               />
@@ -112,13 +127,13 @@ export function EventForm() {
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="description" className="text-sm font-medium text-slate-900">
-              Description
-            </label>
+            <AdminLabel htmlFor="description">Description</AdminLabel>
             <Textarea
               id="description"
               value={description}
-              onChange={(e) => { setDescription(e.target.value); }}
+              onChange={(e) => {
+                setDescription(e.target.value)
+              }}
               placeholder="Join us for a hands-on workshop..."
               rows={3}
             />
@@ -126,33 +141,34 @@ export function EventForm() {
 
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <label htmlFor="event_type" className="text-sm font-medium text-slate-900">
-                Event Type *
-              </label>
-              <select
+              <AdminLabel htmlFor="event_type">Event Type *</AdminLabel>
+              <AdminSelect
                 id="event_type"
                 value={eventType}
-                onChange={(e) => { setEventType(e.target.value); }}
+                onChange={(e) => {
+                  setEventType(e.target.value)
+                }}
                 required
-                className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-700 focus:ring-offset-2"
               >
                 <option value="workshop">Workshop</option>
                 <option value="meetup">Meetup</option>
                 <option value="conference">Conference</option>
                 <option value="hackathon">Hackathon</option>
                 <option value="other">Other</option>
-              </select>
+              </AdminSelect>
             </div>
             <div className="space-y-2">
-              <label htmlFor="capacity" className="text-sm font-medium text-slate-900">
-                Capacity
-              </label>
+              <AdminLabel htmlFor="capacity">Capacity</AdminLabel>
               <Input
                 id="capacity"
                 type="number"
                 min="1"
                 value={capacity}
-                onChange={(e) => { setCapacity(e.target.value ? Number.parseInt(e.target.value) : ""); }}
+                onChange={(e) => {
+                  setCapacity(
+                    e.target.value ? Number.parseInt(e.target.value) : '',
+                  )
+                }}
                 placeholder="Leave empty for unlimited"
               />
             </div>
@@ -163,56 +179,72 @@ export function EventForm() {
       <Card>
         <CardHeader>
           <CardTitle>Date & Location</CardTitle>
-          <CardDescription>When and where the event takes place</CardDescription>
+          <CardDescription>
+            When and where the event takes place
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <label htmlFor="event_date" className="text-sm font-medium text-slate-900">
+              <AdminLabel htmlFor="event_date">
                 Start Date & Time *
-              </label>
+              </AdminLabel>
               <Input
                 id="event_date"
                 type="datetime-local"
                 value={eventDate}
-                onChange={(e) => { setEventDate(e.target.value); }}
+                onChange={(e) => {
+                  setEventDate(e.target.value)
+                }}
                 required
               />
             </div>
             <div className="space-y-2">
-              <label htmlFor="end_date" className="text-sm font-medium text-slate-900">
+              <AdminLabel htmlFor="end_date">
                 End Date & Time
-              </label>
+              </AdminLabel>
               <Input
                 id="end_date"
                 type="datetime-local"
                 value={endDate}
-                onChange={(e) => { setEndDate(e.target.value); }}
+                onChange={(e) => {
+                  setEndDate(e.target.value)
+                }}
               />
             </div>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <label htmlFor="location" className="text-sm font-medium text-slate-900">
+              <label
+                htmlFor="location"
+                className="text-sm font-medium text-slate-900"
+              >
                 Location Name *
               </label>
               <Input
                 id="location"
                 value={location}
-                onChange={(e) => { setLocation(e.target.value); }}
+                onChange={(e) => {
+                  setLocation(e.target.value)
+                }}
                 placeholder="Honolulu Community Center"
                 required
               />
             </div>
             <div className="space-y-2">
-              <label htmlFor="address" className="text-sm font-medium text-slate-900">
+              <label
+                htmlFor="address"
+                className="text-sm font-medium text-slate-900"
+              >
                 Address
               </label>
               <Input
                 id="address"
                 value={address}
-                onChange={(e) => { setAddress(e.target.value); }}
+                onChange={(e) => {
+                  setAddress(e.target.value)
+                }}
                 placeholder="123 Main St, Honolulu, HI"
               />
             </div>
@@ -228,26 +260,36 @@ export function EventForm() {
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <label htmlFor="rsvp_url" className="text-sm font-medium text-slate-900">
+              <label
+                htmlFor="rsvp_url"
+                className="text-sm font-medium text-slate-900"
+              >
                 RSVP URL
               </label>
               <Input
                 id="rsvp_url"
                 type="url"
                 value={rsvpUrl}
-                onChange={(e) => { setRsvpUrl(e.target.value); }}
+                onChange={(e) => {
+                  setRsvpUrl(e.target.value)
+                }}
                 placeholder="https://..."
               />
             </div>
             <div className="space-y-2">
-              <label htmlFor="image_url" className="text-sm font-medium text-slate-900">
+              <label
+                htmlFor="image_url"
+                className="text-sm font-medium text-slate-900"
+              >
                 Image URL
               </label>
               <Input
                 id="image_url"
                 type="url"
                 value={imageUrl}
-                onChange={(e) => { setImageUrl(e.target.value); }}
+                onChange={(e) => {
+                  setImageUrl(e.target.value)
+                }}
                 placeholder="https://..."
               />
             </div>
@@ -258,7 +300,9 @@ export function EventForm() {
               id="is_public"
               type="checkbox"
               checked={isPublic}
-              onChange={(e) => { setIsPublic(e.target.checked); }}
+              onChange={(e) => {
+                setIsPublic(e.target.checked)
+              }}
               className="h-4 w-4 rounded border-slate-300"
             />
             <label htmlFor="is_public" className="text-sm text-slate-700">
@@ -272,7 +316,9 @@ export function EventForm() {
         <Button
           type="button"
           variant="outline"
-          onClick={() => { router.push("/admin/events"); }}
+          onClick={() => {
+            router.push('/admin/events')
+          }}
         >
           Cancel
         </Button>

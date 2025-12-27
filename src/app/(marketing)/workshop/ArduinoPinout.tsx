@@ -1,8 +1,8 @@
-"use client"
+'use client'
 
-import { useEffect, useRef } from "react"
-import { Cpu, X, Zap, Hash, Radio } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { useEffect, useRef } from 'react'
+import { Cpu, X, Zap, Hash, Radio } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 interface ArduinoPinoutProps {
   isOpen: boolean
@@ -11,37 +11,57 @@ interface ArduinoPinoutProps {
 
 // Arduino Uno pin definitions
 const digitalPins = [
-  { pin: "D0", name: "RX", special: "Serial RX", color: "text-amber-600" },
-  { pin: "D1", name: "TX", special: "Serial TX", color: "text-amber-600" },
-  { pin: "D2", name: "INT0", special: "Interrupt 0", color: "text-purple-600" },
-  { pin: "D3", name: "INT1/PWM", special: "Interrupt 1, PWM", color: "text-cyan-600" },
-  { pin: "D4", name: "Digital", special: "", color: "text-slate-600" },
-  { pin: "D5", name: "PWM", special: "Timer0", color: "text-cyan-600" },
-  { pin: "D6", name: "PWM", special: "Timer0", color: "text-cyan-600" },
-  { pin: "D7", name: "Digital", special: "", color: "text-slate-600" },
-  { pin: "D8", name: "Digital", special: "", color: "text-slate-600" },
-  { pin: "D9", name: "PWM", special: "Timer1", color: "text-cyan-600" },
-  { pin: "D10", name: "PWM/SS", special: "SPI SS, Timer1", color: "text-cyan-600" },
-  { pin: "D11", name: "PWM/MOSI", special: "SPI MOSI, Timer2", color: "text-green-600" },
-  { pin: "D12", name: "MISO", special: "SPI MISO", color: "text-green-600" },
-  { pin: "D13", name: "SCK/LED", special: "SPI SCK, Built-in LED", color: "text-green-600" },
+  { pin: 'D0', name: 'RX', special: 'Serial RX', color: 'text-amber-600' },
+  { pin: 'D1', name: 'TX', special: 'Serial TX', color: 'text-amber-600' },
+  { pin: 'D2', name: 'INT0', special: 'Interrupt 0', color: 'text-purple-600' },
+  {
+    pin: 'D3',
+    name: 'INT1/PWM',
+    special: 'Interrupt 1, PWM',
+    color: 'text-cyan-600',
+  },
+  { pin: 'D4', name: 'Digital', special: '', color: 'text-slate-600' },
+  { pin: 'D5', name: 'PWM', special: 'Timer0', color: 'text-cyan-600' },
+  { pin: 'D6', name: 'PWM', special: 'Timer0', color: 'text-cyan-600' },
+  { pin: 'D7', name: 'Digital', special: '', color: 'text-slate-600' },
+  { pin: 'D8', name: 'Digital', special: '', color: 'text-slate-600' },
+  { pin: 'D9', name: 'PWM', special: 'Timer1', color: 'text-cyan-600' },
+  {
+    pin: 'D10',
+    name: 'PWM/SS',
+    special: 'SPI SS, Timer1',
+    color: 'text-cyan-600',
+  },
+  {
+    pin: 'D11',
+    name: 'PWM/MOSI',
+    special: 'SPI MOSI, Timer2',
+    color: 'text-green-600',
+  },
+  { pin: 'D12', name: 'MISO', special: 'SPI MISO', color: 'text-green-600' },
+  {
+    pin: 'D13',
+    name: 'SCK/LED',
+    special: 'SPI SCK, Built-in LED',
+    color: 'text-green-600',
+  },
 ]
 
 const analogPins = [
-  { pin: "A0", name: "Analog In", special: "", color: "text-blue-600" },
-  { pin: "A1", name: "Analog In", special: "", color: "text-blue-600" },
-  { pin: "A2", name: "Analog In", special: "", color: "text-blue-600" },
-  { pin: "A3", name: "Analog In", special: "", color: "text-blue-600" },
-  { pin: "A4", name: "SDA", special: "I2C Data", color: "text-orange-600" },
-  { pin: "A5", name: "SCL", special: "I2C Clock", color: "text-orange-600" },
+  { pin: 'A0', name: 'Analog In', special: '', color: 'text-blue-600' },
+  { pin: 'A1', name: 'Analog In', special: '', color: 'text-blue-600' },
+  { pin: 'A2', name: 'Analog In', special: '', color: 'text-blue-600' },
+  { pin: 'A3', name: 'Analog In', special: '', color: 'text-blue-600' },
+  { pin: 'A4', name: 'SDA', special: 'I2C Data', color: 'text-orange-600' },
+  { pin: 'A5', name: 'SCL', special: 'I2C Clock', color: 'text-orange-600' },
 ]
 
 const powerPins = [
-  { pin: "VIN", name: "Input Voltage", special: "7-12V recommended" },
-  { pin: "5V", name: "5V Output", special: "Regulated supply" },
-  { pin: "3.3V", name: "3.3V Output", special: "50mA max" },
-  { pin: "GND", name: "Ground", special: "Multiple available" },
-  { pin: "RESET", name: "Reset", special: "Active LOW" },
+  { pin: 'VIN', name: 'Input Voltage', special: '7-12V recommended' },
+  { pin: '5V', name: '5V Output', special: 'Regulated supply' },
+  { pin: '3.3V', name: '3.3V Output', special: '50mA max' },
+  { pin: 'GND', name: 'Ground', special: 'Multiple available' },
+  { pin: 'RESET', name: 'Reset', special: 'Active LOW' },
 ]
 
 export function ArduinoPinout({ isOpen, onClose }: ArduinoPinoutProps) {
@@ -52,7 +72,7 @@ export function ArduinoPinout({ isOpen, onClose }: ArduinoPinoutProps) {
     if (!isOpen) return
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
+      if (e.key === 'Escape') {
         onClose()
       }
     }
@@ -60,8 +80,10 @@ export function ArduinoPinout({ isOpen, onClose }: ArduinoPinoutProps) {
     // Focus the dialog when opened
     dialogRef.current?.focus()
 
-    document.addEventListener("keydown", handleKeyDown)
-    return () => { document.removeEventListener("keydown", handleKeyDown); }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+    }
   }, [isOpen, onClose])
 
   if (!isOpen) return null
@@ -78,13 +100,20 @@ export function ArduinoPinout({ isOpen, onClose }: ArduinoPinoutProps) {
         ref={dialogRef}
         tabIndex={-1}
         className="bg-white rounded-lg border border-slate-200 w-full max-w-2xl shadow-xl max-h-[90vh] overflow-hidden flex flex-col outline-none"
-        onClick={(e) => { e.stopPropagation(); }}
+        onClick={(e) => {
+          e.stopPropagation()
+        }}
       >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-slate-200">
           <div className="flex items-center gap-2">
             <Cpu className="w-5 h-5 text-cyan-700" />
-            <h2 id="arduino-pinout-title" className="font-mono text-lg text-slate-900">Arduino Uno Pinout</h2>
+            <h2
+              id="arduino-pinout-title"
+              className="font-mono text-lg text-slate-900"
+            >
+              Arduino Uno Pinout
+            </h2>
           </div>
           <button
             onClick={onClose}
@@ -207,10 +236,22 @@ export function ArduinoPinout({ isOpen, onClose }: ArduinoPinoutProps) {
               Quick Reference
             </h4>
             <ul className="space-y-1 text-cyan-700">
-              <li>• <strong>PWM pins (D3, D5, D6, D9, D10, D11):</strong> Use for servo control with analogWrite()</li>
-              <li>• <strong>I2C (A4/SDA, A5/SCL):</strong> Connect sensors with Wire library</li>
-              <li>• <strong>SPI (D10-D13):</strong> High-speed communication with SD cards, displays</li>
-              <li>• <strong>Interrupts (D2, D3):</strong> Respond to external events instantly</li>
+              <li>
+                • <strong>PWM pins (D3, D5, D6, D9, D10, D11):</strong> Use for
+                servo control with analogWrite()
+              </li>
+              <li>
+                • <strong>I2C (A4/SDA, A5/SCL):</strong> Connect sensors with
+                Wire library
+              </li>
+              <li>
+                • <strong>SPI (D10-D13):</strong> High-speed communication with
+                SD cards, displays
+              </li>
+              <li>
+                • <strong>Interrupts (D2, D3):</strong> Respond to external
+                events instantly
+              </li>
             </ul>
           </div>
         </div>

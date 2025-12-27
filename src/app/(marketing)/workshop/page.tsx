@@ -1,24 +1,31 @@
-import { createClient } from "@/lib/supabase/server"
-import { Button } from "@/components/ui/button"
-import { Package, Key, LogIn, AlertCircle } from "lucide-react"
-import Link from "next/link"
-import { ClaimCodeForm } from "./ClaimCodeForm"
-import { KitCard } from "./KitCard"
-import { PendingLicenseCard } from "./PendingLicenseCard"
-import { ClaimedByOtherCard } from "./ClaimedByOtherCard"
-import { getContents } from "@/lib/content"
-import { getUserAchievements } from "@/lib/achievements"
-import { WorkshopTabs } from "./WorkshopTabs"
-import { CoursesTab } from "./CoursesTab"
-import { ToolsTab } from "./ToolsTab"
-import { ProgressTab } from "./ProgressTab"
-import { SkillAssessmentWrapper } from "../learn/SkillAssessmentWrapper"
+import { createClient } from '@/lib/supabase/server'
+import { Button } from '@/components/ui/button'
+import { Package, Key, LogIn, AlertCircle } from 'lucide-react'
+import Link from 'next/link'
+import { ClaimCodeForm } from './ClaimCodeForm'
+import { KitCard } from './KitCard'
+import { PendingLicenseCard } from './PendingLicenseCard'
+import { ClaimedByOtherCard } from './ClaimedByOtherCard'
+import { getContents } from '@/lib/content'
+import { getUserAchievements } from '@/lib/achievements'
+import { WorkshopTabs } from './WorkshopTabs'
+import { CoursesTab } from './CoursesTab'
+import { ToolsTab } from './ToolsTab'
+import { ProgressTab } from './ProgressTab'
+import { SkillAssessmentWrapper } from '../learn/SkillAssessmentWrapper'
+import { resolveParams, type MaybePromise } from '@/lib/next-params'
 
 interface CourseModule {
   id: string
   title: string
   is_published: boolean | null
-  lessons: { id: string; is_optional: boolean | null; is_published: boolean | null }[] | null
+  lessons:
+    | {
+        id: string
+        is_optional: boolean | null
+        is_published: boolean | null
+      }[]
+    | null
 }
 
 interface Course {
@@ -39,9 +46,9 @@ interface Course {
 export default async function WorkshopPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tab?: string; difficulty?: string }>
+  searchParams: MaybePromise<{ tab?: string; difficulty?: string }>
 }) {
-  const { difficulty: difficultyFilter } = await searchParams
+  const { difficulty: difficultyFilter } = await resolveParams(searchParams)
   const supabase = await createClient()
 
   let user: { id: string } | null = null
@@ -51,51 +58,57 @@ export default async function WorkshopPage({
     } = await supabase.auth.getUser()
     user = fetchedUser ?? null
   } catch (error) {
-    console.error("Failed to fetch user:", error)
+    console.error('Failed to fetch user:', error)
     user = null
   }
 
   // Fetch dynamic content
   const content = await getContents(
     [
-      "workshop.header.title",
-      "workshop.header.description",
-      "workshop.header.description_signed_out",
-      "workshop.no_kits",
-      "workshop.signIn.title",
-      "workshop.signIn.description",
-      "workshop.signIn.button",
-      "workshop.signIn.shopButton",
-      "workshop.kits.title",
-      "workshop.kits.empty.subtitle",
-      "workshop.kits.empty.cta",
-      "workshop.claim.title",
-      "workshop.claim.description",
-      "workshop.pending.title",
-      "workshop.pending.description",
-      "learn.empty",
+      'workshop.header.title',
+      'workshop.header.description',
+      'workshop.header.description_signed_out',
+      'workshop.no_kits',
+      'workshop.signIn.title',
+      'workshop.signIn.description',
+      'workshop.signIn.button',
+      'workshop.signIn.shopButton',
+      'workshop.kits.title',
+      'workshop.kits.empty.subtitle',
+      'workshop.kits.empty.cta',
+      'workshop.claim.title',
+      'workshop.claim.description',
+      'workshop.pending.title',
+      'workshop.pending.description',
+      'learn.empty',
     ],
     {
-      "workshop.header.title": "Workshop",
-      "workshop.header.description": "Your learning hub - courses, tools, and progress all in one place.",
-      "workshop.header.description_signed_out": "Sign in to access your kits and learning materials.",
-      "workshop.no_kits": "You don't have any kits yet.",
-      "workshop.signIn.title": "Sign In Required",
-      "workshop.signIn.description": "Sign in to view your kits, track your learning progress, and claim new kit codes.",
-      "workshop.signIn.button": "Sign In",
-      "workshop.signIn.shopButton": "Shop Kits",
-      "workshop.kits.title": "My Kits",
-      "workshop.kits.empty.subtitle": "Purchase a kit or enter a code to get started.",
-      "workshop.kits.empty.cta": "Browse Kits",
-      "workshop.claim.title": "Claim a Kit",
-      "workshop.claim.description": "Have a kit code? Enter it below to activate your kit.",
-      "workshop.pending.title": "Pending Licenses",
-      "workshop.pending.description": "These licenses were purchased with your email. Claim to add to your account or reject if you didn't make this purchase.",
-      "learn.empty": "No courses available yet. Check back soon.",
-    }
+      'workshop.header.title': 'Workshop',
+      'workshop.header.description':
+        'Your learning hub - courses, tools, and progress all in one place.',
+      'workshop.header.description_signed_out':
+        'Sign in to access your kits and learning materials.',
+      'workshop.no_kits': "You don't have any kits yet.",
+      'workshop.signIn.title': 'Sign In Required',
+      'workshop.signIn.description':
+        'Sign in to view your kits, track your learning progress, and claim new kit codes.',
+      'workshop.signIn.button': 'Sign In',
+      'workshop.signIn.shopButton': 'Shop Kits',
+      'workshop.kits.title': 'My Kits',
+      'workshop.kits.empty.subtitle':
+        'Purchase a kit or enter a code to get started.',
+      'workshop.kits.empty.cta': 'Browse Kits',
+      'workshop.claim.title': 'Claim a Kit',
+      'workshop.claim.description':
+        'Have a kit code? Enter it below to activate your kit.',
+      'workshop.pending.title': 'Pending Licenses',
+      'workshop.pending.description':
+        "These licenses were purchased with your email. Claim to add to your account or reject if you didn't make this purchase.",
+      'learn.empty': 'No courses available yet. Check back soon.',
+    },
   )
 
-  // === DATA FETCHING FOR KITS ===
+  // Data: kits
   let groupedKits: {
     slug: string
     name: string
@@ -125,27 +138,37 @@ export default async function WorkshopPage({
   if (user && supabase) {
     // Fetch claimed licenses
     const { data: claimedData } = await supabase
-      .from("licenses")
-      .select(`
+      .from('licenses')
+      .select(
+        `
         id,
         code,
         created_at,
         product:products(id, slug, name, description)
-      `)
-      .eq("owner_id", user.id)
-      .order("created_at", { ascending: false })
+      `,
+      )
+      .eq('owner_id', user.id)
+      .order('created_at', { ascending: false })
 
     if (claimedData) {
-      const kitMap = new Map<string, {
-        slug: string
-        name: string
-        description: string | null
-        quantity: number
-        claimedAt: string | null
-      }>()
+      const kitMap = new Map<
+        string,
+        {
+          slug: string
+          name: string
+          description: string | null
+          quantity: number
+          claimedAt: string | null
+        }
+      >()
 
       for (const license of claimedData) {
-        const product = license.product as unknown as { id: string; slug: string; name: string; description: string | null } | null
+        const product = license.product as unknown as {
+          id: string
+          slug: string
+          name: string
+          description: string | null
+        } | null
         if (!product) continue
 
         ownedProductIds.push(product.id)
@@ -153,7 +176,10 @@ export default async function WorkshopPage({
         const existing = kitMap.get(product.slug)
         if (existing) {
           existing.quantity++
-          if (license.created_at && (!existing.claimedAt || license.created_at < existing.claimedAt)) {
+          if (
+            license.created_at &&
+            (!existing.claimedAt || license.created_at < existing.claimedAt)
+          ) {
             existing.claimedAt = license.created_at
           }
         } else {
@@ -172,24 +198,30 @@ export default async function WorkshopPage({
 
     // Fetch pending licenses
     const { data: pendingData } = await supabase
-      .from("licenses")
-      .select(`
+      .from('licenses')
+      .select(
+        `
         id,
         code,
         created_at,
         product:products(slug, name, description)
-      `)
-      .eq("status", "pending")
-      .order("created_at", { ascending: false })
+      `,
+      )
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false })
 
     if (pendingData) {
       pendingLicenses = pendingData.map((license) => {
-        const product = license.product as unknown as { slug: string; name: string; description: string | null } | null
+        const product = license.product as unknown as {
+          slug: string
+          name: string
+          description: string | null
+        } | null
         return {
           id: license.id,
           code: license.code,
-          productName: product?.name || "Unknown Kit",
-          productSlug: product?.slug || "",
+          productName: product?.name || 'Unknown Kit',
+          productSlug: product?.slug || '',
           productDescription: product?.description || null,
           purchasedAt: license.created_at || new Date().toISOString(),
         }
@@ -198,21 +230,23 @@ export default async function WorkshopPage({
 
     // Fetch claimed by other licenses
     const { data: claimedByOtherData } = await supabase
-      .from("licenses")
-      .select(`
+      .from('licenses')
+      .select(
+        `
         code,
         created_at,
         product:products(name)
-      `)
-      .eq("status", "claimed_by_other")
-      .order("created_at", { ascending: false })
+      `,
+      )
+      .eq('status', 'claimed_by_other')
+      .order('created_at', { ascending: false })
 
     if (claimedByOtherData) {
       claimedByOtherLicenses = claimedByOtherData.map((license) => {
         const product = license.product as unknown as { name: string } | null
         return {
           code: license.code,
-          productName: product?.name || "Unknown Kit",
+          productName: product?.name || 'Unknown Kit',
           purchasedAt: license.created_at || new Date().toISOString(),
         }
       })
@@ -220,22 +254,23 @@ export default async function WorkshopPage({
 
     // Fetch completed lessons
     const { data: progress } = await supabase
-      .from("lesson_progress")
-      .select("lesson_id")
-      .eq("user_id", user.id)
+      .from('lesson_progress')
+      .select('lesson_id')
+      .eq('user_id', user.id)
 
     if (progress) {
       completedLessonIds = progress.map((p) => p.lesson_id)
     }
   }
 
-  // === DATA FETCHING FOR COURSES ===
+  // Data: courses
   let courses: Course[] = []
   if (supabase && user) {
     try {
       const { data: coursesData } = await supabase
-        .from("courses")
-        .select(`
+        .from('courses')
+        .select(
+          `
           id,
           title,
           description,
@@ -253,29 +288,33 @@ export default async function WorkshopPage({
             is_published,
             lessons (id, is_optional, is_published)
           )
-        `)
-        .eq("is_published", true)
-        .order("created_at", { ascending: true })
+        `,
+        )
+        .eq('is_published', true)
+        .order('created_at', { ascending: true })
 
       // Filter courses by difficulty if specified
-      courses = difficultyFilter && difficultyFilter !== "all"
-        ? ((coursesData ?? []) as unknown as Course[]).filter((c) => c.difficulty === difficultyFilter)
-        : ((coursesData ?? []) as unknown as Course[])
+      courses =
+        difficultyFilter && difficultyFilter !== 'all'
+          ? ((coursesData ?? []) as unknown as Course[]).filter(
+              (c) => c.difficulty === difficultyFilter,
+            )
+          : ((coursesData ?? []) as unknown as Course[])
     } catch (error) {
-      console.error("Failed to fetch courses:", error)
+      console.error('Failed to fetch courses:', error)
     }
   }
 
-  // === DATA FETCHING FOR STATS ===
+  // Data: stats
   let learningStats = { xp: 0, level: 1, streakDays: 0 }
   let lessonsCompleted = 0
   let hasSkillLevel = false
 
   if (user && supabase) {
     const { data: statsData } = await supabase
-      .from("user_learning_stats")
-      .select("xp, level, streak_days")
-      .eq("user_id", user.id)
+      .from('user_learning_stats')
+      .select('xp, level, streak_days')
+      .eq('user_id', user.id)
       .maybeSingle()
 
     if (statsData) {
@@ -288,29 +327,29 @@ export default async function WorkshopPage({
 
     // Count completed lessons
     const { count } = await supabase
-      .from("lesson_progress")
-      .select("*", { count: "exact", head: true })
-      .eq("user_id", user.id)
-      .not("completed_at", "is", null)
+      .from('lesson_progress')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .not('completed_at', 'is', null)
 
     lessonsCompleted = count ?? 0
 
     // Check if user has set skill level
     const { data: profileData } = await supabase
-      .from("profiles")
-      .select("skill_level")
-      .eq("id", user.id)
+      .from('profiles')
+      .select('skill_level')
+      .eq('id', user.id)
       .maybeSingle()
 
-    hasSkillLevel = !!(profileData?.skill_level)
+    hasSkillLevel = !!profileData?.skill_level
   }
 
-  // === DATA FETCHING FOR ACHIEVEMENTS ===
+  // Data: achievements
   const achievementData = user
     ? await getUserAchievements(user.id)
     : { achievements: [], userAchievements: [], totalPoints: 0 }
 
-  // === DATA FETCHING FOR LEADERBOARD ===
+  // Data: leaderboard
   let leaderboardEntries: {
     rank: number
     displayName: string
@@ -323,9 +362,9 @@ export default async function WorkshopPage({
   if (supabase && user) {
     try {
       const { data: leaderboardData } = await supabase
-        .from("user_learning_stats")
-        .select("user_id, xp, level")
-        .order("xp", { ascending: false })
+        .from('user_learning_stats')
+        .select('user_id, xp, level')
+        .order('xp', { ascending: false })
         .limit(10)
 
       leaderboardEntries = (leaderboardData ?? []).map((entry, index) => ({
@@ -338,21 +377,21 @@ export default async function WorkshopPage({
 
       if (!leaderboardEntries.some((e) => e.isCurrentUser)) {
         const { count } = await supabase
-          .from("user_learning_stats")
-          .select("*", { count: "exact", head: true })
-          .gt("xp", learningStats.xp)
+          .from('user_learning_stats')
+          .select('*', { count: 'exact', head: true })
+          .gt('xp', learningStats.xp)
 
         currentUserRank = (count ?? 0) + 1
       }
     } catch (error) {
-      console.error("Failed to fetch leaderboard:", error)
+      console.error('Failed to fetch leaderboard:', error)
     }
   }
 
-  // Total license count for display
+  // Total licenses (display)
   const totalLicenses = groupedKits.reduce((sum, kit) => sum + kit.quantity, 0)
 
-  // === RENDER ===
+  // Render
   const pageContent = (
     <div className="bg-slate-50">
       {/* Header */}
@@ -360,12 +399,12 @@ export default async function WorkshopPage({
         <div className="max-w-7xl mx-auto">
           <p className="text-sm font-mono text-cyan-700 mb-2">Dashboard</p>
           <h1 className="font-mono text-4xl lg:text-5xl font-bold text-slate-900 mb-4 break-words">
-            {content["workshop.header.title"]}
+            {content['workshop.header.title']}
           </h1>
           <p className="text-lg text-slate-600 max-w-2xl break-words">
             {user
-              ? content["workshop.header.description"]
-              : content["workshop.header.description_signed_out"]}
+              ? content['workshop.header.description']
+              : content['workshop.header.description_signed_out']}
           </p>
         </div>
       </section>
@@ -375,15 +414,16 @@ export default async function WorkshopPage({
         <section className="pb-24 px-6 lg:px-20">
           <div className="max-w-7xl mx-auto">
             <div className="flex flex-col lg:flex-row gap-8">
-              {/* Left Column - Main Content (70%) */}
+              {/* Left column (70%) */}
               <div className="w-full lg:w-[70%] space-y-6">
                 {/* Pending Licenses Alert */}
-                {(pendingLicenses.length > 0 || claimedByOtherLicenses.length > 0) && (
+                {(pendingLicenses.length > 0 ||
+                  claimedByOtherLicenses.length > 0) && (
                   <div className="bg-amber-50 rounded border border-amber-200 p-6">
                     <div className="flex items-center gap-2 mb-2">
                       <AlertCircle className="w-5 h-5 text-amber-600" />
                       <h2 className="font-mono text-xl text-slate-900">
-                        {content["workshop.pending.title"]}
+                        {content['workshop.pending.title']}
                       </h2>
                       {pendingLicenses.length > 0 && (
                         <span className="text-sm font-mono text-amber-700 bg-amber-100 px-2 py-0.5 rounded">
@@ -392,7 +432,7 @@ export default async function WorkshopPage({
                       )}
                     </div>
                     <p className="text-sm text-slate-600 mb-4">
-                      {content["workshop.pending.description"]}
+                      {content['workshop.pending.description']}
                     </p>
                     <div className="space-y-3">
                       {pendingLicenses.map((license) => (
@@ -428,7 +468,7 @@ export default async function WorkshopPage({
                         learningStats={learningStats}
                         isLoggedIn={!!user}
                         userId={user.id}
-                        emptyMessage={content["learn.empty"]}
+                        emptyMessage={content['learn.empty']}
                       />
                     }
                     toolsContent={<ToolsTab />}
@@ -448,16 +488,17 @@ export default async function WorkshopPage({
                 </div>
               </div>
 
-              {/* Right Column - Sidebar (30%) */}
+              {/* Right column (30%) */}
               <div className="w-full lg:w-[30%] space-y-6">
                 {/* My Kits */}
                 <div className="bg-white rounded border border-slate-200 p-6">
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="font-mono text-lg text-slate-900">
-                      {content["workshop.kits.title"]}
+                      {content['workshop.kits.title']}
                     </h2>
                     <span className="text-xs text-slate-500 font-mono">
-                      {totalLicenses} {totalLicenses === 1 ? "license" : "licenses"}
+                      {totalLicenses}{' '}
+                      {totalLicenses === 1 ? 'license' : 'licenses'}
                     </span>
                   </div>
 
@@ -467,13 +508,19 @@ export default async function WorkshopPage({
                         <Package className="w-6 h-6 text-slate-400" />
                       </div>
                       <p className="text-sm text-slate-600 mb-2">
-                        {content["workshop.no_kits"]}
+                        {content['workshop.no_kits']}
                       </p>
                       <p className="text-xs text-slate-500 mb-4">
-                        {content["workshop.kits.empty.subtitle"]}
+                        {content['workshop.kits.empty.subtitle']}
                       </p>
-                      <Button asChild size="sm" className="bg-cyan-700 hover:bg-cyan-600 text-white font-mono">
-                        <Link href="/shop">{content["workshop.kits.empty.cta"]}</Link>
+                      <Button
+                        asChild
+                        size="sm"
+                        className="bg-cyan-700 hover:bg-cyan-600 text-white font-mono"
+                      >
+                        <Link href="/shop">
+                          {content['workshop.kits.empty.cta']}
+                        </Link>
                       </Button>
                     </div>
                   ) : (
@@ -483,7 +530,7 @@ export default async function WorkshopPage({
                           key={kit.slug}
                           name={kit.name}
                           slug={kit.slug}
-                          description={kit.description || ""}
+                          description={kit.description || ''}
                           claimedAt={kit.claimedAt}
                           quantity={kit.quantity}
                           compact
@@ -498,11 +545,11 @@ export default async function WorkshopPage({
                   <div className="flex items-center gap-2 mb-4">
                     <Key className="w-5 h-5 text-cyan-700" />
                     <h3 className="font-mono text-lg text-slate-900">
-                      {content["workshop.claim.title"]}
+                      {content['workshop.claim.title']}
                     </h3>
                   </div>
                   <p className="text-sm text-slate-600 mb-4">
-                    {content["workshop.claim.description"]}
+                    {content['workshop.claim.description']}
                   </p>
                   <ClaimCodeForm />
                 </div>
@@ -519,16 +566,19 @@ export default async function WorkshopPage({
                 <LogIn className="w-10 h-10 text-slate-500" />
               </div>
               <h2 className="font-mono text-2xl text-slate-900 mb-2">
-                {content["workshop.signIn.title"]}
+                {content['workshop.signIn.title']}
               </h2>
               <p className="text-slate-600 mb-8 max-w-md mx-auto">
-                {content["workshop.signIn.description"]}
+                {content['workshop.signIn.description']}
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button asChild className="bg-cyan-700 hover:bg-cyan-600 text-white font-mono">
+                <Button
+                  asChild
+                  className="bg-cyan-700 hover:bg-cyan-600 text-white font-mono"
+                >
                   <Link href="/login">
                     <LogIn className="w-4 h-4 mr-2" />
-                    {content["workshop.signIn.button"]}
+                    {content['workshop.signIn.button']}
                   </Link>
                 </Button>
                 <Button
@@ -538,7 +588,7 @@ export default async function WorkshopPage({
                 >
                   <Link href="/shop">
                     <Package className="w-4 h-4 mr-2" />
-                    {content["workshop.signIn.shopButton"]}
+                    {content['workshop.signIn.shopButton']}
                   </Link>
                 </Button>
               </div>

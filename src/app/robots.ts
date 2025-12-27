@@ -1,5 +1,5 @@
-import { type MetadataRoute } from "next"
-import { siteConfig } from "@/config/site"
+import { type MetadataRoute } from 'next'
+import { siteConfig } from '@/config/site'
 
 export default function robots(): MetadataRoute.Robots {
   const baseUrl = siteConfig.url
@@ -7,16 +7,16 @@ export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
       {
-        userAgent: "*",
-        allow: "/",
+        userAgent: '*',
+        allow: '/',
         disallow: [
-          "/api/",
-          "/auth/",
-          "/checkout/",
-          "/claim/",
-          "/admin/",
-          "/_next/",
-          "/monitoring",
+          '/api/',
+          '/auth/',
+          '/checkout/',
+          '/claim/',
+          '/admin/',
+          '/_next/',
+          '/monitoring',
         ],
       },
     ],

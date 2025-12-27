@@ -1,16 +1,16 @@
-"use client"
+'use client'
 
-import Link from "next/link"
+import Link from 'next/link'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Button } from "@/components/ui/button"
-import { UserAvatar } from "@/components/ui/user-avatar"
-import { Settings, LogOut, Wrench, Shield, LogIn } from "lucide-react"
+} from '@/components/ui/dropdown-menu'
+import { Button } from '@/components/ui/button'
+import { UserAvatar } from '@/components/ui/user-avatar'
+import { Settings, LogOut, Wrench, Shield, LogIn } from 'lucide-react'
 
 interface UserMenuProps {
   user: {
@@ -24,7 +24,7 @@ interface UserMenuProps {
 }
 
 export function UserMenu({ user }: UserMenuProps) {
-  // Not logged in - show sign in button
+  // Not logged in, show sign-in button.
   if (!user) {
     return (
       <Button asChild variant="ghost" size="sm" className="gap-2">
@@ -36,11 +36,11 @@ export function UserMenu({ user }: UserMenuProps) {
     )
   }
 
-  const isAdminOrStaff = user.role === "admin" || user.role === "staff"
+  const isAdminOrStaff = user.role === 'admin' || user.role === 'staff'
 
   const handleSignOut = () => {
     // Force a full page navigation to ensure server state is cleared
-    window.location.href = "/auth/signout"
+    window.location.href = '/auth/signout'
   }
 
   return (
@@ -66,7 +66,7 @@ export function UserMenu({ user }: UserMenuProps) {
         {/* User info header */}
         <div className="px-3 py-2">
           <p className="text-sm font-medium text-slate-900 truncate">
-            {user.full_name || "User"}
+            {user.full_name || 'User'}
           </p>
           <p className="text-xs text-slate-500 truncate">{user.email}</p>
         </div>

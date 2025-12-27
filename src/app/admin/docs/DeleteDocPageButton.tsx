@@ -1,8 +1,8 @@
-"use client"
+'use client'
 
-import { useState } from "react"
-import { Trash2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { useState } from 'react'
+import { Trash2 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,15 +13,18 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
-import { deleteDocPage } from "./actions"
+} from '@/components/ui/alert-dialog'
+import { deleteDocPage } from './actions'
 
 interface DeleteDocPageButtonProps {
   pageId: string
   pageTitle: string
 }
 
-export function DeleteDocPageButton({ pageId, pageTitle }: DeleteDocPageButtonProps) {
+export function DeleteDocPageButton({
+  pageId,
+  pageTitle,
+}: DeleteDocPageButtonProps) {
   const [isDeleting, setIsDeleting] = useState(false)
 
   async function handleDelete() {
@@ -32,7 +35,7 @@ export function DeleteDocPageButton({ pageId, pageTitle }: DeleteDocPageButtonPr
         alert(`Error: ${result.error}`)
       }
     } catch {
-      alert("Failed to delete page")
+      alert('Failed to delete page')
     } finally {
       setIsDeleting(false)
     }
@@ -41,7 +44,11 @@ export function DeleteDocPageButton({ pageId, pageTitle }: DeleteDocPageButtonPr
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700 hover:bg-red-50">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+        >
           <Trash2 className="w-4 h-4" />
         </Button>
       </AlertDialogTrigger>
@@ -49,8 +56,8 @@ export function DeleteDocPageButton({ pageId, pageTitle }: DeleteDocPageButtonPr
         <AlertDialogHeader>
           <AlertDialogTitle>Delete Documentation Page</AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you want to delete &ldquo;{pageTitle}&rdquo;? This action cannot be
-            undone.
+            Are you sure you want to delete &ldquo;{pageTitle}&rdquo;? This
+            action cannot be undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -60,7 +67,7 @@ export function DeleteDocPageButton({ pageId, pageTitle }: DeleteDocPageButtonPr
             disabled={isDeleting}
             className="bg-red-600 hover:bg-red-700"
           >
-            {isDeleting ? "Deleting..." : "Delete"}
+            {isDeleting ? 'Deleting...' : 'Delete'}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

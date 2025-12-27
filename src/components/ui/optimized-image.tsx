@@ -1,24 +1,24 @@
-"use client"
+'use client'
 
-import Image, { type ImageProps } from "next/image"
-import { useState, useCallback } from "react"
-import { cn } from "@/lib/utils"
+import Image, { type ImageProps } from 'next/image'
+import { useState, useCallback } from 'react'
+import { cn } from '@/lib/utils'
 
-interface OptimizedImageProps extends Omit<ImageProps, "onLoad" | "onError"> {
-  /** Class for the wrapper container */
+interface OptimizedImageProps extends Omit<ImageProps, 'onLoad' | 'onError'> {
+  /** Wrapper class */
   wrapperClassName?: string
-  /** Show skeleton shimmer while loading */
+  /** Skeleton shimmer */
   showSkeleton?: boolean
-  /** Fallback content when image fails to load */
+  /** Error fallback */
   fallback?: React.ReactNode
-  /** Callback when image finishes loading */
+  /** Load callback */
   onLoadComplete?: () => void
-  /** Duration of fade-in transition in ms */
+  /** Fade duration (ms) */
   fadeInDuration?: number
 }
 
 /**
- * OptimizedImage - Next.js Image with skeleton loading, error handling, and smooth transitions
+ * OptimizedImage (next/image wrapper).
  */
 export function OptimizedImage({
   src,
@@ -48,9 +48,9 @@ export function OptimizedImage({
     setHasError(true)
   }, [])
 
-  // Default fallback content
+  // Default fallback
   const defaultFallback = (
-    <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
+    <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-50">
       <div className="w-12 h-12 mb-2 rounded-full bg-slate-200 flex items-center justify-center">
         <svg
           className="w-6 h-6 text-slate-600"
@@ -67,33 +67,34 @@ export function OptimizedImage({
           />
         </svg>
       </div>
-      <span className="text-xs text-slate-600 font-mono">Image unavailable</span>
+      <span className="text-xs text-slate-600 font-mono">
+        Image unavailable
+      </span>
     </div>
   )
 
-  // Render error fallback
   if (hasError) {
     return (
-      <div className={cn("relative overflow-hidden", wrapperClassName)}>
+      <div className={cn('relative overflow-hidden', wrapperClassName)}>
         {fallback || defaultFallback}
       </div>
     )
   }
 
-  const resolvedLoading = priority ? "eager" : loading ?? "lazy"
-  const resolvedFetchPriority = priority ? "high" : fetchPriority ?? "low"
+  const resolvedLoading = priority ? 'eager' : (loading ?? 'lazy')
+  const resolvedFetchPriority = priority ? 'high' : (fetchPriority ?? 'low')
 
   return (
-    <div className={cn("relative overflow-hidden", wrapperClassName)}>
-      {/* Skeleton shimmer - shown while loading */}
+    <div className={cn('relative overflow-hidden', wrapperClassName)}>
+      {/* Skeleton (loading) */}
       {showSkeleton && isLoading && (
         <div
-          className="absolute inset-0 z-10 bg-gradient-to-r from-slate-100 via-slate-50 to-slate-100 animate-shimmer bg-[length:200%_100%]"
+          className="absolute inset-0 z-10 bg-slate-100 animate-pulse"
           aria-hidden="true"
         />
       )}
 
-      {/* Actual image - className goes HERE for object-fit */}
+      {/* Image (className controls object-fit) */}
       <Image
         src={src}
         alt={alt}
@@ -102,9 +103,9 @@ export function OptimizedImage({
         loading={resolvedLoading}
         fetchPriority={resolvedFetchPriority}
         className={cn(
-          "transition-opacity",
-          isLoading ? "opacity-0" : "opacity-100",
-          className
+          'transition-opacity',
+          isLoading ? 'opacity-0' : 'opacity-100',
+          className,
         )}
         style={{ transitionDuration: `${fadeInDuration}ms` }}
         onLoad={handleLoad}
@@ -116,17 +117,17 @@ export function OptimizedImage({
 }
 
 /**
- * ProductImage - For product displays with object-contain
+ * ProductImage; object-contain.
  */
 export function ProductImage({
   src,
   alt,
   wrapperClassName,
   priority = false,
-  sizes = "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw",
+  sizes = '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw',
   quality = 95,
   ...props
-}: Omit<OptimizedImageProps, "fill" | "showSkeleton" | "className"> & {
+}: Omit<OptimizedImageProps, 'fill' | 'showSkeleton' | 'className'> & {
   priority?: boolean
 }) {
   return (
@@ -146,7 +147,7 @@ export function ProductImage({
 }
 
 /**
- * ThumbnailImage - Small preview thumbnails
+ * ThumbnailImage; previews.
  */
 export function ThumbnailImage({
   src,
@@ -154,7 +155,10 @@ export function ThumbnailImage({
   wrapperClassName,
   size = 80,
   ...props
-}: Omit<OptimizedImageProps, "fill" | "width" | "height" | "sizes" | "className"> & {
+}: Omit<
+  OptimizedImageProps,
+  'fill' | 'width' | 'height' | 'sizes' | 'className'
+> & {
   size?: number
 }) {
   return (

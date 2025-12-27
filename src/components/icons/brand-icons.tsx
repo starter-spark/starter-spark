@@ -1,4 +1,4 @@
-import { siGithub, siInstagram, siYoutube } from "simple-icons"
+import { siGithub, siInstagram, siYoutube } from 'simple-icons'
 
 interface IconProps {
   className?: string

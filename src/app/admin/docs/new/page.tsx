@@ -1,16 +1,16 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
-import Link from "next/link"
-import { ArrowLeft, Save, Eye, EyeOff } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Switch } from "@/components/ui/switch"
-import { createClient } from "@/lib/supabase/client"
-import { createDocPage } from "../actions"
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
+import { ArrowLeft, Save, Eye, EyeOff } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Switch } from '@/components/ui/switch'
+import { createClient } from '@/lib/supabase/client'
+import { createDocPage } from '../actions'
 
 interface Category {
   id: string
@@ -21,7 +21,7 @@ interface Category {
 export default function NewDocPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const preselectedCategory = searchParams.get("category")
+  const preselectedCategory = searchParams.get('category')
 
   const [categories, setCategories] = useState<Category[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -29,12 +29,12 @@ export default function NewDocPage() {
   const [showPreview, setShowPreview] = useState(false)
 
   const [formData, setFormData] = useState({
-    category_id: preselectedCategory || "",
-    title: "",
-    slug: "",
-    content: "",
-    excerpt: "",
-    sort_order: "0",
+    category_id: preselectedCategory || '',
+    title: '',
+    slug: '',
+    content: '',
+    excerpt: '',
+    sort_order: '0',
     is_published: false,
   })
 
@@ -42,9 +42,9 @@ export default function NewDocPage() {
     async function loadCategories() {
       const supabase = createClient()
       const { data } = await supabase
-        .from("doc_categories")
-        .select("id, name, slug")
-        .order("sort_order", { ascending: true })
+        .from('doc_categories')
+        .select('id, name, slug')
+        .order('sort_order', { ascending: true })
       setCategories(data || [])
       if (data && data.length > 0 && !formData.category_id) {
         setFormData((prev) => ({ ...prev, category_id: data[0].id }))
@@ -57,8 +57,8 @@ export default function NewDocPage() {
   function generateSlug(title: string) {
     return title
       .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-|-$/g, "")
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '')
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -66,13 +66,13 @@ export default function NewDocPage() {
     setIsSaving(true)
 
     const data = new FormData()
-    data.append("category_id", formData.category_id)
-    data.append("title", formData.title)
-    data.append("slug", formData.slug)
-    data.append("content", formData.content)
-    data.append("excerpt", formData.excerpt)
-    data.append("sort_order", formData.sort_order)
-    data.append("is_published", String(formData.is_published))
+    data.append('category_id', formData.category_id)
+    data.append('title', formData.title)
+    data.append('slug', formData.slug)
+    data.append('content', formData.content)
+    data.append('excerpt', formData.excerpt)
+    data.append('sort_order', formData.sort_order)
+    data.append('is_published', String(formData.is_published))
 
     try {
       const result = await createDocPage(data)
@@ -106,15 +106,21 @@ export default function NewDocPage() {
             <ArrowLeft className="w-4 h-4" />
             Back to Documentation
           </Link>
-          <h1 className="font-mono text-2xl font-bold text-slate-900">New Documentation Page</h1>
+          <h1 className="font-mono text-2xl font-bold text-slate-900">
+            New Documentation Page
+          </h1>
         </div>
         <Button
           variant="outline"
           onClick={() => setShowPreview(!showPreview)}
           className="gap-2"
         >
-          {showPreview ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-          {showPreview ? "Edit" : "Preview"}
+          {showPreview ? (
+            <EyeOff className="w-4 h-4" />
+          ) : (
+            <Eye className="w-4 h-4" />
+          )}
+          {showPreview ? 'Edit' : 'Preview'}
         </Button>
       </div>
 
@@ -126,7 +132,9 @@ export default function NewDocPage() {
               <Label>Category</Label>
               <select
                 value={formData.category_id}
-                onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, category_id: e.target.value })
+                }
                 className="w-full h-10 rounded border border-slate-200 px-3"
                 required
               >
@@ -160,7 +168,9 @@ export default function NewDocPage() {
               <Label>Slug</Label>
               <Input
                 value={formData.slug}
-                onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, slug: e.target.value })
+                }
                 placeholder="getting-started-with-arduino"
                 required
               />
@@ -170,7 +180,9 @@ export default function NewDocPage() {
               <Input
                 type="number"
                 value={formData.sort_order}
-                onChange={(e) => setFormData({ ...formData, sort_order: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, sort_order: e.target.value })
+                }
               />
             </div>
           </div>
@@ -180,7 +192,9 @@ export default function NewDocPage() {
             <Label>Excerpt (optional)</Label>
             <Textarea
               value={formData.excerpt}
-              onChange={(e) => setFormData({ ...formData, excerpt: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, excerpt: e.target.value })
+              }
               placeholder="Brief summary for search results..."
               rows={2}
             />
@@ -191,13 +205,17 @@ export default function NewDocPage() {
             <Label>Content (Markdown)</Label>
             {showPreview ? (
               <div className="min-h-[400px] p-4 border border-slate-200 rounded bg-slate-50 prose prose-slate max-w-none">
-                {/* Simple preview - in production you'd use a markdown renderer */}
-                <pre className="whitespace-pre-wrap text-sm">{formData.content || "No content yet..."}</pre>
+                {/* Preview (no markdown renderer) */}
+                <pre className="whitespace-pre-wrap text-sm">
+                  {formData.content || 'No content yet...'}
+                </pre>
               </div>
             ) : (
               <Textarea
                 value={formData.content}
-                onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, content: e.target.value })
+                }
                 placeholder="# Introduction&#10;&#10;Write your documentation here using Markdown..."
                 rows={20}
                 className="font-mono text-sm"
@@ -218,14 +236,14 @@ export default function NewDocPage() {
                 <Label className="mb-0">Publish</Label>
                 <p className="text-xs text-slate-500">
                   {formData.is_published
-                    ? "This page will be visible to the public"
-                    : "Save as draft (not visible to public)"}
+                    ? 'This page will be visible to the public'
+                    : 'Save as draft (not visible to public)'}
                 </p>
               </div>
             </div>
             <Button type="submit" disabled={isSaving}>
               <Save className="w-4 h-4 mr-2" />
-              {isSaving ? "Creating..." : "Create Page"}
+              {isSaving ? 'Creating...' : 'Create Page'}
             </Button>
           </div>
         </div>

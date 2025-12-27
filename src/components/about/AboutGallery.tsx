@@ -1,6 +1,6 @@
-"use client"
+'use client'
 
-import { motion } from "motion/react"
+import { motion } from 'motion/react'
 
 export interface AboutStat {
   value: string
@@ -14,42 +14,42 @@ interface AboutGalleryProps {
 interface GalleryImage {
   label: string
   caption: string
-  span?: "wide" | "tall" | "normal"
+  span?: 'wide' | 'tall' | 'normal'
 }
 
 const galleryImages: GalleryImage[] = [
   {
-    label: "FTC Competition",
-    caption: "Hawaii State Championship 2024",
-    span: "wide",
+    label: 'FTC Competition',
+    caption: 'Hawaii State Championship 2024',
+    span: 'wide',
   },
   {
-    label: "Workshop",
-    caption: "Punahou School, December 2024",
-    span: "normal",
+    label: 'Workshop',
+    caption: 'Punahou School, December 2024',
+    span: 'normal',
   },
   {
-    label: "Student Building",
-    caption: "First successful arm build",
-    span: "tall",
+    label: 'Student Building',
+    caption: 'First successful arm build',
+    span: 'tall',
   },
   {
-    label: "Team Presentation",
-    caption: "STEM Night at Iolani",
-    span: "normal",
+    label: 'Team Presentation',
+    caption: 'STEM Night at Iolani',
+    span: 'normal',
   },
   {
-    label: "Outreach Event",
-    caption: "Hawaii State Library Workshop",
-    span: "wide",
+    label: 'Outreach Event',
+    caption: 'Hawaii State Library Workshop',
+    span: 'wide',
   },
 ]
 
 const defaultStats: AboutStat[] = [
-  { value: "0", label: "Workshops Hosted" },
-  { value: "0", label: "Students Reached" },
-  { value: "0", label: "Partner Schools" },
-  { value: "67%", label: "Donated to STEM" },
+  { value: '0', label: 'Workshops Hosted' },
+  { value: '0', label: 'Students Reached' },
+  { value: '0', label: 'Partner Schools' },
+  { value: '67%', label: 'Donated to STEM' },
 ]
 
 export function AboutGallery({ stats = defaultStats }: AboutGalleryProps) {
@@ -81,9 +81,9 @@ export function AboutGallery({ stats = defaultStats }: AboutGalleryProps) {
               viewport={{ once: true }}
               transition={{ delay: idx * 0.05 }}
               className={`
-                relative group overflow-hidden rounded border border-slate-200 bg-gradient-to-br from-slate-50 to-slate-100
-                ${image.span === "wide" ? "col-span-2" : ""}
-                ${image.span === "tall" ? "row-span-2" : ""}
+                relative group overflow-hidden rounded border border-slate-200 bg-slate-50
+                ${image.span === 'wide' ? 'col-span-2' : ''}
+                ${image.span === 'tall' ? 'row-span-2' : ''}
               `}
             >
               {/* Placeholder Content */}
@@ -109,9 +109,11 @@ export function AboutGallery({ stats = defaultStats }: AboutGalleryProps) {
               </div>
 
               {/* Hover Overlay with Caption */}
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
+              <div className="absolute inset-0 bg-slate-900/70 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
                 <div>
-                  <p className="text-white font-medium text-sm">{image.label}</p>
+                  <p className="text-white font-medium text-sm">
+                    {image.label}
+                  </p>
                   <p className="text-white/70 text-xs">{image.caption}</p>
                 </div>
               </div>

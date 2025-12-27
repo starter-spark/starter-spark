@@ -1,12 +1,12 @@
-"use client"
+'use client'
 
-import { useState } from "react"
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Switch } from "@/components/ui/switch"
+import { useState } from 'react'
+import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Switch } from '@/components/ui/switch'
 import {
   Dialog,
   DialogContent,
@@ -14,7 +14,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from '@/components/ui/dialog'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,9 +24,24 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
-import { Plus, Pencil, Trash2, GripVertical, User, Github, Linkedin, Twitter, Loader2 } from "lucide-react"
-import { createTeamMember, updateTeamMember, deleteTeamMember, reorderTeamMembers } from "./actions"
+} from '@/components/ui/alert-dialog'
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  GripVertical,
+  User,
+  Github,
+  Linkedin,
+  Twitter,
+  Loader2,
+} from 'lucide-react'
+import {
+  createTeamMember,
+  updateTeamMember,
+  deleteTeamMember,
+  reorderTeamMembers,
+} from './actions'
 
 interface TeamMember {
   id: string
@@ -49,11 +64,11 @@ interface TeamManagerProps {
 }
 
 const EMPTY_FORM = {
-  name: "",
-  role: "",
-  bio: "",
-  image_url: "",
-  social_links: { github: "", linkedin: "", twitter: "" },
+  name: '',
+  role: '',
+  bio: '',
+  image_url: '',
+  social_links: { github: '', linkedin: '', twitter: '' },
   is_active: true,
 }
 
@@ -78,12 +93,12 @@ export function TeamManager({ initialMembers }: TeamManagerProps) {
     setFormData({
       name: member.name,
       role: member.role,
-      bio: member.bio || "",
-      image_url: member.image_url || "",
+      bio: member.bio || '',
+      image_url: member.image_url || '',
       social_links: {
-        github: member.social_links?.github || "",
-        linkedin: member.social_links?.linkedin || "",
-        twitter: member.social_links?.twitter || "",
+        github: member.social_links?.github || '',
+        linkedin: member.social_links?.linkedin || '',
+        twitter: member.social_links?.twitter || '',
       },
       is_active: member.is_active,
     })
@@ -101,9 +116,15 @@ export function TeamManager({ initialMembers }: TeamManagerProps) {
       bio: formData.bio,
       image_url: formData.image_url,
       social_links: {
-        ...(formData.social_links.github && { github: formData.social_links.github }),
-        ...(formData.social_links.linkedin && { linkedin: formData.social_links.linkedin }),
-        ...(formData.social_links.twitter && { twitter: formData.social_links.twitter }),
+        ...(formData.social_links.github && {
+          github: formData.social_links.github,
+        }),
+        ...(formData.social_links.linkedin && {
+          linkedin: formData.social_links.linkedin,
+        }),
+        ...(formData.social_links.twitter && {
+          twitter: formData.social_links.twitter,
+        }),
       },
       is_active: formData.is_active,
     }
@@ -112,7 +133,7 @@ export function TeamManager({ initialMembers }: TeamManagerProps) {
       const result = await updateTeamMember(editingMember.id, data)
       if (result.success) {
         setMembers((prev) =>
-          prev.map((m) => (m.id === editingMember.id ? { ...m, ...data } : m))
+          prev.map((m) => (m.id === editingMember.id ? { ...m, ...data } : m)),
         )
       }
     } else {
@@ -124,7 +145,8 @@ export function TeamManager({ initialMembers }: TeamManagerProps) {
           role: result.member.role,
           bio: result.member.bio,
           image_url: result.member.image_url,
-          social_links: result.member.social_links as TeamMember["social_links"],
+          social_links: result.member
+            .social_links as TeamMember['social_links'],
           sort_order: result.member.sort_order ?? 0,
           is_active: result.member.is_active ?? true,
           created_at: result.member.created_at ?? new Date().toISOString(),
@@ -179,7 +201,10 @@ export function TeamManager({ initialMembers }: TeamManagerProps) {
   return (
     <>
       <div className="flex justify-end mb-4">
-        <Button onClick={openCreateDialog} className="bg-cyan-700 hover:bg-cyan-600">
+        <Button
+          onClick={openCreateDialog}
+          className="bg-cyan-700 hover:bg-cyan-600"
+        >
           <Plus className="h-4 w-4 mr-2" />
           Add Member
         </Button>
@@ -190,12 +215,16 @@ export function TeamManager({ initialMembers }: TeamManagerProps) {
           <Card
             key={member.id}
             draggable
-            onDragStart={() => { handleDragStart(index); }}
-            onDragOver={(e) => { handleDragOver(e, index); }}
+            onDragStart={() => {
+              handleDragStart(index)
+            }}
+            onDragOver={(e) => {
+              handleDragOver(e, index)
+            }}
             onDragEnd={() => void handleDragEnd()}
             className={`bg-white border-slate-200 cursor-move transition-all ${
-              draggedIndex === index ? "opacity-50 scale-[0.98]" : ""
-            } ${member.is_active ? "" : "opacity-60"}`}
+              draggedIndex === index ? 'opacity-50 scale-[0.98]' : ''
+            } ${member.is_active ? '' : 'opacity-60'}`}
           >
             <CardContent className="p-4">
               <div className="flex items-center gap-4">
@@ -225,7 +254,9 @@ export function TeamManager({ initialMembers }: TeamManagerProps) {
                       </span>
                     )}
                   </div>
-                  <p className="text-sm text-slate-600 truncate">{member.role}</p>
+                  <p className="text-sm text-slate-600 truncate">
+                    {member.role}
+                  </p>
                 </div>
 
                 <div className="flex items-center gap-2 flex-shrink-0">
@@ -244,7 +275,9 @@ export function TeamManager({ initialMembers }: TeamManagerProps) {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => { openEditDialog(member); }}
+                    onClick={() => {
+                      openEditDialog(member)
+                    }}
                     className="cursor-pointer"
                   >
                     <Pencil className="h-4 w-4" />
@@ -284,12 +317,12 @@ export function TeamManager({ initialMembers }: TeamManagerProps) {
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>
-              {editingMember ? "Edit Team Member" : "Add Team Member"}
+              {editingMember ? 'Edit Team Member' : 'Add Team Member'}
             </DialogTitle>
             <DialogDescription>
               {editingMember
                 ? "Update the team member's profile information."
-                : "Add a new team member to display on the About page."}
+                : 'Add a new team member to display on the About page.'}
             </DialogDescription>
           </DialogHeader>
 
@@ -300,7 +333,9 @@ export function TeamManager({ initialMembers }: TeamManagerProps) {
                 <Input
                   id="name"
                   value={formData.name}
-                  onChange={(e) => { setFormData({ ...formData, name: e.target.value }); }}
+                  onChange={(e) => {
+                    setFormData({ ...formData, name: e.target.value })
+                  }}
                   placeholder="John Doe"
                 />
               </div>
@@ -309,7 +344,9 @@ export function TeamManager({ initialMembers }: TeamManagerProps) {
                 <Input
                   id="role"
                   value={formData.role}
-                  onChange={(e) => { setFormData({ ...formData, role: e.target.value }); }}
+                  onChange={(e) => {
+                    setFormData({ ...formData, role: e.target.value })
+                  }}
                   placeholder="Software Engineer"
                 />
               </div>
@@ -320,7 +357,9 @@ export function TeamManager({ initialMembers }: TeamManagerProps) {
               <Textarea
                 id="bio"
                 value={formData.bio}
-                onChange={(e) => { setFormData({ ...formData, bio: e.target.value }); }}
+                onChange={(e) => {
+                  setFormData({ ...formData, bio: e.target.value })
+                }}
                 placeholder="A brief description of this team member..."
                 rows={3}
               />
@@ -331,7 +370,9 @@ export function TeamManager({ initialMembers }: TeamManagerProps) {
               <Input
                 id="image_url"
                 value={formData.image_url}
-                onChange={(e) => { setFormData({ ...formData, image_url: e.target.value }); }}
+                onChange={(e) => {
+                  setFormData({ ...formData, image_url: e.target.value })
+                }}
                 placeholder="https://example.com/photo.jpg"
               />
             </div>
@@ -343,12 +384,15 @@ export function TeamManager({ initialMembers }: TeamManagerProps) {
                   <Github className="h-4 w-4 text-slate-500" />
                   <Input
                     value={formData.social_links.github}
-                    onChange={(e) =>
-                      { setFormData({
+                    onChange={(e) => {
+                      setFormData({
                         ...formData,
-                        social_links: { ...formData.social_links, github: e.target.value },
-                      }); }
-                    }
+                        social_links: {
+                          ...formData.social_links,
+                          github: e.target.value,
+                        },
+                      })
+                    }}
                     placeholder="https://github.com/username"
                     className="flex-1"
                   />
@@ -357,12 +401,15 @@ export function TeamManager({ initialMembers }: TeamManagerProps) {
                   <Linkedin className="h-4 w-4 text-slate-500" />
                   <Input
                     value={formData.social_links.linkedin}
-                    onChange={(e) =>
-                      { setFormData({
+                    onChange={(e) => {
+                      setFormData({
                         ...formData,
-                        social_links: { ...formData.social_links, linkedin: e.target.value },
-                      }); }
-                    }
+                        social_links: {
+                          ...formData.social_links,
+                          linkedin: e.target.value,
+                        },
+                      })
+                    }}
                     placeholder="https://linkedin.com/in/username"
                     className="flex-1"
                   />
@@ -371,12 +418,15 @@ export function TeamManager({ initialMembers }: TeamManagerProps) {
                   <Twitter className="h-4 w-4 text-slate-500" />
                   <Input
                     value={formData.social_links.twitter}
-                    onChange={(e) =>
-                      { setFormData({
+                    onChange={(e) => {
+                      setFormData({
                         ...formData,
-                        social_links: { ...formData.social_links, twitter: e.target.value },
-                      }); }
-                    }
+                        social_links: {
+                          ...formData.social_links,
+                          twitter: e.target.value,
+                        },
+                      })
+                    }}
                     placeholder="https://twitter.com/username"
                     className="flex-1"
                   />
@@ -394,15 +444,20 @@ export function TeamManager({ initialMembers }: TeamManagerProps) {
               <Switch
                 id="is_active"
                 checked={formData.is_active}
-                onCheckedChange={(checked) =>
-                  { setFormData({ ...formData, is_active: checked }); }
-                }
+                onCheckedChange={(checked) => {
+                  setFormData({ ...formData, is_active: checked })
+                }}
               />
             </div>
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setIsDialogOpen(false); }}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsDialogOpen(false)
+              }}
+            >
               Cancel
             </Button>
             <Button
@@ -410,21 +465,26 @@ export function TeamManager({ initialMembers }: TeamManagerProps) {
               disabled={isSubmitting || !formData.name || !formData.role}
               className="bg-cyan-700 hover:bg-cyan-600"
             >
-              {isSubmitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              {editingMember ? "Save Changes" : "Add Member"}
+              {isSubmitting && (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              )}
+              {editingMember ? 'Save Changes' : 'Add Member'}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+      <AlertDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Team Member</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete {deletingMember?.name}? This action cannot
-              be undone.
+              Are you sure you want to delete {deletingMember?.name}? This
+              action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -433,7 +493,9 @@ export function TeamManager({ initialMembers }: TeamManagerProps) {
               onClick={() => void handleDelete()}
               className="bg-red-600 hover:bg-red-700"
             >
-              {isSubmitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              {isSubmitting && (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              )}
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>

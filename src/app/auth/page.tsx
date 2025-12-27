@@ -1,9 +1,10 @@
-import Link from "next/link"
-import type { Metadata } from "next"
+import Link from 'next/link'
+import type { Metadata } from 'next'
+import { compactPrimaryLink } from '@/components/marketing/link-classes'
 
 export const metadata: Metadata = {
-  title: "Sign In",
-  description: "Sign in to access your kits and learning materials.",
+  title: 'Sign In',
+  description: 'Sign in to access your kits and learning materials.',
 }
 
 export default function AuthLandingPage() {
@@ -20,7 +21,7 @@ export default function AuthLandingPage() {
         </p>
         <Link
           href="/login"
-          className="inline-flex items-center justify-center rounded bg-cyan-700 px-4 py-2 text-white font-mono text-sm hover:bg-cyan-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-700 focus-visible:ring-offset-2"
+          className={compactPrimaryLink}
         >
           Go to Sign In
         </Link>

@@ -1,18 +1,24 @@
-"use client"
+'use client'
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { MoreHorizontal, Edit, ExternalLink, Trash2, Loader2 } from "lucide-react"
-import { deleteEvent } from "./actions"
+} from '@/components/ui/dropdown-menu'
+import {
+  MoreHorizontal,
+  Edit,
+  ExternalLink,
+  Trash2,
+  Loader2,
+} from 'lucide-react'
+import { deleteEvent } from './actions'
 
 interface EventActionsProps {
   eventId: string
@@ -24,7 +30,11 @@ export function EventActions({ eventId, slug }: EventActionsProps) {
   const [isLoading, setIsLoading] = useState(false)
 
   const handleDelete = async () => {
-    if (!confirm("Are you sure you want to delete this event? This cannot be undone.")) {
+    if (
+      !confirm(
+        'Are you sure you want to delete this event? This cannot be undone.',
+      )
+    ) {
       return
     }
 

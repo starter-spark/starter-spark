@@ -1,5 +1,5 @@
-import { createPublicClient } from "@/lib/supabase/public"
-import { AboutTeam } from "./AboutTeam"
+import { createPublicClient } from '@/lib/supabase/public'
+import { AboutTeam } from './AboutTeam'
 
 interface TeamMember {
   id: string
@@ -19,17 +19,17 @@ export async function AboutTeamWrapper() {
   try {
     const supabase = createPublicClient()
     const { data, error } = await supabase
-      .from("team_members")
-      .select("id, name, role, bio, image_url, social_links")
-      .eq("is_active", true)
-      .order("sort_order", { ascending: true })
+      .from('team_members')
+      .select('id, name, role, bio, image_url, social_links')
+      .eq('is_active', true)
+      .order('sort_order', { ascending: true })
 
     if (error) {
-      console.error("Error fetching team members:", error)
+      console.error('Error fetching team members:', error)
     }
     members = (data as TeamMember[]) || []
   } catch (error) {
-    console.error("Error fetching team members:", error)
+    console.error('Error fetching team members:', error)
   }
 
   // Transform to match the expected format
@@ -38,7 +38,7 @@ export async function AboutTeamWrapper() {
     return {
       name: m.name,
       role: m.role,
-      bio: m.bio || "",
+      bio: m.bio || '',
       image: m.image_url || undefined,
       github: socialLinks?.github,
       linkedin: socialLinks?.linkedin,

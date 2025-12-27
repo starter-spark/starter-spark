@@ -1,9 +1,9 @@
-"use server"
+'use server'
 
-import { createClient } from "@/lib/supabase/server"
-import { revalidatePath } from "next/cache"
-import { requireAdminOrStaff } from "@/lib/auth"
-import { logAuditEvent } from "@/lib/audit"
+import { createClient } from '@/lib/supabase/server'
+import { revalidatePath } from 'next/cache'
+import { requireAdminOrStaff } from '@/lib/auth'
+import { logAuditEvent } from '@/lib/audit'
 
 // Doc Category Actions
 export async function createCategory(formData: FormData) {
@@ -12,16 +12,16 @@ export async function createCategory(formData: FormData) {
   if (!guard.ok) return { error: guard.error }
   const user = guard.user
 
-  const name = formData.get("name") as string
-  const slug = formData.get("slug") as string
-  const description = formData.get("description") as string | null
-  const icon = formData.get("icon") as string | null
-  const parentId = formData.get("parent_id") as string | null
-  const sortOrder = parseInt(formData.get("sort_order") as string) || 0
-  const isPublished = formData.get("is_published") === "true"
+  const name = formData.get('name') as string
+  const slug = formData.get('slug') as string
+  const description = formData.get('description') as string | null
+  const icon = formData.get('icon') as string | null
+  const parentId = formData.get('parent_id') as string | null
+  const sortOrder = parseInt(formData.get('sort_order') as string) || 0
+  const isPublished = formData.get('is_published') === 'true'
 
   const { data, error } = await supabase
-    .from("doc_categories")
+    .from('doc_categories')
     .insert({
       name,
       slug,
@@ -31,7 +31,7 @@ export async function createCategory(formData: FormData) {
       sort_order: sortOrder,
       is_published: isPublished,
     })
-    .select("id, name, slug")
+    .select('id, name, slug')
     .maybeSingle()
 
   if (error) {
@@ -39,13 +39,13 @@ export async function createCategory(formData: FormData) {
   }
 
   if (!data) {
-    return { error: "Failed to create category" }
+    return { error: 'Failed to create category' }
   }
 
   await logAuditEvent({
     userId: user.id,
-    action: "doc_category.created",
-    resourceType: "doc_category",
+    action: 'doc_category.created',
+    resourceType: 'doc_category',
     resourceId: data.id,
     details: {
       name: data.name,
@@ -54,8 +54,8 @@ export async function createCategory(formData: FormData) {
     },
   })
 
-  revalidatePath("/admin/docs/categories")
-  revalidatePath("/docs")
+  revalidatePath('/admin/docs/categories')
+  revalidatePath('/docs')
   return { success: true }
 }
 
@@ -65,16 +65,16 @@ export async function updateCategory(id: string, formData: FormData) {
   if (!guard.ok) return { error: guard.error }
   const user = guard.user
 
-  const name = formData.get("name") as string
-  const slug = formData.get("slug") as string
-  const description = formData.get("description") as string | null
-  const icon = formData.get("icon") as string | null
-  const parentId = formData.get("parent_id") as string | null
-  const sortOrder = parseInt(formData.get("sort_order") as string) || 0
-  const isPublished = formData.get("is_published") === "true"
+  const name = formData.get('name') as string
+  const slug = formData.get('slug') as string
+  const description = formData.get('description') as string | null
+  const icon = formData.get('icon') as string | null
+  const parentId = formData.get('parent_id') as string | null
+  const sortOrder = parseInt(formData.get('sort_order') as string) || 0
+  const isPublished = formData.get('is_published') === 'true'
 
   const { data, error } = await supabase
-    .from("doc_categories")
+    .from('doc_categories')
     .update({
       name,
       slug,
@@ -85,8 +85,8 @@ export async function updateCategory(id: string, formData: FormData) {
       is_published: isPublished,
       updated_at: new Date().toISOString(),
     })
-    .eq("id", id)
-    .select("id, name, slug")
+    .eq('id', id)
+    .select('id, name, slug')
     .maybeSingle()
 
   if (error) {
@@ -94,13 +94,13 @@ export async function updateCategory(id: string, formData: FormData) {
   }
 
   if (!data) {
-    return { error: "Category not found" }
+    return { error: 'Category not found' }
   }
 
   await logAuditEvent({
     userId: user.id,
-    action: "doc_category.updated",
-    resourceType: "doc_category",
+    action: 'doc_category.updated',
+    resourceType: 'doc_category',
     resourceId: data.id,
     details: {
       name: data.name,
@@ -109,8 +109,8 @@ export async function updateCategory(id: string, formData: FormData) {
     },
   })
 
-  revalidatePath("/admin/docs/categories")
-  revalidatePath("/docs")
+  revalidatePath('/admin/docs/categories')
+  revalidatePath('/docs')
   return { success: true }
 }
 
@@ -121,10 +121,10 @@ export async function deleteCategory(id: string) {
   const user = guard.user
 
   const { data, error } = await supabase
-    .from("doc_categories")
+    .from('doc_categories')
     .delete()
-    .eq("id", id)
-    .select("id, name, slug")
+    .eq('id', id)
+    .select('id, name, slug')
     .maybeSingle()
 
   if (error) {
@@ -132,13 +132,13 @@ export async function deleteCategory(id: string) {
   }
 
   if (!data) {
-    return { error: "Category not found" }
+    return { error: 'Category not found' }
   }
 
   await logAuditEvent({
     userId: user.id,
-    action: "doc_category.deleted",
-    resourceType: "doc_category",
+    action: 'doc_category.deleted',
+    resourceType: 'doc_category',
     resourceId: data.id,
     details: {
       name: data.name,
@@ -146,8 +146,8 @@ export async function deleteCategory(id: string) {
     },
   })
 
-  revalidatePath("/admin/docs/categories")
-  revalidatePath("/docs")
+  revalidatePath('/admin/docs/categories')
+  revalidatePath('/docs')
   return { success: true }
 }
 
@@ -158,16 +158,16 @@ export async function createDocPage(formData: FormData) {
   if (!guard.ok) return { error: guard.error }
   const user = guard.user
 
-  const categoryId = formData.get("category_id") as string
-  const title = formData.get("title") as string
-  const slug = formData.get("slug") as string
-  const content = formData.get("content") as string | null
-  const excerpt = formData.get("excerpt") as string | null
-  const sortOrder = parseInt(formData.get("sort_order") as string) || 0
-  const isPublished = formData.get("is_published") === "true"
+  const categoryId = formData.get('category_id') as string
+  const title = formData.get('title') as string
+  const slug = formData.get('slug') as string
+  const content = formData.get('content') as string | null
+  const excerpt = formData.get('excerpt') as string | null
+  const sortOrder = parseInt(formData.get('sort_order') as string) || 0
+  const isPublished = formData.get('is_published') === 'true'
 
   const { data, error } = await supabase
-    .from("doc_pages")
+    .from('doc_pages')
     .insert({
       category_id: categoryId,
       title,
@@ -179,7 +179,7 @@ export async function createDocPage(formData: FormData) {
       created_by: user.id,
       updated_by: user.id,
     })
-    .select("id, title, slug, is_published")
+    .select('id, title, slug, is_published')
     .maybeSingle()
 
   if (error) {
@@ -187,13 +187,13 @@ export async function createDocPage(formData: FormData) {
   }
 
   if (!data) {
-    return { error: "Failed to create doc page" }
+    return { error: 'Failed to create doc page' }
   }
 
   await logAuditEvent({
     userId: user.id,
-    action: "doc_page.created",
-    resourceType: "doc_page",
+    action: 'doc_page.created',
+    resourceType: 'doc_page',
     resourceId: data.id,
     details: {
       title: data.title,
@@ -203,8 +203,8 @@ export async function createDocPage(formData: FormData) {
     },
   })
 
-  revalidatePath("/admin/docs")
-  revalidatePath("/docs")
+  revalidatePath('/admin/docs')
+  revalidatePath('/docs')
   return { success: true, id: data.id }
 }
 
@@ -214,16 +214,16 @@ export async function updateDocPage(id: string, formData: FormData) {
   if (!guard.ok) return { error: guard.error }
   const user = guard.user
 
-  const categoryId = formData.get("category_id") as string
-  const title = formData.get("title") as string
-  const slug = formData.get("slug") as string
-  const content = formData.get("content") as string | null
-  const excerpt = formData.get("excerpt") as string | null
-  const sortOrder = parseInt(formData.get("sort_order") as string) || 0
-  const isPublished = formData.get("is_published") === "true"
+  const categoryId = formData.get('category_id') as string
+  const title = formData.get('title') as string
+  const slug = formData.get('slug') as string
+  const content = formData.get('content') as string | null
+  const excerpt = formData.get('excerpt') as string | null
+  const sortOrder = parseInt(formData.get('sort_order') as string) || 0
+  const isPublished = formData.get('is_published') === 'true'
 
   const { data, error } = await supabase
-    .from("doc_pages")
+    .from('doc_pages')
     .update({
       category_id: categoryId,
       title,
@@ -235,8 +235,8 @@ export async function updateDocPage(id: string, formData: FormData) {
       updated_by: user.id,
       updated_at: new Date().toISOString(),
     })
-    .eq("id", id)
-    .select("id, title, slug, is_published")
+    .eq('id', id)
+    .select('id, title, slug, is_published')
     .maybeSingle()
 
   if (error) {
@@ -244,13 +244,13 @@ export async function updateDocPage(id: string, formData: FormData) {
   }
 
   if (!data) {
-    return { error: "Doc page not found" }
+    return { error: 'Doc page not found' }
   }
 
   await logAuditEvent({
     userId: user.id,
-    action: "doc_page.updated",
-    resourceType: "doc_page",
+    action: 'doc_page.updated',
+    resourceType: 'doc_page',
     resourceId: data.id,
     details: {
       title: data.title,
@@ -260,8 +260,8 @@ export async function updateDocPage(id: string, formData: FormData) {
     },
   })
 
-  revalidatePath("/admin/docs")
-  revalidatePath("/docs")
+  revalidatePath('/admin/docs')
+  revalidatePath('/docs')
   return { success: true }
 }
 
@@ -272,10 +272,10 @@ export async function deleteDocPage(id: string) {
   const user = guard.user
 
   const { data, error } = await supabase
-    .from("doc_pages")
+    .from('doc_pages')
     .delete()
-    .eq("id", id)
-    .select("id, title, slug")
+    .eq('id', id)
+    .select('id, title, slug')
     .maybeSingle()
 
   if (error) {
@@ -283,13 +283,13 @@ export async function deleteDocPage(id: string) {
   }
 
   if (!data) {
-    return { error: "Doc page not found" }
+    return { error: 'Doc page not found' }
   }
 
   await logAuditEvent({
     userId: user.id,
-    action: "doc_page.deleted",
-    resourceType: "doc_page",
+    action: 'doc_page.deleted',
+    resourceType: 'doc_page',
     resourceId: data.id,
     details: {
       title: data.title,
@@ -297,8 +297,8 @@ export async function deleteDocPage(id: string) {
     },
   })
 
-  revalidatePath("/admin/docs")
-  revalidatePath("/docs")
+  revalidatePath('/admin/docs')
+  revalidatePath('/docs')
   return { success: true }
 }
 
@@ -309,13 +309,13 @@ export async function toggleDocPagePublished(id: string, isPublished: boolean) {
   const user = guard.user
 
   const { data, error } = await supabase
-    .from("doc_pages")
+    .from('doc_pages')
     .update({
       is_published: isPublished,
       updated_at: new Date().toISOString(),
     })
-    .eq("id", id)
-    .select("id, title, slug")
+    .eq('id', id)
+    .select('id, title, slug')
     .maybeSingle()
 
   if (error) {
@@ -323,13 +323,13 @@ export async function toggleDocPagePublished(id: string, isPublished: boolean) {
   }
 
   if (!data) {
-    return { error: "Doc page not found" }
+    return { error: 'Doc page not found' }
   }
 
   await logAuditEvent({
     userId: user.id,
-    action: isPublished ? "doc_page.published" : "doc_page.unpublished",
-    resourceType: "doc_page",
+    action: isPublished ? 'doc_page.published' : 'doc_page.unpublished',
+    resourceType: 'doc_page',
     resourceId: data.id,
     details: {
       title: data.title,
@@ -337,7 +337,7 @@ export async function toggleDocPagePublished(id: string, isPublished: boolean) {
     },
   })
 
-  revalidatePath("/admin/docs")
-  revalidatePath("/docs")
+  revalidatePath('/admin/docs')
+  revalidatePath('/docs')
   return { success: true }
 }

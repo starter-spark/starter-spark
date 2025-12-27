@@ -1,11 +1,11 @@
-"use client"
+'use client'
 
-import { useMemo } from "react"
-import { ReactFlow, Background, Controls } from "@xyflow/react"
-import "@xyflow/react/dist/style.css"
-import { reactFlowTokens } from "@/styles/reactflow-tokens"
-import { cn } from "@/lib/utils"
-import { parseFlowState } from "./visual-programming"
+import { useMemo } from 'react'
+import { ReactFlow, Background, Controls } from '@xyflow/react'
+import '@xyflow/react/dist/style.css'
+import { reactFlowTokens } from '@/styles/reactflow-tokens'
+import { cn } from '@/lib/utils'
+import { parseFlowState } from './visual-programming'
 
 interface FlowViewerProps {
   value: unknown
@@ -13,13 +13,20 @@ interface FlowViewerProps {
   height?: number
 }
 
-export function FlowViewer({ value, className, height = 360 }: FlowViewerProps) {
+export function FlowViewer({
+  value,
+  className,
+  height = 360,
+}: FlowViewerProps) {
   const flow = useMemo(() => parseFlowState(value), [value])
   const { nodes, edges } = flow
 
   return (
     <div
-      className={cn("rounded border border-slate-200 bg-white overflow-hidden", className)}
+      className={cn(
+        'rounded border border-slate-200 bg-white overflow-hidden',
+        className,
+      )}
       style={{ height }}
     >
       <ReactFlow

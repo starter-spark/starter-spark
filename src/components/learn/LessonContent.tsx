@@ -1,7 +1,7 @@
-"use client"
+'use client'
 
-import { useCallback, useState } from "react"
-import dynamic from "next/dynamic"
+import { useCallback, useState } from 'react'
+import dynamic from 'next/dynamic'
 import {
   AlertTriangle,
   Check,
@@ -11,30 +11,29 @@ import {
   Info,
   Lightbulb,
   Square,
-} from "lucide-react"
-import { Highlight, themes } from "prism-react-renderer"
-import ReactMarkdown from "react-markdown"
-import type { Components } from "react-markdown"
-import type { ComponentPropsWithoutRef } from "react"
-import remarkGfm from "remark-gfm"
-import remarkDirective from "remark-directive"
-import remarkEmoji from "remark-emoji"
-import { visit } from "unist-util-visit"
-import type { Plugin } from "unified"
-import type { Root } from "mdast"
+} from 'lucide-react'
+import { Highlight, themes } from 'prism-react-renderer'
+import ReactMarkdown from 'react-markdown'
+import type { Components } from 'react-markdown'
+import type { ComponentPropsWithoutRef } from 'react'
+import remarkGfm from 'remark-gfm'
+import remarkDirective from 'remark-directive'
+import remarkEmoji from 'remark-emoji'
+import { visit } from 'unist-util-visit'
+import type { Plugin } from 'unified'
+import type { Root } from 'mdast'
 import {
   normalizeLearnAssetValue,
   parseLearnAssetRef,
   resolveLearnAssetUrl,
-} from "@/lib/learn-assets"
+} from '@/lib/learn-assets'
 import {
-  isExternalHref,
-  sanitizeMarkdownUrl,
   safeMarkdownUrlTransform,
-} from "@/lib/safe-url"
+} from '@/lib/safe-url'
+import { createMarkdownComponents } from '@/components/markdown/markdown-components'
 
 const LazyCodeEditor = dynamic(
-  () => import("@/components/learn/CodeEditor").then((m) => m.CodeEditor),
+  () => import('@/components/learn/CodeEditor').then((m) => m.CodeEditor),
   {
     ssr: false,
     loading: () => (
@@ -42,11 +41,11 @@ const LazyCodeEditor = dynamic(
         Loading editor…
       </div>
     ),
-  }
+  },
 )
 
 const LazyFlowViewer = dynamic(
-  () => import("@/components/learn/FlowViewer").then((m) => m.FlowViewer),
+  () => import('@/components/learn/FlowViewer').then((m) => m.FlowViewer),
   {
     ssr: false,
     loading: () => (
@@ -54,13 +53,13 @@ const LazyFlowViewer = dynamic(
         Loading diagram…
       </div>
     ),
-  }
+  },
 )
 
 const LazyVisualBlocksChallenge = dynamic(
   () =>
-    import("@/components/learn/VisualBlocksChallenge").then(
-      (m) => m.VisualBlocksChallenge
+    import('@/components/learn/VisualBlocksChallenge').then(
+      (m) => m.VisualBlocksChallenge,
     ),
   {
     ssr: false,
@@ -69,8 +68,23 @@ const LazyVisualBlocksChallenge = dynamic(
         Loading challenge…
       </div>
     ),
-  }
+  },
 )
+
+const markdownStyles = {
+  h2: 'font-mono text-2xl text-slate-900 mt-8 mb-4',
+  h3: 'font-mono text-xl text-slate-900 mt-6 mb-3',
+  p: 'text-slate-600 mb-4',
+  ul: 'list-disc list-inside space-y-2 text-slate-600 mb-6',
+  ol: 'list-decimal list-inside space-y-2 text-slate-600 mb-6',
+  li: 'text-slate-600',
+  blockquote:
+    'border-l-4 border-cyan-500 bg-slate-50 pl-4 py-2 my-4 italic text-slate-600',
+  link: 'text-cyan-700 hover:underline',
+}
+
+const inlineCodeClassName =
+  'bg-slate-100 px-1.5 py-0.5 rounded font-mono text-sm'
 
 interface LessonContentProps {
   content: string
@@ -82,43 +96,43 @@ interface LessonContentProps {
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null
+  return typeof value === 'object' && value !== null
 }
 
 function asString(value: unknown): string | null {
-  return typeof value === "string" ? value : null
+  return typeof value === 'string' ? value : null
 }
 
 function asNumber(value: unknown): number | null {
-  return typeof value === "number" && Number.isFinite(value) ? value : null
+  return typeof value === 'number' && Number.isFinite(value) ? value : null
 }
 
 // Map common language aliases to Prism language names
 function getPrismLanguage(lang: string): string {
   const languageMap: Record<string, string> = {
-    cpp: "cpp",
-    "c++": "cpp",
-    c: "c",
-    javascript: "javascript",
-    js: "javascript",
-    typescript: "typescript",
-    ts: "typescript",
-    python: "python",
-    py: "python",
-    java: "java",
-    arduino: "cpp",
-    ino: "cpp",
-    bash: "bash",
-    sh: "bash",
-    shell: "bash",
-    json: "json",
-    html: "markup",
-    css: "css",
-    sql: "sql",
-    text: "plain",
-    plain: "plain",
+    cpp: 'cpp',
+    'c++': 'cpp',
+    c: 'c',
+    javascript: 'javascript',
+    js: 'javascript',
+    typescript: 'typescript',
+    ts: 'typescript',
+    python: 'python',
+    py: 'python',
+    java: 'java',
+    arduino: 'cpp',
+    ino: 'cpp',
+    bash: 'bash',
+    sh: 'bash',
+    shell: 'bash',
+    json: 'json',
+    html: 'markup',
+    css: 'css',
+    sql: 'sql',
+    text: 'plain',
+    plain: 'plain',
   }
-  return languageMap[lang.toLowerCase()] || "plain"
+  return languageMap[lang.toLowerCase()] || 'plain'
 }
 
 // Custom remark plugin to transform callout directives into custom elements
@@ -126,20 +140,20 @@ const remarkCallouts: Plugin<[], Root> = () => {
   return (tree) => {
     visit(tree, (node) => {
       if (
-        node.type === "containerDirective" ||
-        node.type === "leafDirective" ||
-        node.type === "textDirective"
+        node.type === 'containerDirective' ||
+        node.type === 'leafDirective' ||
+        node.type === 'textDirective'
       ) {
         const directive = node as {
           name: string
           data?: { hName?: string; hProperties?: Record<string, string> }
           children?: unknown[]
         }
-        if (["tip", "warning", "info", "danger"].includes(directive.name)) {
+        if (['tip', 'warning', 'info', 'danger'].includes(directive.name)) {
           const data = directive.data || (directive.data = {})
-          data.hName = "div"
+          data.hName = 'div'
           data.hProperties = {
-            "data-callout": directive.name,
+            'data-callout': directive.name,
           }
         }
       }
@@ -150,7 +164,7 @@ const remarkCallouts: Plugin<[], Root> = () => {
 // Code block component with copy button and syntax highlighting
 function CodeBlock({
   code,
-  language = "cpp",
+  language = 'cpp',
   filename,
 }: {
   code: string
@@ -163,7 +177,9 @@ function CodeBlock({
   const handleCopy = () => {
     void navigator.clipboard.writeText(code)
     setCopied(true)
-    setTimeout(() => { setCopied(false); }, 2000)
+    setTimeout(() => {
+      setCopied(false)
+    }, 2000)
   }
 
   return (
@@ -180,7 +196,7 @@ function CodeBlock({
         <button
           onClick={handleCopy}
           className="text-slate-500 hover:text-slate-600 transition-colors cursor-pointer"
-          aria-label={copied ? "Copied!" : "Copy code"}
+          aria-label={copied ? 'Copied!' : 'Copy code'}
           type="button"
         >
           {copied ? (
@@ -190,11 +206,15 @@ function CodeBlock({
           )}
         </button>
       </div>
-      <Highlight theme={themes.github} code={code.trim()} language={prismLanguage}>
+      <Highlight
+        theme={themes.github}
+        code={code.trim()}
+        language={prismLanguage}
+      >
         {({ className, style, tokens, getLineProps, getTokenProps }) => (
           <pre
             className={`${className} p-4 overflow-x-auto text-sm`}
-            style={{ ...style, margin: 0, background: "#f8fafc" }}
+            style={{ ...style, margin: 0, background: '#f8fafc' }}
           >
             {tokens.map((line, i) => (
               <div key={i} {...getLineProps({ line })}>
@@ -217,42 +237,42 @@ function Callout({
   variant,
   children,
 }: {
-  variant: "tip" | "warning" | "info" | "danger"
+  variant: 'tip' | 'warning' | 'info' | 'danger'
   children: React.ReactNode
 }) {
   const styles = {
     tip: {
-      bg: "bg-cyan-50",
-      border: "border-cyan-200",
+      bg: 'bg-cyan-50',
+      border: 'border-cyan-200',
       icon: <Lightbulb className="w-5 h-5 text-cyan-700" />,
-      title: "Tip",
+      title: 'Tip',
     },
     warning: {
-      bg: "bg-amber-50",
-      border: "border-amber-200",
+      bg: 'bg-amber-50',
+      border: 'border-amber-200',
       icon: <AlertTriangle className="w-5 h-5 text-amber-600" />,
-      title: "Warning",
+      title: 'Warning',
     },
     info: {
-      bg: "bg-blue-50",
-      border: "border-blue-200",
+      bg: 'bg-blue-50',
+      border: 'border-blue-200',
       icon: <Info className="w-5 h-5 text-blue-600" />,
-      title: "Note",
+      title: 'Note',
     },
     danger: {
-      bg: "bg-red-50",
-      border: "border-red-200",
+      bg: 'bg-red-50',
+      border: 'border-red-200',
       icon: <AlertTriangle className="w-5 h-5 text-red-600" />,
-      title: "Important",
+      title: 'Important',
     },
   } as const
 
   const style =
-    variant === "tip"
+    variant === 'tip'
       ? styles.tip
-      : variant === "warning"
+      : variant === 'warning'
         ? styles.warning
-        : variant === "info"
+        : variant === 'info'
           ? styles.info
           : styles.danger
 
@@ -268,30 +288,33 @@ function Callout({
 }
 
 function getVideoEmbed(
-  url: string
-): { type: "youtube" | "vimeo" | "direct"; id: string } | null {
+  url: string,
+): { type: 'youtube' | 'vimeo' | 'direct'; id: string } | null {
   const normalized = normalizeLearnAssetValue(url)
 
-  if (normalized.startsWith("/api/learn/assets?")) {
-    return { type: "direct", id: normalized }
+  if (normalized.startsWith('/api/learn/assets?')) {
+    return { type: 'direct', id: normalized }
   }
 
   if (parseLearnAssetRef(normalized)) {
-    return { type: "direct", id: resolveLearnAssetUrl(normalized) }
+    return { type: 'direct', id: resolveLearnAssetUrl(normalized) }
   }
 
-  const youtubeMatch = /(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/.exec(url)
+  const youtubeMatch =
+    /(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/.exec(
+      url,
+    )
   if (youtubeMatch) {
-    return { type: "youtube", id: youtubeMatch[1] }
+    return { type: 'youtube', id: youtubeMatch[1] }
   }
 
   const vimeoMatch = /vimeo\.com\/(?:video\/)?(\d+)/.exec(url)
   if (vimeoMatch) {
-    return { type: "vimeo", id: vimeoMatch[1] }
+    return { type: 'vimeo', id: vimeoMatch[1] }
   }
 
   if (/\.(mp4|webm|ogg)$/i.test(url)) {
-    return { type: "direct", id: url }
+    return { type: 'direct', id: url }
   }
 
   return null
@@ -308,7 +331,7 @@ function VideoPlayer({ url }: { url: string }) {
     )
   }
 
-  if (embed.type === "youtube") {
+  if (embed.type === 'youtube') {
     return (
       <div className="relative aspect-video rounded-lg overflow-hidden my-6">
         <iframe
@@ -321,7 +344,7 @@ function VideoPlayer({ url }: { url: string }) {
     )
   }
 
-  if (embed.type === "vimeo") {
+  if (embed.type === 'vimeo') {
     return (
       <div className="relative aspect-video rounded-lg overflow-hidden my-6">
         <iframe
@@ -378,24 +401,24 @@ function QuizBlock({
               disabled={submitted}
               className={`w-full text-left px-4 py-3 rounded-lg border transition-colors ${
                 showCorrect
-                  ? "border-green-500 bg-green-50 text-green-800"
+                  ? 'border-green-500 bg-green-50 text-green-800'
                   : showIncorrect
-                    ? "border-red-500 bg-red-50 text-red-800"
+                    ? 'border-red-500 bg-red-50 text-red-800'
                     : isSelected
-                      ? "border-cyan-500 bg-cyan-50 text-slate-900"
-                      : "border-slate-200 hover:border-slate-300 text-slate-700"
-              } ${submitted ? "cursor-default" : "cursor-pointer"}`}
+                      ? 'border-cyan-500 bg-cyan-50 text-slate-900'
+                      : 'border-slate-200 hover:border-slate-300 text-slate-700'
+              } ${submitted ? 'cursor-default' : 'cursor-pointer'}`}
             >
               <div className="flex items-center gap-3">
                 <div
                   className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
                     showCorrect
-                      ? "border-green-500 bg-green-500"
+                      ? 'border-green-500 bg-green-500'
                       : showIncorrect
-                        ? "border-red-500 bg-red-500"
+                        ? 'border-red-500 bg-red-500'
                         : isSelected
-                          ? "border-cyan-500 bg-cyan-500"
-                          : "border-slate-300"
+                          ? 'border-cyan-500 bg-cyan-500'
+                          : 'border-slate-300'
                   }`}
                 >
                   {(isSelected || showCorrect) && (
@@ -418,9 +441,13 @@ function QuizBlock({
         </button>
       )}
       {submitted && (
-        <div className={`mt-4 p-3 rounded ${isCorrect ? "bg-green-50 text-green-800" : "bg-red-50 text-red-800"}`}>
+        <div
+          className={`mt-4 p-3 rounded ${isCorrect ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}
+        >
           <p className="text-sm font-medium">
-            {isCorrect ? "Correct!" : `Incorrect. The correct answer is: ${options[correctAnswer ?? 0]}`}
+            {isCorrect
+              ? 'Correct!'
+              : `Incorrect. The correct answer is: ${options[correctAnswer ?? 0]}`}
           </p>
         </div>
       )}
@@ -443,7 +470,7 @@ function QuizBlock({
 function CodeChallenge({
   starterCode,
   solutionCode,
-  language = "cpp",
+  language = 'cpp',
   storageKey,
 }: {
   starterCode: string
@@ -460,12 +487,14 @@ function CodeChallenge({
           Code Challenge
         </h3>
         <div className="space-y-4">
-            <div>
-              <div className="text-sm font-medium text-slate-700 mb-2">Starter Code</div>
+          <div>
+            <div className="text-sm font-medium text-slate-700 mb-2">
+              Starter Code
+            </div>
             <LazyCodeEditor
               initialCode={starterCode}
               language={language}
-              filename={language === "cpp" ? "challenge.ino" : undefined}
+              filename={language === 'cpp' ? 'challenge.ino' : undefined}
               storageKey={storageKey}
               diffAgainst={solutionCode}
               diffTitle="Diff vs Solution"
@@ -474,18 +503,20 @@ function CodeChallenge({
           {solutionCode && (
             <div>
               <button
-                onClick={() => { setShowSolution(!showSolution); }}
+                onClick={() => {
+                  setShowSolution(!showSolution)
+                }}
                 className="text-sm text-cyan-700 hover:text-cyan-600 font-medium"
                 type="button"
               >
-                {showSolution ? "Hide Solution" : "Show Solution"}
+                {showSolution ? 'Hide Solution' : 'Show Solution'}
               </button>
               {showSolution && (
                 <div className="mt-2">
                   <LazyCodeEditor
                     initialCode={solutionCode}
                     language={language}
-                    filename={language === "cpp" ? "solution.ino" : undefined}
+                    filename={language === 'cpp' ? 'solution.ino' : undefined}
                     readOnly
                   />
                 </div>
@@ -501,7 +532,7 @@ function CodeChallenge({
 export function LessonContent({
   content,
   contentBlocks,
-  lessonType = "content",
+  lessonType = 'content',
   videoUrl,
   codeStarter,
   codeSolution,
@@ -511,9 +542,12 @@ export function LessonContent({
   const [checkedItems, setCheckedItems] = useState<Set<number>>(new Set())
   let checkboxIndex = 0
   const isCalloutVariant = (
-    value: string
-  ): value is "tip" | "warning" | "info" | "danger" =>
-    value === "tip" || value === "warning" || value === "info" || value === "danger"
+    value: string,
+  ): value is 'tip' | 'warning' | 'info' | 'danger' =>
+    value === 'tip' ||
+    value === 'warning' ||
+    value === 'info' ||
+    value === 'danger'
 
   const toggleCheckbox = useCallback((index: number) => {
     setCheckedItems((prev) => {
@@ -524,113 +558,85 @@ export function LessonContent({
     })
   }, [])
 
-  const markdownComponents: Components = {
-      h2: ({ children }) => (
-        <h2 className="font-mono text-2xl text-slate-900 mt-8 mb-4">{children}</h2>
-      ),
-      h3: ({ children }) => (
-        <h3 className="font-mono text-xl text-slate-900 mt-6 mb-3">{children}</h3>
-      ),
-      p: ({ children }) => (
-        <p className="text-slate-600 mb-4">{children}</p>
-      ),
-      ul: ({ children }) => (
-        <ul className="list-disc list-inside space-y-2 text-slate-600 mb-6">{children}</ul>
-      ),
-      ol: ({ children }) => (
-        <ol className="list-decimal list-inside space-y-2 text-slate-600 mb-6">{children}</ol>
-      ),
-      li: ({ children }) => (
-        <li className="text-slate-600">{children}</li>
-      ),
-      blockquote: ({ children }) => (
-        <blockquote className="border-l-4 border-cyan-500 bg-slate-50 pl-4 py-2 my-4 italic text-slate-600">
-          {children}
-        </blockquote>
-      ),
-      a: ({ href, children }) => {
-        const safeHref = sanitizeMarkdownUrl(href, "href")
-        if (!safeHref) return <span>{children}</span>
-        const external = isExternalHref(safeHref)
-        return (
-          <a
-            href={safeHref}
-            target={external ? "_blank" : undefined}
-            rel={external ? "noopener noreferrer" : undefined}
-            className="text-cyan-700 hover:underline"
-          >
-            {children}
-          </a>
-        )
-      },
-      strong: ({ children }) => <strong>{children}</strong>,
-      em: ({ children }) => <em>{children}</em>,
-      div: ({
-        children,
-        ...props
-      }: ComponentPropsWithoutRef<"div"> & { "data-callout"?: string }) => {
-        const calloutType = props["data-callout"]
-        if (calloutType && isCalloutVariant(calloutType)) {
-          return <Callout variant={calloutType}>{children}</Callout>
-        }
-        return <div {...props}>{children}</div>
-      },
-      code: ({ className, children }) => {
-        const match = /language-(\w+)/.exec((className || ""))
-        const isInline = !match
-
-        if (isInline) {
-          const inlineText =
-            typeof children === "string" || typeof children === "number"
-              ? String(children)
-              : Array.isArray(children)
-                ? children
-                    .map((c) =>
-                      typeof c === "string" || typeof c === "number" ? String(c) : ""
-                    )
-                    .join("")
-                : ""
-          return (
-            <code className="bg-slate-100 px-1.5 py-0.5 rounded font-mono text-sm">
-              {inlineText}
-            </code>
-          )
-        }
-
-        const language = match ? match[1] : "text"
-        const codeText =
-          typeof children === "string"
-            ? children
-            : Array.isArray(children)
-              ? children.join("")
-              : ""
-        return <CodeBlock code={codeText.replace(/\n$/, "")} language={language} />
-      },
-      pre: ({ children }) => <>{children}</>,
-      input: ({ type, checked, ...props }: ComponentPropsWithoutRef<"input">) => {
-        if (type === "checkbox") {
-          const index = checkboxIndex++
-          const isChecked = checkedItems.has(index)
-
-          return (
-            <button
-              type="button"
-              role="checkbox"
-              aria-checked={isChecked}
-              onClick={() => { toggleCheckbox(index); }}
-              className="inline-flex items-center justify-center w-5 h-5 mr-2 align-text-bottom rounded border border-slate-300 bg-white hover:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 transition-colors cursor-pointer"
-            >
-              {isChecked ? (
-                <CheckSquare className="w-4 h-4 text-cyan-600" />
-              ) : (
-                <Square className="w-4 h-4 text-slate-300" />
-              )}
-            </button>
-          )
-        }
-        return <input type={type} checked={checked} {...props} />
-      },
+  const getInlineCodeText = (value: React.ReactNode) => {
+    if (typeof value === 'string' || typeof value === 'number') {
+      return String(value)
     }
+    if (Array.isArray(value)) {
+      return value
+        .map((item) =>
+          typeof item === 'string' || typeof item === 'number'
+            ? String(item)
+            : '',
+        )
+        .join('')
+    }
+    return ''
+  }
+
+  const markdownComponents: Components = createMarkdownComponents(markdownStyles, {
+    strong: ({ children }) => <strong>{children}</strong>,
+    em: ({ children }) => <em>{children}</em>,
+    div: ({
+      children,
+      ...props
+    }: ComponentPropsWithoutRef<'div'> & { 'data-callout'?: string }) => {
+      const calloutType = props['data-callout']
+      if (calloutType && isCalloutVariant(calloutType)) {
+        return <Callout variant={calloutType}>{children}</Callout>
+      }
+      return <div {...props}>{children}</div>
+    },
+    code: ({ className, children }) => {
+      const match = /language-(\w+)/.exec(className || '')
+      const isInline = !match
+
+      if (isInline) {
+        return (
+          <code className={inlineCodeClassName}>
+            {getInlineCodeText(children)}
+          </code>
+        )
+      }
+
+      const language = match ? match[1] : 'text'
+      const codeText =
+        typeof children === 'string'
+          ? children
+          : Array.isArray(children)
+            ? children.join('')
+            : ''
+      return (
+        <CodeBlock code={codeText.replace(/\n$/, '')} language={language} />
+      )
+    },
+    pre: ({ children }) => <>{children}</>,
+    input: ({ type, checked, ...props }: ComponentPropsWithoutRef<'input'>) => {
+      if (type === 'checkbox') {
+        const index = checkboxIndex++
+        const isChecked = checkedItems.has(index)
+
+        return (
+          <button
+            type="button"
+            role="checkbox"
+            aria-checked={isChecked}
+            onClick={() => {
+              toggleCheckbox(index)
+            }}
+            className="inline-flex items-center justify-center w-5 h-5 mr-2 align-text-bottom rounded border border-slate-300 bg-white hover:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 transition-colors cursor-pointer"
+          >
+            {isChecked ? (
+              <CheckSquare className="w-4 h-4 text-cyan-600" />
+            ) : (
+              <Square className="w-4 h-4 text-slate-300" />
+            )}
+          </button>
+        )
+      }
+      return <input type={type} checked={checked} {...props} />
+    },
+  })
 
   const renderMarkdown = (markdown: string) => (
     <ReactMarkdown
@@ -647,42 +653,52 @@ export function LessonContent({
       <div className="space-y-8">
         {blocks.map((block, index) => {
           if (!isRecord(block)) return null
-          const type = asString(block.type) || "text"
+          const type = asString(block.type) || 'text'
 
-          if (type === "text") {
-            const md = asString(block.content) || ""
+          if (type === 'text') {
+            const md = asString(block.content) || ''
             return (
-              <article key={(asString(block.id) || String(index))} className="prose prose-slate max-w-none">
+              <article
+                key={asString(block.id) || String(index)}
+                className="prose prose-slate max-w-none"
+              >
                 {renderMarkdown(md)}
               </article>
             )
           }
 
-          if (type === "heading") {
+          if (type === 'heading') {
             const level = asNumber(block.level) || 2
-            const text = asString(block.content) || ""
-            const Tag: "h2" | "h3" | "h4" = level === 1 ? "h2" : level === 2 ? "h3" : "h4"
+            const text = asString(block.content) || ''
+            const Tag: 'h2' | 'h3' | 'h4' =
+              level === 1 ? 'h2' : level === 2 ? 'h3' : 'h4'
             const className =
               level === 1
-                ? "font-mono text-2xl text-slate-900 mt-8 mb-4"
+                ? 'font-mono text-2xl text-slate-900 mt-8 mb-4'
                 : level === 2
-                  ? "font-mono text-xl text-slate-900 mt-6 mb-3"
-                  : "font-mono text-lg text-slate-900 mt-4 mb-2"
+                  ? 'font-mono text-xl text-slate-900 mt-6 mb-3'
+                  : 'font-mono text-lg text-slate-900 mt-4 mb-2'
             return (
-              <Tag key={(asString(block.id) || String(index))} className={className}>
+              <Tag
+                key={asString(block.id) || String(index)}
+                className={className}
+              >
                 {text}
               </Tag>
             )
           }
 
-          if (type === "image") {
+          if (type === 'image') {
             const url = asString(block.url)
             if (!url) return null
             const resolvedUrl = resolveLearnAssetUrl(url)
-            const alt = asString(block.alt) || ""
+            const alt = asString(block.alt) || ''
             const caption = asString(block.caption)
             return (
-              <figure key={(asString(block.id) || String(index))} className="my-6">
+              <figure
+                key={asString(block.id) || String(index)}
+                className="my-6"
+              >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={resolvedUrl}
@@ -691,64 +707,90 @@ export function LessonContent({
                   loading="lazy"
                 />
                 {caption && (
-                  <figcaption className="text-xs text-slate-500 mt-2">{caption}</figcaption>
+                  <figcaption className="text-xs text-slate-500 mt-2">
+                    {caption}
+                  </figcaption>
                 )}
               </figure>
             )
           }
 
-          if (type === "video") {
+          if (type === 'video') {
             const url = asString(block.url)
             if (!url) return null
-            return <VideoPlayer key={(asString(block.id) || String(index))} url={url} />
+            return (
+              <VideoPlayer
+                key={asString(block.id) || String(index)}
+                url={url}
+              />
+            )
           }
 
-          if (type === "code") {
-            const code = asString(block.code) || ""
-            const language = asString(block.language) || "text"
+          if (type === 'code') {
+            const code = asString(block.code) || ''
+            const language = asString(block.language) || 'text'
             const filename = asString(block.filename) || undefined
             return (
-              <div key={(asString(block.id) || String(index))}>
-                <CodeBlock code={code} language={language} filename={filename} />
+              <div key={asString(block.id) || String(index)}>
+                <CodeBlock
+                  code={code}
+                  language={language}
+                  filename={filename}
+                />
               </div>
             )
           }
 
-          if (type === "callout") {
-            const variant = (asString(block.variant) || "info") as "tip" | "warning" | "info" | "danger"
-            const md = asString(block.content) || ""
+          if (type === 'callout') {
+            const variant = (asString(block.variant) || 'info') as
+              | 'tip'
+              | 'warning'
+              | 'info'
+              | 'danger'
+            const md = asString(block.content) || ''
             return (
-              <Callout key={(asString(block.id) || String(index))} variant={variant}>
+              <Callout
+                key={asString(block.id) || String(index)}
+                variant={variant}
+              >
                 {renderMarkdown(md)}
               </Callout>
             )
           }
 
-          if (type === "download") {
+          if (type === 'download') {
             const url = asString(block.url)
             if (!url) return null
             const resolvedUrl = resolveLearnAssetUrl(url)
-            const filename = asString(block.filename) || "Download"
+            const filename = asString(block.filename) || 'Download'
             const description = asString(block.description)
-            const ext = filename.split(".").pop()?.toLowerCase() || ""
+            const ext = filename.split('.').pop()?.toLowerCase() || ''
             const fileTypeLabel =
-              ext === "ino" ? "Arduino Sketch"
-                : ext === "pdf" ? "PDF Document"
-                  : ext === "stl" ? "3D Model"
-                    : ext === "zip" ? "Archive"
-                      : "File"
+              ext === 'ino'
+                ? 'Arduino Sketch'
+                : ext === 'pdf'
+                  ? 'PDF Document'
+                  : ext === 'stl'
+                    ? '3D Model'
+                    : ext === 'zip'
+                      ? 'Archive'
+                      : 'File'
             return (
               <div
-                key={(asString(block.id) || String(index))}
+                key={asString(block.id) || String(index)}
                 className="rounded border border-slate-200 bg-white p-4 flex items-center gap-4"
               >
                 <div className="flex-shrink-0 w-12 h-12 rounded bg-cyan-50 flex items-center justify-center">
                   <Download className="w-6 h-6 text-cyan-700" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-mono text-sm font-medium text-slate-900 truncate">{filename}</p>
+                  <p className="font-mono text-sm font-medium text-slate-900 truncate">
+                    {filename}
+                  </p>
                   <p className="text-xs text-slate-500">{fileTypeLabel}</p>
-                  {description && <p className="text-sm text-slate-600 mt-1">{description}</p>}
+                  {description && (
+                    <p className="text-sm text-slate-600 mt-1">{description}</p>
+                  )}
                 </div>
                 <a
                   href={resolvedUrl}
@@ -762,12 +804,13 @@ export function LessonContent({
             )
           }
 
-          if (type === "quiz") {
-            const question = asString(block.question) || "Quiz"
+          if (type === 'quiz') {
+            const question = asString(block.question) || 'Quiz'
             const options = Array.isArray(block.options)
-              ? block.options.filter((o): o is string => typeof o === "string")
+              ? block.options.filter((o): o is string => typeof o === 'string')
               : []
-            const correctAnswer = asNumber(block.correctAnswer) ?? asNumber(block.correct_answer)
+            const correctAnswer =
+              asNumber(block.correctAnswer) ?? asNumber(block.correct_answer)
             const blockId = asString(block.id) || `quiz-${index}`
             return (
               <QuizBlock
@@ -779,10 +822,10 @@ export function LessonContent({
             )
           }
 
-          if (type === "interactive_code") {
-            const starter = asString(block.starterCode) || ""
+          if (type === 'interactive_code') {
+            const starter = asString(block.starterCode) || ''
             const solution = asString(block.solutionCode)
-            const language = asString(block.language) || "cpp"
+            const language = asString(block.language) || 'cpp'
             const blockId = asString(block.id) || `block-${index}`
             return (
               <CodeChallenge
@@ -795,18 +838,21 @@ export function LessonContent({
             )
           }
 
-          if (type === "diagram") {
-            const flowValue =
-              isRecord(block.flowData) ? block.flowData : (block as unknown)
+          if (type === 'diagram') {
+            const flowValue = isRecord(block.flowData)
+              ? block.flowData
+              : (block as unknown)
             return (
-              <div key={(asString(block.id) || String(index))} className="my-6">
+              <div key={asString(block.id) || String(index)} className="my-6">
                 <LazyFlowViewer value={flowValue} />
               </div>
             )
           }
 
-          if (type === "visual_blocks") {
-            const starterFlow = isRecord(block.flowData) ? block.flowData : (block as unknown)
+          if (type === 'visual_blocks') {
+            const starterFlow = isRecord(block.flowData)
+              ? block.flowData
+              : (block as unknown)
             const solutionFlow = isRecord(block.solutionFlowData)
               ? block.solutionFlowData
               : isRecord(block.solution)
@@ -814,7 +860,7 @@ export function LessonContent({
                 : undefined
             return (
               <LazyVisualBlocksChallenge
-                key={(asString(block.id) || String(index))}
+                key={asString(block.id) || String(index)}
                 starterFlow={starterFlow}
                 solutionFlow={solutionFlow}
               />
@@ -823,7 +869,7 @@ export function LessonContent({
 
           return (
             <div
-              key={(asString(block.id) || String(index))}
+              key={asString(block.id) || String(index)}
               className="rounded border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-600"
             >
               Unsupported block type: <span className="font-mono">{type}</span>
@@ -841,13 +887,20 @@ export function LessonContent({
       ) : (
         <>
           {videoUrl && <VideoPlayer url={videoUrl} />}
-          <article className="prose prose-slate max-w-none">{renderMarkdown(content)}</article>
+          <article className="prose prose-slate max-w-none">
+            {renderMarkdown(content)}
+          </article>
         </>
       )}
 
-      {lessonType === "code_challenge" && codeStarter && blocks.length === 0 && (
-        <CodeChallenge starterCode={codeStarter} solutionCode={codeSolution} />
-      )}
+      {lessonType === 'code_challenge' &&
+        codeStarter &&
+        blocks.length === 0 && (
+          <CodeChallenge
+            starterCode={codeStarter}
+            solutionCode={codeSolution}
+          />
+        )}
     </div>
   )
 }

@@ -17,7 +17,10 @@ export function useReducedMotion(): boolean {
   )
 
   useEffect(() => {
-    if (globalThis.window === undefined || globalThis.matchMedia === undefined) {
+    if (
+      globalThis.window === undefined ||
+      globalThis.matchMedia === undefined
+    ) {
       return
     }
 
@@ -28,7 +31,9 @@ export function useReducedMotion(): boolean {
     }
 
     mediaQuery.addEventListener('change', handler)
-    return () => { mediaQuery.removeEventListener('change', handler); }
+    return () => {
+      mediaQuery.removeEventListener('change', handler)
+    }
   }, [])
 
   return prefersReducedMotion

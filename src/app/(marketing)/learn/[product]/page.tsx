@@ -1,6 +1,6 @@
-import { createClient } from "@/lib/supabase/server"
-import { formatDuration } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
+import { createClient } from '@/lib/supabase/server'
+import { formatDuration } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
 import {
   Award,
   BookOpen,
@@ -11,32 +11,37 @@ import {
   Lock,
   ArrowLeft,
   Package,
-} from "lucide-react"
-import Link from "next/link"
-import { notFound } from "next/navigation"
-import { getCourseSchema, getBreadcrumbSchema, jsonLdScript } from "@/lib/structured-data"
-import { AnimatedProgressFill } from "@/components/learn/AnimatedProgressFill"
-import { headers } from "next/headers"
+} from 'lucide-react'
+import Link from 'next/link'
+import { notFound } from 'next/navigation'
+import {
+  getCourseSchema,
+  getBreadcrumbSchema,
+  jsonLdScript,
+} from '@/lib/structured-data'
+import { AnimatedProgressFill } from '@/components/learn/AnimatedProgressFill'
+import { headers } from 'next/headers'
+import { resolveParams, type MaybePromise } from '@/lib/next-params'
 
 export default async function CoursePage({
   params,
 }: {
-  params: Promise<{ product: string }>
+  params: MaybePromise<{ product: string }>
 }) {
-  const nonce = (await headers()).get("x-nonce") ?? undefined
-  const { product: productSlug } = await params
+  const nonce = (await headers()).get('x-nonce') ?? undefined
+  const { product: productSlug } = await resolveParams(params)
   const supabase = await createClient()
 
   // First fetch the product by slug
   const { data: product, error: productError } = await supabase
-    .from("products")
-    .select("id, slug, name")
-    .eq("slug", productSlug)
+    .from('products')
+    .select('id, slug, name')
+    .eq('slug', productSlug)
     .maybeSingle()
 
   if (productError) {
-    console.error("Error fetching product:", productError)
-    throw new Error("Failed to load product")
+    console.error('Error fetching product:', productError)
+    throw new Error('Failed to load product')
   }
 
   if (!product) {
@@ -45,8 +50,9 @@ export default async function CoursePage({
 
   // Then fetch the course by product_id
   const { data: course, error } = await supabase
-    .from("courses")
-    .select(`
+    .from('courses')
+    .select(
+      `
       id,
       title,
       description,
@@ -70,14 +76,15 @@ export default async function CoursePage({
           sort_order
         )
       )
-    `)
-    .eq("product_id", product.id)
-    .eq("is_published", true)
+    `,
+    )
+    .eq('product_id', product.id)
+    .eq('is_published', true)
     .maybeSingle()
 
   if (error) {
-    console.error("Error fetching course:", error)
-    throw new Error("Failed to load course")
+    console.error('Error fetching course:', error)
+    throw new Error('Failed to load course')
   }
 
   if (!course) {
@@ -85,25 +92,37 @@ export default async function CoursePage({
   }
 
   // Sort modules and lessons by sort_order
-	  interface ModuleWithLessons {
-	    id: string
-	    title: string
-	    description: string | null
-	    sort_order: number
-      is_published: boolean | null
-	    lessons: { id: string; slug: string; title: string; description: string | null; is_published: boolean | null; is_optional: boolean; duration_minutes: number; sort_order: number }[] | null
-	  }
+  interface ModuleWithLessons {
+    id: string
+    title: string
+    description: string | null
+    sort_order: number
+    is_published: boolean | null
+    lessons:
+      | {
+          id: string
+          slug: string
+          title: string
+          description: string | null
+          is_published: boolean | null
+          is_optional: boolean
+          duration_minutes: number
+          sort_order: number
+        }[]
+      | null
+  }
   const modules = course.modules as unknown as ModuleWithLessons[] | null
-  const sortedModules = modules
-    ?.filter((m) => m.is_published !== false)
-    ?.sort((a, b) => a.sort_order - b.sort_order)
-    .map((mod) => ({
-      ...mod,
-      lessons:
-        mod.lessons
-          ?.filter((l) => l.is_published !== false)
-          .sort((a, b) => a.sort_order - b.sort_order) || [],
-    })) || []
+  const sortedModules =
+    modules
+      ?.filter((m) => m.is_published !== false)
+      ?.sort((a, b) => a.sort_order - b.sort_order)
+      .map((mod) => ({
+        ...mod,
+        lessons:
+          mod.lessons
+            ?.filter((l) => l.is_published !== false)
+            .sort((a, b) => a.sort_order - b.sort_order) || [],
+      })) || []
 
   const {
     data: { user },
@@ -113,12 +132,12 @@ export default async function CoursePage({
   let isOwned = false
   let completedLessonIds: string[] = []
   if (user) {
-    // Use limit(1) instead of single() - user may have multiple licenses for same product
+    // Use limit(1) instead of single(), multiple licenses possible.
     const { data: licenses } = await supabase
-      .from("licenses")
-      .select("id")
-      .eq("owner_id", user.id)
-      .eq("product_id", product.id)
+      .from('licenses')
+      .select('id')
+      .eq('owner_id', user.id)
+      .eq('product_id', product.id)
       .limit(1)
 
     if (licenses && licenses.length > 0) {
@@ -126,9 +145,9 @@ export default async function CoursePage({
 
       // Fetch completed lessons for this user
       const { data: progress } = await supabase
-        .from("lesson_progress")
-        .select("lesson_id")
-        .eq("user_id", user.id)
+        .from('lesson_progress')
+        .select('lesson_id')
+        .eq('user_id', user.id)
 
       if (progress) {
         completedLessonIds = progress.map((p) => p.lesson_id)
@@ -142,29 +161,31 @@ export default async function CoursePage({
   const totalLessons = allLessons.length
   const totalRequiredLessons = requiredLessons.length
   const completedRequiredCount = requiredLessons.filter((l) =>
-    completedLessonIds.includes(l.id)
+    completedLessonIds.includes(l.id),
   ).length
-  const progressPercent = totalRequiredLessons > 0
-    ? Math.round((completedRequiredCount / totalRequiredLessons) * 100)
-    : 0
+  const progressPercent =
+    totalRequiredLessons > 0
+      ? Math.round((completedRequiredCount / totalRequiredLessons) * 100)
+      : 0
 
   const courseCtaLabel =
     progressPercent >= 100
-      ? "Review Course"
+      ? 'Review Course'
       : progressPercent > 0
-        ? "Continue Course"
-        : "Start Course"
+        ? 'Continue Course'
+        : 'Start Course'
 
   // Get first incomplete required lesson (optional lessons don't block completion)
   const firstIncompleteLesson = requiredLessons.find(
-    (lesson) => !completedLessonIds.includes(lesson.id)
+    (lesson) => !completedLessonIds.includes(lesson.id),
   )
-  const firstLesson = firstIncompleteLesson || requiredLessons[0] || allLessons[0]
+  const firstLesson =
+    firstIncompleteLesson || requiredLessons[0] || allLessons[0]
 
   // Generate structured data for SEO
   const courseSchema = getCourseSchema({
     name: course.title,
-    description: course.description || "",
+    description: course.description || '',
     slug: product.slug,
     difficulty: course.difficulty || undefined,
     duration: formatDuration(course.duration_minutes),
@@ -175,22 +196,22 @@ export default async function CoursePage({
   })
 
   const breadcrumbSchema = getBreadcrumbSchema([
-    { name: "Home", url: "/" },
-    { name: "Learn", url: "/learn" },
+    { name: 'Home', url: '/' },
+    { name: 'Learn', url: '/learn' },
     { name: course.title, url: `/learn/${product.slug}` },
   ])
 
-	  return (
-	    <div className="bg-slate-50">
-	      {/* JSON-LD Structured Data for SEO */}
-	      <script nonce={nonce} type="application/ld+json">
-	        {jsonLdScript(courseSchema)}
-	      </script>
-	      <script nonce={nonce} type="application/ld+json">
-	        {jsonLdScript(breadcrumbSchema)}
-	      </script>
-	      {/* Header */}
-	      <section className="pt-32 pb-8 px-6 lg:px-20 bg-white border-b border-slate-200">
+  return (
+    <div className="bg-slate-50">
+      {/* JSON-LD Structured Data for SEO */}
+      <script nonce={nonce} type="application/ld+json">
+        {jsonLdScript(courseSchema)}
+      </script>
+      <script nonce={nonce} type="application/ld+json">
+        {jsonLdScript(breadcrumbSchema)}
+      </script>
+      {/* Header */}
+      <section className="pt-32 pb-8 px-6 lg:px-20 bg-white border-b border-slate-200">
         <div className="max-w-7xl mx-auto">
           <Link
             href="/learn"
@@ -245,17 +266,20 @@ export default async function CoursePage({
                     </div>
                     <p className="text-sm text-slate-500">completed</p>
                   </div>
-	                  <div className="h-2 bg-slate-200 rounded-full overflow-hidden mb-6">
-	                    {user && (
-	                      <AnimatedProgressFill
-	                        progress={progressPercent}
-	                        storageKey={`learn:${user.id}:course:${course.id}:progress`}
-	                        className="h-full bg-cyan-700 rounded-full"
-	                      />
-	                    )}
-	                  </div>
+                  <div className="h-2 bg-slate-200 rounded-full overflow-hidden mb-6">
+                    {user && (
+                      <AnimatedProgressFill
+                        progress={progressPercent}
+                        storageKey={`learn:${user.id}:course:${course.id}:progress`}
+                        className="h-full bg-cyan-700 rounded-full"
+                      />
+                    )}
+                  </div>
                   {firstLesson && (
-                    <Button asChild className="w-full bg-cyan-700 hover:bg-cyan-600 text-white font-mono">
+                    <Button
+                      asChild
+                      className="w-full bg-cyan-700 hover:bg-cyan-600 text-white font-mono"
+                    >
                       <Link href={`/learn/${product.slug}/${firstLesson.slug}`}>
                         {courseCtaLabel}
                         <ChevronRight className="w-4 h-4 ml-2" />
@@ -268,7 +292,10 @@ export default async function CoursePage({
                       variant="outline"
                       className="w-full mt-3 border-cyan-700 text-cyan-700 hover:bg-cyan-50 font-mono"
                     >
-                      <a href={`/api/certificate?courseId=${course.id}`} download>
+                      <a
+                        href={`/api/certificate?courseId=${course.id}`}
+                        download
+                      >
                         <Award className="w-4 h-4 mr-2" />
                         Download Certificate
                       </a>
@@ -283,15 +310,21 @@ export default async function CoursePage({
                       Kit required to access lessons
                     </span>
                   </div>
-                  <Button asChild className="w-full bg-cyan-700 hover:bg-cyan-600 text-white font-mono">
+                  <Button
+                    asChild
+                    className="w-full bg-cyan-700 hover:bg-cyan-600 text-white font-mono"
+                  >
                     <Link href={`/shop/${product.slug}`}>
                       Get the Kit
                       <ChevronRight className="w-4 h-4 ml-2" />
                     </Link>
                   </Button>
                   <p className="text-xs text-slate-500 text-center mt-3">
-                    Already have a kit?{" "}
-                    <Link href="/workshop" className="text-cyan-700 hover:underline">
+                    Already have a kit?{' '}
+                    <Link
+                      href="/workshop"
+                      className="text-cyan-700 hover:underline"
+                    >
                       Claim your code
                     </Link>
                   </p>
@@ -332,8 +365,8 @@ export default async function CoursePage({
                         key={lesson.id}
                         className={`flex items-center gap-4 p-4 ${
                           isAccessible
-                            ? "hover:bg-slate-50 cursor-pointer"
-                            : "opacity-60"
+                            ? 'hover:bg-slate-50 cursor-pointer'
+                            : 'opacity-60'
                         }`}
                       >
                         {/* Status Icon */}

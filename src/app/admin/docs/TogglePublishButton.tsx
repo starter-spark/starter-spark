@@ -1,16 +1,19 @@
-"use client"
+'use client'
 
-import { useState } from "react"
-import { Eye, EyeOff } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { toggleDocPagePublished } from "./actions"
+import { useState } from 'react'
+import { Eye, EyeOff } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { toggleDocPagePublished } from './actions'
 
 interface TogglePublishButtonProps {
   pageId: string
   isPublished: boolean
 }
 
-export function TogglePublishButton({ pageId, isPublished }: TogglePublishButtonProps) {
+export function TogglePublishButton({
+  pageId,
+  isPublished,
+}: TogglePublishButtonProps) {
   const [isUpdating, setIsUpdating] = useState(false)
   const [currentState, setCurrentState] = useState(isPublished)
 
@@ -24,7 +27,7 @@ export function TogglePublishButton({ pageId, isPublished }: TogglePublishButton
         setCurrentState(!currentState)
       }
     } catch {
-      alert("Failed to update page")
+      alert('Failed to update page')
     } finally {
       setIsUpdating(false)
     }
@@ -36,10 +39,14 @@ export function TogglePublishButton({ pageId, isPublished }: TogglePublishButton
       size="sm"
       onClick={() => void handleToggle()}
       disabled={isUpdating}
-      className={currentState ? "text-green-600" : "text-slate-400"}
-      title={currentState ? "Click to unpublish" : "Click to publish"}
+      className={currentState ? 'text-green-600' : 'text-slate-400'}
+      title={currentState ? 'Click to unpublish' : 'Click to publish'}
     >
-      {currentState ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+      {currentState ? (
+        <Eye className="w-4 h-4" />
+      ) : (
+        <EyeOff className="w-4 h-4" />
+      )}
     </Button>
   )
 }

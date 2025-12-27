@@ -1,9 +1,9 @@
-"use client"
+'use client'
 
-import { useState, useCallback, useEffect, useRef } from "react"
-import { Calculator, X, RotateCcw } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { useState, useCallback, useEffect, useRef } from 'react'
+import { Calculator, X, RotateCcw } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
 interface ServoCalculatorProps {
   isOpen: boolean
@@ -11,9 +11,9 @@ interface ServoCalculatorProps {
 }
 
 export function ServoCalculator({ isOpen, onClose }: ServoCalculatorProps) {
-  const [angle, setAngle] = useState<string>("90")
-  const [minPulse, setMinPulse] = useState<string>("500")
-  const [maxPulse, setMaxPulse] = useState<string>("2500")
+  const [angle, setAngle] = useState<string>('90')
+  const [minPulse, setMinPulse] = useState<string>('500')
+  const [maxPulse, setMaxPulse] = useState<string>('2500')
   const dialogRef = useRef<HTMLDivElement>(null)
 
   // Handle Escape key and focus trap
@@ -21,7 +21,7 @@ export function ServoCalculator({ isOpen, onClose }: ServoCalculatorProps) {
     if (!isOpen) return
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
+      if (e.key === 'Escape') {
         onClose()
       }
     }
@@ -29,8 +29,10 @@ export function ServoCalculator({ isOpen, onClose }: ServoCalculatorProps) {
     // Focus the dialog when opened
     dialogRef.current?.focus()
 
-    document.addEventListener("keydown", handleKeyDown)
-    return () => { document.removeEventListener("keydown", handleKeyDown); }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+    }
   }, [isOpen, onClose])
 
   const calculatePulseWidth = useCallback(() => {
@@ -41,7 +43,7 @@ export function ServoCalculator({ isOpen, onClose }: ServoCalculatorProps) {
     // Clamp angle between 0 and 180
     const clampedAngle = Math.max(0, Math.min(180, angleNum))
 
-    // Linear interpolation: pulse = min + (angle/180) * (max - min)
+    // Linear interpolation: pulse = min + (angle/180) * (max-min)
     const pulseWidth = minNum + (clampedAngle / 180) * (maxNum - minNum)
     return Math.round(pulseWidth)
   }, [angle, minPulse, maxPulse])
@@ -53,9 +55,9 @@ export function ServoCalculator({ isOpen, onClose }: ServoCalculatorProps) {
   }, [calculatePulseWidth])
 
   const reset = () => {
-    setAngle("90")
-    setMinPulse("500")
-    setMaxPulse("2500")
+    setAngle('90')
+    setMinPulse('500')
+    setMaxPulse('2500')
   }
 
   if (!isOpen) return null
@@ -72,13 +74,20 @@ export function ServoCalculator({ isOpen, onClose }: ServoCalculatorProps) {
         ref={dialogRef}
         tabIndex={-1}
         className="bg-white rounded-lg border border-slate-200 w-full max-w-md shadow-xl outline-none"
-        onClick={(e) => { e.stopPropagation(); }}
+        onClick={(e) => {
+          e.stopPropagation()
+        }}
       >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-slate-200">
           <div className="flex items-center gap-2">
             <Calculator className="w-5 h-5 text-cyan-700" />
-            <h2 id="servo-calculator-title" className="font-mono text-lg text-slate-900">Servo Calculator</h2>
+            <h2
+              id="servo-calculator-title"
+              className="font-mono text-lg text-slate-900"
+            >
+              Servo Calculator
+            </h2>
           </div>
           <button
             onClick={onClose}
@@ -99,7 +108,9 @@ export function ServoCalculator({ isOpen, onClose }: ServoCalculatorProps) {
             <Input
               type="number"
               value={angle}
-              onChange={(e) => { setAngle(e.target.value); }}
+              onChange={(e) => {
+                setAngle(e.target.value)
+              }}
               min={0}
               max={180}
               className="font-mono"
@@ -116,7 +127,9 @@ export function ServoCalculator({ isOpen, onClose }: ServoCalculatorProps) {
               <Input
                 type="number"
                 value={minPulse}
-                onChange={(e) => { setMinPulse(e.target.value); }}
+                onChange={(e) => {
+                  setMinPulse(e.target.value)
+                }}
                 className="font-mono"
                 placeholder="500"
               />
@@ -128,7 +141,9 @@ export function ServoCalculator({ isOpen, onClose }: ServoCalculatorProps) {
               <Input
                 type="number"
                 value={maxPulse}
-                onChange={(e) => { setMaxPulse(e.target.value); }}
+                onChange={(e) => {
+                  setMaxPulse(e.target.value)
+                }}
                 className="font-mono"
                 placeholder="2500"
               />
@@ -164,7 +179,7 @@ export function ServoCalculator({ isOpen, onClose }: ServoCalculatorProps) {
                   className="absolute left-1/2 top-2 origin-bottom"
                   style={{
                     transform: `translateX(-50%) rotate(${(Number.parseFloat(angle) || 90) - 90}deg)`,
-                    transition: "transform 0.3s ease-out",
+                    transition: 'transform 0.3s ease-out',
                   }}
                 >
                   <div className="w-1.5 h-10 bg-cyan-700 rounded-full" />
@@ -172,8 +187,12 @@ export function ServoCalculator({ isOpen, onClose }: ServoCalculatorProps) {
                 </div>
               </div>
               {/* Angle markers */}
-              <div className="absolute left-4 text-xs text-slate-500 font-mono">0°</div>
-              <div className="absolute right-4 text-xs text-slate-500 font-mono">180°</div>
+              <div className="absolute left-4 text-xs text-slate-500 font-mono">
+                0°
+              </div>
+              <div className="absolute right-4 text-xs text-slate-500 font-mono">
+                180°
+              </div>
             </div>
           </div>
 
@@ -183,7 +202,8 @@ export function ServoCalculator({ isOpen, onClose }: ServoCalculatorProps) {
               pulse = min + (angle / 180) × (max - min)
             </p>
             <p className="mt-1">
-              Standard servos expect 50Hz PWM signals with pulse widths typically between 500-2500μs.
+              Standard servos expect 50Hz PWM signals with pulse widths
+              typically between 500-2500μs.
             </p>
           </div>
         </div>

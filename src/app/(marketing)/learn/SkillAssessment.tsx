@@ -1,11 +1,11 @@
-"use client"
+'use client'
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Label } from "@/components/ui/label"
-import { GraduationCap, ArrowRight, Check } from "lucide-react"
-import { createClient } from "@/lib/supabase/client"
+import { useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { Label } from '@/components/ui/label'
+import { GraduationCap, ArrowRight, Check } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
 
 interface SkillAssessmentProps {
   userId: string
@@ -14,33 +14,57 @@ interface SkillAssessmentProps {
 
 const questions = [
   {
-    id: "coding",
-    question: "How much coding experience do you have?",
+    id: 'coding',
+    question: 'How much coding experience do you have?',
     options: [
-      { value: "none", label: "I've never written code", points: 0 },
-      { value: "some", label: "I've done some tutorials or basic projects", points: 1 },
-      { value: "comfortable", label: "I can write simple programs", points: 2 },
-      { value: "experienced", label: "I code regularly", points: 3 },
+      { value: 'none', label: "I've never written code", points: 0 },
+      {
+        value: 'some',
+        label: "I've done some tutorials or basic projects",
+        points: 1,
+      },
+      { value: 'comfortable', label: 'I can write simple programs', points: 2 },
+      { value: 'experienced', label: 'I code regularly', points: 3 },
     ],
   },
   {
-    id: "electronics",
+    id: 'electronics',
     question: "What's your experience with electronics/circuits?",
     options: [
-      { value: "none", label: "Never worked with electronics", points: 0 },
-      { value: "basic", label: "I've done basic projects (LEDs, batteries)", points: 1 },
-      { value: "intermediate", label: "I understand circuits and components", points: 2 },
-      { value: "advanced", label: "I design and build circuits regularly", points: 3 },
+      { value: 'none', label: 'Never worked with electronics', points: 0 },
+      {
+        value: 'basic',
+        label: "I've done basic projects (LEDs, batteries)",
+        points: 1,
+      },
+      {
+        value: 'intermediate',
+        label: 'I understand circuits and components',
+        points: 2,
+      },
+      {
+        value: 'advanced',
+        label: 'I design and build circuits regularly',
+        points: 3,
+      },
     ],
   },
   {
-    id: "arduino",
-    question: "Have you used Arduino or similar microcontrollers?",
+    id: 'arduino',
+    question: 'Have you used Arduino or similar microcontrollers?',
     options: [
-      { value: "never", label: "Never heard of Arduino", points: 0 },
-      { value: "heard", label: "I know what it is but haven't used it", points: 1 },
-      { value: "tried", label: "I've done a few Arduino projects", points: 2 },
-      { value: "experienced", label: "I'm comfortable with Arduino", points: 3 },
+      { value: 'never', label: 'Never heard of Arduino', points: 0 },
+      {
+        value: 'heard',
+        label: "I know what it is but haven't used it",
+        points: 1,
+      },
+      { value: 'tried', label: "I've done a few Arduino projects", points: 2 },
+      {
+        value: 'experienced',
+        label: "I'm comfortable with Arduino",
+        points: 3,
+      },
     ],
   },
 ]
@@ -70,9 +94,9 @@ export function SkillAssessment({ userId, onComplete }: SkillAssessmentProps) {
     }
 
     // Max points = 9 (3 questions * 3 max points)
-    if (totalPoints <= 2) return "beginner"
-    if (totalPoints <= 5) return "intermediate"
-    return "advanced"
+    if (totalPoints <= 2) return 'beginner'
+    if (totalPoints <= 5) return 'intermediate'
+    return 'advanced'
   }
 
   const handleNext = () => {
@@ -82,12 +106,12 @@ export function SkillAssessment({ userId, onComplete }: SkillAssessmentProps) {
       setIsSubmitting(true)
       const skillLevel = calculateSkillLevel()
 
-      // Save to profile - fire and forget, complete regardless
+      // Save to profile, best-effort.
       const supabase = createClient()
       void supabase
-        .from("profiles")
+        .from('profiles')
         .update({ skill_level: skillLevel })
-        .eq("id", userId)
+        .eq('id', userId)
 
       onComplete(skillLevel)
     }
@@ -119,7 +143,7 @@ export function SkillAssessment({ userId, onComplete }: SkillAssessmentProps) {
           <div
             key={i}
             className={`h-1 flex-1 rounded-full ${
-              i <= currentQuestion ? "bg-cyan-700" : "bg-slate-200"
+              i <= currentQuestion ? 'bg-cyan-700' : 'bg-slate-200'
             }`}
           />
         ))}
@@ -135,7 +159,7 @@ export function SkillAssessment({ userId, onComplete }: SkillAssessmentProps) {
 
       {/* Options */}
       <RadioGroup
-        value={currentAnswer || ""}
+        value={currentAnswer || ''}
         onValueChange={handleAnswer}
         className="space-y-3 mb-6"
       >
@@ -159,7 +183,7 @@ export function SkillAssessment({ userId, onComplete }: SkillAssessmentProps) {
         className="w-full bg-cyan-700 hover:bg-cyan-600 text-white font-mono"
       >
         {isSubmitting ? (
-          "Saving..."
+          'Saving...'
         ) : currentQuestion < questions.length - 1 ? (
           <>
             Next

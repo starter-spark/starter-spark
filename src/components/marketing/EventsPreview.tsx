@@ -1,11 +1,30 @@
-"use client"
+'use client'
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { UserAvatar } from "@/components/ui/user-avatar"
-import { Calendar, MapPin, ArrowRight, MessageSquare, Users, PlusCircle, ChevronUp, CheckCircle2, Circle } from "lucide-react"
-import { motion } from "motion/react"
-import Link from "next/link"
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { UserAvatar } from '@/components/ui/user-avatar'
+import {
+  Calendar,
+  MapPin,
+  ArrowRight,
+  MessageSquare,
+  Users,
+  PlusCircle,
+  ChevronUp,
+  CheckCircle2,
+  Circle,
+} from 'lucide-react'
+import { motion } from 'motion/react'
+import Link from 'next/link'
+import { SectionIntro } from './SectionIntro'
+import { cn, formatShortDate } from '@/lib/utils'
+import {
+  ctaGhost,
+  ctaOutline,
+  ctaOutlineSm,
+  ctaPrimary,
+  ctaPrimarySm,
+} from './cta-classes'
 
 export interface Workshop {
   id: string
@@ -60,36 +79,27 @@ interface EventsPreviewSectionProps extends EventsPreviewContentProps {
   }
 }
 
-function formatEventDate(dateString: string): string {
-  const date = new Date(dateString)
-  return date.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  })
-}
-
 export function EventsPreviewSection({
   workshops,
   discussions,
   communityStats,
-  title = "Join the Community",
-  description = "Learn together at our workshops or connect with builders in The Lab.",
-  workshopsTitle = "Upcoming Workshops",
-  workshopsViewAll = "View All",
-  workshopsEmptyTitle = "No Upcoming Events",
-  workshopsEmptyDescription = "Check back soon for new workshops and events in your area.",
-  workshopsEmptyCta = "View Past Events",
-  workshopsCta = "Register for a Workshop",
-  workshopsCtaEmpty = "View All Events",
-  labTitle = "The Lab",
-  labJoinNow = "Join Now",
-  labMembersLabel = "Members",
-  labDiscussionsLabel = "Discussions",
-  labEmptyTitle = "Be the First to Ask",
-  labEmptyDescription = "Start a discussion and help build our community of makers.",
-  labEmptyCta = "Ask a Question",
-  labCta = "Join The Lab",
+  title = 'Join the Community',
+  description = 'Learn together at our workshops or connect with builders in The Lab.',
+  workshopsTitle = 'Upcoming Workshops',
+  workshopsViewAll = 'View All',
+  workshopsEmptyTitle = 'No Upcoming Events',
+  workshopsEmptyDescription = 'Check back soon for new workshops and events in your area.',
+  workshopsEmptyCta = 'View Past Events',
+  workshopsCta = 'Register for a Workshop',
+  workshopsCtaEmpty = 'View All Events',
+  labTitle = 'The Lab',
+  labJoinNow = 'Join Now',
+  labMembersLabel = 'Members',
+  labDiscussionsLabel = 'Discussions',
+  labEmptyTitle = 'Be the First to Ask',
+  labEmptyDescription = 'Start a discussion and help build our community of makers.',
+  labEmptyCta = 'Ask a Question',
+  labCta = 'Join The Lab',
 }: EventsPreviewSectionProps) {
   const hasWorkshops = workshops.length > 0
   const hasDiscussions = discussions.length > 0
@@ -97,22 +107,10 @@ export function EventsPreviewSection({
   return (
     <section className="py-24 px-6 lg:px-20 bg-slate-50">
       <div className="max-w-7xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center mb-16"
-        >
-          <h2 className="font-mono text-3xl lg:text-4xl text-slate-900 mb-4 break-words">
-            {title}
-          </h2>
-          <p className="text-slate-600 max-w-2xl mx-auto break-words">
-            {description}
-          </p>
-        </motion.div>
+        <SectionIntro title={title} description={description} />
 
         <div className="flex flex-col lg:flex-row gap-12">
-          {/* Left - Upcoming Workshops (50%) */}
+          {/* Left (50%) */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             whileInView={{ opacity: 1, x: 0 }}
@@ -128,7 +126,7 @@ export function EventsPreviewSection({
                 asChild
                 variant="ghost"
                 size="sm"
-                className="text-cyan-700 hover:text-cyan-600 font-mono whitespace-normal break-words text-left h-auto py-2 flex-wrap"
+                className={ctaGhost}
               >
                 <Link href="/events">
                   {workshopsViewAll}
@@ -145,12 +143,12 @@ export function EventsPreviewSection({
                     href={`/events#${workshop.slug}`}
                     className="block cursor-pointer"
                   >
-                    <Card className="bg-white border-slate-200 hover:border-cyan-200 transition-colors">
+                    <Card className="bg-white border-slate-200 hover:border-cyan-200 transition-colors focus-within:ring-2 focus-within:ring-cyan-700/20 focus-within:border-cyan-200">
                       <CardContent className="p-4">
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <p className="font-mono text-sm text-cyan-700 mb-1">
-                              {formatEventDate(workshop.event_date)}
+                              {formatShortDate(workshop.event_date)}
                             </p>
                             <h4 className="font-medium text-slate-900 mb-2 break-words">
                               {workshop.title}
@@ -165,8 +163,8 @@ export function EventsPreviewSection({
                               <span
                                 className={`text-xs font-mono px-2 py-1 rounded ${
                                   workshop.capacity <= 5
-                                    ? "bg-amber-100 text-amber-700"
-                                    : "bg-green-100 text-green-700"
+                                    ? 'bg-amber-100 text-amber-700'
+                                    : 'bg-green-100 text-green-700'
                                 }`}
                               >
                                 {workshop.capacity} spots
@@ -191,7 +189,12 @@ export function EventsPreviewSection({
                 <p className="text-sm text-slate-500 mb-4 break-words">
                   {workshopsEmptyDescription}
                 </p>
-                <Button asChild variant="outline" size="sm" className="font-mono whitespace-normal break-words text-center h-auto py-2 flex-wrap">
+                <Button
+                  asChild
+                  variant="outline"
+                  size="sm"
+                  className={ctaOutlineSm}
+                >
                   <Link href="/events">{workshopsEmptyCta}</Link>
                 </Button>
               </div>
@@ -201,7 +204,7 @@ export function EventsPreviewSection({
               <Button
                 asChild
                 variant="outline"
-                className="w-full border-slate-200 hover:border-cyan-700 text-slate-600 hover:text-cyan-700 font-mono whitespace-normal break-words text-center h-auto py-3 flex-wrap"
+                className={cn(ctaOutline, 'w-full')}
               >
                 <Link href="/events">
                   {hasWorkshops ? workshopsCta : workshopsCtaEmpty}
@@ -211,7 +214,7 @@ export function EventsPreviewSection({
             </div>
           </motion.div>
 
-          {/* Right - The Lab Preview (50%) */}
+          {/* Right (50%) */}
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             whileInView={{ opacity: 1, x: 0 }}
@@ -227,7 +230,7 @@ export function EventsPreviewSection({
                 asChild
                 variant="ghost"
                 size="sm"
-                className="text-cyan-700 hover:text-cyan-600 font-mono whitespace-normal break-words text-left h-auto py-2 flex-wrap"
+                className={ctaGhost}
               >
                 <Link href="/community">
                   {labJoinNow}
@@ -236,19 +239,25 @@ export function EventsPreviewSection({
               </Button>
             </div>
 
-            {/* Stats Bar - Clean and minimal */}
+            {/* Stats */}
             <div className="flex flex-wrap items-center gap-4 mb-4 text-sm text-slate-600">
               <span>
-                <span className="font-mono text-slate-900">{communityStats.totalMembers}</span> {labMembersLabel}
+                <span className="font-mono text-slate-900">
+                  {communityStats.totalMembers}
+                </span>{' '}
+                {labMembersLabel}
               </span>
               <span className="text-slate-300">•</span>
               <span>
-                <span className="font-mono text-slate-900">{communityStats.totalDiscussions}</span> {labDiscussionsLabel}
+                <span className="font-mono text-slate-900">
+                  {communityStats.totalDiscussions}
+                </span>{' '}
+                {labDiscussionsLabel}
               </span>
             </div>
 
             {hasDiscussions ? (
-              /* Top Discussions by Upvotes */
+              /* Top discussions */
               <div className="space-y-4">
                 {discussions.map((discussion) => (
                   <Link
@@ -256,18 +265,22 @@ export function EventsPreviewSection({
                     href={`/community/${discussion.slug || discussion.id}`}
                     className="block"
                   >
-                    <Card className="bg-white border-slate-200 hover:border-cyan-300 transition-colors">
+                    <Card className="bg-white border-slate-200 hover:border-cyan-300 transition-colors focus-within:ring-2 focus-within:ring-cyan-700/20 focus-within:border-cyan-300">
                       <CardContent className="p-4">
                         <div className="flex gap-4">
                           {/* Vote/Comment Column */}
                           <div className="flex flex-col items-center gap-1 text-center min-w-[40px]">
                             <div className="flex items-center gap-0.5 text-slate-500">
                               <ChevronUp className="w-4 h-4" />
-                              <span className="font-mono text-sm">{discussion.upvotes}</span>
+                              <span className="font-mono text-sm">
+                                {discussion.upvotes}
+                              </span>
                             </div>
                             <div className="flex items-center gap-0.5 text-slate-400">
                               <MessageSquare className="w-3 h-3" />
-                              <span className="font-mono text-xs">{discussion.comment_count}</span>
+                              <span className="font-mono text-xs">
+                                {discussion.comment_count}
+                              </span>
                             </div>
                           </div>
 
@@ -275,7 +288,7 @@ export function EventsPreviewSection({
                           <div className="flex-1 min-w-0">
                             <div className="flex items-start gap-2 mb-1">
                               {/* Status Badge */}
-                              {discussion.status === "solved" ? (
+                              {discussion.status === 'solved' ? (
                                 <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-green-100 text-green-700 text-xs font-mono rounded flex-shrink-0">
                                   <CheckCircle2 className="w-3 h-3" />
                                   Solved
@@ -301,7 +314,9 @@ export function EventsPreviewSection({
                                 }}
                                 size="sm"
                               />
-                              <span>{discussion.author_name || "Anonymous"}</span>
+                              <span>
+                                {discussion.author_name || 'Anonymous'}
+                              </span>
                               {discussion.tags && discussion.tags[0] && (
                                 <>
                                   <span className="text-slate-300">·</span>
@@ -330,14 +345,21 @@ export function EventsPreviewSection({
                 <p className="text-sm text-slate-500 mb-4 break-words">
                   {labEmptyDescription}
                 </p>
-                <Button asChild size="sm" className="bg-cyan-700 hover:bg-cyan-600 font-mono whitespace-normal break-words text-center h-auto py-2 flex-wrap">
+                <Button
+                  asChild
+                  size="sm"
+                  className={ctaPrimarySm}
+                >
                   <Link href="/community/new">{labEmptyCta}</Link>
                 </Button>
               </div>
             )}
 
             <div className="mt-auto pt-6">
-              <Button asChild className="w-full bg-cyan-700 hover:bg-cyan-600 text-white font-mono whitespace-normal break-words text-center h-auto py-3 flex-wrap">
+              <Button
+                asChild
+                className={cn(ctaPrimary, 'w-full')}
+              >
                 <Link href="/community">
                   {labCta}
                   <ArrowRight className="w-4 h-4 ml-2" />

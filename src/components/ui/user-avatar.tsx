@@ -1,8 +1,8 @@
-"use client"
+'use client'
 
-import { useState } from "react"
-import { getUserAvatarUrl, getInitials } from "@/lib/avatar"
-import { cn } from "@/lib/utils"
+import { useState } from 'react'
+import { getUserAvatarUrl, getInitials } from '@/lib/avatar'
+import { cn } from '@/lib/utils'
 
 interface UserAvatarProps {
   user: {
@@ -12,32 +12,40 @@ interface UserAvatarProps {
     avatar_url?: string | null
     avatar_seed?: string | null
   }
-  size?: "sm" | "md" | "lg" | "xl"
+  size?: 'sm' | 'md' | 'lg' | 'xl'
   className?: string
   showFallback?: boolean
 }
 
-function getSizeClass(size: "sm" | "md" | "lg" | "xl"): string {
+function getSizeClass(size: 'sm' | 'md' | 'lg' | 'xl'): string {
   switch (size) {
-    case "sm": return "h-6 w-6 text-xs"
-    case "md": return "h-8 w-8 text-sm"
-    case "lg": return "h-10 w-10 text-base"
-    case "xl": return "h-16 w-16 text-xl"
+    case 'sm':
+      return 'h-6 w-6 text-xs'
+    case 'md':
+      return 'h-8 w-8 text-sm'
+    case 'lg':
+      return 'h-10 w-10 text-base'
+    case 'xl':
+      return 'h-16 w-16 text-xl'
   }
 }
 
-function getSizePixels(size: "sm" | "md" | "lg" | "xl"): number {
+function getSizePixels(size: 'sm' | 'md' | 'lg' | 'xl'): number {
   switch (size) {
-    case "sm": return 24
-    case "md": return 32
-    case "lg": return 40
-    case "xl": return 64
+    case 'sm':
+      return 24
+    case 'md':
+      return 32
+    case 'lg':
+      return 40
+    case 'xl':
+      return 64
   }
 }
 
 export function UserAvatar({
   user,
-  size = "md",
+  size = 'md',
   className,
   showFallback = true,
 }: UserAvatarProps) {
@@ -54,16 +62,16 @@ export function UserAvatar({
   })
 
   const initials = getInitials(user.full_name || user.email)
-  const displayName = user.full_name || user.email || "User"
+  const displayName = user.full_name || user.email || 'User'
 
   // Show initials fallback if image fails to load
   if (imageError && showFallback) {
     return (
       <div
         className={cn(
-          "flex items-center justify-center rounded-full bg-slate-100 font-medium text-slate-600",
+          'flex items-center justify-center rounded-full bg-slate-100 font-medium text-slate-600',
           sizeClass,
-          className
+          className,
         )}
         title={displayName}
       >
@@ -77,8 +85,10 @@ export function UserAvatar({
     <img
       src={avatarUrl}
       alt={displayName}
-      className={cn("rounded-full object-cover", sizeClass, className)}
-      onError={() => { setImageError(true); }}
+      className={cn('rounded-full object-cover', sizeClass, className)}
+      onError={() => {
+        setImageError(true)
+      }}
     />
   )
 }

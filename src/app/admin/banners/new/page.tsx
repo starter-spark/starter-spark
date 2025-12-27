@@ -1,9 +1,9 @@
-import Link from "next/link"
-import { ChevronLeft } from "lucide-react"
-import { BannerForm } from "../BannerForm"
+import Link from 'next/link'
+import { ChevronLeft } from 'lucide-react'
+import { BannerForm } from '../BannerForm'
 
 export const metadata = {
-  title: "Create Banner | Admin",
+  title: 'Create Banner | Admin',
 }
 
 export default function NewBannerPage() {
@@ -18,8 +18,12 @@ export default function NewBannerPage() {
           <ChevronLeft className="mr-1 h-4 w-4" />
           Back to Banners
         </Link>
-        <h1 className="font-mono text-2xl font-bold text-slate-900">Create Banner</h1>
-        <p className="text-slate-600">Add a new site-wide announcement or promotion</p>
+        <h1 className="font-mono text-2xl font-bold text-slate-900">
+          Create Banner
+        </h1>
+        <p className="text-slate-600">
+          Add a new site-wide announcement or promotion
+        </p>
       </div>
 
       <BannerForm />

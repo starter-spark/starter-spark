@@ -1,7 +1,7 @@
-"use client"
+'use client'
 
-import { useMemo, useState } from "react"
-import Link from "next/link"
+import { useMemo, useState } from 'react'
+import Link from 'next/link'
 import {
   CheckCircle2,
   ChevronDown,
@@ -9,9 +9,9 @@ import {
   Home,
   Menu,
   X,
-} from "lucide-react"
-import { AnimatedProgressFill } from "@/components/learn/AnimatedProgressFill"
-import { LearnProgressSync } from "@/components/learn/LearnProgressSync"
+} from 'lucide-react'
+import { AnimatedProgressFill } from '@/components/learn/AnimatedProgressFill'
+import { LearnProgressSync } from '@/components/learn/LearnProgressSync'
 
 interface LessonSidebarProps {
   product: string
@@ -38,7 +38,7 @@ export function LessonSidebar({
 }: LessonSidebarProps) {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [expandedModules, setExpandedModules] = useState<Set<number>>(
-    new Set([0, 1, 2]) // All expanded by default
+    new Set([0, 1, 2]), // All expanded by default
   )
 
   const pendingCompletion = useMemo(() => {
@@ -55,18 +55,19 @@ export function LessonSidebar({
       }
 
       const parsed: unknown = JSON.parse(raw)
-      if (typeof parsed !== "object" || parsed === null) return null
+      if (typeof parsed !== 'object' || parsed === null) return null
       const record = parsed as Record<string, unknown>
 
       const lessonId =
-        typeof record.lessonId === "string" && record.lessonId.length > 0
+        typeof record.lessonId === 'string' && record.lessonId.length > 0
           ? record.lessonId
           : null
 
       const progress =
-        typeof record.progress === "number" && Number.isFinite(record.progress)
+        typeof record.progress === 'number' && Number.isFinite(record.progress)
           ? record.progress
-          : typeof record.progress === "string" && Number.isFinite(Number(record.progress))
+          : typeof record.progress === 'string' &&
+              Number.isFinite(Number(record.progress))
             ? Number(record.progress)
             : null
 
@@ -122,7 +123,7 @@ export function LessonSidebar({
 
   // Find current module index
   const currentModuleIndex = course.modules.findIndex((mod) =>
-    mod.lessons.some((l) => l.slug === currentLesson)
+    mod.lessons.some((l) => l.slug === currentLesson),
   )
 
   // Sidebar content as JSX (not a component to avoid re-render issues)
@@ -146,7 +147,9 @@ export function LessonSidebar({
       <div className="p-4 border-b border-slate-100">
         <div className="flex items-center justify-between text-xs mb-2">
           <span className="text-slate-500">Progress</span>
-          <span className="font-mono text-slate-700">{displayProgressPercent}%</span>
+          <span className="font-mono text-slate-700">
+            {displayProgressPercent}%
+          </span>
         </div>
         <div className="h-1.5 bg-slate-200 rounded-full overflow-hidden">
           <AnimatedProgressFill
@@ -166,11 +169,13 @@ export function LessonSidebar({
           return (
             <div key={moduleIndex} className="border-b border-slate-100">
               <button
-                onClick={() => { toggleModule(moduleIndex); }}
+                onClick={() => {
+                  toggleModule(moduleIndex)
+                }}
                 className={`w-full flex items-center justify-between p-4 text-left transition-colors ${
                   isCurrentModule
-                    ? "bg-cyan-50 text-cyan-700"
-                    : "hover:bg-slate-50"
+                    ? 'bg-cyan-50 text-cyan-700'
+                    : 'hover:bg-slate-50'
                 }`}
               >
                 <span className="font-mono text-sm font-medium">
@@ -187,31 +192,35 @@ export function LessonSidebar({
                 <div className="pb-2">
                   {courseModule.lessons.map((lesson) => {
                     const isCurrent = lesson.slug === currentLesson
-                    const isCompleted = optimisticCompletedLessonIds.has(lesson.id)
+                    const isCompleted = optimisticCompletedLessonIds.has(
+                      lesson.id,
+                    )
 
                     return (
                       <Link
                         key={lesson.slug}
                         href={`/learn/${product}/${lesson.slug}`}
-                        onClick={() => { setMobileOpen(false); }}
+                        onClick={() => {
+                          setMobileOpen(false)
+                        }}
                         className={`flex items-center gap-3 px-4 py-2 text-sm transition-colors ${
                           isCurrent
-                            ? "bg-cyan-700 text-white"
-                            : "text-slate-600 hover:text-cyan-700 hover:bg-slate-50"
+                            ? 'bg-cyan-700 text-white'
+                            : 'text-slate-600 hover:text-cyan-700 hover:bg-slate-50'
                         }`}
                       >
                         {isCompleted ? (
                           <CheckCircle2
                             className={`w-4 h-4 flex-shrink-0 ${
-                              isCurrent ? "text-white" : "text-green-500"
+                              isCurrent ? 'text-white' : 'text-green-500'
                             }`}
                           />
                         ) : (
                           <div
                             className={`w-4 h-4 rounded-full border-2 flex-shrink-0 ${
                               isCurrent
-                                ? "border-white bg-white/20"
-                                : "border-slate-300"
+                                ? 'border-white bg-white/20'
+                                : 'border-slate-300'
                             }`}
                           />
                         )}
@@ -238,7 +247,9 @@ export function LessonSidebar({
 
       {/* Mobile Sidebar Toggle */}
       <button
-        onClick={() => { setMobileOpen(true); }}
+        onClick={() => {
+          setMobileOpen(true)
+        }}
         className="lg:hidden fixed bottom-6 right-6 z-50 w-12 h-12 bg-cyan-700 text-white rounded-full shadow-lg flex items-center justify-center"
       >
         <Menu className="w-5 h-5" />
@@ -249,11 +260,15 @@ export function LessonSidebar({
         <div className="lg:hidden fixed inset-0 z-50 flex">
           <div
             className="fixed inset-0 bg-slate-900/50"
-            onClick={() => { setMobileOpen(false); }}
+            onClick={() => {
+              setMobileOpen(false)
+            }}
           />
           <aside className="relative w-80 max-w-[85vw] bg-white flex flex-col">
             <button
-              onClick={() => { setMobileOpen(false); }}
+              onClick={() => {
+                setMobileOpen(false)
+              }}
               className="absolute top-4 right-4 text-slate-500 hover:text-slate-600"
             >
               <X className="w-5 h-5" />

@@ -1,27 +1,69 @@
-"use client"
+'use client'
 
-import { useState, useTransition } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import { useState, useTransition } from 'react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Loader2, Save, Pencil, X, Plus, Trash2, RefreshCw, Database } from "lucide-react"
-import { updateSiteStat, createSiteStat, deleteSiteStat } from "./actions"
+} from '@/components/ui/select'
+import {
+  Loader2,
+  Save,
+  Pencil,
+  X,
+  Plus,
+  Trash2,
+  RefreshCw,
+  Database,
+} from 'lucide-react'
+import { updateSiteStat, createSiteStat, deleteSiteStat } from './actions'
 
 // Available auto sources for stats calculation
 const AUTO_SOURCES = [
-  { value: "licenses_count", label: "Claimed Licenses", description: "Count of licenses with an owner" },
-  { value: "events_count", label: "Past Events", description: "Count of past public events" },
-  { value: "profiles_count", label: "Registered Users", description: "Total registered users" },
-  { value: "posts_count", label: "Community Posts", description: "Published community questions" },
-  { value: "comments_count", label: "Comments/Answers", description: "Total answers in community" },
+  {
+    value: 'licenses_count',
+    label: 'Claimed Licenses',
+    description: 'Count of licenses with an owner',
+  },
+  {
+    value: 'events_count',
+    label: 'Past Events',
+    description: 'Count of past public events',
+  },
+  {
+    value: 'profiles_count',
+    label: 'Registered Users',
+    description: 'Total registered users',
+  },
+  {
+    value: 'posts_count',
+    label: 'Community Posts',
+    description: 'Published community questions',
+  },
+  {
+    value: 'comments_count',
+    label: 'Comments/Answers',
+    description: 'Total answers in community',
+  },
+] as const
+
+// Available pages where stats can be displayed
+const PAGE_OPTIONS = [
+  { value: 'home', label: 'Home' },
+  { value: 'about', label: 'About' },
+  { value: 'workshop', label: 'Workshop' },
 ] as const
 
 interface SiteStat {
@@ -32,13 +74,16 @@ interface SiteStat {
   suffix: string | null
   is_auto_calculated: boolean | null
   auto_source: string | null
+  visible_on: string[] | null
 }
 
 interface SiteStatsManagerProps {
   stats: SiteStat[]
 }
 
-export function SiteStatsManager({ stats: initialStats }: SiteStatsManagerProps) {
+export function SiteStatsManager({
+  stats: initialStats,
+}: SiteStatsManagerProps) {
   const [stats, setStats] = useState(initialStats)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [isAdding, setIsAdding] = useState(false)
@@ -47,26 +92,29 @@ export function SiteStatsManager({ stats: initialStats }: SiteStatsManagerProps)
 
   // Edit form state
   const [editValue, setEditValue] = useState(0)
-  const [editLabel, setEditLabel] = useState("")
-  const [editSuffix, setEditSuffix] = useState("")
+  const [editLabel, setEditLabel] = useState('')
+  const [editSuffix, setEditSuffix] = useState('')
   const [editIsAuto, setEditIsAuto] = useState(false)
   const [editAutoSource, setEditAutoSource] = useState<string | null>(null)
+  const [editVisibleOn, setEditVisibleOn] = useState<string[]>(['home'])
 
   // New stat form state
-  const [newKey, setNewKey] = useState("")
+  const [newKey, setNewKey] = useState('')
   const [newValue, setNewValue] = useState(0)
-  const [newLabel, setNewLabel] = useState("")
-  const [newSuffix, setNewSuffix] = useState("")
+  const [newLabel, setNewLabel] = useState('')
+  const [newSuffix, setNewSuffix] = useState('')
   const [newIsAuto, setNewIsAuto] = useState(false)
   const [newAutoSource, setNewAutoSource] = useState<string | null>(null)
+  const [newVisibleOn, setNewVisibleOn] = useState<string[]>(['home'])
 
   const startEditing = (stat: SiteStat) => {
     setEditingId(stat.id)
     setEditValue(stat.value)
     setEditLabel(stat.label)
-    setEditSuffix(stat.suffix || "")
+    setEditSuffix(stat.suffix || '')
     setEditIsAuto(stat.is_auto_calculated || false)
     setEditAutoSource(stat.auto_source || null)
+    setEditVisibleOn(stat.visible_on || ['home'])
     setError(null)
   }
 
@@ -84,6 +132,7 @@ export function SiteStatsManager({ stats: initialStats }: SiteStatsManagerProps)
         suffix: editSuffix,
         is_auto_calculated: editIsAuto,
         auto_source: editIsAuto ? editAutoSource : null,
+        visible_on: editVisibleOn,
       })
 
       if (result.error) {
@@ -100,9 +149,10 @@ export function SiteStatsManager({ stats: initialStats }: SiteStatsManagerProps)
                   suffix: editSuffix,
                   is_auto_calculated: editIsAuto,
                   auto_source: editIsAuto ? editAutoSource : null,
+                  visible_on: editVisibleOn,
                 }
-              : s
-          )
+              : s,
+          ),
         )
         setEditingId(null)
         setError(null)
@@ -111,7 +161,7 @@ export function SiteStatsManager({ stats: initialStats }: SiteStatsManagerProps)
   }
 
   const handleDelete = (id: string) => {
-    if (!confirm("Are you sure you want to delete this stat?")) return
+    if (!confirm('Are you sure you want to delete this stat?')) return
 
     startTransition(async () => {
       const result = await deleteSiteStat(id)
@@ -127,35 +177,37 @@ export function SiteStatsManager({ stats: initialStats }: SiteStatsManagerProps)
 
   const handleCreate = () => {
     if (!newKey.trim() || !newLabel.trim()) {
-      setError("Key and label are required")
+      setError('Key and label are required')
       return
     }
 
     if (newIsAuto && !newAutoSource) {
-      setError("Please select a data source for auto-calculation")
+      setError('Please select a data source for auto-calculation')
       return
     }
 
     startTransition(async () => {
       const result = await createSiteStat({
-        key: newKey.toLowerCase().replaceAll(/\s+/g, "_"),
+        key: newKey.toLowerCase().replaceAll(/\s+/g, '_'),
         value: newValue,
         label: newLabel,
         suffix: newSuffix,
         is_auto_calculated: newIsAuto,
         auto_source: newIsAuto ? newAutoSource : null,
+        visible_on: newVisibleOn,
       })
 
       if (result.error) {
         setError(result.error)
       } else {
         // Reset form and close
-        setNewKey("")
+        setNewKey('')
         setNewValue(0)
-        setNewLabel("")
-        setNewSuffix("")
+        setNewLabel('')
+        setNewSuffix('')
         setNewIsAuto(false)
         setNewAutoSource(null)
+        setNewVisibleOn(['home'])
         setIsAdding(false)
         setError(null)
         // Note: Page will revalidate and show new stat
@@ -177,7 +229,9 @@ export function SiteStatsManager({ stats: initialStats }: SiteStatsManagerProps)
           <Button
             variant="outline"
             size="sm"
-            onClick={() => { setIsAdding(true); }}
+            onClick={() => {
+              setIsAdding(true)
+            }}
             disabled={isAdding}
           >
             <Plus className="mr-2 h-4 w-4" />
@@ -203,7 +257,9 @@ export function SiteStatsManager({ stats: initialStats }: SiteStatsManagerProps)
                   </label>
                   <Input
                     value={newKey}
-                    onChange={(e) => { setNewKey(e.target.value); }}
+                    onChange={(e) => {
+                      setNewKey(e.target.value)
+                    }}
                     placeholder="kits_deployed"
                     className="text-sm"
                   />
@@ -214,7 +270,9 @@ export function SiteStatsManager({ stats: initialStats }: SiteStatsManagerProps)
                   </label>
                   <Input
                     value={newLabel}
-                    onChange={(e) => { setNewLabel(e.target.value); }}
+                    onChange={(e) => {
+                      setNewLabel(e.target.value)
+                    }}
                     placeholder="Kits Deployed"
                     className="text-sm"
                   />
@@ -226,7 +284,9 @@ export function SiteStatsManager({ stats: initialStats }: SiteStatsManagerProps)
                   <Input
                     type="number"
                     value={newValue}
-                    onChange={(e) => { setNewValue(Number.parseInt(e.target.value) || 0); }}
+                    onChange={(e) => {
+                      setNewValue(Number.parseInt(e.target.value) || 0)
+                    }}
                     className="text-sm"
                   />
                 </div>
@@ -236,14 +296,16 @@ export function SiteStatsManager({ stats: initialStats }: SiteStatsManagerProps)
                   </label>
                   <Input
                     value={newSuffix}
-                    onChange={(e) => { setNewSuffix(e.target.value); }}
+                    onChange={(e) => {
+                      setNewSuffix(e.target.value)
+                    }}
                     placeholder="+ or %"
                     className="text-sm"
                   />
                 </div>
               </div>
               <div className="mt-3 space-y-3">
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-4 flex-wrap">
                   <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
                     <input
                       type="checkbox"
@@ -258,8 +320,10 @@ export function SiteStatsManager({ stats: initialStats }: SiteStatsManagerProps)
                   </label>
                   {newIsAuto && (
                     <Select
-                      value={newAutoSource || ""}
-                      onValueChange={(value) => { setNewAutoSource(value); }}
+                      value={newAutoSource || ''}
+                      onValueChange={(value) => {
+                        setNewAutoSource(value)
+                      }}
                     >
                       <SelectTrigger className="w-[200px] text-sm">
                         <SelectValue placeholder="Select data source" />
@@ -277,6 +341,31 @@ export function SiteStatsManager({ stats: initialStats }: SiteStatsManagerProps)
                     </Select>
                   )}
                 </div>
+                <div className="flex items-center gap-4">
+                  <span className="text-sm text-slate-600">Show on:</span>
+                  {PAGE_OPTIONS.map((page) => (
+                    <label
+                      key={page.value}
+                      className="flex items-center gap-1.5 text-sm text-slate-600 cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={newVisibleOn.includes(page.value)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setNewVisibleOn([...newVisibleOn, page.value])
+                          } else {
+                            setNewVisibleOn(
+                              newVisibleOn.filter((p) => p !== page.value),
+                            )
+                          }
+                        }}
+                        className="h-4 w-4 rounded border-slate-300 text-cyan-700 cursor-pointer"
+                      />
+                      {page.label}
+                    </label>
+                  ))}
+                </div>
                 <div className="flex justify-end gap-2">
                   <Button
                     variant="ghost"
@@ -291,7 +380,9 @@ export function SiteStatsManager({ stats: initialStats }: SiteStatsManagerProps)
                   </Button>
                   <Button
                     size="sm"
-                    onClick={() => { handleCreate(); }}
+                    onClick={() => {
+                      handleCreate()
+                    }}
                     disabled={isPending}
                     className="bg-cyan-700 hover:bg-cyan-600"
                   >
@@ -323,7 +414,9 @@ export function SiteStatsManager({ stats: initialStats }: SiteStatsManagerProps)
                       </label>
                       <Input
                         value={editLabel}
-                        onChange={(e) => { setEditLabel(e.target.value); }}
+                        onChange={(e) => {
+                          setEditLabel(e.target.value)
+                        }}
                         className="text-sm"
                       />
                     </div>
@@ -334,9 +427,9 @@ export function SiteStatsManager({ stats: initialStats }: SiteStatsManagerProps)
                       <Input
                         type="number"
                         value={editValue}
-                        onChange={(e) =>
-                          { setEditValue(Number.parseInt(e.target.value) || 0); }
-                        }
+                        onChange={(e) => {
+                          setEditValue(Number.parseInt(e.target.value) || 0)
+                        }}
                         className="text-sm"
                         disabled={editIsAuto}
                       />
@@ -347,46 +440,78 @@ export function SiteStatsManager({ stats: initialStats }: SiteStatsManagerProps)
                       </label>
                       <Input
                         value={editSuffix}
-                        onChange={(e) => { setEditSuffix(e.target.value); }}
+                        onChange={(e) => {
+                          setEditSuffix(e.target.value)
+                        }}
                         placeholder="+ or %"
                         className="text-sm"
                       />
                     </div>
                   </div>
+                  <div className="flex items-center gap-4 flex-wrap">
+                    <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={editIsAuto}
+                        onChange={(e) => {
+                          setEditIsAuto(e.target.checked)
+                          if (!e.target.checked) setEditAutoSource(null)
+                        }}
+                        className="h-4 w-4 rounded border-slate-300 text-cyan-700 cursor-pointer"
+                      />
+                      Auto-calculated
+                    </label>
+                    {editIsAuto && (
+                      <Select
+                        value={editAutoSource || ''}
+                        onValueChange={(value) => {
+                          setEditAutoSource(value)
+                        }}
+                      >
+                        <SelectTrigger className="w-[180px] text-sm">
+                          <SelectValue placeholder="Select source" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {AUTO_SOURCES.map((source) => (
+                            <SelectItem
+                              key={source.value}
+                              value={source.value}
+                            >
+                              <div className="flex items-center gap-2">
+                                <Database className="h-3 w-3 text-cyan-600" />
+                                {source.label}
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                      <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={editIsAuto}
-                          onChange={(e) => {
-                            setEditIsAuto(e.target.checked)
-                            if (!e.target.checked) setEditAutoSource(null)
-                          }}
-                          className="h-4 w-4 rounded border-slate-300 text-cyan-700 cursor-pointer"
-                        />
-                        Auto-calculated
-                      </label>
-                      {editIsAuto && (
-                        <Select
-                          value={editAutoSource || ""}
-                          onValueChange={(value) => { setEditAutoSource(value); }}
+                      <span className="text-sm text-slate-600">Show on:</span>
+                      {PAGE_OPTIONS.map((page) => (
+                        <label
+                          key={page.value}
+                          className="flex items-center gap-1.5 text-sm text-slate-600 cursor-pointer"
                         >
-                          <SelectTrigger className="w-[180px] text-sm">
-                            <SelectValue placeholder="Select source" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {AUTO_SOURCES.map((source) => (
-                              <SelectItem key={source.value} value={source.value}>
-                                <div className="flex items-center gap-2">
-                                  <Database className="h-3 w-3 text-cyan-600" />
-                                  {source.label}
-                                </div>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      )}
+                          <input
+                            type="checkbox"
+                            checked={editVisibleOn.includes(page.value)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setEditVisibleOn([...editVisibleOn, page.value])
+                              } else {
+                                setEditVisibleOn(
+                                  editVisibleOn.filter((p) => p !== page.value),
+                                )
+                              }
+                            }}
+                            className="h-4 w-4 rounded border-slate-300 text-cyan-700 cursor-pointer"
+                          />
+                          {page.label}
+                        </label>
+                      ))}
                     </div>
                     <div className="flex gap-2">
                       <Button
@@ -399,7 +524,9 @@ export function SiteStatsManager({ stats: initialStats }: SiteStatsManagerProps)
                       </Button>
                       <Button
                         size="icon"
-                        onClick={() => { handleUpdate(stat.id); }}
+                        onClick={() => {
+                          handleUpdate(stat.id)
+                        }}
                         disabled={isPending || (editIsAuto && !editAutoSource)}
                         className="bg-cyan-700 hover:bg-cyan-600"
                       >
@@ -426,7 +553,7 @@ export function SiteStatsManager({ stats: initialStats }: SiteStatsManagerProps)
                     </div>
                     <div>
                       <p className="font-medium text-slate-900">{stat.label}</p>
-                      <div className="flex items-center gap-2 mt-1">
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
                         <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs text-slate-600">
                           {stat.key}
                         </code>
@@ -434,12 +561,40 @@ export function SiteStatsManager({ stats: initialStats }: SiteStatsManagerProps)
                           <Badge
                             variant="outline"
                             className="border-cyan-200 text-cyan-700 text-xs"
-                            title={stat.auto_source ? `Source: ${AUTO_SOURCES.find(s => s.value === stat.auto_source)?.label || stat.auto_source}` : "Auto-calculated"}
+                            title={
+                              stat.auto_source
+                                ? `Source: ${AUTO_SOURCES.find((s) => s.value === stat.auto_source)?.label || stat.auto_source}`
+                                : 'Auto-calculated'
+                            }
                           >
                             <RefreshCw className="mr-1 h-3 w-3" />
                             {stat.auto_source
-                              ? AUTO_SOURCES.find(s => s.value === stat.auto_source)?.label || "Auto"
-                              : "Auto"}
+                              ? AUTO_SOURCES.find(
+                                  (s) => s.value === stat.auto_source,
+                                )?.label || 'Auto'
+                              : 'Auto'}
+                          </Badge>
+                        )}
+                        {(stat.visible_on?.length ?? 0) > 0 && (
+                          <div className="flex items-center gap-1">
+                            {stat.visible_on?.map((page) => (
+                              <Badge
+                                key={page}
+                                variant="outline"
+                                className="border-slate-200 text-slate-600 text-xs"
+                              >
+                                {PAGE_OPTIONS.find((p) => p.value === page)
+                                  ?.label || page}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+                        {(stat.visible_on?.length ?? 0) === 0 && (
+                          <Badge
+                            variant="outline"
+                            className="border-amber-200 text-amber-600 text-xs"
+                          >
+                            Hidden
                           </Badge>
                         )}
                       </div>
@@ -449,14 +604,18 @@ export function SiteStatsManager({ stats: initialStats }: SiteStatsManagerProps)
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => { startEditing(stat); }}
+                      onClick={() => {
+                        startEditing(stat)
+                      }}
                     >
                       <Pencil className="h-4 w-4" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => { handleDelete(stat.id); }}
+                      onClick={() => {
+                        handleDelete(stat.id)
+                      }}
                       className="text-red-600 hover:text-red-700 hover:bg-red-50"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -472,7 +631,9 @@ export function SiteStatsManager({ stats: initialStats }: SiteStatsManagerProps)
               <p>No stats configured yet.</p>
               <Button
                 variant="link"
-                onClick={() => { setIsAdding(true); }}
+                onClick={() => {
+                  setIsAdding(true)
+                }}
                 className="mt-2 text-cyan-700"
               >
                 Add your first stat

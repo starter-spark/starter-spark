@@ -1,11 +1,11 @@
-"use client"
+'use client'
 
-import { useState, useCallback } from "react"
-import { createClient } from "@/lib/supabase/client"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent } from "@/components/ui/card"
+import { useState, useCallback } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent } from '@/components/ui/card'
 import {
   Upload,
   X,
@@ -16,13 +16,14 @@ import {
   Star,
   Loader2,
   Trash2,
-} from "lucide-react"
-import { cn } from "@/lib/utils"
-import { randomId } from "@/lib/random-id"
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { randomId } from '@/lib/random-id'
+import { formatFileSize } from '@/lib/file-size'
 
 export interface MediaItem {
   id?: string
-  type: "image" | "video" | "3d_model" | "document"
+  type: 'image' | 'video' | '3d_model' | 'document'
   url: string
   storage_path?: string
   filename: string
@@ -42,86 +43,90 @@ interface MediaUploaderProps {
 }
 
 const ACCEPTED_TYPES: Record<string, string[]> = {
-  image: ["image/jpeg", "image/png", "image/webp", "image/gif"],
-  video: ["video/mp4", "video/webm"],
-  "3d_model": ["model/gltf-binary", "model/gltf+json", "application/octet-stream"],
-  document: ["application/pdf"],
+  image: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
+  video: ['video/mp4', 'video/webm'],
+  '3d_model': [
+    'model/gltf-binary',
+    'model/gltf+json',
+    'application/octet-stream',
+  ],
+  document: ['application/pdf'],
 }
 
-const MAX_FILE_SIZE_BYTES: Record<MediaItem["type"], number> = {
+const MAX_FILE_SIZE_BYTES: Record<MediaItem['type'], number> = {
   image: 15 * 1024 * 1024, // 15MB
   video: 200 * 1024 * 1024, // 200MB
-  "3d_model": 100 * 1024 * 1024, // 100MB
+  '3d_model': 100 * 1024 * 1024, // 100MB
   document: 50 * 1024 * 1024, // 50MB
 }
 
 function getFileExtension(filename: string): string | null {
-  const last = filename.split(".").pop()
+  const last = filename.split('.').pop()
   if (!last || last === filename) return null
   return last.toLowerCase()
 }
 
 function extensionFromMime(mimeType: string): string | null {
   switch (mimeType) {
-    case "image/jpeg":
-      return "jpg"
-    case "image/png":
-      return "png"
-    case "image/webp":
-      return "webp"
-    case "image/gif":
-      return "gif"
-    case "video/mp4":
-      return "mp4"
-    case "video/webm":
-      return "webm"
-    case "application/pdf":
-      return "pdf"
-    case "model/gltf-binary":
-      return "glb"
-    case "model/gltf+json":
-      return "gltf"
+    case 'image/jpeg':
+      return 'jpg'
+    case 'image/png':
+      return 'png'
+    case 'image/webp':
+      return 'webp'
+    case 'image/gif':
+      return 'gif'
+    case 'video/mp4':
+      return 'mp4'
+    case 'video/webm':
+      return 'webm'
+    case 'application/pdf':
+      return 'pdf'
+    case 'model/gltf-binary':
+      return 'glb'
+    case 'model/gltf+json':
+      return 'gltf'
     default:
       return null
   }
 }
 
-function detectMediaType(file: File): MediaItem["type"] | null {
+function detectMediaType(file: File): MediaItem['type'] | null {
   const ext = getFileExtension(file.name)
-  if (ext === "glb" || ext === "gltf") return "3d_model"
-  if (ACCEPTED_TYPES.image.includes(file.type)) return "image"
-  if (ACCEPTED_TYPES.video.includes(file.type)) return "video"
-  if (ACCEPTED_TYPES.document.includes(file.type)) return "document"
+  if (ext === 'glb' || ext === 'gltf') return '3d_model'
+  if (ACCEPTED_TYPES.image.includes(file.type)) return 'image'
+  if (ACCEPTED_TYPES.video.includes(file.type)) return 'video'
+  if (ACCEPTED_TYPES.document.includes(file.type)) return 'document'
   // Some browsers report .glb as application/octet-stream
-  if (file.type === "application/octet-stream" && (ext === "glb" || ext === "gltf")) {
-    return "3d_model"
+  if (
+    file.type === 'application/octet-stream' &&
+    (ext === 'glb' || ext === 'gltf')
+  ) {
+    return '3d_model'
   }
   return null
 }
 
-function storageFolderFor(type: MediaItem["type"]): string {
-  if (type === "image") return "images"
-  if (type === "video") return "videos"
-  if (type === "3d_model") return "models"
-  return "documents"
+function storageFolderFor(type: MediaItem['type']): string {
+  if (type === 'image') return 'images'
+  if (type === 'video') return 'videos'
+  if (type === '3d_model') return 'models'
+  return 'documents'
 }
 
-function maxFileSizeFor(type: MediaItem["type"]): number {
-  if (type === "image") return MAX_FILE_SIZE_BYTES.image
-  if (type === "video") return MAX_FILE_SIZE_BYTES.video
-  if (type === "3d_model") return MAX_FILE_SIZE_BYTES["3d_model"]
+function maxFileSizeFor(type: MediaItem['type']): number {
+  if (type === 'image') return MAX_FILE_SIZE_BYTES.image
+  if (type === 'video') return MAX_FILE_SIZE_BYTES.video
+  if (type === '3d_model') return MAX_FILE_SIZE_BYTES['3d_model']
   return MAX_FILE_SIZE_BYTES.document
 }
 
-
-function formatFileSize(bytes: number | undefined | null): string {
-  if (!bytes || bytes <= 0) return "Size unknown"
-  if (bytes >= 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)} MB`
-  if (bytes >= 1024) return `${(bytes / 1024).toFixed(0)} KB`
-  return `${bytes} bytes`
-}
-
-export function MediaUploader({ productId, media, onChange, bucket = "products" }: MediaUploaderProps) {
+export function MediaUploader({
+  productId,
+  media,
+  onChange,
+  bucket = 'products',
+}: MediaUploaderProps) {
   const [isDragging, setIsDragging] = useState(false)
   const [uploading, setUploading] = useState<string[]>([])
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
@@ -138,81 +143,88 @@ export function MediaUploader({ productId, media, onChange, bucket = "products" 
     setIsDragging(false)
   }, [])
 
-  const uploadFile = useCallback(async (file: File): Promise<MediaItem | null> => {
-    setErrorMessage(null)
+  const uploadFile = useCallback(
+    async (file: File): Promise<MediaItem | null> => {
+      setErrorMessage(null)
 
-    if (!file || file.size <= 0) {
-      setErrorMessage("Empty files are not allowed.")
-      return null
-    }
-
-    const mediaType = detectMediaType(file)
-    if (!mediaType) {
-      setErrorMessage(`Unsupported file type for "${file.name}".`)
-      return null
-    }
-
-    const maxSize = maxFileSizeFor(mediaType)
-    if (file.size > maxSize) {
-      setErrorMessage(
-        `File "${file.name}" exceeds ${(maxSize / (1024 * 1024)).toFixed(0)}MB limit.`
-      )
-      return null
-    }
-
-    const fileId = `${file.name}-${randomId()}`
-    setUploading((prev) => [...prev, fileId])
-
-    try {
-      const ext =
-        getFileExtension(file.name) ??
-        extensionFromMime(file.type) ??
-        (mediaType === "3d_model" ? "glb" : null)
-
-      if (!ext) {
-        setErrorMessage(`Could not determine file extension for "${file.name}".`)
+      if (!file || file.size <= 0) {
+        setErrorMessage('Empty files are not allowed.')
         return null
       }
 
-      const folder = storageFolderFor(mediaType)
-      const filename = `${randomId()}.${ext}`
-      const storagePath = `${productId}/${folder}/${filename}`
-
-      // Upload to Supabase Storage
-      const { data, error } = await supabase.storage
-        .from(bucket)
-        .upload(storagePath, file, {
-          cacheControl: "3600",
-          upsert: false,
-        })
-
-      if (error) {
-        console.error("Upload error:", error)
+      const mediaType = detectMediaType(file)
+      if (!mediaType) {
+        setErrorMessage(`Unsupported file type for "${file.name}".`)
         return null
       }
 
-      // Get public URL
-      const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(storagePath)
-
-      return {
-        type: mediaType,
-        url: urlData.publicUrl,
-        storage_path: data.path,
-        filename: file.name,
-        file_size: file.size,
-        mime_type: file.type,
-        is_primary: false,
-        sort_order: media.length,
-        isNew: true,
+      const maxSize = maxFileSizeFor(mediaType)
+      if (file.size > maxSize) {
+        setErrorMessage(
+          `File "${file.name}" exceeds ${(maxSize / (1024 * 1024)).toFixed(0)}MB limit.`,
+        )
+        return null
       }
-    } catch (err) {
-      console.error("Upload failed:", err)
-      setErrorMessage("Upload failed. Please try again.")
-      return null
-    } finally {
-      setUploading((prev) => prev.filter((id) => id !== fileId))
-    }
-  }, [productId, bucket, supabase.storage, media.length])
+
+      const fileId = `${file.name}-${randomId()}`
+      setUploading((prev) => [...prev, fileId])
+
+      try {
+        const ext =
+          getFileExtension(file.name) ??
+          extensionFromMime(file.type) ??
+          (mediaType === '3d_model' ? 'glb' : null)
+
+        if (!ext) {
+          setErrorMessage(
+            `Could not determine file extension for "${file.name}".`,
+          )
+          return null
+        }
+
+        const folder = storageFolderFor(mediaType)
+        const filename = `${randomId()}.${ext}`
+        const storagePath = `${productId}/${folder}/${filename}`
+
+        // Upload to Supabase Storage
+        const { data, error } = await supabase.storage
+          .from(bucket)
+          .upload(storagePath, file, {
+            cacheControl: '3600',
+            upsert: false,
+          })
+
+        if (error) {
+          console.error('Upload error:', error)
+          return null
+        }
+
+        // Get public URL
+        const { data: urlData } = supabase.storage
+          .from(bucket)
+          .getPublicUrl(storagePath)
+
+        return {
+          type: mediaType,
+          url: urlData.publicUrl,
+          storage_path: data.path,
+          filename: file.name,
+          file_size: file.size,
+          mime_type: file.type,
+          is_primary: false,
+          sort_order: media.length,
+          isNew: true,
+        }
+      } catch (err) {
+        console.error('Upload failed:', err)
+        setErrorMessage('Upload failed. Please try again.')
+        return null
+      } finally {
+        setUploading((prev) => prev.filter((id) => id !== fileId))
+      }
+    },
+    [productId, bucket, supabase.storage, media.length],
+  )
 
   const handleDrop = useCallback(
     async (e: React.DragEvent) => {
@@ -231,16 +243,18 @@ export function MediaUploader({ productId, media, onChange, bucket = "products" 
         }))
 
         // Set first image as primary if no primary exists
-        const hasImage = orderedNewMedia.some((m) => m.type === "image")
-        const hasPrimaryImage = media.some((m) => m.type === "image" && m.is_primary)
+        const hasImage = orderedNewMedia.some((m) => m.type === 'image')
+        const hasPrimaryImage = media.some(
+          (m) => m.type === 'image' && m.is_primary,
+        )
         if (hasImage && !hasPrimaryImage) {
-          const firstImage = orderedNewMedia.find((m) => m.type === "image")
+          const firstImage = orderedNewMedia.find((m) => m.type === 'image')
           if (firstImage) firstImage.is_primary = true
         }
         onChange([...media, ...orderedNewMedia])
       }
     },
-    [media, onChange, uploadFile]
+    [media, onChange, uploadFile],
   )
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -255,17 +269,19 @@ export function MediaUploader({ productId, media, onChange, bucket = "products" 
         sort_order: media.length + idx,
       }))
 
-      const hasImage = orderedNewMedia.some((m) => m.type === "image")
-      const hasPrimaryImage = media.some((m) => m.type === "image" && m.is_primary)
+      const hasImage = orderedNewMedia.some((m) => m.type === 'image')
+      const hasPrimaryImage = media.some(
+        (m) => m.type === 'image' && m.is_primary,
+      )
       if (hasImage && !hasPrimaryImage) {
-        const firstImage = orderedNewMedia.find((m) => m.type === "image")
+        const firstImage = orderedNewMedia.find((m) => m.type === 'image')
         if (firstImage) firstImage.is_primary = true
       }
       onChange([...media, ...orderedNewMedia])
     }
 
     // Reset input
-    e.target.value = ""
+    e.target.value = ''
   }
 
   const handleRemove = async (index: number) => {
@@ -280,11 +296,13 @@ export function MediaUploader({ productId, media, onChange, bucket = "products" 
     const newMedia = media.filter((_, i) => i !== index)
 
     // If we removed the primary image, set a new one
-    if (item.is_primary && item.type === "image") {
-      const firstImageIndex = newMedia.findIndex((m) => m.type === "image")
+    if (item.is_primary && item.type === 'image') {
+      const firstImageIndex = newMedia.findIndex((m) => m.type === 'image')
       if (firstImageIndex !== -1) {
         onChange(
-          newMedia.map((m, i) => (i === firstImageIndex ? { ...m, is_primary: true } : m))
+          newMedia.map((m, i) =>
+            i === firstImageIndex ? { ...m, is_primary: true } : m,
+          ),
         )
         return
       }
@@ -296,23 +314,25 @@ export function MediaUploader({ productId, media, onChange, bucket = "products" 
   const handleSetPrimary = (index: number) => {
     const item = media.at(index)
     if (!item) return
-    if (item.type !== "image") return
+    if (item.type !== 'image') return
 
     const newMedia = media.map((m, i) => ({
       ...m,
-      is_primary: m.type === "image" ? i === index : m.is_primary,
+      is_primary: m.type === 'image' ? i === index : m.is_primary,
     }))
     onChange(newMedia)
   }
 
   const handleAltTextChange = (index: number, altText: string) => {
-    onChange(media.map((m, i) => (i === index ? { ...m, alt_text: altText } : m)))
+    onChange(
+      media.map((m, i) => (i === index ? { ...m, alt_text: altText } : m)),
+    )
   }
 
-  const images = media.filter((m) => m.type === "image")
-  const videos = media.filter((m) => m.type === "video")
-  const models = media.filter((m) => m.type === "3d_model")
-  const documents = media.filter((m) => m.type === "document")
+  const images = media.filter((m) => m.type === 'image')
+  const videos = media.filter((m) => m.type === 'video')
+  const models = media.filter((m) => m.type === '3d_model')
+  const documents = media.filter((m) => m.type === 'document')
 
   return (
     <div className="space-y-6">
@@ -322,10 +342,10 @@ export function MediaUploader({ productId, media, onChange, bucket = "products" 
         onDragLeave={handleDragLeave}
         onDrop={(e) => void handleDrop(e)}
         className={cn(
-          "relative rounded-lg border-2 border-dashed p-8 text-center transition-colors",
+          'relative rounded-lg border-2 border-dashed p-8 text-center transition-colors',
           isDragging
-            ? "border-cyan-500 bg-cyan-50"
-            : "border-slate-300 hover:border-slate-400"
+            ? 'border-cyan-500 bg-cyan-50'
+            : 'border-slate-300 hover:border-slate-400',
         )}
       >
         <input
@@ -334,10 +354,10 @@ export function MediaUploader({ productId, media, onChange, bucket = "products" 
           accept={[
             ...ACCEPTED_TYPES.image,
             ...ACCEPTED_TYPES.video,
-            ".glb",
-            ".gltf",
+            '.glb',
+            '.gltf',
             ...ACCEPTED_TYPES.document,
-          ].join(",")}
+          ].join(',')}
           onChange={(e) => void handleFileSelect(e)}
           className="absolute inset-0 cursor-pointer opacity-0"
         />
@@ -392,7 +412,9 @@ export function MediaUploader({ productId, media, onChange, bucket = "products" 
                             type="button"
                             size="sm"
                             variant="secondary"
-                            onClick={() => { handleSetPrimary(originalIndex); }}
+                            onClick={() => {
+                              handleSetPrimary(originalIndex)
+                            }}
                           >
                             <Star className="mr-1 h-3 w-3" />
                             Primary
@@ -411,8 +433,10 @@ export function MediaUploader({ productId, media, onChange, bucket = "products" 
                     <div className="p-2">
                       <Input
                         placeholder="Alt text..."
-                        value={item.alt_text || ""}
-                        onChange={(e) => { handleAltTextChange(originalIndex, e.target.value); }}
+                        value={item.alt_text || ''}
+                        onChange={(e) => {
+                          handleAltTextChange(originalIndex, e.target.value)
+                        }}
                         className="h-7 text-xs"
                       />
                     </div>
@@ -445,7 +469,11 @@ export function MediaUploader({ productId, media, onChange, bucket = "products" 
                           {item.filename}
                         </p>
                         <p className="text-xs text-slate-500">
-                          {formatFileSize(item.file_size)}
+                          {formatFileSize(item.file_size, {
+                            unknownLabel: 'Size unknown',
+                            bytesLabel: 'bytes',
+                            precisionKb: 0,
+                          })}
                         </p>
                       </div>
                       <Button
@@ -486,7 +514,11 @@ export function MediaUploader({ productId, media, onChange, bucket = "products" 
                           {item.filename}
                         </p>
                         <p className="text-xs text-slate-500">
-                          {formatFileSize(item.file_size)}
+                          {formatFileSize(item.file_size, {
+                            unknownLabel: 'Size unknown',
+                            bytesLabel: 'bytes',
+                            precisionKb: 0,
+                          })}
                         </p>
                       </div>
                       <Button
@@ -514,7 +546,8 @@ export function MediaUploader({ productId, media, onChange, bucket = "products" 
               Documents ({documents.length})
             </Label>
             <p className="text-xs text-slate-500 mt-0.5">
-              Name PDFs with &ldquo;datasheet&rdquo; to show the download button on product pages
+              Name PDFs with &ldquo;datasheet&rdquo; to show the download button
+              on product pages
             </p>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
@@ -532,7 +565,11 @@ export function MediaUploader({ productId, media, onChange, bucket = "products" 
                           {item.filename}
                         </p>
                         <p className="text-xs text-slate-500">
-                          {formatFileSize(item.file_size)}
+                          {formatFileSize(item.file_size, {
+                            unknownLabel: 'Size unknown',
+                            bytesLabel: 'bytes',
+                            precisionKb: 0,
+                          })}
                         </p>
                       </div>
                       <Button

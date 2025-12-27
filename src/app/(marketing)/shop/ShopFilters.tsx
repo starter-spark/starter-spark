@@ -1,10 +1,10 @@
-"use client"
+'use client'
 
-import { ProductCard, type ProductTag } from "@/components/commerce"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Search, Filter } from "lucide-react"
-import { useState, useMemo } from "react"
+import { ProductCard, type ProductTag } from '@/components/commerce'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { Search, Filter } from 'lucide-react'
+import { useState, useMemo } from 'react'
 
 interface Product {
   slug: string
@@ -14,9 +14,9 @@ interface Product {
   badge?: string
   tags?: ProductTag[]
   category: string
-  status: "active" | "coming_soon" | "draft"
+  status: 'active' | 'coming_soon' | 'draft'
   image?: string
-  // Discount fields (Phase 14.3)
+  // Discount fields
   originalPrice?: number | null
   discountPercent?: number | null
   discountExpiresAt?: string | null
@@ -26,17 +26,17 @@ interface ShopFiltersProps {
   products: Product[]
 }
 
-type FilterOption = "all" | "kit" | "bundle" | "parts"
+type FilterOption = 'all' | 'kit' | 'bundle' | 'parts'
 
 export function ShopFilters({ products }: ShopFiltersProps) {
-  const [search, setSearch] = useState("")
-  const [filter, setFilter] = useState<FilterOption>("all")
+  const [search, setSearch] = useState('')
+  const [filter, setFilter] = useState<FilterOption>('all')
 
   const filterOptions: { value: FilterOption; label: string }[] = [
-    { value: "all", label: "All" },
-    { value: "kit", label: "Kits" },
-    { value: "bundle", label: "Bundles" },
-    { value: "parts", label: "Parts" },
+    { value: 'all', label: 'All' },
+    { value: 'kit', label: 'Kits' },
+    { value: 'bundle', label: 'Bundles' },
+    { value: 'parts', label: 'Parts' },
   ]
 
   const filteredProducts = useMemo(() => {
@@ -44,7 +44,7 @@ export function ShopFilters({ products }: ShopFiltersProps) {
       const matchesSearch = product.name
         .toLowerCase()
         .includes(search.toLowerCase())
-      const matchesFilter = filter === "all" || product.category === filter
+      const matchesFilter = filter === 'all' || product.category === filter
       return matchesSearch && matchesFilter
     })
   }, [products, search, filter])
@@ -69,7 +69,9 @@ export function ShopFilters({ products }: ShopFiltersProps) {
                 type="text"
                 placeholder="Search products..."
                 value={search}
-                onChange={(e) => { setSearch(e.target.value); }}
+                onChange={(e) => {
+                  setSearch(e.target.value)
+                }}
                 className="pl-10 bg-white border-slate-200 focus:border-cyan-700"
               />
             </div>
@@ -80,13 +82,15 @@ export function ShopFilters({ products }: ShopFiltersProps) {
               {filterOptions.map(({ value, label }) => (
                 <Button
                   key={value}
-                  variant={filter === value ? "default" : "outline"}
+                  variant={filter === value ? 'default' : 'outline'}
                   size="sm"
-                  onClick={() => { setFilter(value); }}
+                  onClick={() => {
+                    setFilter(value)
+                  }}
                   className={
                     filter === value
-                      ? "bg-cyan-700 hover:bg-cyan-600 text-white font-mono"
-                      : "border-slate-200 hover:border-cyan-700 text-slate-600 hover:text-cyan-700 font-mono"
+                      ? 'bg-cyan-700 hover:bg-cyan-600 text-white font-mono'
+                      : 'border-slate-200 hover:border-cyan-700 text-slate-600 hover:text-cyan-700 font-mono'
                   }
                 >
                   {label}
@@ -127,8 +131,8 @@ export function ShopFilters({ products }: ShopFiltersProps) {
               <Button
                 variant="ghost"
                 onClick={() => {
-                  setSearch("")
-                  setFilter("all")
+                  setSearch('')
+                  setFilter('all')
                 }}
                 className="mt-4 text-cyan-700 hover:text-cyan-600"
               >

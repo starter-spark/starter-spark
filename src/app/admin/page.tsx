@@ -1,8 +1,14 @@
-import Link from "next/link"
-import { createClient } from "@/lib/supabase/server"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { UserAvatar } from "@/components/ui/user-avatar"
+import Link from 'next/link'
+import { createClient } from '@/lib/supabase/server'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { UserAvatar } from '@/components/ui/user-avatar'
 import {
   Package,
   KeyRound,
@@ -11,7 +17,7 @@ import {
   Calendar,
   ArrowRight,
   AlertCircle,
-} from "lucide-react"
+} from 'lucide-react'
 
 async function getStats() {
   const supabase = await createClient()
@@ -25,12 +31,21 @@ async function getStats() {
     openQuestionsResult,
     upcomingEventsResult,
   ] = await Promise.all([
-    supabase.from("products").select("*", { count: "exact", head: true }),
-    supabase.from("licenses").select("*", { count: "exact", head: true }),
-    supabase.from("licenses").select("*", { count: "exact", head: true }).not("owner_id", "is", null),
-    supabase.from("profiles").select("*", { count: "exact", head: true }),
-    supabase.from("posts").select("*", { count: "exact", head: true }).eq("status", "open"),
-    supabase.from("events").select("*", { count: "exact", head: true }).gte("event_date", new Date().toISOString()),
+    supabase.from('products').select('*', { count: 'exact', head: true }),
+    supabase.from('licenses').select('*', { count: 'exact', head: true }),
+    supabase
+      .from('licenses')
+      .select('*', { count: 'exact', head: true })
+      .not('owner_id', 'is', null),
+    supabase.from('profiles').select('*', { count: 'exact', head: true }),
+    supabase
+      .from('posts')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'open'),
+    supabase
+      .from('events')
+      .select('*', { count: 'exact', head: true })
+      .gte('event_date', new Date().toISOString()),
   ])
 
   return {
@@ -48,18 +63,20 @@ async function getRecentActivity() {
 
   // Get recent unclaimed licenses
   const { data: unclaimedLicenses } = await supabase
-    .from("licenses")
-    .select("id, code, created_at, customer_email, products(name)")
-    .is("owner_id", null)
-    .order("created_at", { ascending: false })
+    .from('licenses')
+    .select('id, code, created_at, customer_email, products(name)')
+    .is('owner_id', null)
+    .order('created_at', { ascending: false })
     .limit(5)
 
   // Get recent open questions
   const { data: recentQuestions } = await supabase
-    .from("posts")
-    .select("id, title, slug, created_at, status, profiles(id, full_name, email, avatar_url, avatar_seed)")
-    .eq("status", "open")
-    .order("created_at", { ascending: false })
+    .from('posts')
+    .select(
+      'id, title, slug, created_at, status, profiles(id, full_name, email, avatar_url, avatar_seed)',
+    )
+    .eq('status', 'open')
+    .order('created_at', { ascending: false })
     .limit(5)
 
   return {
@@ -74,45 +91,45 @@ export default async function AdminDashboard() {
 
   const statCards = [
     {
-      title: "Products",
+      title: 'Products',
       value: stats.products,
       icon: Package,
-      href: "/admin/products",
-      color: "text-cyan-700",
-      bgColor: "bg-cyan-50",
+      href: '/admin/products',
+      color: 'text-cyan-700',
+      bgColor: 'bg-cyan-50',
     },
     {
-      title: "Licenses",
+      title: 'Licenses',
       value: `${stats.claimedLicenses}/${stats.totalLicenses}`,
-      description: "claimed",
+      description: 'claimed',
       icon: KeyRound,
-      href: "/admin/licenses",
-      color: "text-amber-600",
-      bgColor: "bg-amber-50",
+      href: '/admin/licenses',
+      color: 'text-amber-600',
+      bgColor: 'bg-amber-50',
     },
     {
-      title: "Users",
+      title: 'Users',
       value: stats.users,
       icon: Users,
-      href: "/admin/users",
-      color: "text-green-600",
-      bgColor: "bg-green-50",
+      href: '/admin/users',
+      color: 'text-green-600',
+      bgColor: 'bg-green-50',
     },
     {
-      title: "Open Questions",
+      title: 'Open Questions',
       value: stats.openQuestions,
       icon: MessageSquare,
-      href: "/admin/community",
-      color: "text-purple-600",
-      bgColor: "bg-purple-50",
+      href: '/admin/community',
+      color: 'text-purple-600',
+      bgColor: 'bg-purple-50',
     },
     {
-      title: "Upcoming Events",
+      title: 'Upcoming Events',
       value: stats.upcomingEvents,
       icon: Calendar,
-      href: "/admin/events",
-      color: "text-blue-600",
-      bgColor: "bg-blue-50",
+      href: '/admin/events',
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-50',
     },
   ]
 
@@ -120,8 +137,12 @@ export default async function AdminDashboard() {
     <div className="space-y-8">
       {/* Header */}
       <div>
-        <h1 className="font-mono text-2xl font-bold text-slate-900">Dashboard</h1>
-        <p className="text-slate-600">Welcome to the StarterSpark admin panel.</p>
+        <h1 className="font-mono text-2xl font-bold text-slate-900">
+          Dashboard
+        </h1>
+        <p className="text-slate-600">
+          Welcome to the StarterSpark admin panel.
+        </p>
       </div>
 
       {/* Stats Grid */}
@@ -158,7 +179,9 @@ export default async function AdminDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="text-lg">Unclaimed Licenses</CardTitle>
-                <CardDescription>Licenses waiting to be claimed</CardDescription>
+                <CardDescription>
+                  Licenses waiting to be claimed
+                </CardDescription>
               </div>
               <Button asChild variant="ghost" size="sm">
                 <Link href="/admin/licenses?filter=unclaimed">
@@ -183,15 +206,19 @@ export default async function AdminDashboard() {
                         {license.code.slice(0, 4)}****
                       </p>
                       <p className="text-xs text-slate-500">
-                        {(license.products as unknown as { name: string } | null)?.name || "Unknown product"}
+                        {(
+                          license.products as unknown as { name: string } | null
+                        )?.name || 'Unknown product'}
                       </p>
                     </div>
                     <div className="text-right">
                       <p className="text-xs text-slate-500">
-                        {license.customer_email || "No email"}
+                        {license.customer_email || 'No email'}
                       </p>
                       <p className="text-xs text-slate-400">
-                        {license.created_at ? new Date(license.created_at).toLocaleDateString() : "-"}
+                        {license.created_at
+                          ? new Date(license.created_at).toLocaleDateString()
+                          : '-'}
                       </p>
                     </div>
                   </div>
@@ -207,7 +234,9 @@ export default async function AdminDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="text-lg">Open Questions</CardTitle>
-                <CardDescription>Community questions needing attention</CardDescription>
+                <CardDescription>
+                  Community questions needing attention
+                </CardDescription>
               </div>
               <Button asChild variant="ghost" size="sm">
                 <Link href="/admin/community?filter=open">
@@ -236,7 +265,13 @@ export default async function AdminDashboard() {
                         </p>
                         <div className="flex items-center gap-1.5 text-xs text-slate-500 mt-1">
                           {(() => {
-                            const author = question.profiles as unknown as { id: string; full_name: string | null; email: string | null; avatar_url: string | null; avatar_seed: string | null } | null
+                            const author = question.profiles as unknown as {
+                              id: string
+                              full_name: string | null
+                              email: string | null
+                              avatar_url: string | null
+                              avatar_seed: string | null
+                            } | null
                             return (
                               <>
                                 <UserAvatar
@@ -249,12 +284,18 @@ export default async function AdminDashboard() {
                                   }}
                                   size="sm"
                                 />
-                                <span>{author?.full_name || "Unknown"}</span>
+                                <span>{author?.full_name || 'Unknown'}</span>
                               </>
                             )
                           })()}
                           <span>•</span>
-                          <span>{question.created_at ? new Date(question.created_at).toLocaleDateString() : "-"}</span>
+                          <span>
+                            {question.created_at
+                              ? new Date(
+                                  question.created_at,
+                                ).toLocaleDateString()
+                              : '-'}
+                          </span>
                         </div>
                       </div>
                     </div>

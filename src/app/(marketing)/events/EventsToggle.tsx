@@ -1,7 +1,13 @@
-"use client"
+'use client'
 
-import { useState } from "react"
-import { ChevronDown, MapPin, Clock } from "lucide-react"
+import { useState } from 'react'
+import { ChevronDown, MapPin, Clock } from 'lucide-react'
+import {
+  formatEventDate,
+  formatEventRange,
+  getEventTypeBadgeClasses,
+  getEventTypeLabel,
+} from '@/lib/events'
 
 interface Event {
   id: string
@@ -16,69 +22,6 @@ interface Event {
   rsvp_url: string | null
   image_url: string | null
   capacity: number | null
-}
-
-function formatEventDate(dateString: string): string {
-  const date = new Date(dateString)
-  return date.toLocaleDateString("en-US", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  })
-}
-
-function formatEventTime(dateString: string): string {
-  const date = new Date(dateString)
-  return date.toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  })
-}
-
-function formatDateRange(start: string, end: string | null): string {
-  const startDate = new Date(start)
-  const endDate = end ? new Date(end) : null
-
-  if (endDate && startDate.toDateString() === endDate.toDateString()) {
-    return `${formatEventTime(start)} - ${formatEventTime(end!)}`
-  }
-
-  if (endDate) {
-    return `${formatEventDate(start)} - ${formatEventDate(end!)}`
-  }
-
-  return formatEventTime(start)
-}
-
-function getEventTypeLabel(type: string): string {
-  switch (type) {
-    case "workshop":
-      return "Workshop"
-    case "competition":
-      return "Competition"
-    case "meetup":
-      return "Meetup"
-    case "exhibition":
-      return "Exhibition"
-    case "other":
-      return "Event"
-    default:
-      return "Event"
-  }
-}
-
-function getEventTypeColor(type: string): string {
-  switch (type) {
-    case "workshop":
-    case "competition":
-    case "meetup":
-    case "exhibition":
-    case "other":
-    default:
-      return "bg-slate-100 text-slate-600"
-  }
 }
 
 function PastEventCard({ event }: { event: Event }) {
@@ -100,8 +43,9 @@ function PastEventCard({ event }: { event: Event }) {
                 {formatEventDate(event.event_date)}
               </div>
               <span
-                className={`inline-block mt-2 px-2 py-0.5 text-xs font-mono rounded ${getEventTypeColor(
-                  event.event_type
+                className={`inline-block mt-2 px-2 py-0.5 text-xs font-mono rounded ${getEventTypeBadgeClasses(
+                  event.event_type,
+                  { muted: true },
                 )}`}
               >
                 {getEventTypeLabel(event.event_type)}
@@ -122,7 +66,9 @@ function PastEventCard({ event }: { event: Event }) {
             </div>
             <div className="flex items-center gap-1.5">
               <Clock className="w-4 h-4" />
-              <span>{formatDateRange(event.event_date, event.end_date)}</span>
+              <span>
+                {formatEventRange(event.event_date, event.end_date)}
+              </span>
             </div>
           </div>
         </div>
@@ -141,12 +87,14 @@ export function EventsToggle({ pastEvents }: EventsToggleProps) {
   return (
     <div>
       <button
-        onClick={() => { setIsExpanded(!isExpanded); }}
+        onClick={() => {
+          setIsExpanded(!isExpanded)
+        }}
         className="flex items-center gap-2 font-mono text-lg text-slate-600 hover:text-slate-900 transition-colors mb-6"
       >
         <ChevronDown
           className={`w-5 h-5 transition-transform ${
-            isExpanded ? "rotate-180" : ""
+            isExpanded ? 'rotate-180' : ''
           }`}
         />
         Past Events ({pastEvents.length})

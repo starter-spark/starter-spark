@@ -1,6 +1,6 @@
-"use client"
+'use client'
 
-import { useEffect } from "react"
+import { useEffect } from 'react'
 
 type PendingLessonCompletion = {
   lessonId: string
@@ -9,7 +9,7 @@ type PendingLessonCompletion = {
   attempts?: number
 }
 
-const pendingSuffix = ":pending"
+const pendingSuffix = ':pending'
 
 function safeSessionStorageGet(key: string): string | null {
   if (globalThis.window === undefined) return null
@@ -25,7 +25,7 @@ function safeSessionStorageSet(key: string, value: string) {
   try {
     sessionStorage.setItem(key, value)
   } catch {
-    // ignore
+    // Ignore.
   }
 }
 
@@ -34,7 +34,7 @@ function safeSessionStorageRemove(key: string) {
   try {
     sessionStorage.removeItem(key)
   } catch {
-    // ignore
+    // Ignore.
   }
 }
 
@@ -64,20 +64,20 @@ function parsePending(raw: string | null): PendingLessonCompletion | null {
   if (!raw) return null
   try {
     const parsed: unknown = JSON.parse(raw)
-    if (typeof parsed !== "object" || parsed === null) return null
+    if (typeof parsed !== 'object' || parsed === null) return null
     const record = parsed as Record<string, unknown>
     const lessonId = record.lessonId
-    if (typeof lessonId !== "string" || lessonId.length === 0) return null
+    if (typeof lessonId !== 'string' || lessonId.length === 0) return null
     const createdAt =
-      typeof record.createdAt === "number" && Number.isFinite(record.createdAt)
+      typeof record.createdAt === 'number' && Number.isFinite(record.createdAt)
         ? record.createdAt
         : undefined
     const attempts =
-      typeof record.attempts === "number" && Number.isFinite(record.attempts)
+      typeof record.attempts === 'number' && Number.isFinite(record.attempts)
         ? record.attempts
         : undefined
     const progress =
-      typeof record.progress === "number" && Number.isFinite(record.progress)
+      typeof record.progress === 'number' && Number.isFinite(record.progress)
         ? record.progress
         : undefined
 
@@ -93,21 +93,25 @@ function backoffMs(attempts: number): number {
 }
 
 async function postCompletion(lessonId: string): Promise<Response> {
-  return fetch("/api/learn/complete", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
+  return fetch('/api/learn/complete', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ lessonId }),
     keepalive: true,
   })
 }
 
-async function syncPendingKey(pendingKey: string, signal: AbortSignal): Promise<void> {
+async function syncPendingKey(
+  pendingKey: string,
+  signal: AbortSignal,
+): Promise<void> {
   const raw = safeSessionStorageGet(pendingKey)
   const pending = parsePending(raw)
   if (!pending) return
 
   const now = Date.now()
-  const ageMs = typeof pending.createdAt === "number" ? now - pending.createdAt : 0
+  const ageMs =
+    typeof pending.createdAt === 'number' ? now - pending.createdAt : 0
   const attempts = pending.attempts ?? 0
 
   // Too old or too many retries -> clear to avoid permanent UI drift.
@@ -125,7 +129,13 @@ async function syncPendingKey(pendingKey: string, signal: AbortSignal): Promise<
     safeSessionStorageSet(pendingKey, JSON.stringify(next))
     await new Promise<void>((resolve) => {
       const id = globalThis.setTimeout(resolve, backoffMs(attempts))
-      signal.addEventListener("abort", () => { globalThis.clearTimeout(id); }, { once: true })
+      signal.addEventListener(
+        'abort',
+        () => {
+          globalThis.clearTimeout(id)
+        },
+        { once: true },
+      )
     })
     return
   }
@@ -153,7 +163,13 @@ async function syncPendingKey(pendingKey: string, signal: AbortSignal): Promise<
   safeSessionStorageSet(pendingKey, JSON.stringify(next))
   await new Promise<void>((resolve) => {
     const id = globalThis.setTimeout(resolve, backoffMs(attempts))
-    signal.addEventListener("abort", () => { globalThis.clearTimeout(id); }, { once: true })
+    signal.addEventListener(
+      'abort',
+      () => {
+        globalThis.clearTimeout(id)
+      },
+      { once: true },
+    )
   })
 }
 
@@ -176,7 +192,10 @@ export function LearnProgressSync({
         ? pendingKeysForUser(userId)
         : []
 
-    if (pendingKeys.length === 0) return () => { controller.abort(); }
+    if (pendingKeys.length === 0)
+      return () => {
+        controller.abort()
+      }
 
     void (async () => {
       for (const pendingKey of pendingKeys) {
@@ -185,9 +204,10 @@ export function LearnProgressSync({
       }
     })()
 
-    return () => { controller.abort(); }
+    return () => {
+      controller.abort()
+    }
   }, [storageKey, userId])
 
   return null
 }
-

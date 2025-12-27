@@ -1,6 +1,7 @@
-import { Package, ExternalLink, Calendar } from "lucide-react"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
+import { Package, ExternalLink, Calendar } from 'lucide-react'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { formatShortDate } from '@/lib/utils'
 
 interface KitCardProps {
   name: string
@@ -11,14 +12,15 @@ interface KitCardProps {
   compact?: boolean
 }
 
-export function KitCard({ name, slug, description, claimedAt, quantity = 1, compact = false }: KitCardProps) {
-  const formattedDate = claimedAt
-    ? new Date(claimedAt).toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      })
-    : "Unknown"
+export function KitCard({
+  name,
+  slug,
+  description,
+  claimedAt,
+  quantity = 1,
+  compact = false,
+}: KitCardProps) {
+  const formattedDate = claimedAt ? formatShortDate(claimedAt) : 'Unknown'
 
   if (compact) {
     return (
@@ -35,12 +37,8 @@ export function KitCard({ name, slug, description, claimedAt, quantity = 1, comp
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="font-mono text-sm text-slate-900 truncate">
-            {name}
-          </h3>
-          <p className="text-xs text-slate-500">
-            Claimed {formattedDate}
-          </p>
+          <h3 className="font-mono text-sm text-slate-900 truncate">{name}</h3>
+          <p className="text-xs text-slate-500">Claimed {formattedDate}</p>
         </div>
         <ExternalLink className="w-4 h-4 text-slate-400 flex-shrink-0" />
       </Link>
@@ -60,7 +58,11 @@ export function KitCard({ name, slug, description, claimedAt, quantity = 1, comp
       <div className="flex-1 min-w-0">
         <h3 className="font-mono text-lg text-slate-900 mb-1">
           {name}
-          {quantity > 1 && <span className="text-sm text-slate-500 font-normal ml-2">×{quantity}</span>}
+          {quantity > 1 && (
+            <span className="text-sm text-slate-500 font-normal ml-2">
+              ×{quantity}
+            </span>
+          )}
         </h3>
         {description && (
           <p className="text-sm text-slate-600 mb-2 line-clamp-2">

@@ -1,25 +1,25 @@
-import Link from "next/link"
-import { createClient } from "@/lib/supabase/server"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { ArrowLeft } from "lucide-react"
-import { createCourse } from "../actions"
+import Link from 'next/link'
+import { createClient } from '@/lib/supabase/server'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { ArrowLeft } from 'lucide-react'
+import { createCourse } from '../actions'
 
 export const metadata = {
-  title: "New Course | Admin",
+  title: 'New Course | Admin',
 }
 
 async function getProducts() {
   const supabase = await createClient()
   const { data, error } = await supabase
-    .from("products")
-    .select("id, name, slug")
-    .order("name")
+    .from('products')
+    .select('id, name, slug')
+    .order('name')
 
   if (error) {
-    console.error("Error fetching products:", error)
+    console.error('Error fetching products:', error)
     return []
   }
 
@@ -39,7 +39,9 @@ export default async function NewCoursePage() {
           </Link>
         </Button>
         <div>
-          <h1 className="font-mono text-2xl font-bold text-slate-900">New Course</h1>
+          <h1 className="font-mono text-2xl font-bold text-slate-900">
+            New Course
+          </h1>
           <p className="text-slate-600">Create a new learning course</p>
         </div>
       </div>
@@ -108,7 +110,9 @@ export default async function NewCoursePage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="duration_minutes">Estimated Duration (minutes)</Label>
+              <Label htmlFor="duration_minutes">
+                Estimated Duration (minutes)
+              </Label>
               <Input
                 id="duration_minutes"
                 name="duration_minutes"

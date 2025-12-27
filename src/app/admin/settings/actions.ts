@@ -1,9 +1,9 @@
-"use server"
+'use server'
 
-import { createClient } from "@/lib/supabase/server"
-import { revalidatePath } from "next/cache"
-import { logAuditEvent } from "@/lib/audit"
-import { requireAdmin } from "@/lib/auth"
+import { createClient } from '@/lib/supabase/server'
+import { revalidatePath } from 'next/cache'
+import { logAuditEvent } from '@/lib/audit'
+import { requireAdmin } from '@/lib/auth'
 
 interface UpdateStatInput {
   id: string
@@ -12,6 +12,7 @@ interface UpdateStatInput {
   suffix: string
   is_auto_calculated?: boolean
   auto_source?: string | null
+  visible_on?: string[]
 }
 
 export async function updateSiteStat(input: UpdateStatInput) {
@@ -27,30 +28,37 @@ export async function updateSiteStat(input: UpdateStatInput) {
   const updateData: Record<string, unknown> = {
     value: input.value,
     label: input.label,
-    suffix: input.suffix || "",
+    suffix: input.suffix || '',
     updated_at: new Date().toISOString(),
   }
 
   // Include auto_calculated fields if provided
   if (input.is_auto_calculated !== undefined) {
     updateData.is_auto_calculated = input.is_auto_calculated
-    updateData.auto_source = input.is_auto_calculated ? (input.auto_source || null) : null
+    updateData.auto_source = input.is_auto_calculated
+      ? input.auto_source || null
+      : null
+  }
+
+  // Include visible_on if provided
+  if (input.visible_on !== undefined) {
+    updateData.visible_on = input.visible_on
   }
 
   const { data: updated, error } = await supabase
-    .from("site_stats")
+    .from('site_stats')
     .update(updateData)
-    .eq("id", input.id)
-    .select("id")
+    .eq('id', input.id)
+    .select('id')
     .maybeSingle()
 
   if (error) {
-    console.error("Error updating site stat:", error)
+    console.error('Error updating site stat:', error)
     return { error: error.message }
   }
 
   if (!updated) {
-    return { error: "Stat not found" }
+    return { error: 'Stat not found' }
   }
 
   // Log audit event
@@ -66,8 +74,8 @@ export async function updateSiteStat(input: UpdateStatInput) {
     },
   })
 
-  revalidatePath("/admin/settings")
-  revalidatePath("/")
+  revalidatePath('/admin/settings')
+  revalidatePath('/')
 
   return { success: true }
 }
@@ -79,6 +87,7 @@ export async function createSiteStat(input: {
   suffix: string
   is_auto_calculated: boolean
   auto_source?: string | null
+  visible_on?: string[]
 }) {
   const supabase = await createClient()
 
@@ -90,14 +99,14 @@ export async function createSiteStat(input: {
 
   // Get the max sort_order
   const { data: maxOrder, error: maxOrderError } = await supabase
-    .from("site_stats")
-    .select("sort_order")
-    .order("sort_order", { ascending: false })
+    .from('site_stats')
+    .select('sort_order')
+    .order('sort_order', { ascending: false })
     .limit(1)
     .maybeSingle()
 
   if (maxOrderError) {
-    console.error("Error fetching max sort_order:", maxOrderError)
+    console.error('Error fetching max sort_order:', maxOrderError)
     return { error: maxOrderError.message }
   }
 
@@ -105,26 +114,27 @@ export async function createSiteStat(input: {
 
   // Create the stat
   const { data: stat, error } = await supabase
-    .from("site_stats")
+    .from('site_stats')
     .insert({
       key: input.key,
       value: input.value,
       label: input.label,
-      suffix: input.suffix || "",
+      suffix: input.suffix || '',
       is_auto_calculated: input.is_auto_calculated,
-      auto_source: input.is_auto_calculated ? (input.auto_source || null) : null,
+      auto_source: input.is_auto_calculated ? input.auto_source || null : null,
       sort_order: nextSortOrder,
+      visible_on: input.visible_on || ['home'],
     })
-    .select("id")
+    .select('id')
     .maybeSingle()
 
   if (error) {
-    console.error("Error creating site stat:", error)
+    console.error('Error creating site stat:', error)
     return { error: error.message }
   }
 
   if (!stat) {
-    return { error: "Failed to create stat" }
+    return { error: 'Failed to create stat' }
   }
 
   // Log audit event
@@ -140,8 +150,8 @@ export async function createSiteStat(input: {
     },
   })
 
-  revalidatePath("/admin/settings")
-  revalidatePath("/")
+  revalidatePath('/admin/settings')
+  revalidatePath('/')
 
   return { success: true }
 }
@@ -157,19 +167,19 @@ export async function deleteSiteStat(id: string) {
 
   // Delete and return the stat for audit details.
   const { data: stat, error } = await supabase
-    .from("site_stats")
+    .from('site_stats')
     .delete()
-    .eq("id", id)
-    .select("id, key, label")
+    .eq('id', id)
+    .select('id, key, label')
     .maybeSingle()
 
   if (error) {
-    console.error("Error deleting site stat:", error)
+    console.error('Error deleting site stat:', error)
     return { error: error.message }
   }
 
   if (!stat) {
-    return { error: "Stat not found" }
+    return { error: 'Stat not found' }
   }
 
   // Log audit event
@@ -184,8 +194,8 @@ export async function deleteSiteStat(id: string) {
     },
   })
 
-  revalidatePath("/admin/settings")
-  revalidatePath("/")
+  revalidatePath('/admin/settings')
+  revalidatePath('/')
 
   return { success: true }
 }

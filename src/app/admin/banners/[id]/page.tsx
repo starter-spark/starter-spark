@@ -1,25 +1,26 @@
-import Link from "next/link"
-import { notFound } from "next/navigation"
-import { ChevronLeft } from "lucide-react"
-import { createClient } from "@/lib/supabase/server"
-import { BannerForm } from "../BannerForm"
+import Link from 'next/link'
+import { notFound } from 'next/navigation'
+import { ChevronLeft } from 'lucide-react'
+import { createClient } from '@/lib/supabase/server'
+import { BannerForm } from '../BannerForm'
+import { resolveParams, type MaybePromise } from '@/lib/next-params'
 
 export const metadata = {
-  title: "Edit Banner | Admin",
+  title: 'Edit Banner | Admin',
 }
 
 async function getBanner(id: string) {
   const supabase = await createClient()
 
   const { data, error } = await supabase
-    .from("site_banners")
-    .select("*")
-    .eq("id", id)
+    .from('site_banners')
+    .select('*')
+    .eq('id', id)
     .maybeSingle()
 
   if (error) {
-    console.error("Error fetching banner:", error)
-    throw new Error("Failed to load banner")
+    console.error('Error fetching banner:', error)
+    throw new Error('Failed to load banner')
   }
 
   return data
@@ -28,9 +29,9 @@ async function getBanner(id: string) {
 export default async function EditBannerPage({
   params,
 }: {
-  params: Promise<{ id: string }>
+  params: MaybePromise<{ id: string }>
 }) {
-  const { id } = await params
+  const { id } = await resolveParams(params)
   const banner = await getBanner(id)
 
   if (!banner) {
@@ -48,7 +49,9 @@ export default async function EditBannerPage({
           <ChevronLeft className="mr-1 h-4 w-4" />
           Back to Banners
         </Link>
-        <h1 className="font-mono text-2xl font-bold text-slate-900">Edit Banner</h1>
+        <h1 className="font-mono text-2xl font-bold text-slate-900">
+          Edit Banner
+        </h1>
         <p className="text-slate-600">{banner.title}</p>
       </div>
 

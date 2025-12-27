@@ -1,20 +1,27 @@
-"use client"
+'use client'
 
-import { useMemo, useState } from "react"
-import { CheckCircle2, XCircle } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { FlowEditor } from "@/components/learn/FlowEditor"
-import { generateArduinoCode, parseFlowState, type FlowState } from "@/components/learn/visual-programming"
+import { useMemo, useState } from 'react'
+import { CheckCircle2, XCircle } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { FlowEditor } from '@/components/learn/FlowEditor'
+import {
+  generateArduinoCode,
+  parseFlowState,
+  type FlowState,
+} from '@/components/learn/visual-programming'
 
 interface VisualBlocksChallengeProps {
   starterFlow: unknown
   solutionFlow?: unknown
 }
 
-export function VisualBlocksChallenge({ starterFlow, solutionFlow }: VisualBlocksChallengeProps) {
+export function VisualBlocksChallenge({
+  starterFlow,
+  solutionFlow,
+}: VisualBlocksChallengeProps) {
   const initial = useMemo(() => parseFlowState(starterFlow), [starterFlow])
   const [flow, setFlow] = useState<FlowState>(initial)
-  const [result, setResult] = useState<"correct" | "incorrect" | null>(null)
+  const [result, setResult] = useState<'correct' | 'incorrect' | null>(null)
 
   const expected = useMemo(() => {
     if (!solutionFlow) return null
@@ -26,7 +33,7 @@ export function VisualBlocksChallenge({ starterFlow, solutionFlow }: VisualBlock
   const check = () => {
     if (!expected) return
     const actual = generateArduinoCode(flow.nodes, flow.edges).trim()
-    setResult(actual === expected ? "correct" : "incorrect")
+    setResult(actual === expected ? 'correct' : 'incorrect')
   }
 
   return (
@@ -38,12 +45,17 @@ export function VisualBlocksChallenge({ starterFlow, solutionFlow }: VisualBlock
               Visual Blocks Challenge
             </h3>
             <p className="text-sm text-slate-600">
-              Build a program by connecting blocks, then preview the generated Arduino code.
+              Build a program by connecting blocks, then preview the generated
+              Arduino code.
             </p>
           </div>
 
           {expected && (
-            <Button type="button" onClick={check} className="bg-cyan-700 hover:bg-cyan-600 font-mono">
+            <Button
+              type="button"
+              onClick={check}
+              className="bg-cyan-700 hover:bg-cyan-600 font-mono"
+            >
               Check Answer
             </Button>
           )}
@@ -52,18 +64,18 @@ export function VisualBlocksChallenge({ starterFlow, solutionFlow }: VisualBlock
         {result && (
           <div
             className={`flex items-center gap-2 rounded border px-3 py-2 text-sm mb-4 ${
-              result === "correct"
-                ? "border-green-200 bg-green-50 text-green-700"
-                : "border-red-200 bg-red-50 text-red-700"
+              result === 'correct'
+                ? 'border-green-200 bg-green-50 text-green-700'
+                : 'border-red-200 bg-red-50 text-red-700'
             }`}
           >
-            {result === "correct" ? (
+            {result === 'correct' ? (
               <CheckCircle2 className="h-4 w-4" />
             ) : (
               <XCircle className="h-4 w-4" />
             )}
             <span className="font-mono">
-              {result === "correct" ? "Correct!" : "Not quite — keep trying."}
+              {result === 'correct' ? 'Correct!' : 'Not quite — keep trying.'}
             </span>
           </div>
         )}
@@ -79,4 +91,3 @@ export function VisualBlocksChallenge({ starterFlow, solutionFlow }: VisualBlock
     </div>
   )
 }
-

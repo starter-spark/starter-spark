@@ -1,20 +1,20 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { fileTypeFromBuffer } from "file-type"
-import { supabaseAdmin } from "@/lib/supabase/admin"
-import crypto from "node:crypto"
-import { rateLimit, rateLimitHeaders } from "@/lib/rate-limit"
+import { type NextRequest, NextResponse } from 'next/server'
+import { fileTypeFromBuffer } from 'file-type'
+import { supabaseAdmin } from '@/lib/supabase/admin'
+import crypto from 'node:crypto'
+import { rateLimit, rateLimitHeaders } from '@/lib/rate-limit'
 
 // Allowed file types with their magic byte signatures
 const ALLOWED_TYPES = {
   // Images
-  "image/jpeg": { maxSize: 10 * 1024 * 1024 }, // 10MB
-  "image/png": { maxSize: 10 * 1024 * 1024 },
-  "image/gif": { maxSize: 10 * 1024 * 1024 },
-  "image/webp": { maxSize: 10 * 1024 * 1024 },
+  'image/jpeg': { maxSize: 10 * 1024 * 1024 }, // 10MB
+  'image/png': { maxSize: 10 * 1024 * 1024 },
+  'image/gif': { maxSize: 10 * 1024 * 1024 },
+  'image/webp': { maxSize: 10 * 1024 * 1024 },
   // Videos
-  "video/mp4": { maxSize: 50 * 1024 * 1024 }, // 50MB
-  "video/webm": { maxSize: 50 * 1024 * 1024 },
-  "video/quicktime": { maxSize: 50 * 1024 * 1024 },
+  'video/mp4': { maxSize: 50 * 1024 * 1024 }, // 50MB
+  'video/webm': { maxSize: 50 * 1024 * 1024 },
+  'video/quicktime': { maxSize: 50 * 1024 * 1024 },
 } as const
 
 type AllowedMimeType = keyof typeof ALLOWED_TYPES
@@ -25,19 +25,19 @@ const MAX_TOTAL_SIZE = 100 * 1024 * 1024
 // Maximum number of files per submission
 const MAX_FILES = 5
 
-// Sanitize filename - remove dangerous characters, limit length
+// Sanitize filename, remove dangerous characters, limit length.
 function sanitizeFilename(filename: string): string {
   // Remove path traversal attempts
-  const basename = filename.split(/[\\/]/).pop() || "file"
+  const basename = filename.split(/[\\/]/).pop() || 'file'
 
   // Remove dangerous characters, keep only alphanumeric, dash, underscore, dot
   const sanitized = basename
-    .replaceAll(/[^a-zA-Z0-9._-]/g, "_")
-    .replaceAll(/\.{2,}/g, ".") // Remove multiple dots
+    .replaceAll(/[^a-zA-Z0-9._-]/g, '_')
+    .replaceAll(/\.{2,}/g, '.') // Remove multiple dots
     .slice(0, 100) // Limit length
 
   // Ensure it has an extension
-  if (!sanitized.includes(".")) {
+  if (!sanitized.includes('.')) {
     return `${sanitized}.bin`
   }
 
@@ -47,85 +47,83 @@ function sanitizeFilename(filename: string): string {
 // Generate a secure random path to prevent enumeration
 function getExtensionForMimeType(mimeType: AllowedMimeType): string {
   switch (mimeType) {
-    case "image/jpeg":
-      return "jpg"
-    case "image/png":
-      return "png"
-    case "image/gif":
-      return "gif"
-    case "image/webp":
-      return "webp"
-    case "video/mp4":
-      return "mp4"
-    case "video/webm":
-      return "webm"
-    case "video/quicktime":
-      return "mov"
+    case 'image/jpeg':
+      return 'jpg'
+    case 'image/png':
+      return 'png'
+    case 'image/gif':
+      return 'gif'
+    case 'image/webp':
+      return 'webp'
+    case 'video/mp4':
+      return 'mp4'
+    case 'video/webm':
+      return 'webm'
+    case 'video/quicktime':
+      return 'mov'
   }
 }
 
 function getAllowedTypeConfig(mimeType: AllowedMimeType): { maxSize: number } {
   switch (mimeType) {
-    case "image/jpeg":
-      return ALLOWED_TYPES["image/jpeg"]
-    case "image/png":
-      return ALLOWED_TYPES["image/png"]
-    case "image/gif":
-      return ALLOWED_TYPES["image/gif"]
-    case "image/webp":
-      return ALLOWED_TYPES["image/webp"]
-    case "video/mp4":
-      return ALLOWED_TYPES["video/mp4"]
-    case "video/webm":
-      return ALLOWED_TYPES["video/webm"]
-    case "video/quicktime":
-      return ALLOWED_TYPES["video/quicktime"]
+    case 'image/jpeg':
+      return ALLOWED_TYPES['image/jpeg']
+    case 'image/png':
+      return ALLOWED_TYPES['image/png']
+    case 'image/gif':
+      return ALLOWED_TYPES['image/gif']
+    case 'image/webp':
+      return ALLOWED_TYPES['image/webp']
+    case 'video/mp4':
+      return ALLOWED_TYPES['video/mp4']
+    case 'video/webm':
+      return ALLOWED_TYPES['video/webm']
+    case 'video/quicktime':
+      return ALLOWED_TYPES['video/quicktime']
   }
 }
 
 function generateSecurePath(
   originalFilename: string,
   mimeType: AllowedMimeType,
-  uploadSession: string
+  uploadSession: string,
 ): string {
   const timestamp = Date.now()
-  const randomId = crypto.randomBytes(16).toString("hex")
+  const randomId = crypto.randomBytes(16).toString('hex')
   const sanitizedName = sanitizeFilename(originalFilename)
 
-  const ext = getExtensionForMimeType(mimeType) || sanitizedName.split(".").pop() || "bin"
+  const ext =
+    getExtensionForMimeType(mimeType) || sanitizedName.split('.').pop() || 'bin'
 
   // Path format: contact/<session>/YYYY/MM/DD/randomId_timestamp.ext
   const date = new Date()
   const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, "0")
-  const day = String(date.getDate()).padStart(2, "0")
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
 
   return `contact/${uploadSession}/${year}/${month}/${day}/${randomId}_${timestamp}.${ext}`
 }
 
 export async function POST(request: NextRequest) {
-  const rateLimitResponse = await rateLimit(request, "contactUpload")
+  const rateLimitResponse = await rateLimit(request, 'contactUpload')
   if (rateLimitResponse) return rateLimitResponse
 
   try {
-    const uploadSession = crypto.randomBytes(16).toString("hex")
+    const uploadSession = crypto.randomBytes(16).toString('hex')
 
     // Parse multipart form data
     const formData = await request.formData()
-    const files = formData.getAll("files") as File[]
+    const files = formData.getAll('files') as File[]
 
     // Validate number of files
     if (!files || files.length === 0) {
-      return NextResponse.json(
-        { error: "No files provided" },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'No files provided' }, { status: 400 })
     }
 
     if (files.length > MAX_FILES) {
       return NextResponse.json(
         { error: `Maximum ${MAX_FILES} files allowed` },
-        { status: 400 }
+        { status: 400 },
       )
     }
 
@@ -133,8 +131,8 @@ export async function POST(request: NextRequest) {
     const totalSize = files.reduce((sum, file) => sum + file.size, 0)
     if (totalSize > MAX_TOTAL_SIZE) {
       return NextResponse.json(
-        { error: "Total file size exceeds 100MB limit" },
-        { status: 400 }
+        { error: 'Total file size exceeds 100MB limit' },
+        { status: 400 },
       )
     }
 
@@ -150,13 +148,13 @@ export async function POST(request: NextRequest) {
       if (uploadedPaths.length === 0) return
       try {
         const { error: cleanupError } = await supabaseAdmin.storage
-          .from("contact-attachments")
+          .from('contact-attachments')
           .remove(uploadedPaths)
         if (cleanupError) {
-          console.error("Failed to cleanup uploaded files:", cleanupError)
+          console.error('Failed to cleanup uploaded files:', cleanupError)
         }
       } catch (err) {
-        console.error("Unexpected error cleaning up uploaded files:", err)
+        console.error('Unexpected error cleaning up uploaded files:', err)
       }
     }
 
@@ -166,8 +164,8 @@ export async function POST(request: NextRequest) {
         if (file.size === 0) {
           await cleanupUploadedFiles()
           return NextResponse.json(
-            { error: "Empty files are not allowed" },
-            { status: 400 }
+            { error: 'Empty files are not allowed' },
+            { status: 400 },
           )
         }
 
@@ -180,8 +178,10 @@ export async function POST(request: NextRequest) {
         if (!detectedType) {
           await cleanupUploadedFiles()
           return NextResponse.json(
-            { error: `Could not determine file type for: ${file.name}. Only images (JPEG, PNG, GIF, WebP) and videos (MP4, WebM, MOV) are allowed.` },
-            { status: 400 }
+            {
+              error: `Could not determine file type for: ${file.name}. Only images (JPEG, PNG, GIF, WebP) and videos (MP4, WebM, MOV) are allowed.`,
+            },
+            { status: 400 },
           )
         }
 
@@ -189,8 +189,10 @@ export async function POST(request: NextRequest) {
         if (!(detectedType.mime in ALLOWED_TYPES)) {
           await cleanupUploadedFiles()
           return NextResponse.json(
-            { error: `File type "${detectedType.mime}" is not allowed for: ${file.name}. Only images (JPEG, PNG, GIF, WebP) and videos (MP4, WebM, MOV) are allowed.` },
-            { status: 400 }
+            {
+              error: `File type "${detectedType.mime}" is not allowed for: ${file.name}. Only images (JPEG, PNG, GIF, WebP) and videos (MP4, WebM, MOV) are allowed.`,
+            },
+            { status: 400 },
           )
         }
 
@@ -202,14 +204,20 @@ export async function POST(request: NextRequest) {
           const maxMB = typeConfig.maxSize / (1024 * 1024)
           await cleanupUploadedFiles()
           return NextResponse.json(
-            { error: `File "${file.name}" exceeds ${maxMB}MB limit for ${mimeType.startsWith("video") ? "videos" : "images"}` },
-            { status: 400 }
+            {
+              error: `File "${file.name}" exceeds ${maxMB}MB limit for ${mimeType.startsWith('video') ? 'videos' : 'images'}`,
+            },
+            { status: 400 },
           )
         }
 
-        // SECURITY: Additional validation for images - check for embedded scripts
-        if (mimeType.startsWith("image/")) {
-          const bufferString = buffer.toString("utf8", 0, Math.min(buffer.length, 1000))
+        // Security: Validate images for embedded scripts.
+        if (mimeType.startsWith('image/')) {
+          const bufferString = buffer.toString(
+            'utf8',
+            0,
+            Math.min(buffer.length, 1000),
+          )
           const dangerousPatterns = [
             /<script/i,
             /javascript:/i,
@@ -222,30 +230,36 @@ export async function POST(request: NextRequest) {
             if (pattern.test(bufferString)) {
               await cleanupUploadedFiles()
               return NextResponse.json(
-                { error: `File "${file.name}" contains potentially malicious content` },
-                { status: 400 }
+                {
+                  error: `File "${file.name}" contains potentially malicious content`,
+                },
+                { status: 400 },
               )
             }
           }
         }
 
         // Generate secure storage path
-        const storagePath = generateSecurePath(file.name, mimeType, uploadSession)
+        const storagePath = generateSecurePath(
+          file.name,
+          mimeType,
+          uploadSession,
+        )
 
         // Upload to Supabase Storage using service role
         const { error: uploadError } = await supabaseAdmin.storage
-          .from("contact-attachments")
+          .from('contact-attachments')
           .upload(storagePath, buffer, {
             contentType: mimeType,
             upsert: false, // Never overwrite existing files
           })
 
         if (uploadError) {
-          console.error("Storage upload error:", uploadError)
+          console.error('Storage upload error:', uploadError)
           await cleanupUploadedFiles()
           return NextResponse.json(
-            { error: "Failed to upload file. Please try again." },
-            { status: 500 }
+            { error: 'Failed to upload file. Please try again.' },
+            { status: 500 },
           )
         }
 
@@ -259,10 +273,10 @@ export async function POST(request: NextRequest) {
       }
     } catch (err) {
       await cleanupUploadedFiles()
-      console.error("Unexpected error processing uploads:", err)
+      console.error('Unexpected error processing uploads:', err)
       return NextResponse.json(
-        { error: "An unexpected error occurred during upload" },
-        { status: 500 }
+        { error: 'An unexpected error occurred during upload' },
+        { status: 500 },
       )
     }
 
@@ -272,19 +286,18 @@ export async function POST(request: NextRequest) {
         uploadSession,
         files: uploadedFiles,
       },
-      { headers: rateLimitHeaders("contactUpload") }
+      { headers: rateLimitHeaders('contactUpload') },
     )
-
   } catch (error) {
-    console.error("Upload error:", error)
+    console.error('Upload error:', error)
     return NextResponse.json(
-      { error: "An unexpected error occurred during upload" },
-      { status: 500 }
+      { error: 'An unexpected error occurred during upload' },
+      { status: 500 },
     )
   }
 }
 
 // Only allow POST
 export function GET() {
-  return NextResponse.json({ error: "Method not allowed" }, { status: 405 })
+  return NextResponse.json({ error: 'Method not allowed' }, { status: 405 })
 }

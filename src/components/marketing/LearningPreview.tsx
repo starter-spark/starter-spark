@@ -1,10 +1,12 @@
-"use client"
+'use client'
 
-import { Button } from "@/components/ui/button"
-import { Code, MessageCircle, ArrowRight } from "lucide-react"
-import { motion, useInView } from "motion/react"
-import Link from "next/link"
-import { useEffect, useState, useRef } from "react"
+import { Button } from '@/components/ui/button'
+import { Code, MessageCircle, ArrowRight } from 'lucide-react'
+import { motion, useInView } from 'motion/react'
+import Link from 'next/link'
+import { useEffect, useState, useRef } from 'react'
+import { SectionIntro } from './SectionIntro'
+import { ctaOutlineAuto, ctaPrimaryAuto } from './cta-classes'
 
 export interface LearningPreviewSectionProps {
   title?: string
@@ -19,9 +21,15 @@ export interface LearningPreviewSectionProps {
   block2Cta?: string
 }
 
-// Typing animation component
-function TypeWriter({ text, startDelay = 0 }: { text: string; startDelay?: number }) {
-  const [displayText, setDisplayText] = useState("")
+// Typing animation
+function TypeWriter({
+  text,
+  startDelay = 0,
+}: {
+  text: string
+  startDelay?: number
+}) {
+  const [displayText, setDisplayText] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const ref = useRef<HTMLSpanElement>(null)
   const isInView = useInView(ref, { once: true })
@@ -36,12 +44,12 @@ function TypeWriter({ text, startDelay = 0 }: { text: string; startDelay?: numbe
         if (i < text.length) {
           setDisplayText(text.slice(0, i + 1))
           i++
-          // Natural typing: variable delay based on character
+          // Variable delay per char
           const char = text[i - 1]
-          let delay = 30 + Math.random() * 50 // Base delay 30-80ms
-          if (char === " ") delay = 20 + Math.random() * 30 // Faster for spaces
-          if (char === "." || char === ";" || char === "{" || char === "}") {
-            delay = 100 + Math.random() * 100 // Pause after punctuation
+          let delay = 30 + Math.random() * 50 // Base delay (30-80ms)
+          if (char === ' ') delay = 20 + Math.random() * 30 // Faster on spaces
+          if (char === '.' || char === ';' || char === '{' || char === '}') {
+            delay = 100 + Math.random() * 100 // Pause on punctuation
           }
           setTimeout(typeChar, delay)
         } else {
@@ -51,7 +59,9 @@ function TypeWriter({ text, startDelay = 0 }: { text: string; startDelay?: numbe
       typeChar()
     }, startDelay)
 
-    return () => { clearTimeout(timeout); }
+    return () => {
+      clearTimeout(timeout)
+    }
   }, [isInView, text, startDelay])
 
   return (
@@ -63,35 +73,23 @@ function TypeWriter({ text, startDelay = 0 }: { text: string; startDelay?: numbe
 }
 
 export function LearningPreviewSection({
-  title = "Learn by Doing",
-  description = "Our interactive platform guides you from unboxing to your first programmed movement.",
-  block1Title = "Step-by-Step Digital Guides",
-  block1Description1 = "Each lesson builds on the last, taking you from basic assembly through advanced programming. Our interactive diagrams show exactly where each wire connects, and you can hover over components to learn what they do.",
-  block1Description2 = "The built-in code editor lets you write, test, and upload your programs directly from the browser. Real-time syntax highlighting and error checking help you learn proper coding practices from day one.",
-  block1Cta = "Start Learning",
-  block2Title = "Expert Support When You Need It",
-  block2Description1 = "Stuck on a step? Our community forum, The Lab, connects you with fellow builders and our support team. Most questions get answered within hours, not days.",
-  block2Description2 = "Staff members actively monitor discussions and provide verified solutions. Every question helps build our knowledge base for future builders.",
-  block2Cta = "Visit The Lab",
+  title = 'Learn by Doing',
+  description = 'Our interactive platform guides you from unboxing to your first programmed movement.',
+  block1Title = 'Step-by-Step Digital Guides',
+  block1Description1 = 'Each lesson builds on the last, taking you from basic assembly through advanced programming. Our interactive diagrams show exactly where each wire connects, and you can hover over components to learn what they do.',
+  block1Description2 = 'The built-in code editor lets you write, test, and upload your programs directly from the browser. Real-time syntax highlighting and error checking help you learn proper coding practices from day one.',
+  block1Cta = 'Start Learning',
+  block2Title = 'Expert Support When You Need It',
+  block2Description1 = 'Stuck on a step? Our community forum, The Lab, connects you with fellow builders and our support team. Most questions get answered within hours, not days.',
+  block2Description2 = 'Staff members actively monitor discussions and provide verified solutions. Every question helps build our knowledge base for future builders.',
+  block2Cta = 'Visit The Lab',
 }: LearningPreviewSectionProps) {
   return (
     <section className="py-24 px-6 lg:px-20 bg-white">
       <div className="max-w-7xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center mb-16"
-        >
-          <h2 className="font-mono text-3xl lg:text-4xl text-slate-900 mb-4 break-words">
-            {title}
-          </h2>
-          <p className="text-slate-600 max-w-2xl mx-auto break-words">
-            {description}
-          </p>
-        </motion.div>
+        <SectionIntro title={title} description={description} />
 
-        {/* Block 1: Image Left, Text Right */}
+        {/* Block 1 (image left, text right) */}
         <div className="flex flex-col lg:flex-row gap-12 items-center mb-24">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -99,32 +97,54 @@ export function LearningPreviewSection({
             viewport={{ once: true }}
             className="w-full lg:w-1/2"
           >
-            {/* Platform Screenshot - Dark Theme CodeEditor */}
+            {/* Platform screenshot (dark) */}
             <div className="relative aspect-[4/3] rounded border border-slate-700 shadow-xl overflow-hidden flex flex-col bg-[#0b1220]">
-              {/* Header - Dark theme */}
+              {/* Header (dark) */}
               <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2 bg-slate-800 border-b border-slate-700">
                 <div className="flex items-center gap-2 min-w-0">
-                  <span className="text-sm font-mono text-slate-300 truncate">servo-control.ino</span>
+                  <span className="text-sm font-mono text-slate-300 truncate">
+                    servo-control.ino
+                  </span>
                   <span className="text-xs font-mono text-slate-400 bg-slate-700 px-1.5 py-0.5 rounded">
                     arduino
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <span className="inline-flex items-center gap-1 rounded px-2 py-1 text-xs text-slate-500">
-                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <svg
+                      className="h-3.5 w-3.5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
                     </svg>
                     Verify
                   </span>
                   <span className="inline-flex items-center gap-1 rounded px-2 py-1 text-xs text-slate-500">
-                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    <svg
+                      className="h-3.5 w-3.5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                      />
                     </svg>
                     Download
                   </span>
                 </div>
               </div>
-              {/* Code Content - Dark theme matching CodeEditor dark mode */}
+              {/* Code (dark) */}
               <div className="bg-[#0b1220] p-4 font-mono text-sm leading-5 text-slate-300 flex-1">
                 <pre className="whitespace-pre-wrap m-0">
                   <TypeWriter
@@ -172,7 +192,7 @@ void loop() {
             </p>
             <Button
               asChild
-              className="bg-cyan-700 hover:bg-cyan-600 text-white font-mono w-full sm:w-auto whitespace-normal break-words text-center leading-snug h-auto py-3 flex-wrap"
+              className={ctaPrimaryAuto}
             >
               <Link href="/learn">
                 {block1Cta}
@@ -182,7 +202,7 @@ void loop() {
           </motion.div>
         </div>
 
-        {/* Block 2: Text Left, Image Right */}
+        {/* Block 2 (text left, image right) */}
         <div className="flex flex-col-reverse lg:flex-row gap-12 items-center">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -205,7 +225,7 @@ void loop() {
             <Button
               asChild
               variant="outline"
-              className="border-slate-200 hover:border-cyan-700 text-slate-600 hover:text-cyan-700 font-mono w-full sm:w-auto whitespace-normal break-words text-center leading-snug h-auto py-3 flex-wrap"
+              className={ctaOutlineAuto}
             >
               <Link href="/community">
                 {block2Cta}
@@ -220,15 +240,15 @@ void loop() {
             viewport={{ once: true }}
             className="w-full lg:w-1/2"
           >
-            {/* Community Screenshot Placeholder */}
+            {/* Community placeholder */}
             <div className="relative bg-white rounded-lg border border-slate-200 shadow-lg overflow-hidden">
-              {/* Fake Forum Header */}
+              {/* Forum header */}
               <div className="h-12 bg-slate-50 border-b border-slate-200 flex items-center justify-between px-4">
                 <span className="text-sm font-mono text-slate-600">
                   The Lab - Community Q&A
                 </span>
               </div>
-              {/* Fake Question */}
+              {/* Question */}
               <div className="p-4 border-b border-slate-100">
                 <div className="flex items-start gap-3">
                   <div className="w-8 h-8 rounded-full bg-slate-200" />
@@ -237,11 +257,13 @@ void loop() {
                       <span className="text-sm font-medium text-slate-900">
                         @robotenthusiast
                       </span>
-                      <span className="text-xs text-slate-500">2 hours ago</span>
+                      <span className="text-xs text-slate-500">
+                        2 hours ago
+                      </span>
                     </div>
                     <p className="text-sm text-slate-700 mb-2">
-                      My servo keeps jittering when it holds a position. I&apos;m
-                      using the code from lesson 3...
+                      My servo keeps jittering when it holds a position.
+                      I&apos;m using the code from lesson 3...
                     </p>
                     <div className="flex items-center gap-2">
                       <span className="text-xs px-2 py-0.5 bg-slate-100 text-slate-600 rounded">
@@ -254,7 +276,7 @@ void loop() {
                   </div>
                 </div>
               </div>
-              {/* Verified Answer */}
+              {/* Verified answer */}
               <div className="p-4 bg-green-50/50 border-l-4 border-green-500">
                 <div className="flex items-start gap-3">
                   <div className="w-8 h-8 rounded-full bg-cyan-100 flex items-center justify-center">
@@ -273,8 +295,9 @@ void loop() {
                       </span>
                     </div>
                     <p className="text-sm text-slate-700">
-                      This is usually a power issue. Try using a separate 5V supply
-                      for the servos instead of the Arduino&apos;s 5V pin...
+                      This is usually a power issue. Try using a separate 5V
+                      supply for the servos instead of the Arduino&apos;s 5V
+                      pin...
                     </p>
                   </div>
                 </div>

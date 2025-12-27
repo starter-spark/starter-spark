@@ -1,37 +1,43 @@
-import { stripe } from "@/lib/stripe"
-import { CheckCircle, Package, Mail, ArrowRight } from "lucide-react"
-import Link from "next/link"
-import { redirect } from "next/navigation"
-import { ClearCart } from "./ClearCart"
-import { getContent } from "@/lib/content"
+import { stripe } from '@/lib/stripe'
+import { CheckCircle, Package, Mail, ArrowRight } from 'lucide-react'
+import Link from 'next/link'
+import { redirect } from 'next/navigation'
+import { ClearCart } from './ClearCart'
+import { getContent } from '@/lib/content'
+import { cn } from '@/lib/utils'
+import {
+  actionPrimaryLink,
+  actionSecondaryLink,
+} from '@/components/marketing/link-classes'
+import { resolveParams, type MaybePromise } from '@/lib/next-params'
 
 interface SuccessPageProps {
-  searchParams: Promise<{ session_id?: string }>
+  searchParams: MaybePromise<{ session_id?: string }>
 }
 
 export default async function CheckoutSuccessPage({
   searchParams,
 }: SuccessPageProps) {
-  const params = await searchParams
+  const params = await resolveParams(searchParams)
   const sessionId = params.session_id
 
   if (!sessionId) {
-    redirect("/shop")
+    redirect('/shop')
   }
 
   // Fetch session from Stripe
   let session
   try {
     session = await stripe.checkout.sessions.retrieve(sessionId, {
-      expand: ["line_items", "customer_details"],
+      expand: ['line_items', 'customer_details'],
     })
   } catch {
-    redirect("/shop")
+    redirect('/shop')
   }
 
   // Verify payment was successful
-  if (session.payment_status !== "paid") {
-    redirect("/cart")
+  if (session.payment_status !== 'paid') {
+    redirect('/cart')
   }
 
   const customerEmail = session.customer_details?.email
@@ -39,14 +45,14 @@ export default async function CheckoutSuccessPage({
   // Extract items for analytics tracking
   const lineItems = session.line_items?.data || []
   const orderItems = lineItems.map((item) => ({
-    id: item.price?.product as string || "",
-    name: item.description || "Product",
+    id: (item.price?.product as string) || '',
+    name: item.description || 'Product',
     quantity: item.quantity || 1,
     price: Math.round((item.amount_total || 0) / (item.quantity || 1) / 100),
   }))
 
   // Fetch charity percentage
-  const charityPercentage = await getContent("global.charity.percentage", "67%")
+  const charityPercentage = await getContent('global.charity.percentage', '67%')
 
   return (
     <div className="bg-slate-50">
@@ -141,7 +147,7 @@ export default async function CheckoutSuccessPage({
               <p className="text-sm text-slate-600">
                 <span className="font-mono text-amber-600 font-semibold">
                   {charityPercentage}
-                </span>{" "}
+                </span>{' '}
                 of your purchase will go directly to Hawaii STEM education
                 programs. Thank you for supporting the next generation of
                 engineers!
@@ -152,14 +158,14 @@ export default async function CheckoutSuccessPage({
             <div className="flex flex-col sm:flex-row gap-4">
               <Link
                 href="/shop"
-                className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 bg-cyan-700 hover:bg-cyan-600 text-white font-mono rounded transition-colors"
+                className={cn(actionPrimaryLink, 'flex-1')}
               >
                 Continue Shopping
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <Link
                 href="/"
-                className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 border border-slate-200 hover:border-slate-300 text-slate-600 font-mono rounded transition-colors"
+                className={cn(actionSecondaryLink, 'flex-1')}
               >
                 Back to Home
               </Link>

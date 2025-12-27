@@ -1,6 +1,6 @@
-import Link from "next/link"
-import { notFound } from "next/navigation"
-import { createClient } from "@/lib/supabase/server"
+import Link from 'next/link'
+import { notFound } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -8,11 +8,12 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
-import { LessonEditor } from "./LessonEditor"
+} from '@/components/ui/breadcrumb'
+import { LessonEditor } from './LessonEditor'
+import { resolveParams, type MaybePromise } from '@/lib/next-params'
 
 export const metadata = {
-  title: "Edit Lesson | Admin",
+  title: 'Edit Lesson | Admin',
 }
 
 interface Lesson {
@@ -42,12 +43,16 @@ interface Lesson {
   }
 }
 
-async function getLesson(courseId: string, lessonId: string): Promise<Lesson | null> {
+async function getLesson(
+  courseId: string,
+  lessonId: string,
+): Promise<Lesson | null> {
   const supabase = await createClient()
 
   const { data, error } = await supabase
-    .from("lessons")
-    .select(`
+    .from('lessons')
+    .select(
+      `
       id,
       title,
       slug,
@@ -74,20 +79,25 @@ async function getLesson(courseId: string, lessonId: string): Promise<Lesson | n
           title
         )
       )
-    `)
-    .eq("id", lessonId)
+    `,
+    )
+    .eq('id', lessonId)
     .maybeSingle()
 
   if (error) {
-    console.error("Error fetching lesson:", error)
-    throw new Error("Failed to load lesson")
+    console.error('Error fetching lesson:', error)
+    throw new Error('Failed to load lesson')
   }
 
   if (!data) {
     return null
   }
 
-  const moduleData = data.module as { id: string; title: string; course: { id: string; title: string } | null } | null
+  const moduleData = data.module as {
+    id: string
+    title: string
+    course: { id: string; title: string } | null
+  } | null
 
   if (!moduleData?.course) {
     return null
@@ -97,37 +107,33 @@ async function getLesson(courseId: string, lessonId: string): Promise<Lesson | n
     return null
   }
 
-	  const lessonContent = data.content_data as
-	    | {
-	        content: string | null
-	        content_blocks: unknown[] | null
-	        video_url: string | null
-	        code_starter: string | null
-	        code_solution: string | null
-	      }
-	    | null
-	  const contentBlocks = lessonContent?.content_blocks
+  const lessonContent = data.content_data as {
+    content: string | null
+    content_blocks: unknown[] | null
+    video_url: string | null
+    code_starter: string | null
+    code_solution: string | null
+  } | null
+  const contentBlocks = lessonContent?.content_blocks
 
-	  const lesson: Lesson = {
-	    id: data.id,
-	    title: data.title,
-	    slug: data.slug,
+  const lesson: Lesson = {
+    id: data.id,
+    title: data.title,
+    slug: data.slug,
     description: data.description,
-    lesson_type: (data.lesson_type!) || "content",
-    difficulty: (data.difficulty!) || "beginner",
-    estimated_minutes: (data.estimated_minutes!) || 15,
+    lesson_type: data.lesson_type! || 'content',
+    difficulty: data.difficulty! || 'beginner',
+    estimated_minutes: data.estimated_minutes! || 15,
     is_published: data.is_published!,
     is_optional: data.is_optional!,
     prerequisites: data.prerequisites ?? null,
-	    sort_order: data.sort_order,
-	    content: lessonContent?.content || "",
-	    content_blocks: Array.isArray(contentBlocks)
-	      ? contentBlocks
-	      : [],
-	    video_url: lessonContent?.video_url ?? null,
-	    code_starter: lessonContent?.code_starter ?? null,
-	    code_solution: lessonContent?.code_solution ?? null,
-	    module: {
+    sort_order: data.sort_order,
+    content: lessonContent?.content || '',
+    content_blocks: Array.isArray(contentBlocks) ? contentBlocks : [],
+    video_url: lessonContent?.video_url ?? null,
+    code_starter: lessonContent?.code_starter ?? null,
+    code_solution: lessonContent?.code_solution ?? null,
+    module: {
       id: moduleData.id,
       title: moduleData.title,
       course: {
@@ -140,36 +146,40 @@ async function getLesson(courseId: string, lessonId: string): Promise<Lesson | n
   return lesson
 }
 
-async function getAvailableLessons(courseId: string): Promise<{ id: string; title: string }[]> {
+async function getAvailableLessons(
+  courseId: string,
+): Promise<{ id: string; title: string }[]> {
   const supabase = await createClient()
 
   const { data, error } = await supabase
-    .from("modules")
+    .from('modules')
     .select(
       `
       lessons (
         id,
         title
       )
-    `
+    `,
     )
-    .eq("course_id", courseId)
+    .eq('course_id', courseId)
 
   if (error) {
-    console.error("Error fetching course lessons:", error)
-    throw new Error("Failed to load course lessons")
+    console.error('Error fetching course lessons:', error)
+    throw new Error('Failed to load course lessons')
   }
 
-  const lessons = (data ?? []).flatMap((m) => (m.lessons || []) as { id: string; title: string }[])
+  const lessons = (data ?? []).flatMap(
+    (m) => (m.lessons || []) as { id: string; title: string }[],
+  )
   return lessons
 }
 
 export default async function EditLessonPage({
   params,
 }: {
-  params: Promise<{ courseId: string; lessonId: string }>
+  params: MaybePromise<{ courseId: string; lessonId: string }>
 }) {
-  const { courseId, lessonId } = await params
+  const { courseId, lessonId } = await resolveParams(params)
   const lesson = await getLesson(courseId, lessonId)
   const availableLessons = await getAvailableLessons(courseId)
 
@@ -196,7 +206,9 @@ export default async function EditLessonPage({
           <BreadcrumbSeparator />
           <BreadcrumbItem>
             <BreadcrumbLink asChild>
-              <Link href={`/admin/learn/${courseId}`}>{lesson.module.course.title}</Link>
+              <Link href={`/admin/learn/${courseId}`}>
+                {lesson.module.course.title}
+              </Link>
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
@@ -215,7 +227,11 @@ export default async function EditLessonPage({
       </div>
 
       {/* Lesson Editor */}
-      <LessonEditor lesson={lesson} courseId={courseId} availableLessons={availableLessons} />
+      <LessonEditor
+        lesson={lesson}
+        courseId={courseId}
+        availableLessons={availableLessons}
+      />
     </div>
   )
 }

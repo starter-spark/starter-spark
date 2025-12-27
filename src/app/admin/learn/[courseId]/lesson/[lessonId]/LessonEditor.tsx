@@ -1,21 +1,28 @@
-"use client"
+'use client'
 
-import { useMemo, useRef, useState, useEffect, useCallback, useTransition } from "react"
-import { useRouter } from "next/navigation"
-import { Reorder, useDragControls } from "motion/react"
-import { toast } from "sonner"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Switch } from "@/components/ui/switch"
+import {
+  useMemo,
+  useRef,
+  useState,
+  useEffect,
+  useCallback,
+  useTransition,
+} from 'react'
+import { useRouter } from 'next/navigation'
+import { Reorder, useDragControls } from 'motion/react'
+import { toast } from 'sonner'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Switch } from '@/components/ui/switch'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from '@/components/ui/select'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,12 +33,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
+} from '@/components/ui/alert-dialog'
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@/components/ui/tooltip"
+} from '@/components/ui/tooltip'
 import {
   Save,
   Trash2,
@@ -49,13 +56,13 @@ import {
   AlertTriangle,
   Copy,
   Upload,
-} from "lucide-react"
-import { updateLesson, deleteLesson } from "../../../actions"
-import { LessonContent } from "@/components/learn/LessonContent"
-import { CodeEditor } from "@/components/learn/CodeEditor"
-import { FlowEditor } from "@/components/learn/FlowEditor"
-import { VideoUploader } from "@/components/learn/VideoUploader"
-import { randomId } from "@/lib/random-id"
+} from 'lucide-react'
+import { updateLesson, deleteLesson } from '../../../actions'
+import { LessonContent } from '@/components/learn/LessonContent'
+import { CodeEditor } from '@/components/learn/CodeEditor'
+import { FlowEditor } from '@/components/learn/FlowEditor'
+import { VideoUploader } from '@/components/learn/VideoUploader'
+import { randomId } from '@/lib/random-id'
 
 type LessonBlock = Record<string, unknown> & {
   id: string
@@ -101,28 +108,28 @@ const lessonTypeConfig: Record<
 > = {
   content: {
     icon: FileText,
-    label: "Content",
-    description: "Text-based lesson with markdown content",
+    label: 'Content',
+    description: 'Text-based lesson with markdown content',
   },
   code_challenge: {
     icon: Code,
-    label: "Code Challenge",
-    description: "Interactive coding exercise with starter code and solution",
+    label: 'Code Challenge',
+    description: 'Interactive coding exercise with starter code and solution',
   },
   visual_challenge: {
     icon: Blocks,
-    label: "Visual Challenge",
-    description: "Block-based visual programming challenge",
+    label: 'Visual Challenge',
+    description: 'Block-based visual programming challenge',
   },
   quiz: {
     icon: HelpCircle,
-    label: "Quiz",
-    description: "Multiple choice or short answer questions",
+    label: 'Quiz',
+    description: 'Multiple choice or short answer questions',
   },
   project: {
     icon: Wrench,
-    label: "Project",
-    description: "Hands-on project with instructions and deliverables",
+    label: 'Project',
+    description: 'Hands-on project with instructions and deliverables',
   },
 }
 
@@ -132,29 +139,86 @@ const blockTypeOptions: {
   icon: typeof FileText
   description: string
 }[] = [
-  { value: "text", label: "Text", icon: FileText, description: "Markdown content" },
-  { value: "heading", label: "Heading", icon: HeadingIcon, description: "Section title" },
-  { value: "image", label: "Image", icon: ImageIcon, description: "Image + caption" },
-  { value: "video", label: "Video", icon: Video, description: "YouTube/Vimeo/direct" },
-  { value: "code", label: "Code", icon: Code, description: "Syntax-highlighted code block" },
-  { value: "callout", label: "Callout", icon: AlertTriangle, description: "Info/tip/warn/danger" },
-  { value: "download", label: "Download", icon: Download, description: "Download link + description" },
-  { value: "quiz", label: "Quiz", icon: HelpCircle, description: "Question + options" },
-  { value: "interactive_code", label: "Interactive Code", icon: Code, description: "Starter + solution" },
-  { value: "diagram", label: "Diagram", icon: Blocks, description: "Flow/diagram JSON" },
-  { value: "visual_blocks", label: "Visual Blocks", icon: Blocks, description: "Visual blocks JSON" },
+  {
+    value: 'text',
+    label: 'Text',
+    icon: FileText,
+    description: 'Markdown content',
+  },
+  {
+    value: 'heading',
+    label: 'Heading',
+    icon: HeadingIcon,
+    description: 'Section title',
+  },
+  {
+    value: 'image',
+    label: 'Image',
+    icon: ImageIcon,
+    description: 'Image + caption',
+  },
+  {
+    value: 'video',
+    label: 'Video',
+    icon: Video,
+    description: 'YouTube/Vimeo/direct',
+  },
+  {
+    value: 'code',
+    label: 'Code',
+    icon: Code,
+    description: 'Syntax-highlighted code block',
+  },
+  {
+    value: 'callout',
+    label: 'Callout',
+    icon: AlertTriangle,
+    description: 'Info/tip/warn/danger',
+  },
+  {
+    value: 'download',
+    label: 'Download',
+    icon: Download,
+    description: 'Download link + description',
+  },
+  {
+    value: 'quiz',
+    label: 'Quiz',
+    icon: HelpCircle,
+    description: 'Question + options',
+  },
+  {
+    value: 'interactive_code',
+    label: 'Interactive Code',
+    icon: Code,
+    description: 'Starter + solution',
+  },
+  {
+    value: 'diagram',
+    label: 'Diagram',
+    icon: Blocks,
+    description: 'Flow/diagram JSON',
+  },
+  {
+    value: 'visual_blocks',
+    label: 'Visual Blocks',
+    icon: Blocks,
+    description: 'Visual blocks JSON',
+  },
 ]
 
 function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null
+  return typeof value === 'object' && value !== null
 }
 
 function isUnknownArray(value: unknown): value is unknown[] {
   return Array.isArray(value)
 }
 
-function isBlockLike(value: unknown): value is Record<string, unknown> & { type: string } {
-  return isRecord(value) && typeof value.type === "string"
+function isBlockLike(
+  value: unknown,
+): value is Record<string, unknown> & { type: string } {
+  return isRecord(value) && typeof value.type === 'string'
 }
 
 function normalizeBlocks(raw: unknown, lesson: Lesson): LessonBlock[] {
@@ -162,8 +226,8 @@ function normalizeBlocks(raw: unknown, lesson: Lesson): LessonBlock[] {
   if (Array.isArray(raw)) {
     for (const item of raw) {
       if (!isRecord(item)) continue
-      const type = typeof item.type === "string" ? item.type : "text"
-      const id = typeof item.id === "string" ? item.id : randomId()
+      const type = typeof item.type === 'string' ? item.type : 'text'
+      const id = typeof item.id === 'string' ? item.id : randomId()
       fromDb.push({ id, type, ...item })
     }
   }
@@ -172,25 +236,25 @@ function normalizeBlocks(raw: unknown, lesson: Lesson): LessonBlock[] {
 
   const seeded: LessonBlock[] = []
   if (lesson.video_url) {
-    seeded.push({ id: randomId(), type: "video", url: lesson.video_url })
+    seeded.push({ id: randomId(), type: 'video', url: lesson.video_url })
   }
   if (lesson.content?.trim()) {
-    seeded.push({ id: randomId(), type: "text", content: lesson.content })
+    seeded.push({ id: randomId(), type: 'text', content: lesson.content })
   }
-  if (lesson.lesson_type === "code_challenge" && lesson.code_starter) {
+  if (lesson.lesson_type === 'code_challenge' && lesson.code_starter) {
     seeded.push({
       id: randomId(),
-      type: "interactive_code",
-      language: "cpp",
+      type: 'interactive_code',
+      language: 'cpp',
       starterCode: lesson.code_starter,
-      solutionCode: lesson.code_solution || "",
+      solutionCode: lesson.code_solution || '',
     })
   }
   return seeded
 }
 
 function escapeMarkdown(text: string): string {
-  return text.replaceAll('\r\n', "\n").trim()
+  return text.replaceAll('\r\n', '\n').trim()
 }
 
 function blocksToLegacyFields(blocks: LessonBlock[]): {
@@ -199,67 +263,73 @@ function blocksToLegacyFields(blocks: LessonBlock[]): {
   codeStarter: string
   codeSolution: string
 } {
-  let videoUrl = ""
-  let codeStarter = ""
-  let codeSolution = ""
+  let videoUrl = ''
+  let codeStarter = ''
+  let codeSolution = ''
 
   const parts: string[] = []
 
   for (const block of blocks) {
     const type = block.type
 
-    if (type === "video" && !videoUrl && typeof block.url === "string") {
+    if (type === 'video' && !videoUrl && typeof block.url === 'string') {
       videoUrl = block.url
       parts.push(`Video: ${block.url}`)
       continue
     }
 
-    if (type === "interactive_code" && !codeStarter && typeof block.starterCode === "string") {
+    if (
+      type === 'interactive_code' &&
+      !codeStarter &&
+      typeof block.starterCode === 'string'
+    ) {
       codeStarter = block.starterCode
-      if (typeof block.solutionCode === "string") codeSolution = block.solutionCode
-      const lang = typeof block.language === "string" ? block.language : "cpp"
-      parts.push("```" + lang)
-      parts.push(escapeMarkdown(codeStarter), "```")
+      if (typeof block.solutionCode === 'string')
+        codeSolution = block.solutionCode
+      const lang = typeof block.language === 'string' ? block.language : 'cpp'
+      parts.push('```' + lang)
+      parts.push(escapeMarkdown(codeStarter), '```')
       continue
     }
 
-    if (type === "heading") {
-      const level = typeof block.level === "number" ? block.level : 2
-      const heading = typeof block.content === "string" ? block.content : ""
-      const prefix = level === 1 ? "##" : level === 2 ? "###" : "####"
+    if (type === 'heading') {
+      const level = typeof block.level === 'number' ? block.level : 2
+      const heading = typeof block.content === 'string' ? block.content : ''
+      const prefix = level === 1 ? '##' : level === 2 ? '###' : '####'
       parts.push(`${prefix} ${heading}`.trim())
       continue
     }
 
-    if (type === "text" && typeof block.content === "string") {
+    if (type === 'text' && typeof block.content === 'string') {
       parts.push(escapeMarkdown(block.content))
       continue
     }
 
-    if (type === "code" && typeof block.code === "string") {
-      const lang = typeof block.language === "string" ? block.language : "text"
-      parts.push("```" + lang)
-      parts.push(escapeMarkdown(block.code), "```")
+    if (type === 'code' && typeof block.code === 'string') {
+      const lang = typeof block.language === 'string' ? block.language : 'text'
+      parts.push('```' + lang)
+      parts.push(escapeMarkdown(block.code), '```')
       continue
     }
 
-    if (type === "callout" && typeof block.content === "string") {
-      const variant = typeof block.variant === "string" ? block.variant : "info"
+    if (type === 'callout' && typeof block.content === 'string') {
+      const variant = typeof block.variant === 'string' ? block.variant : 'info'
       parts.push(`:::${variant}`)
-      parts.push(escapeMarkdown(block.content), ":::")
+      parts.push(escapeMarkdown(block.content), ':::')
       continue
     }
 
-    if (type === "image" && typeof block.url === "string") {
-      const alt = typeof block.alt === "string" ? block.alt : ""
+    if (type === 'image' && typeof block.url === 'string') {
+      const alt = typeof block.alt === 'string' ? block.alt : ''
       parts.push(`![${alt}](${block.url})`)
       continue
     }
 
-    if (type === "download" && typeof block.url === "string") {
-      const filename = typeof block.filename === "string" ? block.filename : "Download"
+    if (type === 'download' && typeof block.url === 'string') {
+      const filename =
+        typeof block.filename === 'string' ? block.filename : 'Download'
       parts.push(`[${filename}](${block.url})`)
-      if (typeof block.description === "string" && block.description.trim()) {
+      if (typeof block.description === 'string' && block.description.trim()) {
         parts.push(block.description)
       }
       continue
@@ -267,85 +337,126 @@ function blocksToLegacyFields(blocks: LessonBlock[]): {
   }
 
   return {
-    content: parts.filter(Boolean).join("\n\n").trim(),
+    content: parts.filter(Boolean).join('\n\n').trim(),
     videoUrl,
     codeStarter,
     codeSolution,
   }
 }
 
-const builtInTemplates: { id: string; label: string; blocks: LessonBlock[] }[] = [
-  {
-    id: "basic-text",
-    label: "Basic Text Lesson",
-    blocks: [
-      { id: randomId(), type: "heading", level: 1, content: "Overview" },
-      { id: randomId(), type: "text", content: "Write your lesson content here (Markdown supported)." },
-    ],
-  },
-  {
-    id: "code-tutorial",
-    label: "Code Tutorial",
-    blocks: [
-      { id: randomId(), type: "heading", level: 1, content: "What You’ll Build" },
-      { id: randomId(), type: "text", content: "Explain the goal, then walk through the code." },
-      { id: randomId(), type: "code", language: "cpp", filename: "main.ino", code: "// your code here" },
-    ],
-  },
-  {
-    id: "quiz",
-    label: "Quiz",
-    blocks: [
-      { id: randomId(), type: "heading", level: 1, content: "Quick Check" },
-      { id: randomId(), type: "quiz", question: "Question?", options: ["A", "B", "C"], correct: 0, explanation: "" },
-    ],
-  },
-  {
-    id: "project",
-    label: "Project Build",
-    blocks: [
-      { id: randomId(), type: "heading", level: 1, content: "Project" },
-      { id: randomId(), type: "callout", variant: "tip", content: "Call out important constraints or tips." },
-      { id: randomId(), type: "text", content: "Describe steps, deliverables, and evaluation criteria." },
-    ],
-  },
-]
+const builtInTemplates: { id: string; label: string; blocks: LessonBlock[] }[] =
+  [
+    {
+      id: 'basic-text',
+      label: 'Basic Text Lesson',
+      blocks: [
+        { id: randomId(), type: 'heading', level: 1, content: 'Overview' },
+        {
+          id: randomId(),
+          type: 'text',
+          content: 'Write your lesson content here (Markdown supported).',
+        },
+      ],
+    },
+    {
+      id: 'code-tutorial',
+      label: 'Code Tutorial',
+      blocks: [
+        {
+          id: randomId(),
+          type: 'heading',
+          level: 1,
+          content: 'What You’ll Build',
+        },
+        {
+          id: randomId(),
+          type: 'text',
+          content: 'Explain the goal, then walk through the code.',
+        },
+        {
+          id: randomId(),
+          type: 'code',
+          language: 'cpp',
+          filename: 'main.ino',
+          code: '// your code here',
+        },
+      ],
+    },
+    {
+      id: 'quiz',
+      label: 'Quiz',
+      blocks: [
+        { id: randomId(), type: 'heading', level: 1, content: 'Quick Check' },
+        {
+          id: randomId(),
+          type: 'quiz',
+          question: 'Question?',
+          options: ['A', 'B', 'C'],
+          correct: 0,
+          explanation: '',
+        },
+      ],
+    },
+    {
+      id: 'project',
+      label: 'Project Build',
+      blocks: [
+        { id: randomId(), type: 'heading', level: 1, content: 'Project' },
+        {
+          id: randomId(),
+          type: 'callout',
+          variant: 'tip',
+          content: 'Call out important constraints or tips.',
+        },
+        {
+          id: randomId(),
+          type: 'text',
+          content: 'Describe steps, deliverables, and evaluation criteria.',
+        },
+      ],
+    },
+  ]
 
-export function LessonEditor({ lesson, courseId, availableLessons }: LessonEditorProps) {
+export function LessonEditor({
+  lesson,
+  courseId,
+  availableLessons,
+}: LessonEditorProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [deleting, setDeleting] = useState(false)
 
-  const [lessonType, setLessonType] = useState(lesson.lesson_type || "content")
-  const [difficulty, setDifficulty] = useState(lesson.difficulty || "beginner")
+  const [lessonType, setLessonType] = useState(lesson.lesson_type || 'content')
+  const [difficulty, setDifficulty] = useState(lesson.difficulty || 'beginner')
   const [published, setPublished] = useState(lesson.is_published)
   const [optional, setOptional] = useState(lesson.is_optional)
 
   const [blocks, setBlocks] = useState<LessonBlock[]>(() =>
-    normalizeBlocks(lesson.content_blocks, lesson)
+    normalizeBlocks(lesson.content_blocks, lesson),
   )
 
   const [prerequisites, setPrerequisites] = useState<string[]>(
-    () => lesson.prerequisites || []
+    () => lesson.prerequisites || [],
   )
-  const [prereqQuery, setPrereqQuery] = useState("")
+  const [prereqQuery, setPrereqQuery] = useState('')
 
-  const [newBlockType, setNewBlockType] = useState("text")
-  const [templateId, setTemplateId] = useState<string>("")
+  const [newBlockType, setNewBlockType] = useState('text')
+  const [templateId, setTemplateId] = useState<string>('')
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   // Track initial state for unsaved changes detection
   const [initialBlocksSnapshot, setInitialBlocksSnapshot] = useState(() =>
-    JSON.stringify(normalizeBlocks(lesson.content_blocks, lesson))
+    JSON.stringify(normalizeBlocks(lesson.content_blocks, lesson)),
   )
   const [initialPrereqsSnapshot, setInitialPrereqsSnapshot] = useState(() =>
-    JSON.stringify(lesson.prerequisites || [])
+    JSON.stringify(lesson.prerequisites || []),
   )
 
   // Compute if there are unsaved changes
   const hasUnsavedChanges = useMemo(() => {
     const blocksChanged = JSON.stringify(blocks) !== initialBlocksSnapshot
-    const prereqsChanged = JSON.stringify(prerequisites) !== initialPrereqsSnapshot
+    const prereqsChanged =
+      JSON.stringify(prerequisites) !== initialPrereqsSnapshot
     return blocksChanged || prereqsChanged
   }, [blocks, initialBlocksSnapshot, initialPrereqsSnapshot, prerequisites])
 
@@ -354,19 +465,19 @@ export function LessonEditor({ lesson, courseId, availableLessons }: LessonEdito
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (hasUnsavedChanges && !isPending && !deleting) {
         e.preventDefault()
-        e.returnValue = ""
+        e.returnValue = ''
       }
     }
 
-    window.addEventListener("beforeunload", handleBeforeUnload)
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload)
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
   }, [hasUnsavedChanges, isPending, deleting])
 
   // Keyboard shortcut: Cmd/Ctrl+S to save
   const formRef = useRef<HTMLFormElement>(null)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "s") {
+      if ((e.metaKey || e.ctrlKey) && e.key === 's') {
         e.preventDefault()
         if (!isPending && formRef.current) {
           formRef.current.requestSubmit()
@@ -374,8 +485,8 @@ export function LessonEditor({ lesson, courseId, availableLessons }: LessonEdito
       }
     }
 
-    window.addEventListener("keydown", handleKeyDown)
-    return () => window.removeEventListener("keydown", handleKeyDown)
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
   }, [isPending])
 
   // Reset dirty state after successful save
@@ -399,10 +510,10 @@ export function LessonEditor({ lesson, courseId, availableLessons }: LessonEdito
     startTransition(async () => {
       const result = await updateLesson(lesson.id, courseId, formData)
       if (result.error) {
-        toast.error("Failed to save lesson", { description: result.error })
+        toast.error('Failed to save lesson', { description: result.error })
       } else {
         markAsSaved()
-        toast.success("Lesson saved successfully")
+        toast.success('Lesson saved successfully')
         router.refresh()
       }
     })
@@ -413,9 +524,9 @@ export function LessonEditor({ lesson, courseId, availableLessons }: LessonEdito
     const result = await deleteLesson(lesson.id, courseId)
     if (result.error) {
       setDeleting(false)
-      toast.error("Failed to delete lesson", { description: result.error })
+      toast.error('Failed to delete lesson', { description: result.error })
     } else {
-      toast.success("Lesson deleted")
+      toast.success('Lesson deleted')
       router.push(`/admin/learn/${courseId}`)
     }
   }
@@ -426,40 +537,51 @@ export function LessonEditor({ lesson, courseId, availableLessons }: LessonEdito
 
     const base = { id, type }
     const block: LessonBlock =
-      type === "text"
-        ? { ...base, content: "" }
-        : type === "heading"
-          ? { ...base, level: 1, content: "" }
-          : type === "image"
-            ? { ...base, url: "", alt: "", caption: "" }
-            : type === "video"
-              ? { ...base, url: "" }
-              : type === "code"
-                ? { ...base, language: "cpp", filename: "", code: "" }
-                : type === "callout"
-                  ? { ...base, variant: "info", content: "" }
-                  : type === "download"
-                    ? { ...base, url: "", filename: "", description: "" }
-                    : type === "quiz"
-                      ? { ...base, question: "", options: [""], correct: 0, explanation: "" }
-                      : type === "interactive_code"
-                        ? { ...base, language: "cpp", starterCode: "", solutionCode: "" }
-                        : type === "diagram"
+      type === 'text'
+        ? { ...base, content: '' }
+        : type === 'heading'
+          ? { ...base, level: 1, content: '' }
+          : type === 'image'
+            ? { ...base, url: '', alt: '', caption: '' }
+            : type === 'video'
+              ? { ...base, url: '' }
+              : type === 'code'
+                ? { ...base, language: 'cpp', filename: '', code: '' }
+                : type === 'callout'
+                  ? { ...base, variant: 'info', content: '' }
+                  : type === 'download'
+                    ? { ...base, url: '', filename: '', description: '' }
+                    : type === 'quiz'
+                      ? {
+                          ...base,
+                          question: '',
+                          options: [''],
+                          correct: 0,
+                          explanation: '',
+                        }
+                      : type === 'interactive_code'
+                        ? {
+                            ...base,
+                            language: 'cpp',
+                            starterCode: '',
+                            solutionCode: '',
+                          }
+                        : type === 'diagram'
                           ? { ...base, flowData: { nodes: [], edges: [] } }
-                          : type === "visual_blocks"
+                          : type === 'visual_blocks'
                             ? {
                                 ...base,
                                 flowData: { nodes: [], edges: [] },
                                 solutionFlowData: { nodes: [], edges: [] },
                               }
-                            : { ...base, content: "" }
+                            : { ...base, content: '' }
 
     setBlocks((prev) => [...prev, block])
   }
 
   const updateBlock = (id: string, patch: Record<string, unknown>) => {
     setBlocks((prev) =>
-      prev.map((b) => (b.id === id ? ({ ...b, ...patch } as LessonBlock) : b))
+      prev.map((b) => (b.id === id ? ({ ...b, ...patch } as LessonBlock) : b)),
     )
   }
 
@@ -469,7 +591,9 @@ export function LessonEditor({ lesson, courseId, availableLessons }: LessonEdito
 
   const handleBlocksReorder = (nextIds: string[]) => {
     const lookup = new Map(blocks.map((b) => [b.id, b]))
-    setBlocks(nextIds.map((id) => lookup.get(id)).filter(Boolean) as LessonBlock[])
+    setBlocks(
+      nextIds.map((id) => lookup.get(id)).filter(Boolean) as LessonBlock[],
+    )
   }
 
   const togglePrereq = (lessonId: string) => {
@@ -482,12 +606,18 @@ export function LessonEditor({ lesson, courseId, availableLessons }: LessonEdito
   const applyTemplate = () => {
     const tpl = builtInTemplates.find((t) => t.id === templateId)
     if (!tpl) return
-    if (blocks.length > 0 && !confirm("Replace current blocks with this template?")) return
+    if (
+      blocks.length > 0 &&
+      !confirm('Replace current blocks with this template?')
+    )
+      return
     // Re-create IDs to avoid collisions across applies
     const next = tpl.blocks.map((b) => ({ ...b, id: randomId() }))
     setBlocks(next)
-    setTemplateId("")
-    toast.success("Template applied", { description: `Applied "${tpl.label}" template` })
+    setTemplateId('')
+    toast.success('Template applied', {
+      description: `Applied "${tpl.label}" template`,
+    })
   }
 
   const exportTemplate = () => {
@@ -498,15 +628,17 @@ export function LessonEditor({ lesson, courseId, availableLessons }: LessonEdito
       difficulty,
     }
     const blob = new Blob([JSON.stringify(payload, null, 2)], {
-      type: "application/json",
+      type: 'application/json',
     })
     const url = URL.createObjectURL(blob)
-    const a = document.createElement("a")
+    const a = document.createElement('a')
     a.href = url
-    a.download = "lesson-template.json"
+    a.download = 'lesson-template.json'
     a.click()
     URL.revokeObjectURL(url)
-    toast.success("Template exported", { description: "lesson-template.json downloaded" })
+    toast.success('Template exported', {
+      description: 'lesson-template.json downloaded',
+    })
   }
 
   const importTemplate = async (file: File) => {
@@ -514,12 +646,16 @@ export function LessonEditor({ lesson, courseId, availableLessons }: LessonEdito
       const text = await file.text()
       const parsed: unknown = JSON.parse(text)
       if (!isRecord(parsed)) {
-        toast.error("Invalid template file", { description: "File must be a valid JSON object" })
+        toast.error('Invalid template file', {
+          description: 'File must be a valid JSON object',
+        })
         return
       }
       const rawBlocks = parsed.blocks
       if (!isUnknownArray(rawBlocks)) {
-        toast.error("Invalid template file", { description: "Template must contain a 'blocks' array" })
+        toast.error('Invalid template file', {
+          description: "Template must contain a 'blocks' array",
+        })
         return
       }
 
@@ -527,35 +663,39 @@ export function LessonEditor({ lesson, courseId, availableLessons }: LessonEdito
         .filter(isBlockLike)
         .map((b) => ({ ...b, id: randomId(), type: b.type }))
       setBlocks(imported)
-      toast.success("Template imported", { description: `Imported ${imported.length} blocks` })
+      toast.success('Template imported', {
+        description: `Imported ${imported.length} blocks`,
+      })
     } catch {
-      toast.error("Failed to import template", { description: "Invalid JSON file" })
+      toast.error('Failed to import template', {
+        description: 'Invalid JSON file',
+      })
     }
   }
 
   const TypeIcon =
-    lessonType === "content"
+    lessonType === 'content'
       ? lessonTypeConfig.content.icon
-      : lessonType === "code_challenge"
+      : lessonType === 'code_challenge'
         ? lessonTypeConfig.code_challenge.icon
-        : lessonType === "visual_challenge"
+        : lessonType === 'visual_challenge'
           ? lessonTypeConfig.visual_challenge.icon
-          : lessonType === "quiz"
+          : lessonType === 'quiz'
             ? lessonTypeConfig.quiz.icon
-            : lessonType === "project"
+            : lessonType === 'project'
               ? lessonTypeConfig.project.icon
               : FileText
 
   const lessonTypeDescription =
-    lessonType === "content"
+    lessonType === 'content'
       ? lessonTypeConfig.content.description
-      : lessonType === "code_challenge"
+      : lessonType === 'code_challenge'
         ? lessonTypeConfig.code_challenge.description
-        : lessonType === "visual_challenge"
+        : lessonType === 'visual_challenge'
           ? lessonTypeConfig.visual_challenge.description
-          : lessonType === "quiz"
+          : lessonType === 'quiz'
             ? lessonTypeConfig.quiz.description
-            : lessonType === "project"
+            : lessonType === 'project'
               ? lessonTypeConfig.project.description
               : undefined
 
@@ -564,10 +704,26 @@ export function LessonEditor({ lesson, courseId, availableLessons }: LessonEdito
       {/* Hidden fields that back Radix inputs + block model */}
       <input type="hidden" name="lesson_type" value={lessonType} />
       <input type="hidden" name="difficulty" value={difficulty} />
-      <input type="hidden" name="is_published" value={published ? "true" : "false"} />
-      <input type="hidden" name="is_optional" value={optional ? "true" : "false"} />
-      <input type="hidden" name="content_blocks" value={JSON.stringify(blocks)} />
-      <input type="hidden" name="prerequisites" value={JSON.stringify(prerequisites)} />
+      <input
+        type="hidden"
+        name="is_published"
+        value={published ? 'true' : 'false'}
+      />
+      <input
+        type="hidden"
+        name="is_optional"
+        value={optional ? 'true' : 'false'}
+      />
+      <input
+        type="hidden"
+        name="content_blocks"
+        value={JSON.stringify(blocks)}
+      />
+      <input
+        type="hidden"
+        name="prerequisites"
+        value={JSON.stringify(prerequisites)}
+      />
 
       {/* Derived legacy fields (kept for backward compatibility) */}
       <input type="hidden" name="content" value={derived.content} />
@@ -610,7 +766,7 @@ export function LessonEditor({ lesson, courseId, availableLessons }: LessonEdito
               const file = e.target.files?.[0]
               if (!file) return
               void importTemplate(file)
-              e.target.value = ""
+              e.target.value = ''
             }}
           />
         </div>
@@ -633,7 +789,12 @@ export function LessonEditor({ lesson, courseId, availableLessons }: LessonEdito
               <div className="grid gap-6 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="title">Title</Label>
-                  <Input id="title" name="title" defaultValue={lesson.title} required />
+                  <Input
+                    id="title"
+                    name="title"
+                    defaultValue={lesson.title}
+                    required
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="lesson_type_ui">Lesson Type</Label>
@@ -642,25 +803,27 @@ export function LessonEditor({ lesson, courseId, availableLessons }: LessonEdito
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {Object.entries(lessonTypeConfig).map(([value, config]) => (
-                        <SelectItem key={value} value={value}>
-                          {config.label}
-                        </SelectItem>
-                      ))}
+                      {Object.entries(lessonTypeConfig).map(
+                        ([value, config]) => (
+                          <SelectItem key={value} value={value}>
+                            {config.label}
+                          </SelectItem>
+                        ),
+                      )}
                     </SelectContent>
-	                  </Select>
-	                  <p className="text-xs text-slate-500">
-	                    {lessonTypeDescription}
-	                  </p>
-	                </div>
-	              </div>
+                  </Select>
+                  <p className="text-xs text-slate-500">
+                    {lessonTypeDescription}
+                  </p>
+                </div>
+              </div>
 
               <div className="space-y-2">
                 <Label htmlFor="description">Description</Label>
                 <Textarea
                   id="description"
                   name="description"
-                  defaultValue={lesson.description || ""}
+                  defaultValue={lesson.description || ''}
                   rows={2}
                   placeholder="Brief description of what this lesson covers..."
                 />
@@ -724,25 +887,36 @@ export function LessonEditor({ lesson, courseId, availableLessons }: LessonEdito
                 </div>
                 <Input
                   value={prereqQuery}
-                  onChange={(e) => { setPrereqQuery(e.target.value); }}
+                  onChange={(e) => {
+                    setPrereqQuery(e.target.value)
+                  }}
                   placeholder="Search lessons..."
                 />
                 <div className="mt-3 max-h-48 overflow-auto rounded border border-slate-200">
                   {filteredPrereqLessons.length === 0 ? (
-                    <div className="p-3 text-sm text-slate-500">No lessons found.</div>
+                    <div className="p-3 text-sm text-slate-500">
+                      No lessons found.
+                    </div>
                   ) : (
                     <ul className="divide-y divide-slate-100">
                       {filteredPrereqLessons.map((l) => {
                         const checked = prerequisites.includes(l.id)
                         return (
-                          <li key={l.id} className="flex items-center gap-3 p-3">
+                          <li
+                            key={l.id}
+                            className="flex items-center gap-3 p-3"
+                          >
                             <input
                               type="checkbox"
                               checked={checked}
-                              onChange={() => { togglePrereq(l.id); }}
+                              onChange={() => {
+                                togglePrereq(l.id)
+                              }}
                               className="h-4 w-4"
                             />
-                            <span className="text-sm text-slate-700">{l.title}</span>
+                            <span className="text-sm text-slate-700">
+                              {l.title}
+                            </span>
                           </li>
                         )
                       })}
@@ -772,7 +946,12 @@ export function LessonEditor({ lesson, courseId, availableLessons }: LessonEdito
                     ))}
                   </SelectContent>
                 </Select>
-                <Button type="button" variant="outline" onClick={applyTemplate} disabled={!templateId}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={applyTemplate}
+                  disabled={!templateId}
+                >
                   Apply
                 </Button>
               </div>
@@ -796,8 +975,12 @@ export function LessonEditor({ lesson, courseId, availableLessons }: LessonEdito
                       key={block.id}
                       block={block}
                       lessonId={lesson.id}
-                      onChange={(patch) => { updateBlock(block.id, patch); }}
-                      onDelete={() => { removeBlock(block.id); }}
+                      onChange={(patch) => {
+                        updateBlock(block.id, patch)
+                      }}
+                      onDelete={() => {
+                        removeBlock(block.id)
+                      }}
                     />
                   ))}
                 </Reorder.Group>
@@ -819,10 +1002,17 @@ export function LessonEditor({ lesson, courseId, availableLessons }: LessonEdito
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-slate-500 mt-1">
-                    {blockTypeOptions.find((o) => o.value === newBlockType)?.description}
+                    {
+                      blockTypeOptions.find((o) => o.value === newBlockType)
+                        ?.description
+                    }
                   </p>
                 </div>
-                <Button type="button" className="bg-cyan-700 hover:bg-cyan-600" onClick={addBlock}>
+                <Button
+                  type="button"
+                  className="bg-cyan-700 hover:bg-cyan-600"
+                  onClick={addBlock}
+                >
                   <Plus className="mr-2 h-4 w-4" />
                   Add Block
                 </Button>
@@ -836,14 +1026,15 @@ export function LessonEditor({ lesson, courseId, availableLessons }: LessonEdito
               <AlertDialogTrigger asChild>
                 <Button type="button" variant="destructive" disabled={deleting}>
                   <Trash2 className="mr-2 h-4 w-4" />
-                  {deleting ? "Deleting..." : "Delete Lesson"}
+                  {deleting ? 'Deleting...' : 'Delete Lesson'}
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
                   <AlertDialogTitle>Delete Lesson</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Are you sure you want to delete this lesson? This action cannot be undone.
+                    Are you sure you want to delete this lesson? This action
+                    cannot be undone.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -857,9 +1048,13 @@ export function LessonEditor({ lesson, courseId, availableLessons }: LessonEdito
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
-            <Button type="submit" className="bg-cyan-700 hover:bg-cyan-600" disabled={isPending}>
+            <Button
+              type="submit"
+              className="bg-cyan-700 hover:bg-cyan-600"
+              disabled={isPending}
+            >
               <Save className="mr-2 h-4 w-4" />
-              {isPending ? "Saving..." : "Save Changes"}
+              {isPending ? 'Saving...' : 'Save Changes'}
             </Button>
           </div>
         </div>
@@ -916,7 +1111,9 @@ function BlockCard({
       <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-100 bg-slate-50/50">
         <button
           type="button"
-          onPointerDown={(e) => { dragControls.start(e); }}
+          onPointerDown={(e) => {
+            dragControls.start(e)
+          }}
           className="text-slate-400 hover:text-slate-600 cursor-grab active:cursor-grabbing"
           aria-label="Reorder block"
         >
@@ -944,12 +1141,14 @@ function BlockCard({
       </div>
 
       <div className="p-4 space-y-4">
-        {type === "text" && (
+        {type === 'text' && (
           <div className="space-y-2">
             <Label>Markdown</Label>
             <Textarea
-              value={typeof block.content === "string" ? block.content : ""}
-              onChange={(e) => { onChange({ content: e.target.value }); }}
+              value={typeof block.content === 'string' ? block.content : ''}
+              onChange={(e) => {
+                onChange({ content: e.target.value })
+              }}
               rows={10}
               className="font-mono text-sm"
               placeholder="Write markdown..."
@@ -957,13 +1156,17 @@ function BlockCard({
           </div>
         )}
 
-        {type === "heading" && (
+        {type === 'heading' && (
           <div className="grid gap-4 md:grid-cols-3">
             <div className="space-y-2">
               <Label>Level</Label>
               <select
-                value={typeof block.level === "number" ? String(block.level) : "1"}
-                onChange={(e) => { onChange({ level: Number(e.target.value) }); }}
+                value={
+                  typeof block.level === 'number' ? String(block.level) : '1'
+                }
+                onChange={(e) => {
+                  onChange({ level: Number(e.target.value) })
+                }}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-mono"
               >
                 <option value="1">H2</option>
@@ -974,65 +1177,83 @@ function BlockCard({
             <div className="space-y-2 md:col-span-2">
               <Label>Text</Label>
               <Input
-                value={typeof block.content === "string" ? block.content : ""}
-                onChange={(e) => { onChange({ content: e.target.value }); }}
+                value={typeof block.content === 'string' ? block.content : ''}
+                onChange={(e) => {
+                  onChange({ content: e.target.value })
+                }}
                 placeholder="Heading text..."
               />
             </div>
           </div>
         )}
 
-        {type === "image" && (
+        {type === 'image' && (
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2 md:col-span-2">
               <Label>Image URL</Label>
               <Input
-                value={typeof block.url === "string" ? block.url : ""}
-                onChange={(e) => { onChange({ url: e.target.value }); }}
+                value={typeof block.url === 'string' ? block.url : ''}
+                onChange={(e) => {
+                  onChange({ url: e.target.value })
+                }}
                 placeholder="https://..."
               />
             </div>
             <div className="space-y-2">
               <Label>Alt text</Label>
               <Input
-                value={typeof block.alt === "string" ? block.alt : ""}
-                onChange={(e) => { onChange({ alt: e.target.value }); }}
+                value={typeof block.alt === 'string' ? block.alt : ''}
+                onChange={(e) => {
+                  onChange({ alt: e.target.value })
+                }}
               />
             </div>
             <div className="space-y-2">
               <Label>Caption (optional)</Label>
               <Input
-                value={typeof block.caption === "string" ? block.caption : ""}
-                onChange={(e) => { onChange({ caption: e.target.value }); }}
+                value={typeof block.caption === 'string' ? block.caption : ''}
+                onChange={(e) => {
+                  onChange({ caption: e.target.value })
+                }}
               />
             </div>
           </div>
         )}
 
-        {type === "video" && (
+        {type === 'video' && (
           <VideoUploader
             lessonId={lessonId}
-            value={typeof block.url === "string" ? block.url : ""}
-            onChange={(url) => { onChange({ url }); }}
+            value={typeof block.url === 'string' ? block.url : ''}
+            onChange={(url) => {
+              onChange({ url })
+            }}
           />
         )}
 
-        {type === "code" && (
+        {type === 'code' && (
           <div className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label>Language</Label>
                 <Input
-                  value={typeof block.language === "string" ? block.language : "cpp"}
-                  onChange={(e) => { onChange({ language: e.target.value }); }}
+                  value={
+                    typeof block.language === 'string' ? block.language : 'cpp'
+                  }
+                  onChange={(e) => {
+                    onChange({ language: e.target.value })
+                  }}
                   placeholder="cpp / js / ts / ..."
                 />
               </div>
               <div className="space-y-2">
                 <Label>Filename (optional)</Label>
                 <Input
-                  value={typeof block.filename === "string" ? block.filename : ""}
-                  onChange={(e) => { onChange({ filename: e.target.value }); }}
+                  value={
+                    typeof block.filename === 'string' ? block.filename : ''
+                  }
+                  onChange={(e) => {
+                    onChange({ filename: e.target.value })
+                  }}
                   placeholder="main.ino"
                 />
               </div>
@@ -1040,24 +1261,36 @@ function BlockCard({
             <div className="space-y-2">
               <Label>Code</Label>
               <CodeEditor
-                initialCode={typeof block.code === "string" ? block.code : ""}
-                value={typeof block.code === "string" ? block.code : ""}
-                language={typeof block.language === "string" ? block.language : "cpp"}
-                filename={typeof block.filename === "string" ? block.filename : undefined}
+                initialCode={typeof block.code === 'string' ? block.code : ''}
+                value={typeof block.code === 'string' ? block.code : ''}
+                language={
+                  typeof block.language === 'string' ? block.language : 'cpp'
+                }
+                filename={
+                  typeof block.filename === 'string'
+                    ? block.filename
+                    : undefined
+                }
                 hideReset
-                onChange={(next) => { onChange({ code: next }); }}
+                onChange={(next) => {
+                  onChange({ code: next })
+                }}
               />
             </div>
           </div>
         )}
 
-        {type === "callout" && (
+        {type === 'callout' && (
           <div className="space-y-4">
             <div className="space-y-2">
               <Label>Variant</Label>
               <select
-                value={typeof block.variant === "string" ? block.variant : "info"}
-                onChange={(e) => { onChange({ variant: e.target.value }); }}
+                value={
+                  typeof block.variant === 'string' ? block.variant : 'info'
+                }
+                onChange={(e) => {
+                  onChange({ variant: e.target.value })
+                }}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-mono"
               >
                 <option value="info">Info</option>
@@ -1069,8 +1302,10 @@ function BlockCard({
             <div className="space-y-2">
               <Label>Content (Markdown)</Label>
               <Textarea
-                value={typeof block.content === "string" ? block.content : ""}
-                onChange={(e) => { onChange({ content: e.target.value }); }}
+                value={typeof block.content === 'string' ? block.content : ''}
+                onChange={(e) => {
+                  onChange({ content: e.target.value })
+                }}
                 rows={6}
                 className="font-mono text-sm"
               />
@@ -1078,82 +1313,115 @@ function BlockCard({
           </div>
         )}
 
-        {type === "download" && (
+        {type === 'download' && (
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2 md:col-span-2">
               <Label>URL</Label>
               <Input
-                value={typeof block.url === "string" ? block.url : ""}
-                onChange={(e) => { onChange({ url: e.target.value }); }}
+                value={typeof block.url === 'string' ? block.url : ''}
+                onChange={(e) => {
+                  onChange({ url: e.target.value })
+                }}
                 placeholder="https://..."
               />
             </div>
             <div className="space-y-2">
               <Label>Filename</Label>
               <Input
-                value={typeof block.filename === "string" ? block.filename : ""}
-                onChange={(e) => { onChange({ filename: e.target.value }); }}
+                value={typeof block.filename === 'string' ? block.filename : ''}
+                onChange={(e) => {
+                  onChange({ filename: e.target.value })
+                }}
               />
             </div>
             <div className="space-y-2">
               <Label>Description</Label>
               <Input
-                value={typeof block.description === "string" ? block.description : ""}
-                onChange={(e) => { onChange({ description: e.target.value }); }}
+                value={
+                  typeof block.description === 'string' ? block.description : ''
+                }
+                onChange={(e) => {
+                  onChange({ description: e.target.value })
+                }}
               />
             </div>
           </div>
         )}
 
-        {type === "quiz" && (
-          <QuizEditor block={block} onChange={onChange} />
-        )}
+        {type === 'quiz' && <QuizEditor block={block} onChange={onChange} />}
 
-        {type === "interactive_code" && (
+        {type === 'interactive_code' && (
           <div className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label>Language</Label>
                 <Input
-                  value={typeof block.language === "string" ? block.language : "cpp"}
-                  onChange={(e) => { onChange({ language: e.target.value }); }}
+                  value={
+                    typeof block.language === 'string' ? block.language : 'cpp'
+                  }
+                  onChange={(e) => {
+                    onChange({ language: e.target.value })
+                  }}
                 />
               </div>
             </div>
             <div className="space-y-2">
               <Label>Starter Code</Label>
               <CodeEditor
-                initialCode={typeof block.starterCode === "string" ? block.starterCode : ""}
-                value={typeof block.starterCode === "string" ? block.starterCode : ""}
-                language={typeof block.language === "string" ? block.language : "cpp"}
+                initialCode={
+                  typeof block.starterCode === 'string' ? block.starterCode : ''
+                }
+                value={
+                  typeof block.starterCode === 'string' ? block.starterCode : ''
+                }
+                language={
+                  typeof block.language === 'string' ? block.language : 'cpp'
+                }
                 filename="starter"
                 hideReset
-                onChange={(next) => { onChange({ starterCode: next }); }}
+                onChange={(next) => {
+                  onChange({ starterCode: next })
+                }}
               />
             </div>
             <div className="space-y-2">
               <Label>Solution Code (optional)</Label>
               <CodeEditor
-                initialCode={typeof block.solutionCode === "string" ? block.solutionCode : ""}
-                value={typeof block.solutionCode === "string" ? block.solutionCode : ""}
-                language={typeof block.language === "string" ? block.language : "cpp"}
+                initialCode={
+                  typeof block.solutionCode === 'string'
+                    ? block.solutionCode
+                    : ''
+                }
+                value={
+                  typeof block.solutionCode === 'string'
+                    ? block.solutionCode
+                    : ''
+                }
+                language={
+                  typeof block.language === 'string' ? block.language : 'cpp'
+                }
                 filename="solution"
                 hideReset
-                onChange={(next) => { onChange({ solutionCode: next }); }}
+                onChange={(next) => {
+                  onChange({ solutionCode: next })
+                }}
               />
             </div>
           </div>
         )}
 
-        {type === "diagram" && (
+        {type === 'diagram' && (
           <div className="space-y-3">
             <p className="text-xs text-slate-500">
-              Diagram blocks are stored as ReactFlow JSON in <span className="font-mono">flowData</span>.
+              Diagram blocks are stored as ReactFlow JSON in{' '}
+              <span className="font-mono">flowData</span>.
             </p>
             <FlowEditor
               mode="diagram"
               value={isRecord(block.flowData) ? block.flowData : {}}
-              onChange={(next) => { onChange({ flowData: next }); }}
+              onChange={(next) => {
+                onChange({ flowData: next })
+              }}
               height={420}
             />
             <details className="rounded border border-slate-200 bg-slate-50 p-3">
@@ -1163,15 +1431,21 @@ function BlockCard({
               <div className="mt-3 space-y-2">
                 <Label>flowData</Label>
                 <Textarea
-                  value={JSON.stringify(isRecord(block.flowData) ? block.flowData : {}, null, 2)}
+                  value={JSON.stringify(
+                    isRecord(block.flowData) ? block.flowData : {},
+                    null,
+                    2,
+                  )}
                   onChange={(e) => {
                     try {
                       const parsed: unknown = JSON.parse(e.target.value)
-                      if (typeof parsed === "object" && parsed !== null) {
-                        onChange({ flowData: parsed as Record<string, unknown> })
+                      if (typeof parsed === 'object' && parsed !== null) {
+                        onChange({
+                          flowData: parsed as Record<string, unknown>,
+                        })
                       }
                     } catch {
-                      // ignore invalid JSON while typing
+                      // Ignore invalid JSON while typing.
                     }
                   }}
                   rows={8}
@@ -1182,10 +1456,11 @@ function BlockCard({
           </div>
         )}
 
-        {type === "visual_blocks" && (
+        {type === 'visual_blocks' && (
           <div className="space-y-3">
             <p className="text-xs text-slate-500">
-              Visual blocks challenges use a starter <span className="font-mono">flowData</span> and optional{" "}
+              Visual blocks challenges use a starter{' '}
+              <span className="font-mono">flowData</span> and optional{' '}
               <span className="font-mono">solutionFlowData</span>.
             </p>
             <div className="space-y-2">
@@ -1193,7 +1468,9 @@ function BlockCard({
               <FlowEditor
                 mode="visual"
                 value={isRecord(block.flowData) ? block.flowData : {}}
-                onChange={(next) => { onChange({ flowData: next }); }}
+                onChange={(next) => {
+                  onChange({ flowData: next })
+                }}
                 height={520}
               />
             </div>
@@ -1203,11 +1480,19 @@ function BlockCard({
                 Solution (optional)
               </summary>
               <div className="mt-3 space-y-2">
-                <p className="font-mono text-xs text-slate-700">Solution Flow</p>
+                <p className="font-mono text-xs text-slate-700">
+                  Solution Flow
+                </p>
                 <FlowEditor
                   mode="visual"
-                  value={isRecord(block.solutionFlowData) ? block.solutionFlowData : {}}
-                  onChange={(next) => { onChange({ solutionFlowData: next }); }}
+                  value={
+                    isRecord(block.solutionFlowData)
+                      ? block.solutionFlowData
+                      : {}
+                  }
+                  onChange={(next) => {
+                    onChange({ solutionFlowData: next })
+                  }}
                   height={520}
                 />
               </div>
@@ -1226,18 +1511,24 @@ function QuizEditor({
   block: LessonBlock
   onChange: (patch: Record<string, unknown>) => void
 }) {
-  const question = typeof block.question === "string" ? block.question : ""
+  const question = typeof block.question === 'string' ? block.question : ''
   const options = Array.isArray(block.options)
-    ? block.options.filter((o): o is string => typeof o === "string")
-    : [""]
-  const correct = typeof block.correct === "number" ? block.correct : 0
-  const explanation = typeof block.explanation === "string" ? block.explanation : ""
+    ? block.options.filter((o): o is string => typeof o === 'string')
+    : ['']
+  const correct = typeof block.correct === 'number' ? block.correct : 0
+  const explanation =
+    typeof block.explanation === 'string' ? block.explanation : ''
 
   return (
     <div className="space-y-4">
       <div className="space-y-2">
         <Label>Question</Label>
-        <Input value={question} onChange={(e) => { onChange({ question: e.target.value }); }} />
+        <Input
+          value={question}
+          onChange={(e) => {
+            onChange({ question: e.target.value })
+          }}
+        />
       </div>
 
       <div className="space-y-2">
@@ -1247,7 +1538,9 @@ function QuizEditor({
             type="button"
             size="sm"
             variant="outline"
-            onClick={() => { onChange({ options: [...options, ""] }); }}
+            onClick={() => {
+              onChange({ options: [...options, ''] })
+            }}
           >
             <Plus className="mr-2 h-3 w-3" />
             Add option
@@ -1256,22 +1549,24 @@ function QuizEditor({
         <div className="space-y-2">
           {options.map((opt, idx) => (
             <div key={idx} className="flex items-center gap-2">
-                <Input
-                  value={opt}
-                  onChange={(e) => {
+              <Input
+                value={opt}
+                onChange={(e) => {
                   const next = options.map((value, i) =>
-                    i === idx ? e.target.value : value
+                    i === idx ? e.target.value : value,
                   )
                   onChange({ options: next })
-                  }}
-                />
+                }}
+              />
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
                     type="button"
                     variant="ghost"
                     className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                    onClick={() => { onChange({ options: options.filter((_, i) => i !== idx) }); }}
+                    onClick={() => {
+                      onChange({ options: options.filter((_, i) => i !== idx) })
+                    }}
                     aria-label="Remove option"
                   >
                     <Trash2 className="h-4 w-4" />
@@ -1289,7 +1584,9 @@ function QuizEditor({
           <Label>Correct option</Label>
           <select
             value={String(correct)}
-            onChange={(e) => { onChange({ correct: Number(e.target.value) }); }}
+            onChange={(e) => {
+              onChange({ correct: Number(e.target.value) })
+            }}
             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-mono"
           >
             {options.map((_, i) => (
@@ -1301,7 +1598,12 @@ function QuizEditor({
         </div>
         <div className="space-y-2">
           <Label>Explanation (optional)</Label>
-          <Input value={explanation} onChange={(e) => { onChange({ explanation: e.target.value }); }} />
+          <Input
+            value={explanation}
+            onChange={(e) => {
+              onChange({ explanation: e.target.value })
+            }}
+          />
         </div>
       </div>
     </div>

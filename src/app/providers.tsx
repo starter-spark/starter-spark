@@ -1,12 +1,12 @@
-"use client"
+'use client'
 
-import posthog from "posthog-js"
-import { PostHogProvider } from "posthog-js/react"
-import { ReactLenis } from "lenis/react"
-import { MotionConfig } from "motion/react"
-import { type ReactNode, useEffect } from "react"
-import { useReducedMotion } from "@/hooks/use-reduced-motion"
-import { usePathname } from "next/navigation"
+import posthog from 'posthog-js'
+import { PostHogProvider } from 'posthog-js/react'
+import { ReactLenis } from 'lenis/react'
+import { MotionConfig } from 'motion/react'
+import { type ReactNode, useEffect } from 'react'
+import { useReducedMotion } from '@/hooks/use-reduced-motion'
+import { usePathname } from 'next/navigation'
 
 interface ProvidersProps {
   children: ReactNode
@@ -16,7 +16,7 @@ export function Providers({ children }: ProvidersProps) {
   const prefersReducedMotion = useReducedMotion()
   const pathname = usePathname()
   const disableSmoothScroll =
-    pathname.startsWith("/admin") || pathname.startsWith("/learn")
+    pathname.startsWith('/admin') || pathname.startsWith('/learn')
 
   useEffect(() => {
     if (!prefersReducedMotion && !disableSmoothScroll) return
@@ -25,28 +25,28 @@ export function Providers({ children }: ProvidersProps) {
     const body = document.body
 
     html.classList.remove(
-      "lenis",
-      "lenis-smooth",
-      "lenis-scrolling",
-      "lenis-stopped"
+      'lenis',
+      'lenis-smooth',
+      'lenis-scrolling',
+      'lenis-stopped',
     )
-    body.classList.remove("lenis")
+    body.classList.remove('lenis')
 
     const resetStyles = (el: HTMLElement) => {
       for (const prop of [
-        "overflow",
-        "overflow-x",
-        "overflow-y",
-        "height",
-        "width",
-        "position",
-        "top",
-        "right",
-        "bottom",
-        "left",
-        "transform",
-        "will-change",
-        "scroll-behavior",
+        'overflow',
+        'overflow-x',
+        'overflow-y',
+        'height',
+        'width',
+        'position',
+        'top',
+        'right',
+        'bottom',
+        'left',
+        'transform',
+        'will-change',
+        'scroll-behavior',
       ]) {
         el.style.removeProperty(prop)
       }
@@ -57,21 +57,16 @@ export function Providers({ children }: ProvidersProps) {
   }, [disableSmoothScroll, prefersReducedMotion])
 
   useEffect(() => {
-    // Only initialize PostHog if the key is available
     if (process.env.NEXT_PUBLIC_POSTHOG_KEY) {
       posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY, {
-        api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://us.i.posthog.com",
-        // Capture pageviews automatically
+        api_host:
+          process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://us.i.posthog.com',
         capture_pageview: true,
-        // Capture pageleaves to measure time on page
         capture_pageleave: true,
-        // Disable surveys to save ~30KB of JS
         disable_surveys: true,
-        // Disable session recording to improve performance
         disable_session_recording: true,
-        // Only enable in production
         loaded: (posthog) => {
-          if (process.env.NODE_ENV === "development") {
+          if (process.env.NODE_ENV === 'development') {
             posthog.debug()
           }
         },
@@ -79,14 +74,14 @@ export function Providers({ children }: ProvidersProps) {
     }
   }, [])
 
-  // Wrap content with Lenis for smooth scrolling (respects reduced motion)
-  const content = prefersReducedMotion || disableSmoothScroll ? (
-    children
-  ) : (
-    <ReactLenis root options={{ lerp: 0.1, duration: 1.2 }}>
-      {children}
-    </ReactLenis>
-  )
+  const content =
+    prefersReducedMotion || disableSmoothScroll ? (
+      children
+    ) : (
+      <ReactLenis root options={{ lerp: 0.1, duration: 1.2 }}>
+        {children}
+      </ReactLenis>
+    )
 
   const wrappedContent = prefersReducedMotion ? (
     <MotionConfig reducedMotion="always">{content}</MotionConfig>
@@ -94,7 +89,6 @@ export function Providers({ children }: ProvidersProps) {
     content
   )
 
-  // If PostHog is not configured, just render with Lenis
   if (!process.env.NEXT_PUBLIC_POSTHOG_KEY) {
     return <>{wrappedContent}</>
   }

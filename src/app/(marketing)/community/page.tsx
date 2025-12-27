@@ -1,7 +1,7 @@
-import { createClient } from "@/lib/supabase/server"
-import { formatRelativeTime } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { UserAvatar } from "@/components/ui/user-avatar"
+import { createClient } from '@/lib/supabase/server'
+import { formatRelativeTime } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
+import { UserAvatar } from '@/components/ui/user-avatar'
 import {
   CheckCircle2,
   Circle,
@@ -9,16 +9,18 @@ import {
   Plus,
   Eye,
   ChevronUp,
-} from "lucide-react"
-import Link from "next/link"
-import { ForumFilters } from "./ForumFilters"
-import { Suspense } from "react"
-import { getContents } from "@/lib/content"
-import type { Metadata } from "next"
-import { siteConfig } from "@/config/site"
+} from 'lucide-react'
+import Link from 'next/link'
+import { ForumFilters } from './ForumFilters'
+import { Suspense } from 'react'
+import { getContents } from '@/lib/content'
+import type { Metadata } from 'next'
+import { siteConfig } from '@/config/site'
+import { resolveParams, type MaybePromise } from '@/lib/next-params'
 
-const pageTitle = "The Lab - Community Q&A"
-const pageDescription = "Get help from the StarterSpark community. Ask questions, share solutions, and connect with other builders."
+const pageTitle = 'The Lab - Community Q&A'
+const pageDescription =
+  'Get help from the StarterSpark community. Ask questions, share solutions, and connect with other builders.'
 
 export const metadata: Metadata = {
   title: pageTitle,
@@ -30,32 +32,41 @@ export const metadata: Metadata = {
     siteName: siteConfig.name,
     images: [
       {
-        url: `/api/og?title=${encodeURIComponent("The Lab")}&subtitle=${encodeURIComponent(pageDescription)}&type=post`,
+        url: `/api/og?title=${encodeURIComponent('The Lab')}&subtitle=${encodeURIComponent(pageDescription)}&type=post`,
         width: 1200,
         height: 630,
         alt: pageTitle,
       },
     ],
-    type: "website",
+    type: 'website',
   },
   twitter: {
-    card: "summary_large_image",
+    card: 'summary_large_image',
     title: pageTitle,
     description: pageDescription,
-    images: [`/api/og?title=${encodeURIComponent("The Lab")}&subtitle=${encodeURIComponent(pageDescription)}&type=post`],
+    images: [
+      `/api/og?title=${encodeURIComponent('The Lab')}&subtitle=${encodeURIComponent(pageDescription)}&type=post`,
+    ],
   },
 }
 
 export default async function CommunityPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; tag?: string; product?: string; q?: string }>
+  searchParams: MaybePromise<{
+    status?: string
+    tag?: string
+    product?: string
+    q?: string
+  }>
 }) {
-  const params = await searchParams
+  const params = await resolveParams(searchParams)
   const supabase = await createClient()
-  const allowedStatuses = new Set(["open", "solved"])
+  const allowedStatuses = new Set(['open', 'solved'])
   const statusFilter =
-    params.status && allowedStatuses.has(params.status) ? params.status : undefined
+    params.status && allowedStatuses.has(params.status)
+      ? params.status
+      : undefined
   const tagFilter = (() => {
     if (!params.tag) return undefined
     const trimmed = params.tag.trim()
@@ -66,12 +77,17 @@ export default async function CommunityPage({
 
   // Fetch dynamic content
   const content = await getContents(
-    ["community.header.title", "community.header.description", "community.empty"],
+    [
+      'community.header.title',
+      'community.header.description',
+      'community.empty',
+    ],
     {
-      "community.header.title": "The Lab",
-      "community.header.description": "Get help from the community. Ask questions, share solutions, and connect with other builders. Every question gets answered.",
-      "community.empty": "No discussions yet. Be the first to ask a question!",
-    }
+      'community.header.title': 'The Lab',
+      'community.header.description':
+        'Get help from the community. Ask questions, share solutions, and connect with other builders. Every question gets answered.',
+      'community.empty': 'No discussions yet. Be the first to ask a question!',
+    },
   )
 
   let posts: {
@@ -83,7 +99,12 @@ export default async function CommunityPage({
     upvotes: number | null
     view_count: number | null
     created_at: string
-    author: { id: string; full_name: string | null; email: string; role: string | null } | null
+    author: {
+      id: string
+      full_name: string | null
+      email: string
+      role: string | null
+    } | null
     product: { id: string; name: string; slug: string } | null
     comments: { id: string }[]
   }[] = []
@@ -92,7 +113,7 @@ export default async function CommunityPage({
   try {
     // Fetch posts with author info and comment count
     let query = supabase
-      .from("posts")
+      .from('posts')
       .select(
         `
         id,
@@ -117,42 +138,42 @@ export default async function CommunityPage({
           slug
         ),
         comments (id)
-      `
+      `,
       )
-      .order("created_at", { ascending: false })
+      .order('created_at', { ascending: false })
 
     // Apply filters
     if (statusFilter) {
-      query = query.eq("status", statusFilter)
+      query = query.eq('status', statusFilter)
     }
 
     if (tagFilter) {
-      query = query.contains("tags", [tagFilter])
+      query = query.contains('tags', [tagFilter])
     }
 
     // Apply text search
     if (searchQuery) {
-      query = query.ilike("title", `%${searchQuery}%`)
+      query = query.ilike('title', `%${searchQuery}%`)
     }
 
     const { data: postData, error } = await query.limit(50)
 
     if (error) {
-      console.error("Error fetching posts:", error)
+      console.error('Error fetching posts:', error)
     }
     posts = (postData as typeof posts) || []
   } catch (error) {
-    console.error("Error fetching posts:", error)
+    console.error('Error fetching posts:', error)
   }
 
   try {
     const { data: productData } = await supabase
-      .from("products")
-      .select("id, name, slug")
-      .order("name")
+      .from('products')
+      .select('id, name, slug')
+      .order('name')
     products = (productData as typeof products) || []
   } catch (error) {
-    console.error("Error fetching products:", error)
+    console.error('Error fetching products:', error)
   }
 
   // Get unique tags from posts
@@ -169,10 +190,10 @@ export default async function CommunityPage({
         <div className="max-w-7xl mx-auto">
           <p className="text-sm font-mono text-cyan-700 mb-2">Community</p>
           <h1 className="font-mono text-4xl lg:text-5xl font-bold text-slate-900 mb-4 break-words">
-            {content["community.header.title"]}
+            {content['community.header.title']}
           </h1>
           <p className="text-lg text-slate-600 max-w-2xl break-words">
-            {content["community.header.description"]}
+            {content['community.header.description']}
           </p>
         </div>
       </section>
@@ -184,7 +205,10 @@ export default async function CommunityPage({
             {/* Sidebar */}
             <div className="w-full lg:w-64 flex-shrink-0">
               {/* Ask Question CTA */}
-              <Button asChild className="w-full bg-cyan-700 hover:bg-cyan-600 text-white font-mono mb-6">
+              <Button
+                asChild
+                className="w-full bg-cyan-700 hover:bg-cyan-600 text-white font-mono mb-6"
+              >
                 <Link href="/community/new">
                   <Plus className="w-4 h-4 mr-2" />
                   Ask a Question
@@ -192,7 +216,11 @@ export default async function CommunityPage({
               </Button>
 
               {/* Filters */}
-              <Suspense fallback={<div className="animate-pulse bg-slate-100 rounded h-48" />}>
+              <Suspense
+                fallback={
+                  <div className="animate-pulse bg-slate-100 rounded h-48" />
+                }
+              >
                 <ForumFilters
                   products={products || []}
                   availableTags={availableTags}
@@ -225,8 +253,9 @@ export default async function CommunityPage({
                       avatar_url: string | null
                       avatar_seed: string | null
                     } | null
-                    const commentCount = (post.comments as unknown as { id: string }[])
-                      ?.length || 0
+                    const commentCount =
+                      (post.comments as unknown as { id: string }[])?.length ||
+                      0
 
                     return (
                       <Link
@@ -262,7 +291,7 @@ export default async function CommunityPage({
                             <div className="flex-1 min-w-0">
                               <div className="flex items-start gap-2 mb-2">
                                 {/* Status Badge */}
-                                {post.status === "solved" ? (
+                                {post.status === 'solved' ? (
                                   <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 text-xs font-mono rounded">
                                     <CheckCircle2 className="w-3 h-3" />
                                     Solved
@@ -308,11 +337,11 @@ export default async function CommunityPage({
                                 />
                                 <span>
                                   {author?.full_name ||
-                                    author?.email?.split("@")[0] ||
-                                    "Anonymous"}
+                                    author?.email?.split('@')[0] ||
+                                    'Anonymous'}
                                 </span>
                                 {author?.role &&
-                                  ["admin", "staff"].includes(author.role) && (
+                                  ['admin', 'staff'].includes(author.role) && (
                                     <span className="px-1.5 py-0.5 bg-cyan-100 text-cyan-700 text-xs font-mono rounded">
                                       Staff
                                     </span>
@@ -337,9 +366,12 @@ export default async function CommunityPage({
                     No questions yet
                   </p>
                   <p className="text-slate-600 mb-6">
-                    {content["community.empty"]}
+                    {content['community.empty']}
                   </p>
-                  <Button asChild className="bg-cyan-700 hover:bg-cyan-600 text-white font-mono">
+                  <Button
+                    asChild
+                    className="bg-cyan-700 hover:bg-cyan-600 text-white font-mono"
+                  >
                     <Link href="/community/new">
                       <Plus className="w-4 h-4 mr-2" />
                       Ask a Question

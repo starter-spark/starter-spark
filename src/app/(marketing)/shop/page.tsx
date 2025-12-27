@@ -1,14 +1,15 @@
-import { createPublicClient } from "@/lib/supabase/public"
-import { ShopFilters } from "./ShopFilters"
-import { Package } from "lucide-react"
-import Link from "next/link"
-import { type ProductTag } from "@/components/commerce"
-import { getContents } from "@/lib/content"
-import type { Metadata } from "next"
-import { siteConfig } from "@/config/site"
+import { createPublicClient } from '@/lib/supabase/public'
+import { ShopFilters } from './ShopFilters'
+import { Package } from 'lucide-react'
+import Link from 'next/link'
+import { type ProductTag } from '@/components/commerce'
+import { getContents } from '@/lib/content'
+import type { Metadata } from 'next'
+import { siteConfig } from '@/config/site'
 
-const pageTitle = "Robotics Kits"
-const pageDescription = "Precision robotics kits for the next generation of engineers. Each kit includes components, tools, and full access to our learning platform."
+const pageTitle = 'Robotics Kits'
+const pageDescription =
+  'Precision robotics kits for the next generation of engineers. Each kit includes components, tools, and full access to our learning platform.'
 
 export const metadata: Metadata = {
   title: pageTitle,
@@ -26,30 +27,43 @@ export const metadata: Metadata = {
         alt: pageTitle,
       },
     ],
-    type: "website",
+    type: 'website',
   },
   twitter: {
-    card: "summary_large_image",
+    card: 'summary_large_image',
     title: pageTitle,
     description: pageDescription,
-    images: [`/api/og?title=${encodeURIComponent(pageTitle)}&subtitle=${encodeURIComponent(pageDescription)}`],
+    images: [
+      `/api/og?title=${encodeURIComponent(pageTitle)}&subtitle=${encodeURIComponent(pageDescription)}`,
+    ],
   },
 }
 
 export default async function ShopPage() {
   // Fetch dynamic content
   const content = await getContents(
-    ["shop.header.title", "shop.header.description", "shop.empty"],
+    ['shop.header.title', 'shop.header.description', 'shop.empty'],
     {
-      "shop.header.title": "Robotics Kits",
-      "shop.header.description": "Everything you need to start building. Each kit includes components, tools, and full access to our learning platform.",
-      "shop.empty": "No products available at this time.",
-    }
+      'shop.header.title': 'Robotics Kits',
+      'shop.header.description':
+        'Everything you need to start building. Each kit includes components, tools, and full access to our learning platform.',
+      'shop.empty': 'No products available at this time.',
+    },
   )
 
   // Transform and sort products for display
-  interface ProductTagItem { tag: string; priority: number | null; discount_percent: number | null; expires_at: string | null }
-  interface ProductMediaItem { type: string | null; url: string; is_primary: boolean | null; sort_order: number | null }
+  interface ProductTagItem {
+    tag: string
+    priority: number | null
+    discount_percent: number | null
+    expires_at: string | null
+  }
+  interface ProductMediaItem {
+    type: string | null
+    url: string
+    is_primary: boolean | null
+    sort_order: number | null
+  }
 
   type ShopProduct = {
     id: string
@@ -59,8 +73,12 @@ export default async function ShopPage() {
     inStock: boolean
     badge?: string
     category: string
-    status: "active" | "coming_soon" | "draft"
-    tags: { tag: ProductTag["tag"]; priority: number | null; discount_percent: number | null }[]
+    status: 'active' | 'coming_soon' | 'draft'
+    tags: {
+      tag: ProductTag['tag']
+      priority: number | null
+      discount_percent: number | null
+    }[]
     createdAt: string | null
     image?: string
     originalPrice: number | null
@@ -73,8 +91,9 @@ export default async function ShopPage() {
   try {
     const supabase = createPublicClient()
     const { data: products, error } = await supabase
-      .from("products")
-      .select(`
+      .from('products')
+      .select(
+        `
         id,
         slug,
         name,
@@ -97,11 +116,12 @@ export default async function ShopPage() {
           is_primary,
           sort_order
         )
-      `)
-      .in("status", ["active", "coming_soon"])
+      `,
+      )
+      .in('status', ['active', 'coming_soon'])
 
     if (error) {
-      console.error("Error fetching products:", error)
+      console.error('Error fetching products:', error)
     }
 
     transformedProducts = (products || []).map((product) => {
@@ -113,23 +133,27 @@ export default async function ShopPage() {
 
       // Filter out expired tags
       const now = new Date()
-      const productTags = (product.product_tags as unknown as ProductTagItem[] | null) || []
+      const productTags =
+        (product.product_tags as unknown as ProductTagItem[] | null) || []
       const validTags = productTags.filter((t) => {
         if (!t.expires_at) return true // No expiration = always valid
         return new Date(t.expires_at) > now
       })
 
       const tags = validTags.map((t) => ({
-        tag: t.tag as ProductTag["tag"],
+        tag: t.tag as ProductTag['tag'],
         priority: t.priority,
         discount_percent: t.discount_percent,
       }))
 
       // Get primary image or first image by sort_order (filter out 3D models, videos, documents)
-      const productMedia = (product.product_media as unknown as ProductMediaItem[] | null) || []
-      const media = productMedia.filter((m) => m.type === "image" || !m.type)
+      const productMedia =
+        (product.product_media as unknown as ProductMediaItem[] | null) || []
+      const media = productMedia.filter((m) => m.type === 'image' || !m.type)
       const primaryImage = media.find((m) => m.is_primary)
-      const sortedMedia = [...media].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+      const sortedMedia = [...media].sort(
+        (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0),
+      )
       const firstImage = sortedMedia[0]
       const image = primaryImage?.url || firstImage?.url || undefined
 
@@ -140,19 +164,21 @@ export default async function ShopPage() {
         price: product.price_cents / 100,
         inStock: specs?.inStock ?? true,
         badge: specs?.badge || undefined,
-        category: specs?.category || "kit",
-        status: (product.status || "active"),
+        category: specs?.category || 'kit',
+        status: product.status || 'active',
         tags,
         createdAt: product.created_at,
         image,
-        // Discount fields (Phase 14.3)
-        originalPrice: product.original_price_cents ? product.original_price_cents / 100 : null,
+        // Discount fields
+        originalPrice: product.original_price_cents
+          ? product.original_price_cents / 100
+          : null,
         discountPercent: product.discount_percent,
         discountExpiresAt: product.discount_expires_at,
       }
     })
   } catch (error) {
-    console.error("Error fetching products:", error)
+    console.error('Error fetching products:', error)
   }
 
   // Sort products according to PLAN.md algorithm:
@@ -161,10 +187,10 @@ export default async function ShopPage() {
   // 3. Then by tag priority sum
   // 4. Then by created date (newest first)
   const sortedProducts = transformedProducts.sort((a, b) => {
-    const aHasOutOfStock = a.tags.some(t => t.tag === "out_of_stock")
-    const bHasOutOfStock = b.tags.some(t => t.tag === "out_of_stock")
-    const aHasFeatured = a.tags.some(t => t.tag === "featured")
-    const bHasFeatured = b.tags.some(t => t.tag === "featured")
+    const aHasOutOfStock = a.tags.some((t) => t.tag === 'out_of_stock')
+    const bHasOutOfStock = b.tags.some((t) => t.tag === 'out_of_stock')
+    const aHasFeatured = a.tags.some((t) => t.tag === 'featured')
+    const bHasFeatured = b.tags.some((t) => t.tag === 'featured')
 
     // Out of stock last
     if (aHasOutOfStock && !bHasOutOfStock) return 1
@@ -194,15 +220,15 @@ export default async function ShopPage() {
         <div className="max-w-7xl mx-auto">
           <p className="text-sm font-mono text-cyan-700 mb-2">Shop</p>
           <h1 className="font-mono text-4xl lg:text-5xl font-bold text-slate-900 mb-4 break-words">
-            {content["shop.header.title"]}
+            {content['shop.header.title']}
           </h1>
           <p className="text-lg text-slate-600 max-w-2xl break-words">
-            {content["shop.header.description"]}
+            {content['shop.header.description']}
           </p>
         </div>
       </section>
 
-      {/* Visually hidden h2 for proper heading hierarchy - must be in server component for axe */}
+      {/* Hidden h2 (heading hierarchy, server component for axe) */}
       <h2 className="sr-only">Available Products</h2>
 
       {hasProducts ? (
@@ -220,7 +246,7 @@ export default async function ShopPage() {
                 Products Coming Soon
               </h3>
               <p className="text-slate-600 max-w-md mb-6 break-words">
-                {content["shop.empty"]}
+                {content['shop.empty']}
               </p>
               <Link
                 href="/#newsletter"

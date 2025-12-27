@@ -54,7 +54,7 @@ jobs:
       NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
 
-      DOTENV_CONFIG_QUIET: "true"
+      DOTENV_CONFIG_QUIET: 'true'
 
     steps:
       - uses: actions/checkout@v5

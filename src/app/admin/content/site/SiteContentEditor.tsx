@@ -1,15 +1,23 @@
-"use client"
+'use client'
 
-import { useState, useTransition } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Save, RotateCcw, Check, Loader2, Type, FileText, AlertCircle } from "lucide-react"
-import { updateSiteContent } from "./actions"
+import { useState, useTransition } from 'react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import {
+  Save,
+  RotateCcw,
+  Check,
+  Loader2,
+  Type,
+  FileText,
+  AlertCircle,
+} from 'lucide-react'
+import { updateSiteContent } from './actions'
 
 interface ContentItem {
   id: string
@@ -36,9 +44,9 @@ export default function SiteContentEditor({ content }: SiteContentEditorProps) {
   const [error, setError] = useState<string | null>(null)
 
   const handleContentChange = (key: string, value: string) => {
-    setEditedContent(prev => ({ ...prev, [key]: value }))
+    setEditedContent((prev) => ({ ...prev, [key]: value }))
     // Remove from saved set when content changes
-    setSavedItems(prev => {
+    setSavedItems((prev) => {
       const next = new Set(prev)
       next.delete(key)
       return next
@@ -57,7 +65,7 @@ export default function SiteContentEditor({ content }: SiteContentEditorProps) {
         setError(result.error)
       } else {
         // Mark as saved
-        setSavedItems(prev => new Set(prev).add(item.content_key))
+        setSavedItems((prev) => new Set(prev).add(item.content_key))
         // Update the local state to reflect saved content
         item.content = newContent
       }
@@ -67,19 +75,25 @@ export default function SiteContentEditor({ content }: SiteContentEditorProps) {
 
   const handleReset = (item: ContentItem) => {
     if (item.default_value) {
-      setEditedContent(prev => ({ ...prev, [item.content_key]: item.default_value! }))
+      setEditedContent((prev) => ({
+        ...prev,
+        [item.content_key]: item.default_value!,
+      }))
     }
   }
 
   const getDisplayKey = (key: string) => {
     // Convert content_key to human-readable label
-    // e.g., "home.hero.headline" -> "Hero Headline"
-    const parts = key.split(".")
+    // Example: "home.hero.headline" -> "Hero Headline"
+    const parts = key.split('.')
     // Remove category prefix
     const relevantParts = parts.slice(1)
     return relevantParts
-      .map(part => part.charAt(0).toUpperCase() + part.slice(1).replaceAll('_', " "))
-      .join(" ")
+      .map(
+        (part) =>
+          part.charAt(0).toUpperCase() + part.slice(1).replaceAll('_', ' '),
+      )
+      .join(' ')
   }
 
   if (content.length === 0) {
@@ -104,7 +118,7 @@ export default function SiteContentEditor({ content }: SiteContentEditorProps) {
         const isModified = currentValue !== item.content
         const isSaved = savedItems.has(item.content_key)
         const isSaving = savingKey === item.content_key
-        const isRichText = item.content_type === "rich_text"
+        const isRichText = item.content_type === 'rich_text'
 
         return (
           <Card key={item.id} className="bg-slate-50 border-slate-200">
@@ -121,17 +135,25 @@ export default function SiteContentEditor({ content }: SiteContentEditorProps) {
                       {getDisplayKey(item.content_key)}
                     </Label>
                     {item.description && (
-                      <p className="text-xs text-slate-500 mt-0.5">{item.description}</p>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        {item.description}
+                      </p>
                     )}
                   </div>
                   <div className="flex items-center gap-2">
                     {isModified && (
-                      <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-xs">
+                      <Badge
+                        variant="outline"
+                        className="bg-amber-50 text-amber-700 border-amber-200 text-xs"
+                      >
                         Modified
                       </Badge>
                     )}
                     {isSaved && !isModified && (
-                      <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs">
+                      <Badge
+                        variant="outline"
+                        className="bg-green-50 text-green-700 border-green-200 text-xs"
+                      >
                         <Check className="h-3 w-3 mr-1" />
                         Saved
                       </Badge>
@@ -142,39 +164,52 @@ export default function SiteContentEditor({ content }: SiteContentEditorProps) {
                 {isRichText ? (
                   <Textarea
                     value={currentValue}
-                    onChange={(e) => { handleContentChange(item.content_key, e.target.value); }}
+                    onChange={(e) => {
+                      handleContentChange(item.content_key, e.target.value)
+                    }}
                     className="min-h-[100px] bg-white text-slate-900"
-                    placeholder={item.default_value || "Enter content..."}
+                    placeholder={item.default_value || 'Enter content...'}
                   />
                 ) : (
                   <Input
                     value={currentValue}
-                    onChange={(e) => { handleContentChange(item.content_key, e.target.value); }}
+                    onChange={(e) => {
+                      handleContentChange(item.content_key, e.target.value)
+                    }}
                     className="bg-white text-slate-900"
-                    placeholder={item.default_value || "Enter content..."}
+                    placeholder={item.default_value || 'Enter content...'}
                   />
                 )}
 
                 <div className="flex items-center justify-between pt-1">
-                  <code className="text-xs text-slate-400 font-mono">{item.content_key}</code>
+                  <code className="text-xs text-slate-400 font-mono">
+                    {item.content_key}
+                  </code>
                   <div className="flex items-center gap-2">
-                    {item.default_value && currentValue !== item.default_value && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => { handleReset(item); }}
-                        className="text-slate-500 hover:text-slate-700 h-8"
-                      >
-                        <RotateCcw className="h-3.5 w-3.5 mr-1" />
-                        Reset
-                      </Button>
-                    )}
+                    {item.default_value &&
+                      currentValue !== item.default_value && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            handleReset(item)
+                          }}
+                          className="text-slate-500 hover:text-slate-700 h-8"
+                        >
+                          <RotateCcw className="h-3.5 w-3.5 mr-1" />
+                          Reset
+                        </Button>
+                      )}
                     <Button
-                      variant={isModified ? "default" : "outline"}
+                      variant={isModified ? 'default' : 'outline'}
                       size="sm"
-                      onClick={() => { handleSave(item); }}
+                      onClick={() => {
+                        handleSave(item)
+                      }}
                       disabled={!isModified || isPending}
-                      className={isModified ? "bg-cyan-700 hover:bg-cyan-600 h-8" : "h-8"}
+                      className={
+                        isModified ? 'bg-cyan-700 hover:bg-cyan-600 h-8' : 'h-8'
+                      }
                     >
                       {isSaving ? (
                         <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />

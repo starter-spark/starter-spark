@@ -8,7 +8,7 @@ import {
   Info,
   Mail,
   type LucideIcon,
-} from "lucide-react"
+} from 'lucide-react'
 
 export interface NavItem {
   title: string
@@ -23,87 +23,87 @@ export interface NavGroup {
   items: NavItem[]
 }
 
-// Dropdown navigation groups
+// Dropdown groups
+
 export const documentationNav: NavGroup = {
-  title: "Documentation",
+  title: 'Documentation',
   items: [
     {
-      title: "Getting Started",
-      href: "/learn",
-      description: "Start your robotics journey",
+      title: 'Getting Started',
+      href: '/learn',
+      description: 'Start your robotics journey',
       icon: BookOpen,
     },
     {
-      title: "Hardware Guides",
-      href: "/docs#hardware",
-      description: "Assembly and wiring guides",
+      title: 'Hardware Guides',
+      href: '/docs#hardware',
+      description: 'Assembly and wiring guides',
       icon: Cpu,
     },
     {
-      title: "Software Guides",
-      href: "/docs#software",
-      description: "Arduino programming tutorials",
+      title: 'Software Guides',
+      href: '/docs#software',
+      description: 'Arduino programming tutorials',
       icon: Code,
     },
     {
-      title: "Troubleshooting",
-      href: "/support",
-      description: "Common issues and solutions",
+      title: 'Troubleshooting',
+      href: '/support',
+      description: 'Common issues and solutions',
       icon: HelpCircle,
     },
   ],
 }
 
 export const communityNav: NavGroup = {
-  title: "Community",
+  title: 'Community',
   items: [
     {
-      title: "Events",
-      href: "/events",
-      description: "Workshops and meetups",
+      title: 'Events',
+      href: '/events',
+      description: 'Workshops and meetups',
       icon: Calendar,
     },
     {
-      title: "The Lab",
-      href: "/community",
-      description: "Ask questions and share projects",
+      title: 'The Lab',
+      href: '/community',
+      description: 'Ask questions and share projects',
       icon: Users,
     },
     {
-      title: "About Us",
-      href: "/about",
-      description: "Our mission and team",
+      title: 'About Us',
+      href: '/about',
+      description: 'Our mission and team',
       icon: Info,
     },
     {
-      title: "Contact",
-      href: "/contact",
-      description: "Get in touch with our team",
+      title: 'Contact',
+      href: '/contact',
+      description: 'Get in touch with our team',
       icon: Mail,
     },
   ],
 }
 
-// Simple nav items (no dropdown)
-export const mainNav = [
-  { title: "Shop", href: "/shop" },
-] as const
+// Simple items
+
+export const mainNav = [{ title: 'Shop', href: '/shop' }] as const
 
 export const footerNav = {
   main: [
-    { title: "Shop", href: "/shop" },
-    { title: "Learn", href: "/learn" },
-    { title: "Docs", href: "/docs" },
-    { title: "Community", href: "/community" },
-    { title: "Events", href: "/events" },
-    { title: "About", href: "/about" },
-    { title: "Contact", href: "/contact" },
-    { title: "Support", href: "/support" },
+    { title: 'Shop', href: '/shop' },
+    { title: 'Learn', href: '/learn' },
+    { title: 'Docs', href: '/docs' },
+    { title: 'Community', href: '/community' },
+    { title: 'Events', href: '/events' },
+    { title: 'About', href: '/about' },
+    { title: 'Contact', href: '/contact' },
+    { title: 'Support', href: '/support' },
   ],
   legal: [
-    { title: "Privacy", href: "/privacy" },
-    { title: "Terms", href: "/terms" },
-    { title: "Contact", href: "/contact" },
+    { title: 'Privacy', href: '/privacy' },
+    { title: 'Terms', href: '/terms' },
+    { title: 'Contact', href: '/contact' },
   ],
 } as const
 

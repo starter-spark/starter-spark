@@ -1,18 +1,23 @@
-"use server"
+'use server'
 
-import { createClient } from "@/lib/supabase/server"
-import { rateLimitAction } from "@/lib/rate-limit"
-import { revalidatePath } from "next/cache"
-import { isUuid } from "@/lib/uuid"
+import { createClient } from '@/lib/supabase/server'
+import { rateLimitAction } from '@/lib/rate-limit'
+import { revalidatePath } from 'next/cache'
+import { isUuid } from '@/lib/uuid'
 
 /**
  * Check if the current user is banned from forums
  */
-async function checkBanStatus(supabase: Awaited<ReturnType<typeof createClient>>, userId: string): Promise<boolean> {
-  const { data, error } = await supabase.rpc("is_banned_from_forums", { user_id: userId })
+async function checkBanStatus(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+): Promise<boolean> {
+  const { data, error } = await supabase.rpc('is_banned_from_forums', {
+    user_id: userId,
+  })
   if (error) {
-    console.error("Error checking ban status:", error)
-    return false // Fail open - let RLS handle it
+    console.error('Error checking ban status:', error)
+    return false // Fail open, let RLS handle it.
   }
   return data === true
 }
@@ -45,74 +50,101 @@ export async function createPost(input: {
   } = await supabase.auth.getUser()
 
   if (!user) {
-    return { success: false, error: "You must be logged in to post.", requiresAuth: true }
+    return {
+      success: false,
+      error: 'You must be logged in to post.',
+      requiresAuth: true,
+    }
   }
 
   // Check if user is banned from forums
   if (await checkBanStatus(supabase, user.id)) {
-    return { success: false, error: "Your account has been restricted from posting in the community forums." }
+    return {
+      success: false,
+      error:
+        'Your account has been restricted from posting in the community forums.',
+    }
   }
 
-  const rateLimitResult = await rateLimitAction(user.id, "communityPost")
+  const rateLimitResult = await rateLimitAction(user.id, 'communityPost')
   if (!rateLimitResult.success) {
     return {
       success: false,
-      error: rateLimitResult.error || "Too many posts. Please try again shortly.",
+      error:
+        rateLimitResult.error || 'Too many posts. Please try again shortly.',
     }
   }
 
   const title = input.title.trim()
   if (!title) {
-    return { success: false, error: "Please enter a title for your question." }
+    return { success: false, error: 'Please enter a title for your question.' }
   }
   if (title.length < TITLE_MIN) {
-    return { success: false, error: `Title must be at least ${TITLE_MIN} characters.` }
+    return {
+      success: false,
+      error: `Title must be at least ${TITLE_MIN} characters.`,
+    }
   }
   if (title.length > TITLE_MAX) {
-    return { success: false, error: `Title must be ${TITLE_MAX} characters or fewer.` }
+    return {
+      success: false,
+      error: `Title must be ${TITLE_MAX} characters or fewer.`,
+    }
   }
 
   const content = input.content.trim()
   if (!content) {
-    return { success: false, error: "Please describe your question in detail." }
+    return { success: false, error: 'Please describe your question in detail.' }
   }
   if (content.length < CONTENT_MIN) {
-    return { success: false, error: `Please provide at least ${CONTENT_MIN} characters.` }
+    return {
+      success: false,
+      error: `Please provide at least ${CONTENT_MIN} characters.`,
+    }
   }
   if (content.length > CONTENT_MAX) {
-    return { success: false, error: `Question must be ${CONTENT_MAX} characters or fewer.` }
+    return {
+      success: false,
+      error: `Question must be ${CONTENT_MAX} characters or fewer.`,
+    }
   }
 
   const productId = input.productId?.trim()
   if (productId && !isUuid(productId)) {
-    return { success: false, error: "Invalid product selection." }
+    return { success: false, error: 'Invalid product selection.' }
   }
 
   const tags = normalizeTags(input.tags)
 
   const { data: post, error } = await supabase
-    .from("posts")
+    .from('posts')
     .insert({
       title,
       content,
       author_id: user.id,
       product_id: productId || null,
       tags: tags.length > 0 ? tags : null,
-      status: "open",
+      status: 'open',
     })
-    .select("id")
+    .select('id')
     .maybeSingle()
 
   if (error) {
-    console.error("Error posting question:", error)
-    return { success: false, error: "Failed to post your question. Please try again." }
+    console.error('Error posting question:', error)
+    return {
+      success: false,
+      error: 'Failed to post your question. Please try again.',
+    }
   }
 
   if (!post) {
-    return { success: false, error: "Your question was created, but we couldn't load it." }
+    return {
+      success: false,
+      error: "Your question was created, but we couldn't load it.",
+    }
   }
 
-  revalidatePath("/community")
+  revalidatePath('/community')
   return { success: true, postId: post.id }
 }
 
@@ -123,44 +155,62 @@ export async function createAnswer(input: { postId: string; content: string }) {
   } = await supabase.auth.getUser()
 
   if (!user) {
-    return { success: false, error: "You must be logged in to post an answer.", requiresAuth: true }
+    return {
+      success: false,
+      error: 'You must be logged in to post an answer.',
+      requiresAuth: true,
+    }
   }
 
   // Check if user is banned from forums
   if (await checkBanStatus(supabase, user.id)) {
-    return { success: false, error: "Your account has been restricted from posting in the community forums." }
+    return {
+      success: false,
+      error:
+        'Your account has been restricted from posting in the community forums.',
+    }
   }
 
-  const rateLimitResult = await rateLimitAction(user.id, "communityAnswer")
+  const rateLimitResult = await rateLimitAction(user.id, 'communityAnswer')
   if (!rateLimitResult.success) {
     return {
       success: false,
-      error: rateLimitResult.error || "Too many answers. Please try again shortly.",
+      error:
+        rateLimitResult.error || 'Too many answers. Please try again shortly.',
     }
   }
 
   const postId = input.postId.trim()
   if (!isUuid(postId)) {
-    return { success: false, error: "Invalid post." }
+    return { success: false, error: 'Invalid post.' }
   }
 
   const content = input.content.trim()
   if (!content) {
-    return { success: false, error: "Please write an answer before submitting." }
+    return {
+      success: false,
+      error: 'Please write an answer before submitting.',
+    }
   }
   if (content.length > ANSWER_MAX) {
-    return { success: false, error: `Answer must be ${ANSWER_MAX} characters or fewer.` }
+    return {
+      success: false,
+      error: `Answer must be ${ANSWER_MAX} characters or fewer.`,
+    }
   }
 
-  const { error } = await supabase.from("comments").insert({
+  const { error } = await supabase.from('comments').insert({
     post_id: postId,
     author_id: user.id,
     content,
   })
 
   if (error) {
-    console.error("Error posting answer:", error)
-    return { success: false, error: "Failed to post your answer. Please try again." }
+    console.error('Error posting answer:', error)
+    return {
+      success: false,
+      error: 'Failed to post your answer. Please try again.',
+    }
   }
 
   revalidatePath(`/community/${postId}`)

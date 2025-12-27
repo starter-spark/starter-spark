@@ -1,12 +1,12 @@
-import { createClient } from "@/lib/supabase/server"
-import { ArrowLeft } from "lucide-react"
-import Link from "next/link"
-import { redirect } from "next/navigation"
-import { NewQuestionForm } from "./NewQuestionForm"
+import { createClient } from '@/lib/supabase/server'
+import { ArrowLeft } from 'lucide-react'
+import Link from 'next/link'
+import { redirect } from 'next/navigation'
+import { NewQuestionForm } from './NewQuestionForm'
 
 export const metadata = {
-  title: "Ask a Question - The Lab",
-  description: "Ask a question and get help from the StarterSpark community.",
+  title: 'Ask a Question - The Lab',
+  description: 'Ask a question and get help from the StarterSpark community.',
 }
 
 export default async function NewQuestionPage() {
@@ -18,14 +18,14 @@ export default async function NewQuestionPage() {
   } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect("/login?redirect=/community/new")
+    redirect('/login?redirect=/community/new')
   }
 
   // Fetch products for selection
   const { data: products } = await supabase
-    .from("products")
-    .select("id, name, slug")
-    .order("name")
+    .from('products')
+    .select('id, name, slug')
+    .order('name')
 
   return (
     <div className="bg-slate-50">

@@ -1,21 +1,77 @@
-import { createClient } from "@/lib/supabase/server"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Globe, Home, ShoppingBag, Calendar, Users, BookOpen, Wrench, ShoppingCart, ArrowLeft } from "lucide-react"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import SiteContentEditor from "./SiteContentEditor"
+import { createClient } from '@/lib/supabase/server'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import {
+  Globe,
+  Home,
+  ShoppingBag,
+  Calendar,
+  Users,
+  BookOpen,
+  Wrench,
+  ShoppingCart,
+  ArrowLeft,
+} from 'lucide-react'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import SiteContentEditor from './SiteContentEditor'
 
 // Category configuration with icons and descriptions
 const CATEGORIES = [
-  { key: "global", label: "Global", icon: Globe, description: "Footer, header, and site-wide text" },
-  { key: "homepage", label: "Homepage", icon: Home, description: "Hero, mission, and homepage sections" },
-  { key: "shop", label: "Shop", icon: ShoppingBag, description: "Shop page header and empty states" },
-  { key: "events", label: "Events", icon: Calendar, description: "Events page header and empty states" },
-  { key: "community", label: "Community", icon: Users, description: "Community page header and empty states" },
-  { key: "learn", label: "Learn", icon: BookOpen, description: "Learning platform header and empty states" },
-  { key: "workshop", label: "Workshop", icon: Wrench, description: "Workshop dashboard messages" },
-  { key: "cart", label: "Cart", icon: ShoppingCart, description: "Shopping cart empty states" },
+  {
+    key: 'global',
+    label: 'Global',
+    icon: Globe,
+    description: 'Footer, header, and site-wide text',
+  },
+  {
+    key: 'homepage',
+    label: 'Homepage',
+    icon: Home,
+    description: 'Hero, mission, and homepage sections',
+  },
+  {
+    key: 'shop',
+    label: 'Shop',
+    icon: ShoppingBag,
+    description: 'Shop page header and empty states',
+  },
+  {
+    key: 'events',
+    label: 'Events',
+    icon: Calendar,
+    description: 'Events page header and empty states',
+  },
+  {
+    key: 'community',
+    label: 'Community',
+    icon: Users,
+    description: 'Community page header and empty states',
+  },
+  {
+    key: 'learn',
+    label: 'Learn',
+    icon: BookOpen,
+    description: 'Learning platform header and empty states',
+  },
+  {
+    key: 'workshop',
+    label: 'Workshop',
+    icon: Wrench,
+    description: 'Workshop dashboard messages',
+  },
+  {
+    key: 'cart',
+    label: 'Cart',
+    icon: ShoppingCart,
+    description: 'Shopping cart empty states',
+  },
 ]
 
 export default async function SiteContentPage() {
@@ -23,19 +79,21 @@ export default async function SiteContentPage() {
 
   // Fetch all site content
   const { data: content, error } = await supabase
-    .from("site_content")
-    .select("*")
-    .order("category")
-    .order("sort_order")
+    .from('site_content')
+    .select('*')
+    .order('category')
+    .order('sort_order')
 
   if (error) {
-    console.error("Error fetching site content:", error)
+    console.error('Error fetching site content:', error)
   }
 
   // Group content by category
   const contentByCategory: Record<string, typeof content> = {}
   for (const cat of CATEGORIES) {
-    contentByCategory[cat.key] = (content || []).filter(c => c.category === cat.key)
+    contentByCategory[cat.key] = (content || []).filter(
+      (c) => c.category === cat.key,
+    )
   }
 
   return (
@@ -43,7 +101,12 @@ export default async function SiteContentPage() {
       <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center gap-3 mb-2">
-            <Button variant="ghost" size="sm" asChild className="text-slate-500 hover:text-slate-900 -ml-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              asChild
+              className="text-slate-500 hover:text-slate-900 -ml-2"
+            >
               <Link href="/admin/content">
                 <ArrowLeft className="h-4 w-4 mr-1" />
                 Back
@@ -51,7 +114,10 @@ export default async function SiteContentPage() {
             </Button>
           </div>
           <h1 className="text-2xl font-mono text-slate-900">Site Content</h1>
-          <p className="text-slate-600">Edit text across your entire site - headers, empty states, buttons, and more</p>
+          <p className="text-slate-600">
+            Edit text across your entire site - headers, empty states, buttons,
+            and more
+          </p>
         </div>
       </div>
 
@@ -59,7 +125,8 @@ export default async function SiteContentPage() {
         <CardHeader className="pb-0">
           <CardTitle className="text-lg">Content Categories</CardTitle>
           <CardDescription>
-            Select a category to edit its content. Changes are saved automatically.
+            Select a category to edit its content. Changes are saved
+            automatically.
           </CardDescription>
         </CardHeader>
         <CardContent className="pt-6">
@@ -85,7 +152,9 @@ export default async function SiteContentPage() {
             {CATEGORIES.map((cat) => (
               <TabsContent key={cat.key} value={cat.key} className="mt-6">
                 <div className="mb-4">
-                  <h3 className="text-lg font-medium text-slate-900">{cat.label}</h3>
+                  <h3 className="text-lg font-medium text-slate-900">
+                    {cat.label}
+                  </h3>
                   <p className="text-sm text-slate-500">{cat.description}</p>
                 </div>
                 <SiteContentEditor

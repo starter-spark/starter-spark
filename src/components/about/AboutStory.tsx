@@ -1,8 +1,22 @@
-"use client"
+'use client'
 
-import { motion } from "motion/react"
-import ReactMarkdown from "react-markdown"
-import { isExternalHref, sanitizeMarkdownUrl, safeMarkdownUrlTransform } from "@/lib/safe-url"
+import { motion } from 'motion/react'
+import ReactMarkdown from 'react-markdown'
+import { safeMarkdownUrlTransform } from '@/lib/safe-url'
+import { createMarkdownComponents } from '@/components/markdown/markdown-components'
+
+const placeholderClassName = 'space-y-6'
+const markdownClassName =
+  'prose prose-slate prose-lg max-w-none prose-headings:font-mono prose-headings:text-slate-900 prose-p:text-slate-600 prose-p:leading-relaxed prose-a:text-cyan-700 prose-a:no-underline hover:prose-a:underline prose-blockquote:border-l-cyan-700 prose-blockquote:bg-slate-50 prose-blockquote:py-4 prose-blockquote:px-6 prose-blockquote:rounded-r prose-blockquote:not-italic prose-blockquote:text-slate-600'
+const linkClassName = 'text-cyan-700 hover:underline'
+const headingOneClassName = 'text-2xl font-mono text-slate-900 mt-6 mb-4'
+const headingTwoClassName = 'text-xl font-mono text-slate-900 mt-5 mb-3'
+
+const markdownComponents = createMarkdownComponents({
+  link: linkClassName,
+  h1: headingOneClassName,
+  h2: headingTwoClassName,
+})
 
 interface AboutStoryProps {
   content?: string
@@ -10,7 +24,7 @@ interface AboutStoryProps {
 }
 
 export function AboutStory({
-  content = "",
+  content = '',
   isPlaceholder = false,
 }: AboutStoryProps) {
   return (
@@ -31,15 +45,11 @@ export function AboutStory({
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ delay: 0.1 }}
-          className={
-            isPlaceholder
-              ? "space-y-6"
-              : "prose prose-slate prose-lg max-w-none prose-headings:font-mono prose-headings:text-slate-900 prose-p:text-slate-600 prose-p:leading-relaxed prose-a:text-cyan-700 prose-a:no-underline hover:prose-a:underline prose-blockquote:border-l-cyan-700 prose-blockquote:bg-slate-50 prose-blockquote:py-4 prose-blockquote:px-6 prose-blockquote:rounded-r prose-blockquote:not-italic prose-blockquote:text-slate-600"
-          }
+          className={isPlaceholder ? placeholderClassName : markdownClassName}
         >
           {isPlaceholder ? (
             // Render placeholder paragraphs
-            content.split("\n\n").map((paragraph, index) => (
+            content.split('\n\n').map((paragraph, index) => (
               <p
                 key={index}
                 className="p-4 bg-slate-50 rounded border border-slate-200 font-mono text-sm text-slate-500"
@@ -51,22 +61,7 @@ export function AboutStory({
             // Render markdown content
             <ReactMarkdown
               urlTransform={safeMarkdownUrlTransform}
-              components={{
-                a: ({ href, children }) => {
-                  const safeHref = sanitizeMarkdownUrl(href, "href")
-                  if (!safeHref) return <span>{children}</span>
-                  const external = isExternalHref(safeHref)
-                  return (
-                    <a
-                      href={safeHref}
-                      target={external ? "_blank" : undefined}
-                      rel={external ? "noopener noreferrer" : undefined}
-                    >
-                      {children}
-                    </a>
-                  )
-                },
-              }}
+              components={markdownComponents}
             >
               {content}
             </ReactMarkdown>

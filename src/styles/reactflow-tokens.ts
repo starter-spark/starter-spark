@@ -1,67 +1,59 @@
-import type { CSSProperties } from "react"
-
-/**
- * Design tokens for ReactFlow diagrams
- * Following the "Architectural Blueprint" design system
- */
+import type { CSSProperties } from 'react'
 
 const baseNodeStyle: CSSProperties = {
-  fontFamily: "var(--font-geist-mono)",
-  fontSize: "12px",
-  borderRadius: "0px",
+  fontFamily: 'var(--font-geist-mono)',
+  fontSize: '12px',
+  borderRadius: '0px',
 }
 
 export const reactFlowTokens = {
-  // Node styles
   primaryNode: {
     ...baseNodeStyle,
-    background: "#ffffff",
-    color: "#0e7490", // cyan-700
-    border: "1px solid #0e7490",
+    background: '#ffffff',
+    color: '#0e7490',
+    border: '1px solid #0e7490',
     width: 180,
   } as CSSProperties,
 
   secondaryNode: {
     ...baseNodeStyle,
-    background: "#ffffff",
-    color: "#0f172a", // slate-900
-    border: "1px solid #cbd5e1", // slate-300
+    background: '#ffffff',
+    color: '#0f172a',
+    border: '1px solid #cbd5e1',
     width: 160,
   } as CSSProperties,
 
   powerNode: {
     ...baseNodeStyle,
-    background: "#ffffff",
-    color: "#f59e0b", // amber-500
-    border: "1px solid #f59e0b",
+    background: '#ffffff',
+    color: '#f59e0b',
+    border: '1px solid #f59e0b',
     width: 140,
   } as CSSProperties,
 
   componentNode: {
     ...baseNodeStyle,
-    background: "#f8fafc", // slate-50
-    color: "#64748b", // slate-500
-    border: "1px dashed #cbd5e1",
+    background: '#f8fafc',
+    color: '#64748b',
+    border: '1px dashed #cbd5e1',
     width: 140,
   } as CSSProperties,
 
-  // Edge styles
   primaryEdge: {
-    stroke: "#0e7490", // cyan-700
+    stroke: '#0e7490',
     strokeWidth: 2,
   } as CSSProperties,
 
   powerEdge: {
-    stroke: "#f59e0b", // amber-500
+    stroke: '#f59e0b',
     strokeWidth: 2,
   } as CSSProperties,
 
   defaultEdge: {
-    stroke: "#94a3b8", // slate-400
+    stroke: '#94a3b8',
   } as CSSProperties,
 
-  // Background
-  gridColor: "#cbd5e1", // slate-300
+  gridColor: '#cbd5e1',
   gridGap: 24,
   gridSize: 1,
 }

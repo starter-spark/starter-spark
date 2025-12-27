@@ -1,10 +1,10 @@
-"use client"
+'use client'
 
-import { useState, useCallback } from "react"
-import { useRouter } from "next/navigation"
-import { Search, FileText, Loader2 } from "lucide-react"
-import { createClient } from "@/lib/supabase/client"
-import { useDebouncedCallback } from "use-debounce"
+import { useState, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
+import { Search, FileText, Loader2 } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
+import { useDebouncedCallback } from 'use-debounce'
 
 interface SearchResult {
   id: string
@@ -18,7 +18,7 @@ interface SearchResult {
 
 export function DocSearch() {
   const router = useRouter()
-  const [query, setQuery] = useState("")
+  const [query, setQuery] = useState('')
   const [results, setResults] = useState<SearchResult[]>([])
   const [isSearching, setIsSearching] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
@@ -33,13 +33,13 @@ export function DocSearch() {
     setIsSearching(true)
     const supabase = createClient()
 
-    const { data, error } = await supabase.rpc("search_docs", {
+    const { data, error } = await supabase.rpc('search_docs', {
       search_query: searchQuery,
       result_limit: 10,
     })
 
     if (error) {
-      console.error("Search error:", error)
+      console.error('Search error:', error)
       setResults([])
     } else {
       setResults(data || [])
@@ -54,12 +54,12 @@ export function DocSearch() {
       setIsOpen(true)
       void performSearch(value)
     },
-    [performSearch]
+    [performSearch],
   )
 
   const handleResultClick = (result: SearchResult) => {
     setIsOpen(false)
-    setQuery("")
+    setQuery('')
     setResults([])
     router.push(`/docs/${result.category_slug}/${result.slug}`)
   }

@@ -1,18 +1,27 @@
-"use client"
+'use client'
 
-import { useState } from "react"
-import { Copy, Check } from "lucide-react"
-import ReactMarkdown from "react-markdown"
-import remarkGfm from "remark-gfm"
-import {
-  isExternalHref,
-  sanitizeMarkdownUrl,
-  safeMarkdownUrlTransform,
-} from "@/lib/safe-url"
+import { useState } from 'react'
+import { Copy, Check } from 'lucide-react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import { safeMarkdownUrlTransform } from '@/lib/safe-url'
+import { createMarkdownComponents } from '@/components/markdown/markdown-components'
 
 interface MarkdownContentProps {
   content: string
 }
+
+const proseClassName = 'prose prose-slate max-w-none'
+const headingTwoClassName = 'font-mono text-xl text-slate-900 mt-6 mb-3'
+const headingThreeClassName = 'font-mono text-lg text-slate-900 mt-6 mb-2'
+const paragraphClassName = 'text-slate-600 mb-3'
+const listClassName = 'list-disc list-inside text-slate-600 mb-3'
+const orderedListClassName = 'list-decimal list-inside text-slate-600 mb-3'
+const listItemClassName = 'text-slate-600 ml-4'
+const linkClassName = 'text-cyan-700 hover:underline'
+const strongClassName = 'font-semibold text-slate-900'
+const inlineCodeClassName =
+  'bg-slate-100 px-1.5 py-0.5 rounded font-mono text-sm text-slate-800'
 
 // Code block with copy button
 function CodeBlock({ code, language }: { code: string; language: string }) {
@@ -21,14 +30,16 @@ function CodeBlock({ code, language }: { code: string; language: string }) {
   const handleCopy = () => {
     void navigator.clipboard.writeText(code)
     setCopied(true)
-    setTimeout(() => { setCopied(false); }, 2000)
+    setTimeout(() => {
+      setCopied(false)
+    }, 2000)
   }
 
   return (
     <div className="rounded border border-slate-200 overflow-hidden my-4">
       <div className="flex items-center justify-between px-4 py-2 bg-slate-100 border-b border-slate-200">
         <span className="text-sm font-mono text-slate-500">
-          {language || "code"}
+          {language || 'code'}
         </span>
         <button
           onClick={handleCopy}
@@ -49,73 +60,56 @@ function CodeBlock({ code, language }: { code: string; language: string }) {
   )
 }
 
+function MarkdownCode({
+  className,
+  children,
+}: {
+  className?: string
+  children?: React.ReactNode
+}) {
+  const match = /language-(\w+)/.exec(className || '')
+  const isInline = !match
+
+  if (isInline) {
+    return <code className={inlineCodeClassName}>{children}</code>
+  }
+
+  const language = match ? match[1] : ''
+  // Extract text content from children safely
+  const codeText =
+    typeof children === 'string'
+      ? children
+      : Array.isArray(children)
+        ? children.join('')
+        : ''
+  return <CodeBlock code={codeText.replace(/\n$/, '')} language={language} />
+}
+
+const markdownComponents = createMarkdownComponents(
+  {
+    link: linkClassName,
+    h2: headingTwoClassName,
+    h3: headingThreeClassName,
+    p: paragraphClassName,
+    ul: listClassName,
+    ol: orderedListClassName,
+    li: listItemClassName,
+    strong: strongClassName,
+  },
+  {
+    code: MarkdownCode,
+    pre: ({ children }) => <>{children}</>,
+    em: ({ children }) => <em>{children}</em>,
+  },
+)
+
 export function MarkdownContent({ content }: MarkdownContentProps) {
   return (
-    <div className="prose prose-slate max-w-none">
+    <div className={proseClassName}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         urlTransform={safeMarkdownUrlTransform}
-        components={{
-          h2: ({ children }) => (
-            <h2 className="font-mono text-xl text-slate-900 mt-6 mb-3">{children}</h2>
-          ),
-          h3: ({ children }) => (
-            <h3 className="font-mono text-lg text-slate-900 mt-6 mb-2">{children}</h3>
-          ),
-          p: ({ children }) => (
-            <p className="text-slate-600 mb-3">{children}</p>
-          ),
-          ul: ({ children }) => (
-            <ul className="list-disc list-inside text-slate-600 mb-3">{children}</ul>
-          ),
-          ol: ({ children }) => (
-            <ol className="list-decimal list-inside text-slate-600 mb-3">{children}</ol>
-          ),
-          li: ({ children }) => (
-            <li className="text-slate-600 ml-4">{children}</li>
-          ),
-          a: ({ href, children }) => {
-            const safeHref = sanitizeMarkdownUrl(href, "href")
-            if (!safeHref) return <span>{children}</span>
-            const external = isExternalHref(safeHref)
-            return (
-              <a
-                href={safeHref}
-                target={external ? "_blank" : undefined}
-                rel={external ? "noopener noreferrer" : undefined}
-                className="text-cyan-700 hover:underline"
-              >
-                {children}
-              </a>
-            )
-          },
-          code: ({ className, children }) => {
-            const match = /language-(\w+)/.exec((className || ""))
-            const isInline = !match
-
-            if (isInline) {
-              return (
-                <code className="bg-slate-100 px-1.5 py-0.5 rounded font-mono text-sm text-slate-800">
-                  {children}
-                </code>
-              )
-            }
-
-            const language = match ? match[1] : ""
-            // Extract text content from children safely
-            const codeText = typeof children === "string"
-              ? children
-              : Array.isArray(children)
-                ? children.join("")
-                : ""
-            return <CodeBlock code={codeText.replace(/\n$/, "")} language={language} />
-          },
-          pre: ({ children }) => <>{children}</>,
-          strong: ({ children }) => (
-            <strong className="font-semibold text-slate-900">{children}</strong>
-          ),
-          em: ({ children }) => <em>{children}</em>,
-        }}
+        components={markdownComponents}
       >
         {content}
       </ReactMarkdown>

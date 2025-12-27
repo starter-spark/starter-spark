@@ -1,10 +1,10 @@
-"use client"
+'use client'
 
-import { useState } from "react"
-import { Calculator, Cpu, BookOpen, FileText, Code, Zap } from "lucide-react"
-import Link from "next/link"
-import { ServoCalculator } from "./ServoCalculator"
-import { ArduinoPinout } from "./ArduinoPinout"
+import { useState } from 'react'
+import { Calculator, Cpu, BookOpen, FileText, Code, Zap } from 'lucide-react'
+import Link from 'next/link'
+import { ServoCalculator } from './ServoCalculator'
+import { ArduinoPinout } from './ArduinoPinout'
 
 export function ToolsTab() {
   const [showServoCalc, setShowServoCalc] = useState(false)
@@ -12,39 +12,39 @@ export function ToolsTab() {
 
   const tools = [
     {
-      id: "servo-calc",
+      id: 'servo-calc',
       icon: Calculator,
-      title: "Servo Calculator",
-      description: "Convert angles to pulse widths for precise servo control",
+      title: 'Servo Calculator',
+      description: 'Convert angles to pulse widths for precise servo control',
       onClick: () => setShowServoCalc(true),
     },
     {
-      id: "pinout",
+      id: 'pinout',
       icon: Cpu,
-      title: "Arduino Pinout",
-      description: "Quick reference for Arduino Uno/Nano pin assignments",
+      title: 'Arduino Pinout',
+      description: 'Quick reference for Arduino Uno/Nano pin assignments',
       onClick: () => setShowPinout(true),
     },
   ]
 
   const resources = [
     {
-      href: "/docs",
+      href: '/docs',
       icon: BookOpen,
-      title: "Documentation",
-      description: "Comprehensive guides and API references",
+      title: 'Documentation',
+      description: 'Comprehensive guides and API references',
     },
     {
-      href: "/support",
+      href: '/support',
       icon: FileText,
-      title: "Troubleshooting",
-      description: "Common issues and solutions",
+      title: 'Troubleshooting',
+      description: 'Common issues and solutions',
     },
     {
-      href: "/community",
+      href: '/community',
       icon: Code,
-      title: "Community",
-      description: "Ask questions and share projects",
+      title: 'Community',
+      description: 'Ask questions and share projects',
     },
   ]
 
@@ -53,7 +53,9 @@ export function ToolsTab() {
       <div className="space-y-8">
         {/* Interactive Tools */}
         <div>
-          <h3 className="font-mono text-lg text-slate-900 mb-4">Interactive Tools</h3>
+          <h3 className="font-mono text-lg text-slate-900 mb-4">
+            Interactive Tools
+          </h3>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {tools.map((tool) => (
               <button
@@ -74,8 +76,12 @@ export function ToolsTab() {
               <div className="w-12 h-12 rounded bg-slate-100 flex items-center justify-center mb-4 mx-auto">
                 <Zap className="w-6 h-6 text-slate-400" />
               </div>
-              <h4 className="font-mono text-slate-500 mb-1">More Coming Soon</h4>
-              <p className="text-sm text-slate-400">Resistance calculator, LED wizard, and more</p>
+              <h4 className="font-mono text-slate-500 mb-1">
+                More Coming Soon
+              </h4>
+              <p className="text-sm text-slate-400">
+                Resistance calculator, LED wizard, and more
+              </p>
             </div>
           </div>
         </div>
@@ -93,7 +99,9 @@ export function ToolsTab() {
                 <div className="w-12 h-12 rounded bg-slate-50 flex items-center justify-center mb-4 group-hover:bg-cyan-50 transition-colors">
                   <resource.icon className="w-6 h-6 text-slate-600 group-hover:text-cyan-700 transition-colors" />
                 </div>
-                <h4 className="font-mono text-slate-900 mb-1">{resource.title}</h4>
+                <h4 className="font-mono text-slate-900 mb-1">
+                  {resource.title}
+                </h4>
                 <p className="text-sm text-slate-600">{resource.description}</p>
               </Link>
             ))}
@@ -102,58 +110,84 @@ export function ToolsTab() {
 
         {/* Quick Reference Cards */}
         <div>
-          <h3 className="font-mono text-lg text-slate-900 mb-4">Quick Reference</h3>
+          <h3 className="font-mono text-lg text-slate-900 mb-4">
+            Quick Reference
+          </h3>
           <div className="grid gap-4 sm:grid-cols-2">
             {/* Common Pin Types */}
             <div className="bg-white p-6 rounded border border-slate-200">
-              <h4 className="font-mono text-slate-900 mb-4">Arduino Pin Types</h4>
+              <h4 className="font-mono text-slate-900 mb-4">
+                Arduino Pin Types
+              </h4>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-slate-600">Digital I/O</span>
-                  <code className="text-cyan-700 bg-slate-50 px-2 rounded">D0-D13</code>
+                  <code className="text-cyan-700 bg-slate-50 px-2 rounded">
+                    D0-D13
+                  </code>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-600">PWM Output</span>
-                  <code className="text-cyan-700 bg-slate-50 px-2 rounded">D3, D5, D6, D9, D10, D11</code>
+                  <code className="text-cyan-700 bg-slate-50 px-2 rounded">
+                    D3, D5, D6, D9, D10, D11
+                  </code>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-600">Analog Input</span>
-                  <code className="text-cyan-700 bg-slate-50 px-2 rounded">A0-A5</code>
+                  <code className="text-cyan-700 bg-slate-50 px-2 rounded">
+                    A0-A5
+                  </code>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-600">Serial</span>
-                  <code className="text-cyan-700 bg-slate-50 px-2 rounded">D0 (RX), D1 (TX)</code>
+                  <code className="text-cyan-700 bg-slate-50 px-2 rounded">
+                    D0 (RX), D1 (TX)
+                  </code>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-600">I2C</span>
-                  <code className="text-cyan-700 bg-slate-50 px-2 rounded">A4 (SDA), A5 (SCL)</code>
+                  <code className="text-cyan-700 bg-slate-50 px-2 rounded">
+                    A4 (SDA), A5 (SCL)
+                  </code>
                 </div>
               </div>
             </div>
 
             {/* Servo Values */}
             <div className="bg-white p-6 rounded border border-slate-200">
-              <h4 className="font-mono text-slate-900 mb-4">Standard Servo Values</h4>
+              <h4 className="font-mono text-slate-900 mb-4">
+                Standard Servo Values
+              </h4>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-slate-600">Min angle (0&deg;)</span>
-                  <code className="text-cyan-700 bg-slate-50 px-2 rounded">544 &mu;s</code>
+                  <code className="text-cyan-700 bg-slate-50 px-2 rounded">
+                    544 &mu;s
+                  </code>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-600">Center (90&deg;)</span>
-                  <code className="text-cyan-700 bg-slate-50 px-2 rounded">1500 &mu;s</code>
+                  <code className="text-cyan-700 bg-slate-50 px-2 rounded">
+                    1500 &mu;s
+                  </code>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-600">Max angle (180&deg;)</span>
-                  <code className="text-cyan-700 bg-slate-50 px-2 rounded">2400 &mu;s</code>
+                  <code className="text-cyan-700 bg-slate-50 px-2 rounded">
+                    2400 &mu;s
+                  </code>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-600">PWM frequency</span>
-                  <code className="text-cyan-700 bg-slate-50 px-2 rounded">50 Hz (20 ms)</code>
+                  <code className="text-cyan-700 bg-slate-50 px-2 rounded">
+                    50 Hz (20 ms)
+                  </code>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-600">Operating voltage</span>
-                  <code className="text-cyan-700 bg-slate-50 px-2 rounded">4.8-6V</code>
+                  <code className="text-cyan-700 bg-slate-50 px-2 rounded">
+                    4.8-6V
+                  </code>
                 </div>
               </div>
             </div>
@@ -162,7 +196,10 @@ export function ToolsTab() {
       </div>
 
       {/* Modals */}
-      <ServoCalculator isOpen={showServoCalc} onClose={() => setShowServoCalc(false)} />
+      <ServoCalculator
+        isOpen={showServoCalc}
+        onClose={() => setShowServoCalc(false)}
+      />
       <ArduinoPinout isOpen={showPinout} onClose={() => setShowPinout(false)} />
     </>
   )

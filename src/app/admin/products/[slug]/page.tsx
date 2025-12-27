@@ -1,16 +1,18 @@
-import { notFound } from "next/navigation"
-import { createClient } from "@/lib/supabase/server"
-import { ProductForm } from "./ProductForm"
+import { notFound } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
+import { ProductForm } from './ProductForm'
+import { resolveParams, type MaybePromise } from '@/lib/next-params'
 
 export const metadata = {
-  title: "Edit Product | Admin",
+  title: 'Edit Product | Admin',
 }
 
 async function getProduct(slug: string) {
   const supabase = await createClient()
   const { data, error } = await supabase
-    .from("products")
-    .select(`
+    .from('products')
+    .select(
+      `
       *,
       product_tags (
         tag,
@@ -29,13 +31,14 @@ async function getProduct(slug: string) {
         is_primary,
         sort_order
       )
-    `)
-    .eq("slug", slug)
+    `,
+    )
+    .eq('slug', slug)
     .maybeSingle()
 
   if (error) {
-    console.error("Error fetching product:", error)
-    throw new Error("Failed to load product")
+    console.error('Error fetching product:', error)
+    throw new Error('Failed to load product')
   }
 
   return data
@@ -44,9 +47,9 @@ async function getProduct(slug: string) {
 export default async function EditProductPage({
   params,
 }: {
-  params: Promise<{ slug: string }>
+  params: MaybePromise<{ slug: string }>
 }) {
-  const { slug } = await params
+  const { slug } = await resolveParams(params)
   const product = await getProduct(slug)
 
   if (!product) {
@@ -54,9 +57,21 @@ export default async function EditProductPage({
   }
 
   // Transform tags for the form
-  interface ProductTagItem { tag: string; priority: number | null; discount_percent: number | null }
-  type ProductTagType = "featured" | "discount" | "new" | "bestseller" | "limited" | "bundle" | "out_of_stock"
-  const productTags = (product.product_tags as unknown as ProductTagItem[] | null) || []
+  interface ProductTagItem {
+    tag: string
+    priority: number | null
+    discount_percent: number | null
+  }
+  type ProductTagType =
+    | 'featured'
+    | 'discount'
+    | 'new'
+    | 'bestseller'
+    | 'limited'
+    | 'bundle'
+    | 'out_of_stock'
+  const productTags =
+    (product.product_tags as unknown as ProductTagItem[] | null) || []
   const tags = productTags.map((t) => ({
     tag: t.tag as ProductTagType,
     priority: t.priority,
@@ -76,12 +91,13 @@ export default async function EditProductPage({
     is_primary: boolean | null
     sort_order: number | null
   }
-  const productMedia = (product.product_media as unknown as ProductMediaItem[] | null) || []
+  const productMedia =
+    (product.product_media as unknown as ProductMediaItem[] | null) || []
   const media = productMedia
     .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
     .map((m) => ({
       id: m.id,
-      type: m.type as "image" | "video" | "3d_model" | "document",
+      type: m.type as 'image' | 'video' | '3d_model' | 'document',
       url: m.url,
       storage_path: m.storage_path ?? undefined,
       filename: m.filename,
@@ -95,7 +111,9 @@ export default async function EditProductPage({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-mono text-2xl font-bold text-slate-900">Edit Product</h1>
+        <h1 className="font-mono text-2xl font-bold text-slate-900">
+          Edit Product
+        </h1>
         <p className="text-slate-600">Update product details</p>
       </div>
       <ProductForm product={product} initialTags={tags} initialMedia={media} />

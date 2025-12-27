@@ -1,7 +1,7 @@
-import Link from "next/link"
-import { createClient } from "@/lib/supabase/server"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
+import Link from 'next/link'
+import { createClient } from '@/lib/supabase/server'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import {
   Table,
   TableBody,
@@ -9,31 +9,33 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { Plus, Pencil, Star } from "lucide-react"
+} from '@/components/ui/table'
+import { Plus, Pencil, Star } from 'lucide-react'
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@/components/ui/tooltip"
-import { formatPrice } from "@/lib/validation"
+} from '@/components/ui/tooltip'
+import { formatPrice } from '@/lib/validation'
 
 export const metadata = {
-  title: "Products | Admin",
+  title: 'Products | Admin',
 }
 
 async function getProducts() {
   const supabase = await createClient()
   const { data, error } = await supabase
-    .from("products")
-    .select(`
+    .from('products')
+    .select(
+      `
       *,
       product_tags (tag, priority)
-    `)
-    .order("created_at", { ascending: false })
+    `,
+    )
+    .order('created_at', { ascending: false })
 
   if (error) {
-    console.error("Error fetching products:", error)
+    console.error('Error fetching products:', error)
     return []
   }
 
@@ -48,7 +50,9 @@ export default async function ProductsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-mono text-2xl font-bold text-slate-900">Products</h1>
+          <h1 className="font-mono text-2xl font-bold text-slate-900">
+            Products
+          </h1>
           <p className="text-slate-600">Manage your product catalog</p>
         </div>
         <Button asChild className="bg-cyan-700 hover:bg-cyan-600">
@@ -81,8 +85,11 @@ export default async function ProductsPage() {
             </TableHeader>
             <TableBody>
               {products.map((product) => {
-                const tags = ((product.product_tags as unknown) || []) as { tag: string; priority: number | null }[]
-                const hasFeaturedTag = tags.some((t) => t.tag === "featured")
+                const tags = ((product.product_tags as unknown) || []) as {
+                  tag: string
+                  priority: number | null
+                }[]
+                const hasFeaturedTag = tags.some((t) => t.tag === 'featured')
                 return (
                   <TableRow key={product.id}>
                     <TableCell>
@@ -116,7 +123,10 @@ export default async function ProductsPage() {
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Button asChild variant="ghost" size="sm">
-                            <Link href={`/admin/products/${product.slug}`} aria-label={`Edit ${product.name}`}>
+                            <Link
+                              href={`/admin/products/${product.slug}`}
+                              aria-label={`Edit ${product.name}`}
+                            >
                               <Pencil className="h-4 w-4" />
                             </Link>
                           </Button>

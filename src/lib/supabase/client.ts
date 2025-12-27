@@ -6,8 +6,5 @@ export function createClient() {
   const supabaseUrl = getSupabaseUrl()
   const supabaseAnonKey = getSupabaseAnonKey()
 
-  return createBrowserClient<Database>(
-    supabaseUrl,
-    supabaseAnonKey
-  )
+  return createBrowserClient<Database>(supabaseUrl, supabaseAnonKey)
 }

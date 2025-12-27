@@ -1,10 +1,10 @@
-"use client"
+'use client'
 
-import { Card, CardContent } from "@/components/ui/card"
-import { GithubIcon, LinkedinIcon } from "@/components/icons/brand-icons"
-import { Twitter } from "lucide-react"
-import { motion } from "motion/react"
-import Link from "next/link"
+import { Card, CardContent } from '@/components/ui/card'
+import { GithubIcon, LinkedinIcon } from '@/components/icons/brand-icons'
+import { Twitter } from 'lucide-react'
+import { motion } from 'motion/react'
+import Link from 'next/link'
 
 interface TeamMember {
   name: string
@@ -23,30 +23,30 @@ interface AboutTeamProps {
 // Fallback team data (used if database is empty)
 const defaultTeam: TeamMember[] = [
   {
-    name: "Josh Zhang",
-    role: "Marketing & Business",
-    bio: "Team member bio coming soon.",
-    github: "https://github.com/thebestjosh",
-    linkedin: "https://www.linkedin.com/in/josh-zhang-36aa02352/",
+    name: 'Josh Zhang',
+    role: 'Marketing & Business',
+    bio: 'Team member bio coming soon.',
+    github: 'https://github.com/thebestjosh',
+    linkedin: 'https://www.linkedin.com/in/josh-zhang-36aa02352/',
   },
   {
-    name: "Vincent Lau",
-    role: "Kit Design & CAD",
-    bio: "Team member bio coming soon.",
+    name: 'Vincent Lau',
+    role: 'Kit Design & CAD',
+    bio: 'Team member bio coming soon.',
   },
   {
-    name: "Ryder Kawachika",
-    role: "Kit Design & CAD",
-    bio: "Team member bio coming soon.",
-    github: "https://github.com/rydertk",
+    name: 'Ryder Kawachika',
+    role: 'Kit Design & CAD',
+    bio: 'Team member bio coming soon.',
+    github: 'https://github.com/rydertk',
   },
   {
-    name: "Kai Stewart",
-    role: "Web Development",
-    bio: "lead developer.",
-    github: "https://github.com/normalday843812",
-    linkedin: "https://www.linkedin.com/in/kai-stewart-b88841395/",
-  }
+    name: 'Kai Stewart',
+    role: 'Web Development',
+    bio: 'lead developer.',
+    github: 'https://github.com/normalday843812',
+    linkedin: 'https://www.linkedin.com/in/kai-stewart-b88841395/',
+  },
 ]
 
 export function AboutTeam({ team = defaultTeam }: AboutTeamProps) {
@@ -81,7 +81,7 @@ export function AboutTeam({ team = defaultTeam }: AboutTeamProps) {
               <Card className="h-full bg-white border-slate-200 shadow-sm hover:shadow-md transition-shadow">
                 <CardContent className="p-6">
                   {/* Avatar */}
-                  <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-gradient-to-br from-cyan-100 to-slate-100 flex items-center justify-center overflow-hidden">
+                  <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden">
                     {member.image ? (
                       /* eslint-disable-next-line @next/next/no-img-element */
                       <img
@@ -94,9 +94,9 @@ export function AboutTeam({ team = defaultTeam }: AboutTeamProps) {
                     ) : (
                       <span className="text-2xl font-mono text-cyan-700">
                         {member.name
-                          .split(" ")
+                          .split(' ')
                           .map((n) => n[0])
-                          .join("")}
+                          .join('')}
                       </span>
                     )}
                   </div>
@@ -133,7 +133,10 @@ export function AboutTeam({ team = defaultTeam }: AboutTeamProps) {
                           className="p-2 text-slate-500 hover:text-cyan-700 transition-colors"
                           aria-label={`${member.name}'s LinkedIn profile`}
                         >
-                          <LinkedinIcon className="w-4 h-4" aria-hidden="true" />
+                          <LinkedinIcon
+                            className="w-4 h-4"
+                            aria-hidden="true"
+                          />
                         </Link>
                       )}
                       {member.twitter && (

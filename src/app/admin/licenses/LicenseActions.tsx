@@ -1,17 +1,17 @@
-"use client"
+'use client'
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { MoreHorizontal, UserX, Copy, Loader2 } from "lucide-react"
-import { revokeLicense } from "./actions"
+} from '@/components/ui/dropdown-menu'
+import { MoreHorizontal, UserX, Copy, Loader2 } from 'lucide-react'
+import { revokeLicense } from './actions'
 
 interface LicenseActionsProps {
   licenseId: string
@@ -23,7 +23,11 @@ export function LicenseActions({ licenseId, isClaimed }: LicenseActionsProps) {
   const [isLoading, setIsLoading] = useState(false)
 
   const handleRevoke = async () => {
-    if (!confirm("Are you sure you want to revoke this license? The owner will lose access.")) {
+    if (
+      !confirm(
+        'Are you sure you want to revoke this license? The owner will lose access.',
+      )
+    ) {
       return
     }
 
@@ -40,8 +44,8 @@ export function LicenseActions({ licenseId, isClaimed }: LicenseActionsProps) {
   }
 
   const handleCopyCode = () => {
-    // This would need the code passed in - for now just show a placeholder
-    alert("Code copied to clipboard!")
+    // Needs code passed in, placeholder for now.
+    alert('Code copied to clipboard!')
   }
 
   return (
@@ -56,7 +60,11 @@ export function LicenseActions({ licenseId, isClaimed }: LicenseActionsProps) {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => { handleCopyCode(); }}>
+        <DropdownMenuItem
+          onClick={() => {
+            handleCopyCode()
+          }}
+        >
           <Copy className="mr-2 h-4 w-4" />
           Copy Code
         </DropdownMenuItem>

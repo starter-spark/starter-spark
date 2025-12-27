@@ -1,11 +1,13 @@
+import { LoadingBlock } from '@/components/loading'
+
 export default function WorkshopLoading() {
   return (
     <div className="bg-slate-50">
       <section className="pt-32 pb-8 px-6 lg:px-20">
         <div className="max-w-7xl mx-auto">
-          <div className="h-4 w-20 bg-slate-200 rounded animate-pulse mb-2" />
-          <div className="h-10 w-40 bg-slate-200 rounded animate-pulse mb-4" />
-          <div className="h-6 w-96 bg-slate-200 rounded animate-pulse" />
+          <LoadingBlock className="h-4 w-20 rounded mb-2" tone="strong" />
+          <LoadingBlock className="h-10 w-40 rounded mb-4" tone="strong" />
+          <LoadingBlock className="h-6 w-96 rounded" tone="strong" />
         </div>
       </section>
 
@@ -16,8 +18,8 @@ export default function WorkshopLoading() {
             <div className="w-full lg:w-[70%]">
               <div className="bg-white rounded border border-slate-200 p-6">
                 <div className="flex items-center justify-between mb-6">
-                  <div className="h-6 w-24 bg-slate-200 rounded animate-pulse" />
-                  <div className="h-4 w-12 bg-slate-100 rounded animate-pulse" />
+                  <LoadingBlock className="h-6 w-24 rounded" tone="strong" />
+                  <LoadingBlock className="h-4 w-12 rounded" tone="soft" />
                 </div>
                 <div className="space-y-4">
                   {Array.from({ length: 2 }, (_, i) => (
@@ -25,8 +27,8 @@ export default function WorkshopLoading() {
                       key={i}
                       className="p-4 border border-slate-200 rounded"
                     >
-                      <div className="h-5 w-48 bg-slate-200 rounded animate-pulse mb-2" />
-                      <div className="h-4 w-full bg-slate-100 rounded animate-pulse" />
+                      <LoadingBlock className="h-5 w-48 rounded mb-2" tone="strong" />
+                      <LoadingBlock className="h-4 w-full rounded" tone="soft" />
                     </div>
                   ))}
                 </div>
@@ -36,8 +38,8 @@ export default function WorkshopLoading() {
             {/* Sidebar */}
             <div className="w-full lg:w-[30%] space-y-6">
               <div className="bg-white rounded border border-slate-200 p-6">
-                <div className="h-6 w-28 bg-slate-200 rounded animate-pulse mb-4" />
-                <div className="h-10 w-full bg-slate-100 rounded animate-pulse" />
+                <LoadingBlock className="h-6 w-28 rounded mb-4" tone="strong" />
+                <LoadingBlock className="h-10 w-full rounded" tone="soft" />
               </div>
             </div>
           </div>

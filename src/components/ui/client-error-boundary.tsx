@@ -1,6 +1,6 @@
-"use client"
+'use client'
 
-import * as React from "react"
+import * as React from 'react'
 
 interface ClientErrorBoundaryProps {
   children: React.ReactNode
@@ -31,4 +31,3 @@ export class ClientErrorBoundary extends React.Component<
     return this.props.children
   }
 }
-

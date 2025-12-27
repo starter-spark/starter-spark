@@ -1,18 +1,18 @@
-"use client"
+'use client'
 
-import { Button } from "@/components/ui/button"
-import { Box, ChevronLeft, ChevronRight, ImageIcon, ZoomIn } from "lucide-react"
-import dynamic from "next/dynamic"
-import Image from "next/image"
-import { useMemo, useState, useCallback } from "react"
-import { ProductImage, ThumbnailImage } from "@/components/ui/optimized-image"
-import { cn } from "@/lib/utils"
-import { ProductImageLightbox } from "@/components/commerce/ProductImageLightbox"
+import { Button } from '@/components/ui/button'
+import { Box, ChevronLeft, ChevronRight, ImageIcon, ZoomIn } from 'lucide-react'
+import dynamic from 'next/dynamic'
+import Image from 'next/image'
+import { useMemo, useState, useCallback } from 'react'
+import { ProductImage, ThumbnailImage } from '@/components/ui/optimized-image'
+import { cn } from '@/lib/utils'
+import { ProductImageLightbox } from '@/components/commerce/ProductImageLightbox'
 
 // Lazy load the 3D component
-const ProductViewer3D = dynamic(() => import("./ProductViewer3D"), {
+const ProductViewer3D = dynamic(() => import('./ProductViewer3D'), {
   ssr: false,
-  loading: () => <div className="w-full h-full bg-gradient-to-br from-slate-50 to-slate-100" />,
+  loading: () => <div className="w-full h-full bg-slate-50" />,
 })
 
 interface ProductGalleryProps {
@@ -22,13 +22,31 @@ interface ProductGalleryProps {
   productName: string
 }
 
+const navButtonBaseClass =
+  'absolute top-1/2 -translate-y-1/2 z-20 bg-white/90 hover:bg-white border border-slate-200 shadow-sm text-slate-800 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity'
+const thumbBaseClass =
+  'shrink-0 size-20 rounded border overflow-hidden transition-all cursor-pointer'
+const thumbActiveClass = 'border-cyan-700 ring-2 ring-cyan-700/20'
+const thumbInactiveClass = 'border-slate-200 hover:border-slate-300'
+
+function ImageFallback({ label }: { label: string }) {
+  return (
+    <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-50">
+      <div className="w-24 h-24 mb-4 rounded-full bg-slate-200 flex items-center justify-center">
+        <ImageIcon className="w-12 h-12 text-slate-600" aria-hidden="true" />
+      </div>
+      <p className="text-slate-600 font-mono text-sm">{label}</p>
+    </div>
+  )
+}
+
 export function ProductGallery({
   images = [],
   modelPath,
   productName,
 }: ProductGalleryProps) {
-  const [view, setView] = useState<"3d" | "images">(
-    modelPath && images.length === 0 ? "3d" : "images"
+  const [view, setView] = useState<'3d' | 'images'>(
+    modelPath && images.length === 0 ? '3d' : 'images',
   )
   const [selectedImage, setSelectedImage] = useState(0)
   const [lightboxOpen, setLightboxOpen] = useState(false)
@@ -47,46 +65,42 @@ export function ProductGallery({
   // Handle image selection from thumbnail
   const handleSelectImage = useCallback((idx: number) => {
     setSelectedImage(idx)
-    setView("images")
+    setView('images')
   }, [])
 
   const handleHoverImage = useCallback(
     (idx: number) => {
-      if (view !== "images") return
+      if (view !== 'images') return
       setSelectedImage(idx)
     },
-    [view]
+    [view],
   )
 
   const handleOpenLightbox = useCallback(() => {
     if (!hasImages) return
-    setView("images")
+    setView('images')
     setLightboxOpen(true)
   }, [hasImages])
 
   const handlePrevImage = useCallback(() => {
     if (!hasImages) return
-    setView("images")
+    setView('images')
     setSelectedImage((idx) => (idx - 1 + images.length) % images.length)
   }, [hasImages, images.length])
 
   const handleNextImage = useCallback(() => {
     if (!hasImages) return
-    setView("images")
+    setView('images')
     setSelectedImage((idx) => (idx + 1) % images.length)
   }, [hasImages, images.length])
 
   return (
     <div className="space-y-4">
       {/* Main Display (fixed 1:1 to prevent layout shift) */}
-      <div
-        className="relative aspect-square bg-white rounded border border-slate-200 shadow-sm overflow-hidden group"
-      >
+      <div className="relative aspect-square bg-white rounded border border-slate-200 shadow-sm overflow-hidden group">
         {/* Content */}
-        {view === "3d" && modelPath ? (
-          <ProductViewer3D
-            modelPath={modelPath}
-          />
+        {view === '3d' && modelPath ? (
+          <ProductViewer3D modelPath={modelPath} />
         ) : hasImages && displayImageSrc ? (
           <button
             type="button"
@@ -107,7 +121,10 @@ export function ProductGallery({
                 className="object-cover blur-2xl scale-110 opacity-25 pointer-events-none"
                 aria-hidden={true}
               />
-              <div className="absolute inset-0 bg-white/55" aria-hidden="true" />
+              <div
+                className="absolute inset-0 bg-white/55"
+                aria-hidden="true"
+              />
               <ProductImage
                 src={displayImageSrc}
                 alt={`${productName} - Image ${displayImageIndex + 1}`}
@@ -115,12 +132,7 @@ export function ProductGallery({
                 quality={95}
                 wrapperClassName="absolute inset-0"
                 fallback={
-                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
-                    <div className="w-24 h-24 mb-4 rounded-full bg-slate-200 flex items-center justify-center">
-                      <ImageIcon className="w-12 h-12 text-slate-600" aria-hidden="true" />
-                    </div>
-                    <p className="text-slate-600 font-mono text-sm">Failed to load image</p>
-                  </div>
+                  <ImageFallback label="Image unavailable" />
                 }
               />
               <div
@@ -138,23 +150,18 @@ export function ProductGallery({
             </div>
           </button>
         ) : (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
-            <div className="w-24 h-24 mb-4 rounded-full bg-slate-200 flex items-center justify-center">
-              <ImageIcon className="w-12 h-12 text-slate-600" aria-hidden="true" />
-            </div>
-            <p className="text-slate-600 font-mono text-sm">{productName}</p>
-          </div>
+          <ImageFallback label={productName} />
         )}
 
         {/* On-page navigation (image view only) */}
-        {view === "images" && images.length > 1 && (
+        {view === 'images' && images.length > 1 && (
           <>
             <Button
               type="button"
               variant="ghost"
               size="icon-lg"
               onClick={handlePrevImage}
-              className="absolute left-3 top-1/2 -translate-y-1/2 z-20 bg-white/90 hover:bg-white border border-slate-200 shadow-sm text-slate-800 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+              className={cn(navButtonBaseClass, 'left-3')}
               aria-label="Previous image"
             >
               <ChevronLeft className="size-5" aria-hidden="true" />
@@ -164,7 +171,7 @@ export function ProductGallery({
               variant="ghost"
               size="icon-lg"
               onClick={handleNextImage}
-              className="absolute right-3 top-1/2 -translate-y-1/2 z-20 bg-white/90 hover:bg-white border border-slate-200 shadow-sm text-slate-800 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+              className={cn(navButtonBaseClass, 'right-3')}
               aria-label="Next image"
             >
               <ChevronRight className="size-5" aria-hidden="true" />
@@ -182,21 +189,31 @@ export function ProductGallery({
           {modelPath && (
             <button
               type="button"
-              onClick={() => { setView("3d"); }}
+              onClick={() => {
+                setView('3d')
+              }}
               className={cn(
-                "shrink-0 size-20 rounded border overflow-hidden transition-all cursor-pointer bg-slate-50",
-                view === "3d"
-                  ? "border-cyan-700 ring-2 ring-cyan-700/20"
-                  : "border-slate-200 hover:border-slate-300"
+                `${thumbBaseClass} bg-slate-50`,
+                view === '3d'
+                  ? thumbActiveClass
+                  : thumbInactiveClass,
               )}
               aria-label="View 3D model"
             >
               <div className="w-full h-full flex flex-col items-center justify-center">
                 <Box
-                  className={cn("w-4 h-4 mb-0.5", view === "3d" ? "text-cyan-700" : "text-slate-600")}
+                  className={cn(
+                    'w-4 h-4 mb-0.5',
+                    view === '3d' ? 'text-cyan-700' : 'text-slate-600',
+                  )}
                   aria-hidden="true"
                 />
-                <span className={cn("text-[10px] font-mono", view === "3d" ? "text-cyan-700" : "text-slate-600")}>
+                <span
+                  className={cn(
+                    'text-[10px] font-mono',
+                    view === '3d' ? 'text-cyan-700' : 'text-slate-600',
+                  )}
+                >
                   3D
                 </span>
               </div>
@@ -206,14 +223,20 @@ export function ProductGallery({
             <button
               key={imageUrl + idx}
               type="button"
-              onMouseEnter={() => { handleHoverImage(idx); }}
-              onFocus={() => { handleHoverImage(idx); }}
-              onClick={() => { handleSelectImage(idx); }}
+              onMouseEnter={() => {
+                handleHoverImage(idx)
+              }}
+              onFocus={() => {
+                handleHoverImage(idx)
+              }}
+              onClick={() => {
+                handleSelectImage(idx)
+              }}
               className={cn(
-                "shrink-0 size-20 rounded border overflow-hidden transition-all cursor-pointer relative",
-                view === "images" && displayImageIndex === idx
-                  ? "border-cyan-700 ring-2 ring-cyan-700/20"
-                  : "border-slate-200 hover:border-slate-300"
+                `${thumbBaseClass} relative`,
+                view === 'images' && displayImageIndex === idx
+                  ? thumbActiveClass
+                  : thumbInactiveClass,
               )}
               aria-label={`View image ${idx + 1}`}
             >

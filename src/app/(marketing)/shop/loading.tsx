@@ -1,11 +1,13 @@
+import { LoadingBlock } from '@/components/loading'
+
 export default function ShopLoading() {
   return (
     <div className="bg-slate-50">
       <section className="pt-32 pb-8 px-6 lg:px-20">
         <div className="max-w-7xl mx-auto">
-          <div className="h-4 w-16 bg-slate-200 rounded animate-pulse mb-2" />
-          <div className="h-10 w-48 bg-slate-200 rounded animate-pulse mb-4" />
-          <div className="h-6 w-80 bg-slate-200 rounded animate-pulse" />
+          <LoadingBlock className="h-4 w-16 rounded mb-2" tone="strong" />
+          <LoadingBlock className="h-10 w-48 rounded mb-4" tone="strong" />
+          <LoadingBlock className="h-6 w-80 rounded" tone="strong" />
         </div>
       </section>
 
@@ -17,12 +19,12 @@ export default function ShopLoading() {
                 key={i}
                 className="bg-white rounded border border-slate-200 overflow-hidden"
               >
-                <div className="aspect-[4/3] bg-slate-100 animate-pulse" />
+                <LoadingBlock className="aspect-[4/3]" tone="soft" />
                 <div className="p-6 space-y-3">
-                  <div className="h-6 w-3/4 bg-slate-200 rounded animate-pulse" />
-                  <div className="h-4 w-full bg-slate-100 rounded animate-pulse" />
-                  <div className="h-4 w-2/3 bg-slate-100 rounded animate-pulse" />
-                  <div className="h-8 w-24 bg-slate-200 rounded animate-pulse mt-4" />
+                  <LoadingBlock className="h-6 w-3/4 rounded" tone="strong" />
+                  <LoadingBlock className="h-4 w-full rounded" tone="soft" />
+                  <LoadingBlock className="h-4 w-2/3 rounded" tone="soft" />
+                  <LoadingBlock className="h-8 w-24 rounded mt-4" tone="strong" />
                 </div>
               </div>
             ))}

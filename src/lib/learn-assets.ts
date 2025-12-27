@@ -3,12 +3,12 @@ export type LearnAssetRef = {
   path: string
 }
 
-const STORAGE_PROTOCOL = "storage:"
-const LEARN_ASSET_BUCKET = "learn-assets"
+const STORAGE_PROTOCOL = 'storage:'
+const LEARN_ASSET_BUCKET = 'learn-assets'
 
 export function toLearnAssetRef(bucket: string, path: string): string {
   const cleanBucket = bucket.trim()
-  const cleanPath = path.replace(/^\/+/, "")
+  const cleanPath = path.replace(/^\/+/, '')
   return `storage://${cleanBucket}/${cleanPath}`
 }
 
@@ -18,7 +18,7 @@ export function parseLearnAssetRef(value: string): LearnAssetRef | null {
     const url = new URL(value)
     if (url.protocol !== STORAGE_PROTOCOL) return null
     const bucket = url.hostname
-    const path = url.pathname.replace(/^\/+/, "")
+    const path = url.pathname.replace(/^\/+/, '')
     if (!bucket || !path) return null
     return { bucket, path }
   } catch {
@@ -30,7 +30,7 @@ function parseSupabaseLearnAssetUrl(value: string): LearnAssetRef | null {
   try {
     const url = new URL(value)
     const match = /\/storage\/v1\/object\/(?:public|sign)\/([^/]+)\/(.+)$/.exec(
-      url.pathname
+      url.pathname,
     )
     if (!match) return null
     const bucket = match[1]
@@ -45,13 +45,13 @@ function parseSupabaseLearnAssetUrl(value: string): LearnAssetRef | null {
 export function normalizeLearnAssetValue(value: string): string {
   if (!value) return value
 
-  if (value.startsWith("/api/learn/assets?")) return value
+  if (value.startsWith('/api/learn/assets?')) return value
 
   const ref = parseLearnAssetRef(value)
   if (ref) return value
 
-  const cleaned = value.replace(/^\/+/, "")
-  if (cleaned.startsWith("lessons/")) {
+  const cleaned = value.replace(/^\/+/, '')
+  if (cleaned.startsWith('lessons/')) {
     return toLearnAssetRef(LEARN_ASSET_BUCKET, cleaned)
   }
 
@@ -65,7 +65,7 @@ export function normalizeLearnAssetValue(value: string): string {
 
 export function resolveLearnAssetUrl(value: string): string {
   const normalized = normalizeLearnAssetValue(value)
-  if (normalized.startsWith("/api/learn/assets?")) return normalized
+  if (normalized.startsWith('/api/learn/assets?')) return normalized
 
   const ref = parseLearnAssetRef(normalized)
   if (!ref) return value

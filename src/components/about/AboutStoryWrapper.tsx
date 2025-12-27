@@ -1,5 +1,5 @@
-import { createPublicClient } from "@/lib/supabase/public"
-import { AboutStory } from "./AboutStory"
+import { createPublicClient } from '@/lib/supabase/public'
+import { AboutStory } from './AboutStory'
 
 /**
  * Server component that fetches About Story content from page_content table
@@ -21,18 +21,21 @@ This section will highlight our commitment to giving back and supporting Hawaii 
   try {
     const supabase = createPublicClient()
     const { data, error: fetchError } = await supabase
-      .from("page_content")
-      .select("content")
-      .eq("page_key", "about_story")
+      .from('page_content')
+      .select('content')
+      .eq('page_key', 'about_story')
       .maybeSingle()
     pageContent = data
     if (fetchError) error = fetchError
   } catch (err) {
-    error = err instanceof Error ? { message: err.message } : { message: "Unknown error" }
+    error =
+      err instanceof Error
+        ? { message: err.message }
+        : { message: 'Unknown error' }
   }
 
   if (error) {
-    console.error("Failed to fetch About Story content:", error.message)
+    console.error('Failed to fetch About Story content:', error.message)
     return <AboutStory content={defaultContent} isPlaceholder />
   }
 

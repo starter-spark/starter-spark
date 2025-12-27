@@ -1,7 +1,7 @@
-"use client"
+'use client'
 
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react"
-import type PhotoSwipeLightboxType from "photoswipe/lightbox"
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
+import type PhotoSwipeLightboxType from 'photoswipe/lightbox'
 
 interface ProductImageLightboxProps {
   open: boolean
@@ -13,7 +13,10 @@ interface ProductImageLightboxProps {
   className?: string
 }
 
-interface Dimensions { width: number; height: number }
+interface Dimensions {
+  width: number
+  height: number
+}
 
 function wrapIndex(index: number, count: number) {
   if (count <= 0) return 0
@@ -30,17 +33,20 @@ export function ProductImageLightbox({
   className,
 }: ProductImageLightboxProps) {
   const count = images.length
-  const displayIndex = useMemo(() => wrapIndex(activeIndex, count), [activeIndex, count])
+  const displayIndex = useMemo(
+    () => wrapIndex(activeIndex, count),
+    [activeIndex, count],
+  )
 
   const reactId = useId()
   const galleryId = useMemo(() => {
-    const safe = reactId.replaceAll(/[:]/g, "")
+    const safe = reactId.replaceAll(/[:]/g, '')
     return `pswp-gallery-${safe}`
   }, [reactId])
 
   const [isReady, setIsReady] = useState(false)
   const [dimensions, setDimensions] = useState<(Dimensions | null)[]>(() =>
-    Array.from({ length: count }, () => null)
+    Array.from({ length: count }, () => null),
   )
 
   const lightboxRef = useRef<PhotoSwipeLightboxType | null>(null)
@@ -48,7 +54,10 @@ export function ProductImageLightbox({
   const pendingRef = useRef<Map<number, Promise<Dimensions>>>(new Map())
 
   useEffect(() => {
-    const next = Array.from({ length: images.length }, () => null as Dimensions | null)
+    const next = Array.from(
+      { length: images.length },
+      () => null as Dimensions | null,
+    )
     setDimensions(next)
     dimensionsRef.current = next
     pendingRef.current.clear()
@@ -66,20 +75,23 @@ export function ProductImageLightbox({
       const promise = new Promise<Dimensions>((resolve) => {
         const src = images.at(idx)
         const img = new globalThis.Image()
-        img.decoding = "async"
+        img.decoding = 'async'
 
         const finalize = (nextDims: Dimensions) => {
           pendingRef.current.delete(idx)
           dimensionsRef.current.splice(idx, 1, nextDims)
           const galleryEl = document.getElementById(galleryId)
-          const anchorEl = galleryEl?.querySelectorAll("a").item(idx) ?? null
+          const anchorEl = galleryEl?.querySelectorAll('a').item(idx) ?? null
           if (anchorEl) {
             anchorEl.dataset.pswpWidth = String(nextDims.width)
             anchorEl.dataset.pswpHeight = String(nextDims.height)
           }
           setDimensions((prev) => {
             const current = prev.at(idx)
-            if (current?.width === nextDims.width && current?.height === nextDims.height) {
+            if (
+              current?.width === nextDims.width &&
+              current?.height === nextDims.height
+            ) {
               return prev
             }
             const next = [...prev]
@@ -100,13 +112,15 @@ export function ProductImageLightbox({
           const height = img.naturalHeight || 1600
           finalize({ width, height })
         })
-        img.onerror = () => { finalize({ width: 1600, height: 1600 }); }
+        img.onerror = () => {
+          finalize({ width: 1600, height: 1600 })
+        }
       })
 
       pendingRef.current.set(idx, promise)
       return promise
     },
-    [galleryId, images]
+    [galleryId, images],
   )
 
   useEffect(() => {
@@ -115,19 +129,22 @@ export function ProductImageLightbox({
     let isCancelled = false
 
     void (async () => {
-      const { default: PhotoSwipeLightbox } = await import("photoswipe/lightbox")
+      const { default: PhotoSwipeLightbox } =
+        await import('photoswipe/lightbox')
       if (isCancelled) return
 
       const lightbox = new PhotoSwipeLightbox({
         gallery: `#${galleryId}`,
-        children: "a",
-        pswpModule: () => import("photoswipe"),
+        children: 'a',
+        pswpModule: () => import('photoswipe'),
       })
 
-      lightbox.on("close", () => { onOpenChange(false); })
-      lightbox.on("change", () => {
+      lightbox.on('close', () => {
+        onOpenChange(false)
+      })
+      lightbox.on('change', () => {
         const idx = lightbox.pswp?.currIndex
-        if (typeof idx === "number") onActiveIndexChange(idx)
+        if (typeof idx === 'number') onActiveIndexChange(idx)
       })
 
       lightbox.init()
@@ -174,7 +191,12 @@ export function ProductImageLightbox({
   if (count === 0) return null
 
   return (
-    <div id={galleryId} className={className} data-pswp-product={productName} hidden>
+    <div
+      id={galleryId}
+      className={className}
+      data-pswp-product={productName}
+      hidden
+    >
       {images.map((src, idx) => {
         const itemDims = dimensions.at(idx) ?? { width: 1600, height: 1600 }
         return (

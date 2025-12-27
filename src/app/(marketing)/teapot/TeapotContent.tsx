@@ -1,4 +1,8 @@
-import Link from "next/link"
+import Link from 'next/link'
+import {
+  roomyPrimaryLink,
+  roomySecondaryLink,
+} from '@/components/marketing/link-classes'
 
 interface TeapotContentProps {
   viewCount: number
@@ -10,7 +14,7 @@ export function TeapotContent({ viewCount }: TeapotContentProps) {
       <div className="text-center max-w-lg">
         {/* ASCII Teapot */}
         <pre className="font-mono text-cyan-700 text-xs sm:text-sm mb-8 inline-block text-left">
-{`
+          {`
             ;,'
      _o_    ;:;'
  ,-.'---\`.__ ;
@@ -41,24 +45,26 @@ export function TeapotContent({ viewCount }: TeapotContentProps) {
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link
             href="/"
-            className="inline-flex items-center justify-center px-6 py-3 rounded-md bg-cyan-700 hover:bg-cyan-600 text-white font-mono text-sm transition-colors"
+            className={roomyPrimaryLink}
           >
             Tip me over
           </Link>
           <Link
             href="/shop"
-            className="inline-flex items-center justify-center px-6 py-3 rounded-md border border-slate-300 hover:bg-slate-100 text-slate-700 font-mono text-sm transition-colors"
+            className={roomySecondaryLink}
           >
             Pour me out
           </Link>
         </div>
 
         <p className="mt-12 text-xs text-slate-400 font-mono">
-          Error 418: The server refuses to brew coffee because it is, permanently, a teapot.
+          Error 418: The server refuses to brew coffee because it is,
+          permanently, a teapot.
         </p>
 
         <p className="mt-4 text-xs text-slate-400 font-mono">
-          {viewCount} {viewCount === 1 ? "person has" : "people have"} discovered this teapot
+          {viewCount} {viewCount === 1 ? 'person has' : 'people have'}{' '}
+          discovered this teapot
         </p>
       </div>
     </div>
