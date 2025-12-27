@@ -13,7 +13,6 @@ function Model({ path, onLoad }: { path: string; onLoad: () => void }) {
   const { scene } = useGLTF(path, true)
 
   useEffect(() => {
-    // Scene loaded, call onLoad
     if (scene) {
       onLoad()
     }
@@ -29,7 +28,46 @@ export default function ProductViewer3D({ modelPath }: ProductViewer3DProps) {
     return !isWebdriver && supportsWebGL()
   })
 
-  if (!canRender3d) {
+  // Compute whether we should even attempt to check
+  const shouldCheck = Boolean(modelPath && canRender3d)
+
+  // null = checking, true = exists, false = doesn't exist
+  const [modelExists, setModelExists] = useState<boolean | null>(() => {
+    // If we shouldn't check, immediately mark as non-existent
+    return shouldCheck ? null : false
+  })
+
+  // Pre-validate that the model file exists
+  useEffect(() => {
+    if (!shouldCheck) {
+      return
+    }
+
+    // Reset to checking state when path changes
+    let cancelled = false
+
+    // Use HEAD request to check if file exists without downloading it
+    fetch(modelPath, { method: 'HEAD' })
+      .then((res) => {
+        if (cancelled) return
+        setModelExists(res.ok)
+        if (!res.ok) {
+          console.warn(`3D model not found: ${modelPath} (${res.status})`)
+        }
+      })
+      .catch(() => {
+        if (cancelled) return
+        setModelExists(false)
+        console.warn(`3D model check failed: ${modelPath}`)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [modelPath, shouldCheck])
+
+  // Not supported or model doesn't exist - show fallback
+  if (!canRender3d || modelExists === false) {
     return (
       <div
         className="relative w-full h-full overflow-hidden bg-slate-50 flex items-center justify-center"
@@ -43,13 +81,32 @@ export default function ProductViewer3D({ modelPath }: ProductViewer3DProps) {
     )
   }
 
+  // Still checking if model exists
+  if (modelExists === null) {
+    return (
+      <div
+        className="relative w-full h-full overflow-hidden bg-slate-50 flex items-center justify-center"
+        role="img"
+        aria-label="Loading 3D preview"
+      >
+        <div className="flex flex-col items-center gap-3">
+          <div
+            className="w-10 h-10 border-2 border-slate-200 border-t-cyan-700 rounded-full animate-spin"
+            aria-hidden="true"
+          />
+          <p className="text-sm font-mono text-slate-600">Loading 3D…</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div
       className="relative w-full h-full overflow-hidden bg-slate-50"
       role="img"
       aria-label="Interactive 3D product viewer - use mouse to rotate and zoom"
     >
-      {/* Loading */}
+      {/* Loading model */}
       {!isLoaded && (
         <div
           className="absolute inset-0 flex items-center justify-center z-20"
@@ -65,7 +122,7 @@ export default function ProductViewer3D({ modelPath }: ProductViewer3DProps) {
         </div>
       )}
 
-      {/* 3D canvas (no fades) */}
+      {/* 3D canvas */}
       <div className="absolute inset-0">
         <ClientErrorBoundary
           fallback={

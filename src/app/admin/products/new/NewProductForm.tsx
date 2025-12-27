@@ -98,6 +98,7 @@ export function NewProductForm() {
         track_inventory: false,
         stock_quantity: null,
         low_stock_threshold: null,
+        max_quantity_per_order: null,
       })
 
       if (result.error) {

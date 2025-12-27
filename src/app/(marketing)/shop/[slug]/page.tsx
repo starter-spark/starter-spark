@@ -146,6 +146,7 @@ export default async function ProductDetailPage({
     track_inventory: boolean | null
     stock_quantity: number | null
     low_stock_threshold: number | null
+    max_quantity_per_order: number | null
     specs: Json | null
     product_media: {
       id?: string
@@ -208,7 +209,6 @@ export default async function ProductDetailPage({
 
   // Determine stock status from inventory tracking or tags
   const hasOutOfStockTag = tags.has('out_of_stock')
-  const hasLimitedTag = tags.has('limited')
 
   // In-stock: check inventory tracking first, then fall back to specs.
   const inStock = product.track_inventory
@@ -330,6 +330,7 @@ export default async function ProductDetailPage({
                 lowStockThreshold={
                   product.track_inventory ? product.low_stock_threshold : null
                 }
+                maxQuantityPerOrder={product.max_quantity_per_order}
                 charityPercentage={charityPercentage}
               />
             </div>

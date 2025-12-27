@@ -23,6 +23,7 @@ interface ProductData {
   track_inventory: boolean
   stock_quantity: number | null
   low_stock_threshold: number | null
+  max_quantity_per_order: number | null
 }
 
 interface TagData {
@@ -133,6 +134,7 @@ export async function updateProduct(
       track_inventory: data.track_inventory,
       stock_quantity: data.stock_quantity,
       low_stock_threshold: data.low_stock_threshold,
+      max_quantity_per_order: data.max_quantity_per_order,
     })
     .eq('id', id)
     .select('id')
@@ -261,6 +263,7 @@ export async function createProduct(
       track_inventory: data.track_inventory,
       stock_quantity: data.stock_quantity,
       low_stock_threshold: data.low_stock_threshold,
+      max_quantity_per_order: data.max_quantity_per_order,
     })
     .select('id')
     .maybeSingle()

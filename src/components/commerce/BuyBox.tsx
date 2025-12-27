@@ -10,7 +10,7 @@ import {
   RotateCcw,
   Shield,
 } from 'lucide-react'
-import { useId, useState } from 'react'
+import { useEffect, useId, useState } from 'react'
 import { useCartStore } from '@/store/cart'
 import { trackAddToCart } from '@/lib/analytics'
 import { cn } from '@/lib/utils'
@@ -30,6 +30,8 @@ interface BuyBoxProps {
   // Inventory fields
   stockQuantity?: number | null
   lowStockThreshold?: number | null
+  /** Admin-configured max quantity per order (null = no limit) */
+  maxQuantityPerOrder?: number | null
   // Charity percentage from site content
   charityPercentage?: string
 }
@@ -104,16 +106,41 @@ export function BuyBox({
   discountExpiresAt,
   stockQuantity,
   lowStockThreshold,
+  maxQuantityPerOrder,
   charityPercentage = '67%',
 }: BuyBoxProps) {
   const [quantity, setQuantity] = useState(1)
+  const [shiftHeld, setShiftHeld] = useState(false)
   const quantityLabelId = useId()
   const addItem = useCartStore((state) => state.addItem)
 
-  // Max quantity is limited by stock if inventory is tracked
-  const maxQuantity = stockQuantity !== null && stockQuantity !== undefined
+  // Track shift key for bulk quantity adjustments
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Shift') setShiftHeld(true)
+    }
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.key === 'Shift') setShiftHeld(false)
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    window.addEventListener('keyup', handleKeyUp)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+      window.removeEventListener('keyup', handleKeyUp)
+    }
+  }, [])
+
+  // Step amount: 10 when shift is held, 1 otherwise
+  const step = shiftHeld ? 10 : 1
+
+  // Max quantity is the lower of: stock quantity, admin limit, or default 99
+  const stockLimit = stockQuantity !== null && stockQuantity !== undefined
     ? stockQuantity
     : 99
+  const adminLimit = maxQuantityPerOrder !== null && maxQuantityPerOrder !== undefined
+    ? maxQuantityPerOrder
+    : 99
+  const maxQuantity = Math.min(stockLimit, adminLimit)
 
   // Check if discount is active (exists and not expired)
   const hasActiveDiscount = Boolean(
@@ -213,30 +240,49 @@ export function BuyBox({
       {/* Quantity Selector - only show when in stock */}
       {inStock && (
         <div className="space-y-2" role="group" aria-labelledby={quantityLabelId}>
-          <span id={quantityLabelId} className="text-sm text-slate-700">
-            Quantity
-          </span>
+          <div className="flex items-center justify-between">
+            <span id={quantityLabelId} className="text-sm text-slate-700">
+              Quantity
+            </span>
+            {shiftHeld && (
+              <span className="text-xs text-cyan-600 font-mono">
+                ±10 mode
+              </span>
+            )}
+          </div>
           <div className="flex items-center gap-3">
             <QuantityButton
               size="lg"
               onClick={() => {
-                setQuantity(Math.max(1, quantity - 1))
+                setQuantity(Math.max(1, quantity - step))
               }}
               disabled={quantity <= 1}
-              aria-label="Decrease quantity"
+              aria-label={`Decrease quantity by ${step}`}
             >
-              <Minus className="w-4 h-4 text-slate-600" aria-hidden="true" />
+              <span className="w-6 flex items-center justify-center">
+                {shiftHeld ? (
+                  <span className="text-xs font-mono text-slate-600">-10</span>
+                ) : (
+                  <Minus className="w-4 h-4 text-slate-600" aria-hidden="true" />
+                )}
+              </span>
             </QuantityButton>
             <span className="w-12 text-center font-mono text-lg">{quantity}</span>
             <QuantityButton
               size="lg"
               onClick={() => {
-                setQuantity(Math.min(maxQuantity, quantity + 1))
+                setQuantity(Math.min(maxQuantity, quantity + step))
               }}
               disabled={quantity >= maxQuantity}
-              aria-label="Increase quantity"
+              aria-label={`Increase quantity by ${step}`}
             >
-              <Plus className="w-4 h-4 text-slate-600" aria-hidden="true" />
+              <span className="w-6 flex items-center justify-center">
+                {shiftHeld ? (
+                  <span className="text-xs font-mono text-slate-600">+10</span>
+                ) : (
+                  <Plus className="w-4 h-4 text-slate-600" aria-hidden="true" />
+                )}
+              </span>
             </QuantityButton>
           </div>
           {maxQuantity < 99 && maxQuantity > 0 && quantity >= maxQuantity && (

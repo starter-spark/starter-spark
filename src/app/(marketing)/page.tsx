@@ -20,7 +20,7 @@ import {
   EventsPreviewSkeleton,
 } from './loading'
 
-export default async function Home() {
+export default function Home() {
   const organizationSchema = getOrganizationSchema()
   const websiteSchema = getWebsiteSchema()
 
@@ -29,10 +29,12 @@ export default async function Home() {
       {/* JSON-LD via Next.js script - rendered only on server, no hydration issues */}
       <script
         type="application/ld+json"
+        // eslint-disable-next-line react/no-danger
         dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
       />
       <script
         type="application/ld+json"
+        // eslint-disable-next-line react/no-danger
         dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
       />
       <div>

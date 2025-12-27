@@ -102,6 +102,7 @@ interface ProductFormProps {
     track_inventory: boolean | null
     stock_quantity: number | null
     low_stock_threshold: number | null
+    max_quantity_per_order: number | null
   }
   initialTags?: TagState[]
   initialMedia?: MediaItem[]
@@ -154,6 +155,9 @@ export function ProductForm({
   )
   const [lowStockThreshold, setLowStockThreshold] = useState(
     product.low_stock_threshold || 10,
+  )
+  const [maxQuantityPerOrder, setMaxQuantityPerOrder] = useState<number | null>(
+    product.max_quantity_per_order ?? null,
   )
 
   const [specs, setSpecs] = useState<{ key: string; value: string }[]>(() => {
@@ -261,6 +265,7 @@ export function ProductForm({
         track_inventory: trackInventory,
         stock_quantity: trackInventory ? stockQuantity : null,
         low_stock_threshold: trackInventory ? lowStockThreshold : null,
+        max_quantity_per_order: maxQuantityPerOrder,
       })
 
       if (result.error) {
@@ -622,6 +627,31 @@ export function ProductForm({
                     below this number
                   </p>
                 </div>
+              </div>
+
+              {/* Max Quantity Per Order */}
+              <div className="space-y-2">
+                <label
+                  htmlFor="maxQuantityPerOrder"
+                  className={adminLabelClass}
+                >
+                  Max Quantity Per Order
+                </label>
+                <Input
+                  id="maxQuantityPerOrder"
+                  type="number"
+                  min="1"
+                  value={maxQuantityPerOrder ?? ''}
+                  onChange={(e) => {
+                    setMaxQuantityPerOrder(
+                      e.target.value ? Number.parseInt(e.target.value) : null,
+                    )
+                  }}
+                  placeholder="No limit"
+                />
+                <p className="text-xs text-slate-500">
+                  Maximum quantity a customer can add to their cart. Leave empty for no limit.
+                </p>
               </div>
 
               {/* Stock Status Preview */}

@@ -132,14 +132,13 @@ test.describe('Product Page - Buy Box', () => {
     })
 
     const decreaseBtn = page.getByLabel('Decrease quantity')
-
-    // Try to decrease below 1
-    await decreaseBtn.click()
-    await decreaseBtn.click()
-    await decreaseBtn.click()
-
     const quantity = page.locator('.text-center.font-mono').first()
+
+    // Quantity should start at 1
     await expect(quantity).toHaveText('1')
+
+    // Decrease button should be disabled when quantity is 1
+    await expect(decreaseBtn).toBeDisabled()
   })
 
   test('should reset quantity to 1 after adding to cart', async ({ page }) => {
