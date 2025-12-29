@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { UserAvatar } from '@/components/ui/user-avatar'
+import { UrlPagination } from '@/components/ui/pagination'
 import {
   Table,
   TableBody,
@@ -19,13 +20,27 @@ export const metadata = {
   title: 'Community | Admin',
 }
 
+const ITEMS_PER_PAGE = 50
+
 interface SearchParams {
   status?: string
+  page?: string
 }
 
-async function getPosts(status?: string) {
+async function getPosts(status?: string, page: number = 1) {
   const supabase = await createClient()
 
+  // Build count query
+  let countQuery = supabase
+    .from('posts')
+    .select('id', { count: 'exact', head: true })
+  if (status && status !== 'all') {
+    countQuery = countQuery.eq('status', status)
+  }
+  const { count } = await countQuery
+  const totalCount = count || 0
+
+  // Build data query
   let query = supabase
     .from('posts')
     .select(
@@ -41,25 +56,26 @@ async function getPosts(status?: string) {
     query = query.eq('status', status)
   }
 
-  const { data, error } = await query.limit(100)
+  const offset = (page - 1) * ITEMS_PER_PAGE
+  const { data, error } = await query.range(offset, offset + ITEMS_PER_PAGE - 1)
 
   if (error) {
     console.error('Error fetching posts:', error)
-    return []
+    return { data: [], totalCount: 0 }
   }
 
-  return data
+  return { data: data || [], totalCount }
 }
 
 async function getPostStats() {
   const supabase = await createClient()
 
-  const [totalResult, pendingResult, flaggedResult] = await Promise.all([
+  const [totalResult, unansweredResult, flaggedResult] = await Promise.all([
     supabase.from('posts').select('id', { count: 'exact', head: true }),
     supabase
       .from('posts')
       .select('id', { count: 'exact', head: true })
-      .eq('status', 'pending'),
+      .eq('status', 'unanswered'),
     supabase
       .from('posts')
       .select('id', { count: 'exact', head: true })
@@ -68,7 +84,7 @@ async function getPostStats() {
 
   return {
     total: totalResult.count || 0,
-    pending: pendingResult.count || 0,
+    unanswered: unansweredResult.count || 0,
     flagged: flaggedResult.count || 0,
   }
 }
@@ -79,15 +95,18 @@ export default async function CommunityPage({
   searchParams: MaybePromise<SearchParams>
 }) {
   const params = await resolveParams(searchParams)
-  const [posts, stats] = await Promise.all([
-    getPosts(params.status),
+  const currentPage = Math.max(1, parseInt(params.page || '1', 10) || 1)
+  const [{ data: posts, totalCount }, stats] = await Promise.all([
+    getPosts(params.status, currentPage),
     getPostStats(),
   ])
+  const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE)
 
   const filters = [
     { label: 'All', value: 'all' },
-    { label: 'Published', value: 'published' },
-    { label: 'Pending', value: 'pending' },
+    { label: 'Open', value: 'open' },
+    { label: 'Unanswered', value: 'unanswered' },
+    { label: 'Solved', value: 'solved' },
     { label: 'Flagged', value: 'flagged' },
   ]
 
@@ -112,9 +131,9 @@ export default async function CommunityPage({
           </p>
         </div>
         <div className="rounded-lg border border-slate-200 bg-white p-4">
-          <p className="text-sm text-slate-600">Pending Review</p>
+          <p className="text-sm text-slate-600">Unanswered</p>
           <p className="font-mono text-2xl font-bold text-amber-600">
-            {stats.pending}
+            {stats.unanswered}
           </p>
         </div>
         <div className="rounded-lg border border-slate-200 bg-white p-4">
@@ -273,6 +292,20 @@ export default async function CommunityPage({
               })}
             </TableBody>
           </Table>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="p-4 border-t border-slate-200">
+              <UrlPagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalItems={totalCount}
+                itemsPerPage={ITEMS_PER_PAGE}
+                baseUrl={`/admin/community${params.status && params.status !== 'all' ? `?status=${params.status}` : ''}`}
+                showItemCount
+              />
+            </div>
+          )}
         </div>
       )}
     </div>

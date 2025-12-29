@@ -117,8 +117,8 @@ export function SupportActions({ submission }: SupportActionsProps) {
           }
         }
         setSignedUrls(urls)
-      } catch (err) {
-        console.error('Failed to get signed URLs:', err)
+      } catch {
+        // Don't log to console - URL signing is private
       } finally {
         setLoadingUrls(false)
       }
@@ -136,7 +136,7 @@ export function SupportActions({ submission }: SupportActionsProps) {
       if (error) throw error
       router.refresh()
     } catch {
-      console.error('Failed to update status')
+      // Error already handled via UI
     } finally {
       setIsLoading(false)
     }
@@ -183,32 +183,32 @@ export function SupportActions({ submission }: SupportActionsProps) {
           <DropdownMenuSeparator />
           <DropdownMenuLabel>Update Status</DropdownMenuLabel>
           <DropdownMenuItem
-            onClick={() => void updateStatus('pending')}
-            disabled={(submission.status || 'pending') === 'pending'}
+            onClick={() => void updateStatus('new')}
+            disabled={(submission.status || 'new') === 'new'}
           >
             <Clock className="mr-2 h-4 w-4 text-amber-500" />
-            Mark Pending
+            Mark New
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => void updateStatus('in_progress')}
-            disabled={(submission.status || 'pending') === 'in_progress'}
+            disabled={(submission.status || 'new') === 'in_progress'}
           >
             <Clock className="mr-2 h-4 w-4 text-cyan-500" />
             Mark In Progress
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => void updateStatus('resolved')}
-            disabled={(submission.status || 'pending') === 'resolved'}
+            disabled={(submission.status || 'new') === 'resolved'}
           >
             <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
             Mark Resolved
           </DropdownMenuItem>
           <DropdownMenuItem
-            onClick={() => void updateStatus('closed')}
-            disabled={(submission.status || 'pending') === 'closed'}
+            onClick={() => void updateStatus('spam')}
+            disabled={(submission.status || 'new') === 'spam'}
           >
             <XCircle className="mr-2 h-4 w-4 text-slate-500" />
-            Close
+            Mark as Spam
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

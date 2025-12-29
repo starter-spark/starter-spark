@@ -238,7 +238,7 @@ export function ContactForm() {
 
   if (result?.success) {
     return (
-      <div className="bg-white border border-slate-200 rounded-lg p-8 text-center">
+      <div className="bg-white border border-slate-200 rounded p-8 text-center">
         <div className="w-16 h-16 mx-auto mb-4 bg-emerald-50 rounded-full flex items-center justify-center">
           <CheckCircle2 className="w-8 h-8 text-emerald-600" />
         </div>
@@ -265,7 +265,7 @@ export function ContactForm() {
   return (
     <form
       onSubmit={(e) => void handleSubmit(e)}
-      className="bg-white border border-slate-200 rounded-lg p-6 md:p-8 space-y-6"
+      className="bg-white border border-slate-200 rounded p-6 md:p-8 space-y-6"
     >
       {(result?.error || uploadError) && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
@@ -419,7 +419,7 @@ export function ContactForm() {
       </div>
 
       {/* Terms Checkbox */}
-      <div className="flex items-start gap-3 p-4 bg-slate-50 rounded-lg border border-slate-200">
+      <div className="flex items-start gap-3 p-4 bg-slate-50 rounded border border-slate-200">
         <Checkbox
           id="terms"
           checked={acceptedTerms}

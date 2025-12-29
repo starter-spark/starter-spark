@@ -164,8 +164,8 @@ export function BannerForm({ banner }: BannerFormProps) {
 
       router.push('/admin/banners')
       router.refresh()
-    } catch (error) {
-      console.error('Failed to save banner:', error)
+    } catch {
+      // Error handled by action - don't log to console
     } finally {
       setIsSubmitting(false)
     }

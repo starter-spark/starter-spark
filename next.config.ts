@@ -5,6 +5,13 @@ const nextConfig: NextConfig = {
   // Enable React strict mode for better development experience
   reactStrictMode: true,
 
+  // Strip console.log/debug/info/warn from production client bundles
+  // Keep console.error for debugging (but never log sensitive data to it)
+  compiler: {
+    removeConsole:
+      process.env.NODE_ENV === 'production' ? { exclude: ['error'] } : false,
+  },
+
   // Avoid implicit 308 redirects on trailing slashes
   skipTrailingSlashRedirect: true,
 

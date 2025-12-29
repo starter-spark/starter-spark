@@ -24,6 +24,7 @@ async function getEvents() {
     .from('events')
     .select('*')
     .order('event_date', { ascending: true })
+    .limit(100)
 
   if (error) {
     console.error('Error fetching events:', error)

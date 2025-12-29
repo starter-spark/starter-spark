@@ -77,8 +77,7 @@ export function LoginForm({ redirectTo, claimToken }: LoginFormProps) {
 
       setIsSent(true)
     } catch (err) {
-      console.error('Login error:', err)
-
+      // Don't log the full error to console (could leak auth details)
       // Handle rate limit error with user-friendly message
       const errorMessage = err instanceof Error ? err.message : String(err)
       if (errorMessage.includes('after')) {

@@ -2,7 +2,18 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 import { Share2, Bookmark, Flag, Check, Loader2 } from 'lucide-react'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { reportPost } from './actions'
 import { cn } from '@/lib/utils'
 
@@ -16,6 +27,7 @@ export function PostActions({ postId, isAuthenticated }: PostActionsProps) {
   const [copied, setCopied] = useState(false)
   const [isReporting, setIsReporting] = useState(false)
   const [reported, setReported] = useState(false)
+  const [showReportDialog, setShowReportDialog] = useState(false)
 
   const handleShare = async () => {
     const url = globalThis.location.href
@@ -65,10 +77,10 @@ export function PostActions({ postId, isAuthenticated }: PostActionsProps) {
       return
     }
     // TODO: Implement save/bookmark functionality
-    alert('Bookmark feature coming soon!')
+    toast.info('Bookmark feature coming soon!')
   }
 
-  const handleReport = async () => {
+  const handleReportClick = () => {
     if (!isAuthenticated) {
       router.push(
         '/login?redirect=' + encodeURIComponent(globalThis.location.pathname),
@@ -78,19 +90,19 @@ export function PostActions({ postId, isAuthenticated }: PostActionsProps) {
 
     if (reported) return
 
-    const confirmed = confirm(
-      'Are you sure you want to report this post? It will be flagged for moderator review.',
-    )
+    setShowReportDialog(true)
+  }
 
-    if (!confirmed) return
-
+  const handleReportConfirm = async () => {
+    setShowReportDialog(false)
     setIsReporting(true)
     const result = await reportPost(postId)
 
     if (result.error) {
-      alert(result.error)
+      toast.error('Failed to report post', { description: result.error })
     } else {
       setReported(true)
+      toast.success('Post reported for review')
     }
 
     setIsReporting(false)
@@ -124,7 +136,7 @@ export function PostActions({ postId, isAuthenticated }: PostActionsProps) {
         Save
       </button>
       <button
-        onClick={() => void handleReport()}
+        onClick={handleReportClick}
         disabled={isReporting || reported}
         className={cn(
           'flex items-center gap-2 text-sm transition-colors',
@@ -138,6 +150,27 @@ export function PostActions({ postId, isAuthenticated }: PostActionsProps) {
         )}
         {reported ? 'Reported' : 'Report'}
       </button>
+
+      <AlertDialog open={showReportDialog} onOpenChange={setShowReportDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Report this post?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This post will be flagged for moderator review. Please only report
+              posts that violate community guidelines.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => void handleReportConfirm()}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Report Post
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

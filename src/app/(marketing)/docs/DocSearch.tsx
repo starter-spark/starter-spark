@@ -39,7 +39,7 @@ export function DocSearch() {
     })
 
     if (error) {
-      console.error('Search error:', error)
+      // Search failed - just show no results
       setResults([])
     } else {
       setResults(data || [])

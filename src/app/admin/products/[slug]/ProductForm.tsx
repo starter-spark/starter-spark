@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -11,6 +12,16 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Separator } from '@/components/ui/separator'
 import {
   Loader2,
@@ -294,15 +305,10 @@ export function ProductForm({
     })
   }
 
-  const handleDelete = async () => {
-    if (
-      !confirm(
-        'Are you sure you want to delete this product? This cannot be undone.',
-      )
-    ) {
-      return
-    }
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
 
+  const handleDeleteConfirm = async () => {
+    setShowDeleteDialog(false)
     setIsDeleting(true)
     const result = await deleteProduct(product.id)
 
@@ -310,6 +316,7 @@ export function ProductForm({
       setError(result.error)
       setIsDeleting(false)
     } else {
+      toast.success('Product deleted')
       router.push('/admin/products')
       router.refresh()
     }
@@ -887,7 +894,7 @@ export function ProductForm({
         <Button
           type="button"
           variant="destructive"
-          onClick={() => void handleDelete()}
+          onClick={() => setShowDeleteDialog(true)}
           disabled={isDeleting}
         >
           {isDeleting ? (
@@ -921,6 +928,27 @@ export function ProductForm({
           </Button>
         </div>
       </div>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this product?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. The product, its associated licenses,
+              and all related data will be permanently deleted.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => void handleDeleteConfirm()}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </form>
   )
 }

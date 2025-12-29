@@ -47,8 +47,8 @@ export function BannerActions({ bannerId, isActive }: BannerActionsProps) {
     try {
       await deleteBanner(bannerId)
       router.refresh()
-    } catch (error) {
-      console.error('Failed to delete banner:', error)
+    } catch {
+      // Error handled by action - don't log to console
     } finally {
       setIsDeleting(false)
       setShowDeleteDialog(false)
@@ -60,8 +60,8 @@ export function BannerActions({ bannerId, isActive }: BannerActionsProps) {
     try {
       await toggleBannerActive(bannerId, !isActive)
       router.refresh()
-    } catch (error) {
-      console.error('Failed to toggle banner:', error)
+    } catch {
+      // Error handled by action - don't log to console
     } finally {
       setIsToggling(false)
     }
@@ -72,8 +72,8 @@ export function BannerActions({ bannerId, isActive }: BannerActionsProps) {
     try {
       await duplicateBanner(bannerId)
       router.refresh()
-    } catch (error) {
-      console.error('Failed to duplicate banner:', error)
+    } catch {
+      // Error handled by action - don't log to console
     } finally {
       setIsDuplicating(false)
     }

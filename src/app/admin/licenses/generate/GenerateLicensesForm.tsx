@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -63,7 +64,7 @@ export function GenerateLicensesForm({ products }: GenerateLicensesFormProps) {
 
   const handleCopyAll = async () => {
     await navigator.clipboard.writeText(generatedCodes.join('\n'))
-    alert('All codes copied to clipboard!')
+    toast.success('All codes copied to clipboard')
   }
 
   const handleDownloadCSV = () => {

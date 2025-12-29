@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -12,6 +13,16 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Loader2 } from 'lucide-react'
 import { updateEvent, deleteEvent } from '../actions'
 import {
@@ -48,6 +59,7 @@ export function EditEventForm({ event }: EditEventFormProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
 
   // Form state
   const [title, setTitle] = useState(event.title)
@@ -95,21 +107,15 @@ export function EditEventForm({ event }: EditEventFormProps) {
     })
   }
 
-  const handleDelete = () => {
-    if (
-      !confirm(
-        'Are you sure you want to delete this event? This cannot be undone.',
-      )
-    ) {
-      return
-    }
-
+  const handleDeleteConfirm = () => {
+    setShowDeleteDialog(false)
     startTransition(async () => {
       const result = await deleteEvent(event.id)
 
       if (result.error) {
         setError(result.error)
       } else {
+        toast.success('Event deleted')
         router.push('/admin/events')
       }
     })
@@ -184,8 +190,8 @@ export function EditEventForm({ event }: EditEventFormProps) {
               >
                 <option value="workshop">Workshop</option>
                 <option value="meetup">Meetup</option>
-                <option value="conference">Conference</option>
-                <option value="hackathon">Hackathon</option>
+                <option value="competition">Competition</option>
+                <option value="exhibition">Exhibition</option>
                 <option value="other">Other</option>
               </AdminSelect>
             </div>
@@ -323,13 +329,31 @@ export function EditEventForm({ event }: EditEventFormProps) {
           type="button"
           variant="outline"
           className="text-red-600 hover:bg-red-50 hover:text-red-700"
-          onClick={() => {
-            handleDelete()
-          }}
+          onClick={() => setShowDeleteDialog(true)}
           disabled={isPending}
         >
           Delete Event
         </Button>
+
+        <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete this event?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. The event will be permanently deleted.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteConfirm}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
         <div className="flex gap-2">
           <Button
             type="button"

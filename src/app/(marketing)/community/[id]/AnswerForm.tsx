@@ -39,8 +39,7 @@ export function AnswerForm({ postId }: AnswerFormProps) {
 
       setContent('')
       router.refresh()
-    } catch (err) {
-      console.error('Error:', err)
+    } catch {
       setError('An unexpected error occurred. Please try again.')
     } finally {
       setIsSubmitting(false)

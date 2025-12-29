@@ -95,7 +95,7 @@ function EventCard({
       />
 
       {/* Event card */}
-      <div className="bg-white border border-slate-200 rounded shadow-sm hover:shadow-md transition-shadow">
+      <article className="bg-white border border-slate-200 rounded hover:border-cyan-300 transition-colors">
         <div className="p-6">
           {/* Date badge */}
           <div className="flex items-start justify-between mb-4">
@@ -174,7 +174,7 @@ function EventCard({
             </div>
           )}
         </div>
-      </div>
+      </article>
     </div>
   )
 }
@@ -241,7 +241,7 @@ export default async function EventsPage() {
   ])
 
   return (
-    <div className="bg-slate-50">
+    <div className="min-h-screen bg-slate-50">
       {/* JSON-LD Structured Data for SEO */}
       {eventSchemas.map((schema, index) => (
         <script key={index} nonce={nonce} type="application/ld+json">
@@ -251,52 +251,64 @@ export default async function EventsPage() {
       <script nonce={nonce} type="application/ld+json">
         {jsonLdScript(breadcrumbSchema)}
       </script>
-      {/* Hero */}
-      <section className="pt-32 pb-16 px-6 lg:px-20">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-cyan-100 text-cyan-700 text-sm font-mono rounded mb-6">
-            <Calendar className="w-4 h-4" />
-            Events & Workshops
+
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <header className="px-6 lg:px-8 pt-8 pb-6">
+          {/* Breadcrumb */}
+          <nav aria-label="Breadcrumb" className="mb-6">
+            <ol className="flex items-center gap-2 text-sm text-slate-500">
+              <li>
+                <a href="/" className="hover:text-cyan-700 transition-colors">
+                  Home
+                </a>
+              </li>
+              <li aria-hidden="true">/</li>
+              <li className="text-slate-900 font-medium">Events</li>
+            </ol>
+          </nav>
+
+          {/* Title block with left accent */}
+          <div className="border-l-4 border-cyan-600 pl-4">
+            <h1 className="font-mono text-2xl sm:text-3xl font-bold text-slate-900">
+              {content['events.header.title']}
+            </h1>
+            <p className="mt-2 text-slate-600 max-w-xl">
+              {content['events.header.description']}
+            </p>
           </div>
-          <h1 className="font-mono text-4xl lg:text-5xl text-slate-900 mb-4 break-words">
-            {content['events.header.title']}
-          </h1>
-          <p className="text-lg text-slate-600 max-w-2xl mx-auto break-words">
-            {content['events.header.description']}
-          </p>
-        </div>
-      </section>
+        </header>
 
-      {/* Upcoming Events */}
-      <section className="pb-16 px-6 lg:px-20">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="font-mono text-2xl text-slate-900 mb-8">
-            Upcoming Events
-          </h2>
+        {/* Main Content */}
+        <main className="px-6 lg:px-8 pb-16">
+          {/* Upcoming Events */}
+          <section aria-labelledby="upcoming-heading" className="mb-12">
+            <h2 id="upcoming-heading" className="font-mono text-xl font-bold text-slate-900 mb-6">
+              Upcoming Events
+            </h2>
 
-          {upcomingEvents.length > 0 ? (
-            <div className="relative">
-              {upcomingEvents.map((event) => (
-                <EventCard key={event.id} event={event} />
-              ))}
-            </div>
-          ) : (
-            <div className="bg-white border border-slate-200 rounded p-8 text-center">
-              <Calendar className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-              <p className="text-slate-600">{content['events.empty']}</p>
-            </div>
+            {upcomingEvents.length > 0 ? (
+              <div className="relative">
+                {upcomingEvents.map((event) => (
+                  <EventCard key={event.id} event={event} />
+                ))}
+              </div>
+            ) : (
+              <div className="bg-white border border-slate-200 rounded p-8 text-center">
+                <Calendar className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+                <p className="text-slate-600">{content['events.empty']}</p>
+              </div>
+            )}
+          </section>
+
+          {/* Past Events */}
+          {pastEvents.length > 0 && (
+            <section aria-labelledby="past-heading">
+              <EventsToggle pastEvents={pastEvents} />
+            </section>
           )}
-        </div>
-      </section>
-
-      {/* Past Events */}
-      {pastEvents.length > 0 && (
-        <section className="pb-24 px-6 lg:px-20">
-          <div className="max-w-4xl mx-auto">
-            <EventsToggle pastEvents={pastEvents} />
-          </div>
-        </section>
-      )}
+        </main>
+      </div>
     </div>
   )
 }

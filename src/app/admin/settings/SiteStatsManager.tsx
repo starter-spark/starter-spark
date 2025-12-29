@@ -12,6 +12,16 @@ import {
 } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -89,6 +99,7 @@ export function SiteStatsManager({
   const [isAdding, setIsAdding] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
 
   // Edit form state
   const [editValue, setEditValue] = useState(0)
@@ -160,16 +171,17 @@ export function SiteStatsManager({
     })
   }
 
-  const handleDelete = (id: string) => {
-    if (!confirm('Are you sure you want to delete this stat?')) return
+  const handleDeleteConfirm = () => {
+    if (!deleteTarget) return
 
     startTransition(async () => {
-      const result = await deleteSiteStat(id)
+      const result = await deleteSiteStat(deleteTarget)
+      setDeleteTarget(null)
 
       if (result.error) {
         setError(result.error)
       } else {
-        setStats(stats.filter((s) => s.id !== id))
+        setStats(stats.filter((s) => s.id !== deleteTarget))
         setError(null)
       }
     })
@@ -613,9 +625,7 @@ export function SiteStatsManager({
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => {
-                        handleDelete(stat.id)
-                      }}
+                      onClick={() => setDeleteTarget(stat.id)}
                       className="text-red-600 hover:text-red-700 hover:bg-red-50"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -625,6 +635,27 @@ export function SiteStatsManager({
               )}
             </div>
           ))}
+
+          <AlertDialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete this stat?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action cannot be undone. The stat will be permanently
+                  removed from the homepage.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleDeleteConfirm}
+                  className="bg-red-600 hover:bg-red-700"
+                >
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
 
           {stats.length === 0 && !isAdding && (
             <div className="text-center py-8 text-slate-500">

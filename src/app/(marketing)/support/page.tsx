@@ -69,108 +69,120 @@ export default async function SupportPage() {
   )
 
   return (
-    <div className="bg-slate-50">
-      {/* Hero */}
-      <section className="pt-32 pb-16 px-6 lg:px-20">
-        <div className="max-w-4xl mx-auto text-center">
-          <p className="text-sm font-mono text-cyan-700 tracking-wider uppercase mb-4">
-            Support Center
-          </p>
-          <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4">
-            How Can We Help?
-          </h1>
-          <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-            Find answers to common questions, troubleshooting guides, and
-            helpful resources for your StarterSpark robotics kit.
-          </p>
-        </div>
-      </section>
+    <div className="min-h-screen bg-slate-50">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <header className="px-6 lg:px-8 pt-8 pb-6">
+          {/* Breadcrumb */}
+          <nav aria-label="Breadcrumb" className="mb-6">
+            <ol className="flex items-center gap-2 text-sm text-slate-500">
+              <li>
+                <a href="/" className="hover:text-cyan-700 transition-colors">
+                  Home
+                </a>
+              </li>
+              <li aria-hidden="true">/</li>
+              <li className="text-slate-900 font-medium">Support</li>
+            </ol>
+          </nav>
 
-      {/* Quick Links */}
-      <section className="pb-12 px-6 lg:px-20">
-        <div className="max-w-4xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Link
-              href="/docs"
-              className="bg-white border border-slate-200 rounded-lg p-5 hover:border-cyan-300 hover:shadow-sm transition-all group"
-            >
-              <div className="w-10 h-10 bg-cyan-50 rounded-lg flex items-center justify-center mb-3 group-hover:bg-cyan-100 transition-colors">
-                <BookOpen className="w-5 h-5 text-cyan-700" />
-              </div>
-              <h3 className="font-semibold text-slate-900 mb-1">
-                Documentation
-              </h3>
-              <p className="text-sm text-slate-600">
-                Complete guides and API reference
-              </p>
-            </Link>
-
-            <Link
-              href="/community"
-              className="bg-white border border-slate-200 rounded-lg p-5 hover:border-cyan-300 hover:shadow-sm transition-all group"
-            >
-              <div className="w-10 h-10 bg-cyan-50 rounded-lg flex items-center justify-center mb-3 group-hover:bg-cyan-100 transition-colors">
-                <MessageCircle className="w-5 h-5 text-cyan-700" />
-              </div>
-              <h3 className="font-semibold text-slate-900 mb-1">
-                Community Forum
-              </h3>
-              <p className="text-sm text-slate-600">
-                Ask questions and share projects
-              </p>
-            </Link>
-
-            <Link
-              href="/contact"
-              className="bg-white border border-slate-200 rounded-lg p-5 hover:border-cyan-300 hover:shadow-sm transition-all group"
-            >
-              <div className="w-10 h-10 bg-cyan-50 rounded-lg flex items-center justify-center mb-3 group-hover:bg-cyan-100 transition-colors">
-                <Mail className="w-5 h-5 text-cyan-700" />
-              </div>
-              <h3 className="font-semibold text-slate-900 mb-1">
-                Contact Support
-              </h3>
-              <p className="text-sm text-slate-600">
-                Get help from our team directly
-              </p>
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Troubleshooting Articles */}
-      <section className="pb-24 px-6 lg:px-20">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-2xl font-bold text-slate-900 mb-6">
-            Troubleshooting Guides
-          </h2>
-
-          <Suspense fallback={<ArticlesSkeleton />}>
-            <SupportArticles
-              articlesByCategory={articlesByCategory}
-              categories={CATEGORIES}
-            />
-          </Suspense>
-
-          {/* Can't find answer */}
-          <div className="mt-12 bg-cyan-50 border border-cyan-200 rounded-lg p-6 text-center">
-            <h3 className="text-lg font-semibold text-slate-900 mb-2">
-              Can&apos;t find what you&apos;re looking for?
-            </h3>
-            <p className="text-slate-600 mb-4">
-              Our team is here to help. Reach out and we&apos;ll get back to you
-              within 24-48 hours.
+          {/* Title block with left accent */}
+          <div className="border-l-4 border-cyan-600 pl-4">
+            <h1 className="font-mono text-2xl sm:text-3xl font-bold text-slate-900">
+              How Can We Help?
+            </h1>
+            <p className="mt-2 text-slate-600">
+              Find answers to common questions, troubleshooting guides, and
+              helpful resources for your StarterSpark robotics kit.
             </p>
-            <Link
-              href="/contact?subject=technical"
-              className="inline-flex items-center gap-2 bg-cyan-700 text-white px-4 py-2 rounded-lg hover:bg-cyan-800 transition-colors"
-            >
-              <Mail className="w-4 h-4" />
-              Contact Support
-            </Link>
           </div>
-        </div>
-      </section>
+        </header>
+
+        {/* Main Content */}
+        <main className="px-6 lg:px-8 pb-16">
+          {/* Quick Links */}
+          <nav aria-label="Quick links" className="mb-10">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Link
+                href="/docs"
+                className="bg-white border border-slate-200 rounded p-5 hover:border-cyan-300 transition-all group"
+              >
+                <div className="w-10 h-10 bg-cyan-50 rounded flex items-center justify-center mb-3 group-hover:bg-cyan-100 transition-colors">
+                  <BookOpen className="w-5 h-5 text-cyan-700" />
+                </div>
+                <h3 className="font-semibold text-slate-900 mb-1">
+                  Documentation
+                </h3>
+                <p className="text-sm text-slate-600">
+                  Complete guides and API reference
+                </p>
+              </Link>
+
+              <Link
+                href="/community"
+                className="bg-white border border-slate-200 rounded p-5 hover:border-cyan-300 transition-all group"
+              >
+                <div className="w-10 h-10 bg-cyan-50 rounded flex items-center justify-center mb-3 group-hover:bg-cyan-100 transition-colors">
+                  <MessageCircle className="w-5 h-5 text-cyan-700" />
+                </div>
+                <h3 className="font-semibold text-slate-900 mb-1">
+                  Community Forum
+                </h3>
+                <p className="text-sm text-slate-600">
+                  Ask questions and share projects
+                </p>
+              </Link>
+
+              <Link
+                href="/contact"
+                className="bg-white border border-slate-200 rounded p-5 hover:border-cyan-300 transition-all group"
+              >
+                <div className="w-10 h-10 bg-cyan-50 rounded flex items-center justify-center mb-3 group-hover:bg-cyan-100 transition-colors">
+                  <Mail className="w-5 h-5 text-cyan-700" />
+                </div>
+                <h3 className="font-semibold text-slate-900 mb-1">
+                  Contact Support
+                </h3>
+                <p className="text-sm text-slate-600">
+                  Get help from our team directly
+                </p>
+              </Link>
+            </div>
+          </nav>
+
+          {/* Troubleshooting Articles */}
+          <section aria-labelledby="troubleshooting-heading">
+            <h2 id="troubleshooting-heading" className="font-mono text-xl font-bold text-slate-900 mb-6">
+              Troubleshooting Guides
+            </h2>
+
+            <Suspense fallback={<ArticlesSkeleton />}>
+              <SupportArticles
+                articlesByCategory={articlesByCategory}
+                categories={CATEGORIES}
+              />
+            </Suspense>
+
+            {/* Can't find answer */}
+            <div className="mt-12 bg-cyan-50 border border-cyan-200 rounded p-6 text-center">
+              <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                Can&apos;t find what you&apos;re looking for?
+              </h3>
+              <p className="text-slate-600 mb-4">
+                Our team is here to help. Reach out and we&apos;ll get back to you
+                within 24-48 hours.
+              </p>
+              <Link
+                href="/contact?subject=technical"
+                className="inline-flex items-center gap-2 bg-cyan-700 text-white px-4 py-2 rounded hover:bg-cyan-600 transition-colors"
+              >
+                <Mail className="w-4 h-4" />
+                Contact Support
+              </Link>
+            </div>
+          </section>
+        </main>
+      </div>
     </div>
   )
 }

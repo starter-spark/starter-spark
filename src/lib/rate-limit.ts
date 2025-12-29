@@ -15,6 +15,7 @@ const multiplier = isDevelopment || isLocalhost ? 10 : 1
 export const rateLimitConfigs = {
   // Sensitive
   claimLicense: { requests: 5 * multiplier, window: '1 m' as const },
+  claimLicenseBatch: { requests: 3 * multiplier, window: '1 m' as const },
   claimByToken: { requests: 5 * multiplier, window: '1 m' as const },
   checkout: { requests: 10 * multiplier, window: '1 m' as const },
   contactUpload: { requests: 5 * multiplier, window: '1 m' as const },
@@ -48,6 +49,8 @@ function getRateLimitConfig(configKey: RateLimitConfig) {
   switch (configKey) {
     case 'claimLicense':
       return rateLimitConfigs.claimLicense
+    case 'claimLicenseBatch':
+      return rateLimitConfigs.claimLicenseBatch
     case 'claimByToken':
       return rateLimitConfigs.claimByToken
     case 'checkout':

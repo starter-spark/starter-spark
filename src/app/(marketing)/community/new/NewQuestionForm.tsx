@@ -92,8 +92,7 @@ export function NewQuestionForm({ products }: NewQuestionFormProps) {
       }
 
       router.push(`/community/${result.postId}`)
-    } catch (err) {
-      console.error('Error:', err)
+    } catch {
       setError('An unexpected error occurred. Please try again.')
     } finally {
       setIsSubmitting(false)

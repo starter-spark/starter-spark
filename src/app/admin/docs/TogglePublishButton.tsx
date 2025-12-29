@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { Eye, EyeOff } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toggleDocPagePublished } from './actions'
@@ -22,12 +23,13 @@ export function TogglePublishButton({
     try {
       const result = await toggleDocPagePublished(pageId, !currentState)
       if (result.error) {
-        alert(`Error: ${result.error}`)
+        toast.error('Failed to update page', { description: result.error })
       } else {
         setCurrentState(!currentState)
+        toast.success(currentState ? 'Page unpublished' : 'Page published')
       }
     } catch {
-      alert('Failed to update page')
+      toast.error('Failed to update page')
     } finally {
       setIsUpdating(false)
     }

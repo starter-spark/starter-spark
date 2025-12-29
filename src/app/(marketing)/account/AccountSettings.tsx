@@ -12,6 +12,16 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Badge } from '@/components/ui/badge'
 import {
   AlertTriangle,
@@ -46,6 +56,9 @@ export function AccountSettings({ user }: AccountSettingsProps) {
     type: 'success' | 'error'
     text: string
   } | null>(null)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [deleteStep, setDeleteStep] = useState<1 | 2>(1)
+  const [confirmText, setConfirmText] = useState('')
 
   const handleUpdateProfile = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -76,25 +89,18 @@ export function AccountSettings({ user }: AccountSettingsProps) {
     setMessage(msg)
   }
 
-  const handleDeleteAccount = async () => {
-    const confirmed = confirm(
-      'Are you absolutely sure you want to delete your account? This action cannot be undone. All your data, including licenses, progress, and forum posts will be permanently deleted.',
-    )
+  const openDeleteDialog = () => {
+    setDeleteStep(1)
+    setConfirmText('')
+    setShowDeleteDialog(true)
+  }
 
-    if (!confirmed) return
-
-    const doubleConfirmed = confirm(
-      "This is your final warning. Type 'DELETE' in the next prompt to confirm.",
-    )
-
-    if (!doubleConfirmed) return
-
-    const typed = prompt('Type DELETE to confirm account deletion:')
-    if (typed !== 'DELETE') {
-      setMessage({ type: 'error', text: 'Account deletion cancelled.' })
+  const handleDeleteConfirm = async () => {
+    if (confirmText !== 'DELETE') {
       return
     }
 
+    setShowDeleteDialog(false)
     setIsDeleting(true)
     setMessage(null)
 
@@ -276,7 +282,7 @@ export function AccountSettings({ user }: AccountSettingsProps) {
             <Button
               variant="outline"
               className="border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700"
-              onClick={() => void handleDeleteAccount()}
+              onClick={openDeleteDialog}
               disabled={isDeleting}
             >
               {isDeleting ? (
@@ -294,6 +300,77 @@ export function AccountSettings({ user }: AccountSettingsProps) {
           </div>
         </CardContent>
       </Card>
+
+      {/* Delete Account Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={(open) => {
+        if (!open) {
+          setShowDeleteDialog(false)
+          setDeleteStep(1)
+          setConfirmText('')
+        }
+      }}>
+        <AlertDialogContent>
+          {deleteStep === 1 ? (
+            <>
+              <AlertDialogHeader>
+                <AlertDialogTitle className="text-red-600">Delete Your Account?</AlertDialogTitle>
+                <AlertDialogDescription className="space-y-2">
+                  <span className="block">
+                    Are you absolutely sure you want to delete your account? This action cannot be undone.
+                  </span>
+                  <span className="block font-medium text-slate-700">
+                    All your data will be permanently deleted, including:
+                  </span>
+                  <ul className="list-disc list-inside text-sm space-y-1">
+                    <li>Your licenses and workshop access</li>
+                    <li>Your learning progress and achievements</li>
+                    <li>Your forum posts and comments</li>
+                  </ul>
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={(e) => {
+                    e.preventDefault()
+                    setDeleteStep(2)
+                  }}
+                  className="bg-red-600 hover:bg-red-700"
+                >
+                  I Understand, Continue
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </>
+          ) : (
+            <>
+              <AlertDialogHeader>
+                <AlertDialogTitle className="text-red-600">Final Confirmation</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This is your final warning. Type <strong>DELETE</strong> below to permanently delete your account.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <div className="py-4">
+                <Input
+                  placeholder="Type DELETE to confirm"
+                  value={confirmText}
+                  onChange={(e) => setConfirmText(e.target.value)}
+                  className="border-red-200 focus:ring-red-500"
+                />
+              </div>
+              <AlertDialogFooter>
+                <AlertDialogCancel onClick={() => setDeleteStep(1)}>Back</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => void handleDeleteConfirm()}
+                  disabled={confirmText !== 'DELETE'}
+                  className="bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Delete Account Forever
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </>
+          )}
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

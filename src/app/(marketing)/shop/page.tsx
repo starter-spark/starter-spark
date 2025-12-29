@@ -119,6 +119,7 @@ export default async function ShopPage() {
       `,
       )
       .in('status', ['active', 'coming_soon'])
+      .limit(50)
 
     if (error) {
       console.error('Error fetching products:', error)

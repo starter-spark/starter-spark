@@ -56,6 +56,12 @@
   /* Light scheme */
   color-scheme: light;
 
+  /* Font stacks */
+  --font-geist-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
+    Helvetica, Arial, sans-serif;
+  --font-geist-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    'Liberation Mono', 'Courier New', monospace;
+
   /* Radius (sharp) */
   --radius: 0.25rem; /* 4px */
 

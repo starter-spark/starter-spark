@@ -71,27 +71,37 @@ function ContactFormSkeleton() {
 
 export default function ContactPage() {
   return (
-    <div className="bg-slate-50">
-      {/* Hero */}
-      <section className="pt-32 pb-16 px-6 lg:px-20">
-        <div className="max-w-4xl mx-auto text-center">
-          <p className="text-sm font-mono text-cyan-700 tracking-wider uppercase mb-4">
-            Contact
-          </p>
-          <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4">
-            Get in Touch
-          </h1>
-          <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-            Have a question, feedback, or want to collaborate? We&apos;d love to
-            hear from you. Fill out the form below and we&apos;ll get back to
-            you as soon as possible.
-          </p>
-        </div>
-      </section>
+    <div className="min-h-screen bg-slate-50">
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <header className="px-6 lg:px-8 pt-8 pb-6">
+          {/* Breadcrumb */}
+          <nav aria-label="Breadcrumb" className="mb-6">
+            <ol className="flex items-center gap-2 text-sm text-slate-500">
+              <li>
+                <a href="/" className="hover:text-cyan-700 transition-colors">
+                  Home
+                </a>
+              </li>
+              <li aria-hidden="true">/</li>
+              <li className="text-slate-900 font-medium">Contact</li>
+            </ol>
+          </nav>
 
-      {/* Main Content */}
-      <section className="pb-24 px-6 lg:px-20">
-        <div className="max-w-6xl mx-auto">
+          {/* Title block with left accent */}
+          <div className="border-l-4 border-cyan-600 pl-4">
+            <h1 className="font-mono text-2xl sm:text-3xl font-bold text-slate-900">
+              Get in Touch
+            </h1>
+            <p className="mt-2 text-slate-600 max-w-xl">
+              Have a question, feedback, or want to collaborate? Fill out the
+              form below and we&apos;ll get back to you as soon as possible.
+            </p>
+          </div>
+        </header>
+
+        {/* Main Content */}
+        <main className="px-6 lg:px-8 pb-16">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
             {/* Contact Form */}
             <div className="lg:col-span-2">
@@ -101,9 +111,9 @@ export default function ContactPage() {
             </div>
 
             {/* Sidebar */}
-            <div className="space-y-6">
+            <aside className="space-y-6">
               {/* Quick Contact Info */}
-              <div className="bg-white border border-slate-200 rounded-lg p-6">
+              <div className="bg-white border border-slate-200 rounded p-6">
                 <h2 className="text-lg font-semibold text-slate-900 mb-4">
                   Other Ways to Reach Us
                 </h2>
@@ -156,7 +166,7 @@ export default function ContactPage() {
               </div>
 
               {/* Social Links */}
-              <div className="bg-white border border-slate-200 rounded-lg p-6">
+              <div className="bg-white border border-slate-200 rounded p-6">
                 <h2 className="text-lg font-semibold text-slate-900 mb-4">
                   Follow Us
                 </h2>
@@ -177,7 +187,7 @@ export default function ContactPage() {
               </div>
 
               {/* Support Link */}
-              <div className="bg-cyan-50 border border-cyan-200 rounded-lg p-6">
+              <div className="bg-cyan-50 border border-cyan-200 rounded p-6">
                 <h2 className="text-lg font-semibold text-slate-900 mb-2">
                   Need Technical Help?
                 </h2>
@@ -192,10 +202,10 @@ export default function ContactPage() {
                   View Support Articles &rarr;
                 </Link>
               </div>
-            </div>
+            </aside>
           </div>
-        </div>
-      </section>
+        </main>
+      </div>
     </div>
   )
 }

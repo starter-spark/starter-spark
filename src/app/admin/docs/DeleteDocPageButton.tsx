@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -32,10 +33,12 @@ export function DeleteDocPageButton({
     try {
       const result = await deleteDocPage(pageId)
       if (result.error) {
-        alert(`Error: ${result.error}`)
+        toast.error('Failed to delete page', { description: result.error })
+      } else {
+        toast.success('Page deleted')
       }
     } catch {
-      alert('Failed to delete page')
+      toast.error('Failed to delete page')
     } finally {
       setIsDeleting(false)
     }
