@@ -3,6 +3,8 @@ import { type Json } from '@/lib/supabase/database.types'
 import { parseJsonOrNdjson, stableEventId, verifyVercelSignature } from '@/lib/vercel/drains'
 import { NextResponse } from 'next/server'
 
+export const runtime = 'nodejs'
+
 export function GET() {
   return NextResponse.json(
     {
@@ -75,53 +77,63 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, inserted: 0 })
   }
 
-  const rows = events
-    .map((event) => {
-      if (!isRecord(event)) return null
+  // Map events to rows and deduplicate by ID (Postgres can't handle duplicate IDs in same upsert)
+  const rowMap = new Map<string, NonNullable<ReturnType<typeof mapEventToRow>>>()
 
-      const id =
-        getString(event.id) ??
-        stableEventId([
-          getString(event.deploymentId),
-          getString(event.source),
-          getNumber(event.timestamp) ?? '',
-          getString(event.level),
-          getString(event.message) ?? '',
-        ])
+  function mapEventToRow(event: unknown) {
+    if (!isRecord(event)) return null
 
-      const tsMs = getNumber(event.timestamp)
-      const timestamp = tsMs ? new Date(tsMs).toISOString() : new Date().toISOString()
+    const id =
+      getString(event.id) ??
+      stableEventId([
+        getString(event.deploymentId),
+        getString(event.source),
+        getNumber(event.timestamp) ?? '',
+        getString(event.level),
+        getString(event.message) ?? '',
+      ])
 
-      return {
-        id,
-        deployment_id: getString(event.deploymentId),
-        source: getString(event.source) ?? 'unknown',
-        host: getString(event.host),
-        timestamp,
-        project_id: getString(event.projectId),
-        level: getString(event.level) ?? 'info',
-        message: getString(event.message),
-        build_id: getString(event.buildId),
-        entrypoint: getString(event.entrypoint),
-        destination: getString(event.destination),
-        path: getString(event.path),
-        type: getString(event.type),
-        status_code: getNumber(event.statusCode),
-        request_id: getString(event.requestId),
-        environment: getString(event.environment),
-        branch: getString(event.branch),
-        ja3_digest: getString(event.ja3Digest),
-        ja4_digest: getString(event.ja4Digest),
-        edge_type: getString(event.edgeType),
-        project_name: getString(event.projectName),
-        execution_region: getString(event.executionRegion),
-        trace_id: getString(event.traceId) ?? getString(event['trace.id']),
-        span_id: getString(event.spanId) ?? getString(event['span.id']),
-        proxy: isRecord(event.proxy) ? asJson(event.proxy) : null,
-        raw: asJson(event),
-      }
-    })
-    .filter((row): row is NonNullable<typeof row> => row !== null)
+    const tsMs = getNumber(event.timestamp)
+    const timestamp = tsMs ? new Date(tsMs).toISOString() : new Date().toISOString()
+
+    return {
+      id,
+      deployment_id: getString(event.deploymentId),
+      source: getString(event.source) ?? 'unknown',
+      host: getString(event.host),
+      timestamp,
+      project_id: getString(event.projectId),
+      level: getString(event.level) ?? 'info',
+      message: getString(event.message),
+      build_id: getString(event.buildId),
+      entrypoint: getString(event.entrypoint),
+      destination: getString(event.destination),
+      path: getString(event.path),
+      type: getString(event.type),
+      status_code: getNumber(event.statusCode),
+      request_id: getString(event.requestId),
+      environment: getString(event.environment),
+      branch: getString(event.branch),
+      ja3_digest: getString(event.ja3Digest),
+      ja4_digest: getString(event.ja4Digest),
+      edge_type: getString(event.edgeType),
+      project_name: getString(event.projectName),
+      execution_region: getString(event.executionRegion),
+      trace_id: getString(event.traceId) ?? getString(event['trace.id']),
+      span_id: getString(event.spanId) ?? getString(event['span.id']),
+      proxy: isRecord(event.proxy) ? asJson(event.proxy) : null,
+      raw: asJson(event),
+    }
+  }
+
+  for (const event of events) {
+    const row = mapEventToRow(event)
+    if (row) {
+      rowMap.set(row.id, row) // Later entries with same ID overwrite earlier ones
+    }
+  }
+
+  const rows = Array.from(rowMap.values())
 
   for (const batch of chunk(rows, 500)) {
     const { error } = await supabaseAnalyticsAdmin

@@ -4,6 +4,8 @@ import { type Json } from '@/lib/supabase/database.types'
 import { parseJsonOrNdjson, stableEventId, verifyVercelSignature } from '@/lib/vercel/drains'
 import { NextResponse } from 'next/server'
 
+export const runtime = 'nodejs'
+
 export function GET() {
   return NextResponse.json(
     {
@@ -85,16 +87,21 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, inserted: 0 })
   }
 
-  const rows = events
-    .map((event, index) => {
-      if (!isRecord(event)) return null
-      return {
-        event_id: stableEventId([contentType, index, JSON.stringify(event)]),
-        content_type: contentType,
-        body_json: asJson(event),
-      }
+  // Deduplicate by event_id (Postgres can't handle duplicate IDs in same upsert)
+  const rowMap = new Map<string, { event_id: string; content_type: string; body_json: Json }>()
+
+  for (const event of events) {
+    if (!isRecord(event)) continue
+    // Use content hash for stable ID instead of index
+    const event_id = stableEventId([contentType, JSON.stringify(event)])
+    rowMap.set(event_id, {
+      event_id,
+      content_type: contentType,
+      body_json: asJson(event),
     })
-    .filter((row): row is NonNullable<typeof row> => row !== null)
+  }
+
+  const rows = Array.from(rowMap.values())
 
   for (const batch of chunk(rows, 500)) {
     const { error } = await supabaseAnalyticsAdmin

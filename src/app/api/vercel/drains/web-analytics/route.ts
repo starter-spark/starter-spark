@@ -3,6 +3,8 @@ import { type Json } from '@/lib/supabase/database.types'
 import { parseJsonOrNdjson, stableEventId, verifyVercelSignature } from '@/lib/vercel/drains'
 import { NextResponse } from 'next/server'
 
+export const runtime = 'nodejs'
+
 export function GET() {
   return NextResponse.json(
     {
@@ -84,81 +86,91 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, inserted: 0 })
   }
 
-  const rows = events
-    .map((event) => {
-      if (!isRecord(event)) return null
+  // Deduplicate by event_id (Postgres can't handle duplicate IDs in same upsert)
+  const rowMap = new Map<string, NonNullable<ReturnType<typeof mapEventToRow>>>()
 
-      const ts = getNumber(event.timestamp)
-      const timestamp = ts ? new Date(ts).toISOString() : new Date().toISOString()
-      const eventType = getString(event.eventType) ?? 'event'
-      const eventName = getString(event.eventName)
-      const eventData = getString(event.eventData)
+  function mapEventToRow(event: unknown) {
+    if (!isRecord(event)) return null
 
-      const sessionId = getNumber(event.sessionId) ?? getString(event.sessionId)
-      const deviceId = getNumber(event.deviceId) ?? getString(event.deviceId)
+    const ts = getNumber(event.timestamp)
+    const timestamp = ts ? new Date(ts).toISOString() : new Date().toISOString()
+    const eventType = getString(event.eventType) ?? 'event'
+    const eventName = getString(event.eventName)
+    const eventData = getString(event.eventData)
 
-      const path = getString(event.path) ?? '/'
-      const origin = getString(event.origin)
+    const sessionId = getNumber(event.sessionId) ?? getString(event.sessionId)
+    const deviceId = getNumber(event.deviceId) ?? getString(event.deviceId)
 
-      const event_id = stableEventId([
-        timestamp,
-        getString(event.projectId) ?? '',
-        eventType,
-        eventName ?? '',
-        path,
-        sessionId ?? '',
-        deviceId ?? '',
-        eventData ?? '',
-      ])
+    const path = getString(event.path) ?? '/'
+    const origin = getString(event.origin)
 
-      const flagsParsed = tryParseJsonString(event.flags)
-      const eventDataParsed = tryParseJsonString(event.eventData)
+    const event_id = stableEventId([
+      timestamp,
+      getString(event.projectId) ?? '',
+      eventType,
+      eventName ?? '',
+      path,
+      sessionId ?? '',
+      deviceId ?? '',
+      eventData ?? '',
+    ])
 
-      return {
-        event_id,
-        schema: getString(event.schema),
-        event_type: eventType,
-        event_name: eventName,
-        event_data: eventData,
-        event_data_json:
-          isRecord(eventDataParsed) || Array.isArray(eventDataParsed)
-            ? asJson(eventDataParsed)
-            : null,
-        timestamp,
-        project_id: getString(event.projectId),
-        owner_id: getString(event.ownerId),
-        data_source_name: getString(event.dataSourceName),
-        session_id: sessionId ? String(sessionId) : null,
-        device_id: deviceId ? String(deviceId) : null,
-        origin,
-        path,
-        referrer: getString(event.referrer),
-        query_params: getString(event.queryParams),
-        route: getString(event.route),
-        country: getString(event.country),
-        region: getString(event.region),
-        city: getString(event.city),
-        os_name: getString(event.osName),
-        os_version: getString(event.osVersion),
-        client_name: getString(event.clientName),
-        client_type: getString(event.clientType),
-        client_version: getString(event.clientVersion),
-        device_type: getString(event.deviceType),
-        device_brand: getString(event.deviceBrand),
-        device_model: getString(event.deviceModel),
-        browser_engine: getString(event.browserEngine),
-        browser_engine_version: getString(event.browserEngineVersion),
-        sdk_name: getString(event.sdkName),
-        sdk_version: getString(event.sdkVersion),
-        sdk_version_full: getString(event.sdkVersionFull),
-        vercel_environment: getString(event.vercelEnvironment),
-        vercel_url: getString(event.vercelUrl),
-        flags: isRecord(flagsParsed) || Array.isArray(flagsParsed) ? asJson(flagsParsed) : null,
-        deployment: getString(event.deployment),
-        raw: asJson(event),
-      }
-    })
-    .filter((row): row is NonNullable<typeof row> => row !== null)
+    const flagsParsed = tryParseJsonString(event.flags)
+    const eventDataParsed = tryParseJsonString(event.eventData)
+
+    return {
+      event_id,
+      schema: getString(event.schema),
+      event_type: eventType,
+      event_name: eventName,
+      event_data: eventData,
+      event_data_json:
+        isRecord(eventDataParsed) || Array.isArray(eventDataParsed)
+          ? asJson(eventDataParsed)
+          : null,
+      timestamp,
+      project_id: getString(event.projectId),
+      owner_id: getString(event.ownerId),
+      data_source_name: getString(event.dataSourceName),
+      session_id: sessionId ? String(sessionId) : null,
+      device_id: deviceId ? String(deviceId) : null,
+      origin,
+      path,
+      referrer: getString(event.referrer),
+      query_params: getString(event.queryParams),
+      route: getString(event.route),
+      country: getString(event.country),
+      region: getString(event.region),
+      city: getString(event.city),
+      os_name: getString(event.osName),
+      os_version: getString(event.osVersion),
+      client_name: getString(event.clientName),
+      client_type: getString(event.clientType),
+      client_version: getString(event.clientVersion),
+      device_type: getString(event.deviceType),
+      device_brand: getString(event.deviceBrand),
+      device_model: getString(event.deviceModel),
+      browser_engine: getString(event.browserEngine),
+      browser_engine_version: getString(event.browserEngineVersion),
+      sdk_name: getString(event.sdkName),
+      sdk_version: getString(event.sdkVersion),
+      sdk_version_full: getString(event.sdkVersionFull),
+      vercel_environment: getString(event.vercelEnvironment),
+      vercel_url: getString(event.vercelUrl),
+      flags: isRecord(flagsParsed) || Array.isArray(flagsParsed) ? asJson(flagsParsed) : null,
+      deployment: getString(event.deployment),
+      raw: asJson(event),
+    }
+  }
+
+  for (const event of events) {
+    const row = mapEventToRow(event)
+    if (row) {
+      rowMap.set(row.event_id, row)
+    }
+  }
+
+  const rows = Array.from(rowMap.values())
 
   for (const batch of chunk(rows, 500)) {
     const { error } = await supabaseAnalyticsAdmin
