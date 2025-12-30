@@ -3,6 +3,25 @@ import { type Json } from '@/lib/supabase/database.types'
 import { parseJsonOrNdjson, stableEventId, verifyVercelSignature } from '@/lib/vercel/drains'
 import { NextResponse } from 'next/server'
 
+export function GET() {
+  return NextResponse.json(
+    {
+      ok: true,
+      endpoint: 'vercel-drains-speed-insights',
+      note: 'Send a POST request from Vercel Drains with x-vercel-signature.',
+    },
+    { status: 200 },
+  )
+}
+
+export function HEAD() {
+  return new NextResponse(null, { status: 200 })
+}
+
+export function OPTIONS() {
+  return new NextResponse(null, { status: 204 })
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null
 }
