@@ -442,6 +442,7 @@ export function LessonEditor({
 
   const [newBlockType, setNewBlockType] = useState('text')
   const [templateId, setTemplateId] = useState<string>('')
+  const [showTemplateConfirm, setShowTemplateConfirm] = useState(false)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   // Track initial state for unsaved changes detection
@@ -606,11 +607,22 @@ export function LessonEditor({
   const applyTemplate = () => {
     const tpl = builtInTemplates.find((t) => t.id === templateId)
     if (!tpl) return
-    if (
-      blocks.length > 0 &&
-      !confirm('Replace current blocks with this template?')
-    )
+
+    // If there are existing blocks, show confirmation dialog
+    if (blocks.length > 0) {
+      setShowTemplateConfirm(true)
       return
+    }
+
+    // Apply directly if no existing blocks
+    applyTemplateConfirm()
+  }
+
+  const applyTemplateConfirm = () => {
+    setShowTemplateConfirm(false)
+    const tpl = builtInTemplates.find((t) => t.id === templateId)
+    if (!tpl) return
+
     // Re-create IDs to avoid collisions across applies
     const next = tpl.blocks.map((b) => ({ ...b, id: randomId() }))
     setBlocks(next)
@@ -1048,6 +1060,26 @@ export function LessonEditor({
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
+
+            {/* Template Confirm Dialog */}
+            <AlertDialog open={showTemplateConfirm} onOpenChange={setShowTemplateConfirm}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Replace current blocks?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will replace all existing content blocks with the selected template.
+                    This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={applyTemplateConfirm}>
+                    Replace
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+
             <Button
               type="submit"
               className="bg-cyan-700 hover:bg-cyan-600"

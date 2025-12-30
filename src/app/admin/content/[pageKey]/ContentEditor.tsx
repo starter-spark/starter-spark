@@ -4,6 +4,7 @@ import { useState, useTransition, type ChangeEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Switch } from '@/components/ui/switch'
 import {
   Card,
   CardContent,
@@ -21,6 +22,8 @@ import {
   Loader2,
   EyeOff,
   Trash2,
+  LayoutList,
+  FileText,
 } from 'lucide-react'
 import Link from 'next/link'
 import {
@@ -43,12 +46,19 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { PageBlockEditor } from './PageBlockEditor'
+import { PageBlockRenderer } from '@/components/content/PageBlockRenderer'
+import { PagePreview } from '@/components/content/PagePreview'
+import type { PageBlock } from '@/types/page-blocks'
 
 interface PageContent {
   id: string
   page_key: string
   title: string
   content: string
+  content_blocks?: unknown[] | null
+  toc_enabled?: boolean | null
+  show_last_updated?: boolean | null
   published_at: string | null
   updated_at: string | null
   version: number | null
@@ -92,6 +102,13 @@ function parseAboutHeroContent(rawContent: string): {
   }
 }
 
+function parseContentBlocks(blocks: unknown): PageBlock[] {
+  if (!Array.isArray(blocks)) return []
+  return blocks.filter(
+    (b): b is PageBlock => isRecord(b) && typeof b.type === 'string',
+  )
+}
+
 export function ContentEditor({ page }: ContentEditorProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -100,9 +117,22 @@ export function ContentEditor({ page }: ContentEditorProps) {
 
   const [title, setTitle] = useState(page.title)
   const [content, setContent] = useState(page.content)
+  const [contentBlocks, setContentBlocks] = useState<PageBlock[]>(
+    parseContentBlocks(page.content_blocks),
+  )
+  const [tocEnabled, setTocEnabled] = useState(page.toc_enabled ?? false)
+  const [showLastUpdated, setShowLastUpdated] = useState(
+    page.show_last_updated ?? true,
+  )
   const [activeTab, setActiveTab] = useState<string>('edit')
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [showUnpublishDialog, setShowUnpublishDialog] = useState(false)
+
+  // For custom pages, determine if using blocks or markdown
+  const hasBlocks = contentBlocks.length > 0
+  const [editorMode, setEditorMode] = useState<'markdown' | 'blocks'>(
+    hasBlocks ? 'blocks' : 'markdown',
+  )
 
   // Custom page state
   const isCustomPage = page.is_custom_page === true
@@ -134,6 +164,9 @@ export function ContentEditor({ page }: ContentEditorProps) {
       const result = await updatePageContent(page.page_key, {
         title,
         content,
+        contentBlocks: editorMode === 'blocks' ? contentBlocks : [],
+        tocEnabled,
+        showLastUpdated,
         publish,
       })
 
@@ -247,25 +280,95 @@ export function ContentEditor({ page }: ContentEditorProps) {
         </div>
       )}
 
+      {/* Page Settings (for custom pages) */}
+      {isCustomPage && (
+        <Card className="bg-white border-slate-200">
+          <CardHeader>
+            <CardTitle>Page Settings</CardTitle>
+            <CardDescription>
+              Configure display options for this page.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <label className={adminLabelClass}>Table of Contents</label>
+                <p className="text-xs text-slate-500">
+                  Show a navigation sidebar with headings
+                </p>
+              </div>
+              <Switch
+                checked={tocEnabled}
+                onCheckedChange={setTocEnabled}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <div>
+                <label className={adminLabelClass}>Show Last Updated</label>
+                <p className="text-xs text-slate-500">
+                  Display when the page was last updated
+                </p>
+              </div>
+              <Switch
+                checked={showLastUpdated}
+                onCheckedChange={setShowLastUpdated}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Editor */}
       <Card className="bg-white border-slate-200">
         <CardHeader>
-          <CardTitle>
-            {isAboutHero ? 'About Page Hero' : 'Page Content'}
-          </CardTitle>
-          <CardDescription>
-            {isAboutHero
-              ? 'Edit the headline and description that appear at the top of the About page.'
-              : 'Edit the content using Markdown. Use the Preview tab to see how it will look.'}
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>
+                {isAboutHero ? 'About Page Hero' : 'Page Content'}
+              </CardTitle>
+              <CardDescription>
+                {isAboutHero
+                  ? 'Edit the headline and description that appear at the top of the About page.'
+                  : isCustomPage
+                    ? 'Build your page with rich content blocks or use Markdown.'
+                    : 'Edit the content using Markdown. Use the Preview tab to see how it will look.'}
+              </CardDescription>
+            </div>
+            {/* Editor Mode Toggle for custom pages */}
+            {isCustomPage && !isAboutHero && (
+              <div className="flex items-center gap-2 border border-slate-200 rounded-lg p-1">
+                <button
+                  type="button"
+                  onClick={() => setEditorMode('markdown')}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${
+                    editorMode === 'markdown'
+                      ? 'bg-slate-100 text-slate-900'
+                      : 'text-slate-500 hover:text-slate-700'
+                  }`}
+                >
+                  <FileText className="w-4 h-4" />
+                  Markdown
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEditorMode('blocks')}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${
+                    editorMode === 'blocks'
+                      ? 'bg-slate-100 text-slate-900'
+                      : 'text-slate-500 hover:text-slate-700'
+                  }`}
+                >
+                  <LayoutList className="w-4 h-4" />
+                  Blocks
+                </button>
+              </div>
+            )}
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Title */}
           <div className="space-y-2">
-            <label
-              htmlFor="title"
-              className={adminLabelClass}
-            >
+            <label htmlFor="title" className={adminLabelClass}>
               Page Title
             </label>
             <Input
@@ -282,10 +385,7 @@ export function ContentEditor({ page }: ContentEditorProps) {
           {isAboutHero ? (
             <div className="space-y-4">
               <div className="space-y-2">
-                <label
-                  htmlFor="hero-headline"
-                  className={adminLabelClass}
-                >
+                <label htmlFor="hero-headline" className={adminLabelClass}>
                   Headline
                 </label>
                 <p className="text-xs text-slate-500">
@@ -305,10 +405,7 @@ export function ContentEditor({ page }: ContentEditorProps) {
                 />
               </div>
               <div className="space-y-2">
-                <label
-                  htmlFor="hero-description"
-                  className={adminLabelClass}
-                >
+                <label htmlFor="hero-description" className={adminLabelClass}>
                   Description
                 </label>
                 <AdminTextArea
@@ -346,12 +443,54 @@ export function ContentEditor({ page }: ContentEditorProps) {
                 </p>
               </div>
             </div>
+          ) : isCustomPage && editorMode === 'blocks' ? (
+            /* Block Editor for custom pages */
+            <div className="space-y-4">
+              <Tabs value={activeTab} onValueChange={setActiveTab}>
+                <TabsList>
+                  <TabsTrigger value="edit">Edit Blocks</TabsTrigger>
+                  <TabsTrigger value="preview">
+                    <Eye className="h-4 w-4 mr-2" />
+                    Preview
+                  </TabsTrigger>
+                  <TabsTrigger value="page-preview">
+                    <LayoutList className="h-4 w-4 mr-2" />
+                    Page Preview
+                  </TabsTrigger>
+                </TabsList>
+                <TabsContent value="edit" className="mt-4">
+                  <PageBlockEditor
+                    blocks={contentBlocks}
+                    onChange={setContentBlocks}
+                  />
+                </TabsContent>
+                <TabsContent value="preview" className="mt-4">
+                  <div className="w-full min-h-[400px] p-6 border border-slate-200 rounded-md bg-slate-50">
+                    {contentBlocks.length > 0 ? (
+                      <PageBlockRenderer blocks={contentBlocks} />
+                    ) : (
+                      <p className="text-slate-500 text-center py-8">
+                        No blocks to preview. Add some blocks in the Edit tab.
+                      </p>
+                    )}
+                  </div>
+                </TabsContent>
+                <TabsContent value="page-preview" className="mt-4">
+                  <PagePreview
+                    title={title}
+                    blocks={contentBlocks}
+                    markdownContent={content}
+                    tocEnabled={tocEnabled}
+                    showLastUpdated={showLastUpdated}
+                    editorMode={editorMode}
+                  />
+                </TabsContent>
+              </Tabs>
+            </div>
           ) : (
             /* Content Editor with Tabs for markdown pages */
             <div className="space-y-2">
-              <label className={adminLabelClass}>
-                Content (Markdown)
-              </label>
+              <label className={adminLabelClass}>Content (Markdown)</label>
               <Tabs value={activeTab} onValueChange={setActiveTab}>
                 <TabsList>
                   <TabsTrigger value="edit">Edit</TabsTrigger>
@@ -359,6 +498,12 @@ export function ContentEditor({ page }: ContentEditorProps) {
                     <Eye className="h-4 w-4 mr-2" />
                     Preview
                   </TabsTrigger>
+                  {isCustomPage && (
+                    <TabsTrigger value="page-preview">
+                      <LayoutList className="h-4 w-4 mr-2" />
+                      Page Preview
+                    </TabsTrigger>
+                  )}
                 </TabsList>
                 <TabsContent value="edit" className="mt-2">
                   <AdminTextArea
@@ -375,6 +520,18 @@ export function ContentEditor({ page }: ContentEditorProps) {
                     <MarkdownPreview content={content} />
                   </div>
                 </TabsContent>
+                {isCustomPage && (
+                  <TabsContent value="page-preview" className="mt-2">
+                    <PagePreview
+                      title={title}
+                      blocks={contentBlocks}
+                      markdownContent={content}
+                      tocEnabled={tocEnabled}
+                      showLastUpdated={showLastUpdated}
+                      editorMode={editorMode}
+                    />
+                  </TabsContent>
+                )}
               </Tabs>
             </div>
           )}

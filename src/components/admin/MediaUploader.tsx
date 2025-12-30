@@ -195,7 +195,8 @@ export function MediaUploader({
           })
 
         if (error) {
-          console.error('Upload error:', error)
+          // Don't log full error to console (could contain path info)
+          setErrorMessage('Upload failed. Please try again.')
           return null
         }
 
@@ -215,8 +216,8 @@ export function MediaUploader({
           sort_order: media.length,
           isNew: true,
         }
-      } catch (err) {
-        console.error('Upload failed:', err)
+      } catch {
+        // Don't log full error to console (could contain path info)
         setErrorMessage('Upload failed. Please try again.')
         return null
       } finally {

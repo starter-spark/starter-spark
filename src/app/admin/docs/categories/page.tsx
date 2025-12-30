@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { toast } from 'sonner'
 import {
   ArrowLeft,
   Plus,
@@ -12,6 +13,16 @@ import {
   FolderOpen,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -38,6 +49,7 @@ export default function AdminDocCategoriesPage() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [isCreating, setIsCreating] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null)
 
   // Form state
   const [formData, setFormData] = useState({
@@ -108,16 +120,18 @@ export default function AdminDocCategoriesPage() {
       if (isCreating) {
         const result = await createCategory(data)
         if (result.error) {
-          alert(result.error)
+          toast.error('Failed to create category', { description: result.error })
         } else {
+          toast.success('Category created')
           await loadCategories()
           cancelEdit()
         }
       } else if (editingId) {
         const result = await updateCategory(editingId, data)
         if (result.error) {
-          alert(result.error)
+          toast.error('Failed to update category', { description: result.error })
         } else {
+          toast.success('Category updated')
           await loadCategories()
           cancelEdit()
         }
@@ -127,19 +141,15 @@ export default function AdminDocCategoriesPage() {
     }
   }
 
-  async function handleDelete(id: string, name: string) {
-    if (
-      !confirm(
-        `Delete category "${name}"? All pages in this category will also be deleted.`,
-      )
-    ) {
-      return
-    }
+  async function handleDeleteConfirm() {
+    if (!deleteTarget) return
 
-    const result = await deleteCategory(id)
+    const result = await deleteCategory(deleteTarget.id)
+    setDeleteTarget(null)
     if (result.error) {
-      alert(result.error)
+      toast.error('Failed to delete category', { description: result.error })
     } else {
+      toast.success('Category deleted')
       await loadCategories()
     }
   }
@@ -325,7 +335,7 @@ export default function AdminDocCategoriesPage() {
                   variant="ghost"
                   size="sm"
                   className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                  onClick={() => void handleDelete(category.id, category.name)}
+                  onClick={() => setDeleteTarget({ id: category.id, name: category.name })}
                 >
                   <Trash2 className="w-4 h-4" />
                 </Button>
@@ -334,6 +344,27 @@ export default function AdminDocCategoriesPage() {
           ))}
         </div>
       )}
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete category &ldquo;{deleteTarget?.name}&rdquo;?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. All pages in this category will also
+              be permanently deleted.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => void handleDeleteConfirm()}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

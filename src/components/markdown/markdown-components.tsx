@@ -1,7 +1,30 @@
-import type { ComponentPropsWithoutRef } from 'react'
+import { Children, isValidElement, type ComponentPropsWithoutRef, type ReactNode } from 'react'
 import type { Components } from 'react-markdown'
 import { isExternalHref, sanitizeMarkdownUrl } from '@/lib/safe-url'
 import { cn } from '@/lib/utils'
+
+// Extract text content from React children for generating IDs
+function getTextContent(children: ReactNode): string {
+  let text = ''
+  Children.forEach(children, (child) => {
+    if (typeof child === 'string' || typeof child === 'number') {
+      text += child
+    } else if (isValidElement<{ children?: ReactNode }>(child) && child.props.children) {
+      text += getTextContent(child.props.children)
+    }
+  })
+  return text
+}
+
+// Generate anchor ID from text
+function generateAnchor(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+}
 
 type MarkdownComponentStyles = {
   link?: string
@@ -46,9 +69,15 @@ export function createMarkdownComponents(
     <h2 className={cn(styles.h1, className)}>{children}</h2>
   )
 
-  const H2 = ({ children, className }: ComponentPropsWithoutRef<'h2'>) => (
-    <h3 className={cn(styles.h2, className)}>{children}</h3>
-  )
+  const H2 = ({ children, className }: ComponentPropsWithoutRef<'h2'>) => {
+    const text = getTextContent(children)
+    const id = generateAnchor(text)
+    return (
+      <h3 id={id} className={cn(styles.h2, 'scroll-mt-24', className)}>
+        {children}
+      </h3>
+    )
+  }
 
   const H3 = ({ children, className }: ComponentPropsWithoutRef<'h3'>) => (
     <h4 className={cn(styles.h3, className)}>{children}</h4>

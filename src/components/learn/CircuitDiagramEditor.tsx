@@ -605,8 +605,7 @@ export function CircuitDiagramEditor({
     setSelectedId(null)
   }
 
-  const exportSVG = () => {
-    // Export circuit as JSON for now (SVG export would require more work)
+  const exportJSON = () => {
     const data = JSON.stringify({ nodes, edges }, null, 2)
     const blob = new Blob([data], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
@@ -617,6 +616,42 @@ export function CircuitDiagramEditor({
     a.click()
     a.remove()
     URL.revokeObjectURL(url)
+  }
+
+  const exportAsImage = async () => {
+    // Find the ReactFlow viewport element
+    const viewport = document.querySelector('.react-flow__viewport') as HTMLElement
+    if (!viewport) return
+
+    try {
+      // Dynamic import of html-to-image to avoid SSR issues
+      const { toPng } = await import('html-to-image')
+
+      const dataUrl = await toPng(viewport, {
+        backgroundColor: '#ffffff',
+        pixelRatio: 2,
+        filter: (node: Element) => {
+          // Filter out controls and minimap
+          const className = (node as HTMLElement).className
+          if (typeof className === 'string') {
+            if (className.includes('react-flow__controls')) return false
+            if (className.includes('react-flow__minimap')) return false
+          }
+          return true
+        },
+      })
+
+      const a = document.createElement('a')
+      a.href = dataUrl
+      a.download = 'circuit-diagram.png'
+      document.body.append(a)
+      a.click()
+      a.remove()
+    } catch (error) {
+      console.error('Failed to export image:', error)
+      // Fallback to JSON export
+      exportJSON()
+    }
   }
 
   return (
@@ -718,8 +753,9 @@ export function CircuitDiagramEditor({
                   type="button"
                   variant="ghost"
                   size="sm"
-                  onClick={exportSVG}
+                  onClick={() => void exportAsImage()}
                   className="h-7 w-7 p-0"
+                  title="Export as PNG"
                 >
                   <Download className="h-4 w-4" />
                 </Button>

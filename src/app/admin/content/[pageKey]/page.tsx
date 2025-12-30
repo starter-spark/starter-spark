@@ -27,9 +27,15 @@ export default async function EditContentPage({
 
   if (!page) notFound()
 
+  // Transform Supabase Json type to compatible format
+  const transformedPage = {
+    ...page,
+    content_blocks: Array.isArray(page.content_blocks) ? page.content_blocks : null,
+  }
+
   return (
     <div className="space-y-6">
-      <ContentEditor page={page} />
+      <ContentEditor page={transformedPage} />
     </div>
   )
 }

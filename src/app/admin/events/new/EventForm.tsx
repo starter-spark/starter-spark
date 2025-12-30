@@ -152,8 +152,8 @@ export function EventForm() {
               >
                 <option value="workshop">Workshop</option>
                 <option value="meetup">Meetup</option>
-                <option value="conference">Conference</option>
-                <option value="hackathon">Hackathon</option>
+                <option value="competition">Competition</option>
+                <option value="exhibition">Exhibition</option>
                 <option value="other">Other</option>
               </AdminSelect>
             </div>

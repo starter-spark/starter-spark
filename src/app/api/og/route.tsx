@@ -75,6 +75,22 @@ function sanitizeOgImageUrl(value: string | null): string | null {
   return url.toString()
 }
 
+// Fetch font with timeout and error handling
+async function fetchFont(url: string, timeoutMs = 5000): Promise<ArrayBuffer> {
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
+
+  try {
+    const response = await fetch(url, { signal: controller.signal })
+    if (!response.ok) {
+      throw new Error(`Font fetch failed: ${response.status}`)
+    }
+    return await response.arrayBuffer()
+  } finally {
+    clearTimeout(timeoutId)
+  }
+}
+
 export async function GET(request: NextRequest) {
   const rateLimitResponse = await rateLimit(request, 'ogImage')
   if (rateLimitResponse) return rateLimitResponse
@@ -89,22 +105,37 @@ export async function GET(request: NextRequest) {
   const type = searchParams.get('type') || 'default' // default, product, event, post
   const imageUrl = sanitizeOgImageUrl(searchParams.get('image')) // Optional product/event image
 
-  // Load fonts
+  // Load fonts with error handling
   const fontOrigin = 'https://fonts.gstatic.com'
   const geistMonoFile = ['X7nN4b87', 'HvSqjb_W', 'IjL4c1vkAQ', '.woff2'].join(
     '',
   )
   const geistSansFile = ['X7ni4bMx', 'S0VlCqOW', 'fSU', '.woff2'].join('')
 
-  const geistMono = await fetch(
-    new URL(['s', 'geistmono', 'v1', geistMonoFile].join('/'), fontOrigin),
-  ).then((res) => res.arrayBuffer())
+  let geistMono: ArrayBuffer
+  let geistSans: ArrayBuffer
 
-  const geistSans = await fetch(
-    new URL(['s', 'geist', 'v1', geistSansFile].join('/'), fontOrigin),
-  ).then((res) => res.arrayBuffer())
+  try {
+    ;[geistMono, geistSans] = await Promise.all([
+      fetchFont(
+        new URL(['s', 'geistmono', 'v1', geistMonoFile].join('/'), fontOrigin).toString(),
+      ),
+      fetchFont(
+        new URL(['s', 'geist', 'v1', geistSansFile].join('/'), fontOrigin).toString(),
+      ),
+    ])
+  } catch {
+    // Font fetch failed - return a simple error response instead of crashing
+    return new Response('Failed to load fonts for OG image', {
+      status: 503,
+      headers: { 'Retry-After': '60' },
+    })
+  }
 
-  return new ImageResponse(
+  // Wrap ImageResponse in try-catch to handle generation errors gracefully
+  // This prevents "failed to pipe response" errors when the connection closes
+  try {
+    return new ImageResponse(
     <div
       style={{
         height: '100%',
@@ -355,4 +386,10 @@ export async function GET(request: NextRequest) {
       ],
     },
   )
+  } catch {
+    // Image generation failed - return a simple error response
+    return new Response('Failed to generate OG image', {
+      status: 500,
+    })
+  }
 }

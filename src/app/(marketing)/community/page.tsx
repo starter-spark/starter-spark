@@ -1,26 +1,42 @@
 import { createClient } from '@/lib/supabase/server'
-import { formatRelativeTime } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { UserAvatar } from '@/components/ui/user-avatar'
-import {
-  CheckCircle2,
-  Circle,
-  MessageSquare,
-  Plus,
-  Eye,
-  ChevronUp,
-} from 'lucide-react'
+import { Plus } from 'lucide-react'
 import Link from 'next/link'
 import { ForumFilters } from './ForumFilters'
+import { PostsList, type Post } from './PostsList'
 import { Suspense } from 'react'
 import { getContents } from '@/lib/content'
 import type { Metadata } from 'next'
 import { siteConfig } from '@/config/site'
 import { resolveParams, type MaybePromise } from '@/lib/next-params'
 
+const ITEMS_PER_PAGE = 10
+
 const pageTitle = 'The Lab - Community Q&A'
 const pageDescription =
   'Get help from the StarterSpark community. Ask questions, share solutions, and connect with other builders.'
+
+function formatUpstreamError(error: unknown): string {
+  const raw =
+    error instanceof Error
+      ? error.message
+      : error && typeof error === 'object' && 'message' in error
+        ? String((error as { message: unknown }).message)
+        : typeof error === 'string'
+          ? error
+          : (() => {
+              try {
+                return JSON.stringify(error)
+              } catch {
+                return String(error)
+              }
+            })()
+
+  const message = raw.replace(/\s+/g, ' ').trim()
+  if (!message) return 'Unknown error'
+  if (/(<!doctype html|<html)/i.test(message)) return 'Upstream returned HTML'
+  return message.length > 300 ? message.slice(0, 300) + '...' : message
+}
 
 export const metadata: Metadata = {
   title: pageTitle,
@@ -90,25 +106,9 @@ export default async function CommunityPage({
     },
   )
 
-  let posts: {
-    id: string
-    slug: string | null
-    title: string
-    status: string | null
-    tags: string[] | null
-    upvotes: number | null
-    view_count: number | null
-    created_at: string
-    author: {
-      id: string
-      full_name: string | null
-      email: string
-      role: string | null
-    } | null
-    product: { id: string; name: string; slug: string } | null
-    comments: { id: string }[]
-  }[] = []
+  let posts: Post[] = []
   let products: { id: string; name: string; slug: string }[] = []
+  let totalCount = 0
 
   try {
     // Fetch posts with author info and comment count
@@ -156,14 +156,25 @@ export default async function CommunityPage({
       query = query.ilike('title', `%${searchQuery}%`)
     }
 
-    const { data: postData, error } = await query.limit(50)
+    // Get total count first
+    let countQuery = supabase
+      .from('posts')
+      .select('id', { count: 'exact', head: true })
+    if (statusFilter) countQuery = countQuery.eq('status', statusFilter)
+    if (tagFilter) countQuery = countQuery.contains('tags', [tagFilter])
+    if (searchQuery) countQuery = countQuery.ilike('title', `%${searchQuery}%`)
+    const { count } = await countQuery
+    totalCount = count || 0
+
+    // Apply pagination - only fetch first page for initial render
+    const { data: postData, error } = await query.range(0, ITEMS_PER_PAGE - 1)
 
     if (error) {
-      console.error('Error fetching posts:', error)
+      console.error('Error fetching posts:', formatUpstreamError(error))
     }
-    posts = (postData as typeof posts) || []
+    posts = (postData as Post[]) || []
   } catch (error) {
-    console.error('Error fetching posts:', error)
+    console.error('Error fetching posts:', formatUpstreamError(error))
   }
 
   try {
@@ -173,7 +184,7 @@ export default async function CommunityPage({
       .order('name')
     products = (productData as typeof products) || []
   } catch (error) {
-    console.error('Error fetching products:', error)
+    console.error('Error fetching products:', formatUpstreamError(error))
   }
 
   // Get unique tags from posts
@@ -184,26 +195,39 @@ export default async function CommunityPage({
   const availableTags = Array.from(allTags).sort()
 
   return (
-    <div className="bg-slate-50">
-      {/* Hero */}
-      <section className="pt-32 pb-8 px-6 lg:px-20">
-        <div className="max-w-7xl mx-auto">
-          <p className="text-sm font-mono text-cyan-700 mb-2">Community</p>
-          <h1 className="font-mono text-4xl lg:text-5xl font-bold text-slate-900 mb-4 break-words">
-            {content['community.header.title']}
-          </h1>
-          <p className="text-lg text-slate-600 max-w-2xl break-words">
-            {content['community.header.description']}
-          </p>
-        </div>
-      </section>
+    <div className="min-h-screen bg-slate-50">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <header className="px-6 lg:px-8 pt-8 pb-6">
+          {/* Breadcrumb */}
+          <nav aria-label="Breadcrumb" className="mb-6">
+            <ol className="flex items-center gap-2 text-sm text-slate-500">
+              <li>
+                <Link href="/" className="hover:text-cyan-700 transition-colors">
+                  Home
+                </Link>
+              </li>
+              <li aria-hidden="true">/</li>
+              <li className="text-slate-900 font-medium">Community</li>
+            </ol>
+          </nav>
 
-      {/* Main Content */}
-      <section className="pb-24 px-6 lg:px-20">
-        <div className="max-w-7xl mx-auto">
+          {/* Title block with left accent */}
+          <div className="border-l-4 border-cyan-600 pl-4">
+            <h1 className="font-mono text-2xl sm:text-3xl font-bold text-slate-900">
+              {content['community.header.title']}
+            </h1>
+            <p className="mt-2 text-slate-600 max-w-xl">
+              {content['community.header.description']}
+            </p>
+          </div>
+        </header>
+
+        {/* Main Content */}
+        <main className="px-6 lg:px-8 pb-16">
           <div className="flex flex-col lg:flex-row gap-8">
             {/* Sidebar */}
-            <div className="w-full lg:w-64 flex-shrink-0">
+            <aside className="w-full lg:w-64 flex-shrink-0">
               {/* Ask Question CTA */}
               <Button
                 asChild
@@ -230,159 +254,24 @@ export default async function CommunityPage({
                   currentSearch={searchQuery}
                 />
               </Suspense>
-            </div>
+            </aside>
 
             {/* Question List */}
-            <div className="flex-1">
-              {/* Results Header */}
-              <div className="flex items-center justify-between mb-6">
-                <p className="text-sm text-slate-500 font-mono">
-                  {posts?.length || 0} questions
-                </p>
-              </div>
-
-              {/* Questions */}
-              {posts && posts.length > 0 ? (
-                <div className="space-y-4">
-                  {posts.map((post) => {
-                    const author = post.author as unknown as {
-                      id: string
-                      full_name: string | null
-                      email: string
-                      role: string | null
-                      avatar_url: string | null
-                      avatar_seed: string | null
-                    } | null
-                    const commentCount =
-                      (post.comments as unknown as { id: string }[])?.length ||
-                      0
-
-                    return (
-                      <Link
-                        key={post.id}
-                        href={`/community/${post.id}`}
-                        className="block"
-                      >
-                        <article className="bg-white border border-slate-200 rounded p-6 hover:border-cyan-300 transition-colors">
-                          <div className="flex gap-4">
-                            {/* Vote/Status Column */}
-                            <div className="flex flex-col items-center gap-2 text-center min-w-[60px]">
-                              <div className="flex items-center gap-1 text-slate-500">
-                                <ChevronUp className="w-4 h-4" />
-                                <span className="font-mono text-sm">
-                                  {post.upvotes || 0}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-1 text-slate-500">
-                                <MessageSquare className="w-4 h-4" />
-                                <span className="font-mono text-sm">
-                                  {commentCount}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-1 text-slate-500">
-                                <Eye className="w-3 h-3" />
-                                <span className="font-mono text-xs">
-                                  {post.view_count}
-                                </span>
-                              </div>
-                            </div>
-
-                            {/* Content */}
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-start gap-2 mb-2">
-                                {/* Status Badge */}
-                                {post.status === 'solved' ? (
-                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 text-xs font-mono rounded">
-                                    <CheckCircle2 className="w-3 h-3" />
-                                    Solved
-                                  </span>
-                                ) : (
-                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 text-slate-600 text-xs font-mono rounded">
-                                    <Circle className="w-3 h-3" />
-                                    Open
-                                  </span>
-                                )}
-
-                                {/* Title */}
-                                <h2 className="font-mono text-lg text-slate-900 hover:text-cyan-700 truncate">
-                                  {post.title}
-                                </h2>
-                              </div>
-
-                              {/* Tags */}
-                              {post.tags && post.tags.length > 0 && (
-                                <div className="flex flex-wrap gap-2 mb-3">
-                                  {post.tags.map((tag) => (
-                                    <span
-                                      key={tag}
-                                      className="px-2 py-0.5 bg-slate-100 text-slate-600 text-xs font-mono rounded"
-                                    >
-                                      #{tag}
-                                    </span>
-                                  ))}
-                                </div>
-                              )}
-
-                              {/* Meta */}
-                              <div className="flex items-center gap-2 text-sm text-slate-500">
-                                <UserAvatar
-                                  user={{
-                                    id: author?.id || post.id,
-                                    full_name: author?.full_name,
-                                    email: author?.email,
-                                    avatar_url: author?.avatar_url,
-                                    avatar_seed: author?.avatar_seed,
-                                  }}
-                                  size="sm"
-                                />
-                                <span>
-                                  {author?.full_name ||
-                                    author?.email?.split('@')[0] ||
-                                    'Anonymous'}
-                                </span>
-                                {author?.role &&
-                                  ['admin', 'staff'].includes(author.role) && (
-                                    <span className="px-1.5 py-0.5 bg-cyan-100 text-cyan-700 text-xs font-mono rounded">
-                                      Staff
-                                    </span>
-                                  )}
-                                <span className="text-slate-300">·</span>
-                                <span>
-                                  {post.created_at &&
-                                    formatRelativeTime(post.created_at)}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        </article>
-                      </Link>
-                    )
-                  })}
-                </div>
-              ) : (
-                <div className="bg-white border border-slate-200 rounded p-12 text-center">
-                  <MessageSquare className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-                  <p className="font-mono text-lg font-semibold text-slate-900 mb-2">
-                    No questions yet
-                  </p>
-                  <p className="text-slate-600 mb-6">
-                    {content['community.empty']}
-                  </p>
-                  <Button
-                    asChild
-                    className="bg-cyan-700 hover:bg-cyan-600 text-white font-mono"
-                  >
-                    <Link href="/community/new">
-                      <Plus className="w-4 h-4 mr-2" />
-                      Ask a Question
-                    </Link>
-                  </Button>
-                </div>
-              )}
-            </div>
+            <section aria-label="Discussion posts" className="flex-1 min-w-0">
+              <PostsList
+                initialPosts={posts}
+                totalCount={totalCount}
+                itemsPerPage={ITEMS_PER_PAGE}
+                emptyMessage={content['community.empty']}
+                statusFilter={statusFilter}
+                tagFilter={tagFilter}
+                productFilter={params.product}
+                searchQuery={searchQuery}
+              />
+            </section>
           </div>
-        </div>
-      </section>
+        </main>
+      </div>
     </div>
   )
 }

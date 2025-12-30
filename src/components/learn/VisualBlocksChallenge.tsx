@@ -38,7 +38,7 @@ export function VisualBlocksChallenge({
 
   return (
     <div className="my-8 space-y-4">
-      <div className="rounded-lg border border-slate-200 bg-white p-4">
+      <div className="rounded border border-slate-200 bg-white p-4">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
           <div>
             <h3 className="font-mono text-lg font-semibold text-slate-900">
@@ -85,7 +85,7 @@ export function VisualBlocksChallenge({
           value={flow}
           onChange={setFlow}
           className="mt-2"
-          height={520}
+          height="clamp(520px, 70vh, 760px)"
         />
       </div>
     </div>

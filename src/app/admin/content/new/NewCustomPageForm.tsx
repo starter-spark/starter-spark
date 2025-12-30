@@ -4,6 +4,7 @@ import { useState, useTransition, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Switch } from '@/components/ui/switch'
 import {
   Card,
   CardContent,
@@ -20,6 +21,8 @@ import {
   CheckCircle,
   Loader2,
   AlertCircle,
+  LayoutList,
+  FileText,
 } from 'lucide-react'
 import Link from 'next/link'
 import { createCustomPage, checkSlugAvailability } from '../actions'
@@ -29,6 +32,10 @@ import {
   adminHelperTextClass,
   adminLabelClass,
 } from '@/components/admin/form-controls'
+import { PageBlockEditor } from '../[pageKey]/PageBlockEditor'
+import { PageBlockRenderer } from '@/components/content/PageBlockRenderer'
+import { PagePreview } from '@/components/content/PagePreview'
+import type { PageBlock } from '@/types/page-blocks'
 
 function generateSlug(title: string): string {
   return title
@@ -49,6 +56,10 @@ export function NewCustomPageForm() {
   const [slugError, setSlugError] = useState<string | null>(null)
   const [slugChecking, setSlugChecking] = useState(false)
   const [content, setContent] = useState('')
+  const [contentBlocks, setContentBlocks] = useState<PageBlock[]>([])
+  const [editorMode, setEditorMode] = useState<'markdown' | 'blocks'>('markdown')
+  const [tocEnabled, setTocEnabled] = useState(false)
+  const [showLastUpdated, setShowLastUpdated] = useState(true)
   const [seoTitle, setSeoTitle] = useState('')
   const [seoDescription, setSeoDescription] = useState('')
   const [activeTab, setActiveTab] = useState<string>('edit')
@@ -115,8 +126,14 @@ export function NewCustomPageForm() {
       return
     }
 
-    if (!content.trim()) {
+    // Validate content based on mode
+    if (editorMode === 'markdown' && !content.trim()) {
       setError('Content is required')
+      return
+    }
+
+    if (editorMode === 'blocks' && contentBlocks.length === 0) {
+      setError('At least one content block is required')
       return
     }
 
@@ -124,7 +141,10 @@ export function NewCustomPageForm() {
       const result = await createCustomPage({
         title: title.trim(),
         slug: slug.trim(),
-        content: content.trim(),
+        content: editorMode === 'markdown' ? content.trim() : '',
+        contentBlocks: editorMode === 'blocks' ? contentBlocks : [],
+        tocEnabled,
+        showLastUpdated,
         seoTitle: seoTitle.trim() || undefined,
         seoDescription: seoDescription.trim() || undefined,
         publish,
@@ -240,31 +260,146 @@ export function NewCustomPageForm() {
         </CardContent>
       </Card>
 
-      {/* Content Editor */}
+      {/* Page Settings */}
       <Card className="bg-white border-slate-200">
         <CardHeader>
-          <CardTitle>Page Content</CardTitle>
+          <CardTitle>Page Settings</CardTitle>
           <CardDescription>
-            Write your page content using Markdown.
+            Configure display options for this page.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList>
-              <TabsTrigger value="edit">Edit</TabsTrigger>
-              <TabsTrigger value="preview">
-                <Eye className="h-4 w-4 mr-2" />
-                Preview
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent value="edit" className="mt-2">
-              <AdminTextArea
-                value={content}
-                onChange={(e) => {
-                  setContent(e.target.value)
-                }}
-                className="h-[400px] font-mono p-4"
-                placeholder="# Your Page Title
+          <div className="flex items-center justify-between">
+            <div>
+              <label className={adminLabelClass}>Table of Contents</label>
+              <p className="text-xs text-slate-500">
+                Show a navigation sidebar with headings
+              </p>
+            </div>
+            <Switch
+              checked={tocEnabled}
+              onCheckedChange={setTocEnabled}
+            />
+          </div>
+          <div className="flex items-center justify-between">
+            <div>
+              <label className={adminLabelClass}>Show Last Updated</label>
+              <p className="text-xs text-slate-500">
+                Display when the page was last updated
+              </p>
+            </div>
+            <Switch
+              checked={showLastUpdated}
+              onCheckedChange={setShowLastUpdated}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Content Editor */}
+      <Card className="bg-white border-slate-200">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Page Content</CardTitle>
+              <CardDescription>
+                Build your page with rich content blocks or use Markdown.
+              </CardDescription>
+            </div>
+            {/* Editor Mode Toggle */}
+            <div className="flex items-center gap-2 border border-slate-200 rounded-lg p-1">
+              <button
+                type="button"
+                onClick={() => setEditorMode('markdown')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${
+                  editorMode === 'markdown'
+                    ? 'bg-slate-100 text-slate-900'
+                    : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                <FileText className="w-4 h-4" />
+                Markdown
+              </button>
+              <button
+                type="button"
+                onClick={() => setEditorMode('blocks')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${
+                  editorMode === 'blocks'
+                    ? 'bg-slate-100 text-slate-900'
+                    : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                <LayoutList className="w-4 h-4" />
+                Blocks
+              </button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {editorMode === 'blocks' ? (
+            /* Blocks Editor */
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList>
+                <TabsTrigger value="edit">Edit Blocks</TabsTrigger>
+                <TabsTrigger value="preview">
+                  <Eye className="h-4 w-4 mr-2" />
+                  Preview
+                </TabsTrigger>
+                <TabsTrigger value="page-preview">
+                  <LayoutList className="h-4 w-4 mr-2" />
+                  Page Preview
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent value="edit" className="mt-4">
+                <PageBlockEditor
+                  blocks={contentBlocks}
+                  onChange={setContentBlocks}
+                />
+              </TabsContent>
+              <TabsContent value="preview" className="mt-4">
+                <div className="w-full min-h-[400px] p-6 border border-slate-200 rounded-md bg-slate-50">
+                  {contentBlocks.length > 0 ? (
+                    <PageBlockRenderer blocks={contentBlocks} />
+                  ) : (
+                    <p className="text-slate-500 text-center py-8">
+                      No blocks to preview. Add some blocks in the Edit tab.
+                    </p>
+                  )}
+                </div>
+              </TabsContent>
+              <TabsContent value="page-preview" className="mt-4">
+                <PagePreview
+                  title={title}
+                  blocks={contentBlocks}
+                  markdownContent={content}
+                  tocEnabled={tocEnabled}
+                  showLastUpdated={showLastUpdated}
+                  editorMode={editorMode}
+                />
+              </TabsContent>
+            </Tabs>
+          ) : (
+            /* Markdown Editor */
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList>
+                <TabsTrigger value="edit">Edit</TabsTrigger>
+                <TabsTrigger value="preview">
+                  <Eye className="h-4 w-4 mr-2" />
+                  Preview
+                </TabsTrigger>
+                <TabsTrigger value="page-preview">
+                  <LayoutList className="h-4 w-4 mr-2" />
+                  Page Preview
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent value="edit" className="mt-2">
+                <AdminTextArea
+                  value={content}
+                  onChange={(e) => {
+                    setContent(e.target.value)
+                  }}
+                  className="h-[400px] font-mono p-4"
+                  placeholder="# Your Page Title
 
 Write your content here using Markdown...
 
@@ -274,18 +409,29 @@ Write your content here using Markdown...
 - List item 2
 
 **Bold text** and *italic text* are supported."
-              />
-            </TabsContent>
-            <TabsContent value="preview" className="mt-2">
-              <div className="w-full min-h-[400px] p-6 border border-slate-200 rounded-md bg-slate-50 prose prose-slate max-w-none">
-                <MarkdownPreview
-                  content={content}
-                  emptyMessage="Preview will appear here..."
-                  emptyClassName="text-slate-400 italic"
                 />
-              </div>
-            </TabsContent>
-          </Tabs>
+              </TabsContent>
+              <TabsContent value="preview" className="mt-2">
+                <div className="w-full min-h-[400px] p-6 border border-slate-200 rounded-md bg-slate-50 prose prose-slate max-w-none">
+                  <MarkdownPreview
+                    content={content}
+                    emptyMessage="Preview will appear here..."
+                    emptyClassName="text-slate-400 italic"
+                  />
+                </div>
+              </TabsContent>
+              <TabsContent value="page-preview" className="mt-2">
+                <PagePreview
+                  title={title}
+                  blocks={contentBlocks}
+                  markdownContent={content}
+                  tocEnabled={tocEnabled}
+                  showLastUpdated={showLastUpdated}
+                  editorMode={editorMode}
+                />
+              </TabsContent>
+            </Tabs>
+          )}
         </CardContent>
       </Card>
 

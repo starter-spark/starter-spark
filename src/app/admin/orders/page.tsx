@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { Badge } from '@/components/ui/badge'
 import { UserAvatar } from '@/components/ui/user-avatar'
+import { UrlPagination } from '@/components/ui/pagination'
 import {
   Table,
   TableBody,
@@ -10,15 +11,26 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { CreditCard } from 'lucide-react'
+import { resolveParams, type MaybePromise } from '@/lib/next-params'
 
 export const metadata = {
   title: 'Orders | Admin',
 }
 
-async function getOrders() {
+const ITEMS_PER_PAGE = 50
+
+async function getOrders(page: number = 1) {
   const supabase = await createClient()
 
+  // Get total count
+  const { count } = await supabase
+    .from('licenses')
+    .select('id', { count: 'exact', head: true })
+    .eq('source', 'online_purchase')
+  const totalCount = count || 0
+
   // Orders are licenses with source = 'online_purchase'
+  const offset = (page - 1) * ITEMS_PER_PAGE
   const { data, error } = await supabase
     .from('licenses')
     .select(
@@ -30,18 +42,25 @@ async function getOrders() {
     )
     .eq('source', 'online_purchase')
     .order('created_at', { ascending: false })
-    .limit(100)
+    .range(offset, offset + ITEMS_PER_PAGE - 1)
 
   if (error) {
     console.error('Error fetching orders:', error)
-    return []
+    return { data: [], totalCount: 0 }
   }
 
-  return data
+  return { data: data || [], totalCount }
 }
 
-export default async function OrdersPage() {
-  const orders = await getOrders()
+export default async function OrdersPage({
+  searchParams,
+}: {
+  searchParams: MaybePromise<{ page?: string }>
+}) {
+  const params = await resolveParams(searchParams)
+  const currentPage = Math.max(1, parseInt(params.page || '1', 10) || 1)
+  const { data: orders, totalCount } = await getOrders(currentPage)
+  const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE)
 
   // Calculate stats
   const totalOrders = orders.length
@@ -179,6 +198,20 @@ export default async function OrdersPage() {
               })}
             </TableBody>
           </Table>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="p-4 border-t border-slate-200">
+              <UrlPagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalItems={totalCount}
+                itemsPerPage={ITEMS_PER_PAGE}
+                baseUrl="/admin/orders"
+                showItemCount
+              />
+            </div>
+          )}
         </div>
       )}
     </div>

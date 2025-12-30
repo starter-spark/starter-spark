@@ -74,7 +74,7 @@ export async function updateSiteStat(input: UpdateStatInput) {
     },
   })
 
-  revalidatePath('/admin/settings')
+  revalidatePath('/admin/content/stats')
   revalidatePath('/')
 
   return { success: true }
@@ -150,7 +150,7 @@ export async function createSiteStat(input: {
     },
   })
 
-  revalidatePath('/admin/settings')
+  revalidatePath('/admin/content/stats')
   revalidatePath('/')
 
   return { success: true }
@@ -194,7 +194,7 @@ export async function deleteSiteStat(id: string) {
     },
   })
 
-  revalidatePath('/admin/settings')
+  revalidatePath('/admin/content/stats')
   revalidatePath('/')
 
   return { success: true }

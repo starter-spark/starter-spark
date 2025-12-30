@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import { toast } from 'sonner'
 import { ArrowLeft, Save, Eye, EyeOff } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -77,8 +78,9 @@ export default function NewDocPage() {
     try {
       const result = await createDocPage(data)
       if (result.error) {
-        alert(result.error)
+        toast.error('Failed to create page', { description: result.error })
       } else {
+        toast.success('Documentation page created')
         router.push(`/admin/docs/${result.id}`)
       }
     } finally {

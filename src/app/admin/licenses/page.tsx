@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { UserAvatar } from '@/components/ui/user-avatar'
+import { UrlPagination } from '@/components/ui/pagination'
 import {
   Table,
   TableBody,
@@ -20,14 +21,39 @@ export const metadata = {
   title: 'Licenses | Admin',
 }
 
+const ITEMS_PER_PAGE = 50
+
 interface SearchParams {
   filter?: string
   product?: string
+  page?: string
 }
 
-async function getLicenses(filter?: string, productId?: string) {
+async function getLicenses(
+  filter?: string,
+  productId?: string,
+  page: number = 1,
+) {
   const supabase = await createClient()
 
+  // Build count query
+  let countQuery = supabase
+    .from('licenses')
+    .select('id', { count: 'exact', head: true })
+
+  if (filter === 'unclaimed') {
+    countQuery = countQuery.is('owner_id', null)
+  } else if (filter === 'claimed') {
+    countQuery = countQuery.not('owner_id', 'is', null)
+  }
+  if (productId) {
+    countQuery = countQuery.eq('product_id', productId)
+  }
+
+  const { count } = await countQuery
+  const totalCount = count || 0
+
+  // Build data query
   let query = supabase
     .from('licenses')
     .select(
@@ -49,14 +75,15 @@ async function getLicenses(filter?: string, productId?: string) {
     query = query.eq('product_id', productId)
   }
 
-  const { data, error } = await query.limit(100)
+  const offset = (page - 1) * ITEMS_PER_PAGE
+  const { data, error } = await query.range(offset, offset + ITEMS_PER_PAGE - 1)
 
   if (error) {
     console.error('Error fetching licenses:', error)
-    return []
+    return { data: [], totalCount: 0 }
   }
 
-  return data
+  return { data: data || [], totalCount }
 }
 
 async function getProducts() {
@@ -75,10 +102,12 @@ export default async function LicensesPage({
   searchParams: MaybePromise<SearchParams>
 }) {
   const params = await resolveParams(searchParams)
-  const [licenses, products] = await Promise.all([
-    getLicenses(params.filter, params.product),
+  const currentPage = Math.max(1, parseInt(params.page || '1', 10) || 1)
+  const [{ data: licenses, totalCount }, products] = await Promise.all([
+    getLicenses(params.filter, params.product, currentPage),
     getProducts(),
   ])
+  const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE)
 
   const filters = [
     { label: 'All', value: undefined },
@@ -242,6 +271,7 @@ export default async function LicensesPage({
                     <TableCell>
                       <LicenseActions
                         licenseId={license.id}
+                        licenseCode={license.code}
                         isClaimed={!!license.owner_id}
                       />
                     </TableCell>
@@ -250,6 +280,20 @@ export default async function LicensesPage({
               })}
             </TableBody>
           </Table>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="p-4 border-t border-slate-200">
+              <UrlPagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalItems={totalCount}
+                itemsPerPage={ITEMS_PER_PAGE}
+                baseUrl={`/admin/licenses${params.filter ? `?filter=${params.filter}` : ''}${params.product ? `${params.filter ? '&' : '?'}product=${params.product}` : ''}`}
+                showItemCount
+              />
+            </div>
+          )}
         </div>
       )}
     </div>

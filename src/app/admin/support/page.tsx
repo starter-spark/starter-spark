@@ -44,8 +44,8 @@ export default async function SupportPage() {
 
   // Calculate stats
   const totalSubmissions = submissions.length
-  const pendingSubmissions = submissions.filter(
-    (s) => s.status === 'pending',
+  const newSubmissions = submissions.filter(
+    (s) => s.status === 'new' || !s.status,
   ).length
   const resolvedSubmissions = submissions.filter(
     (s) => s.status === 'resolved',
@@ -61,10 +61,10 @@ export default async function SupportPage() {
   }
 
   const statusColors: Record<string, string> = {
-    pending: 'bg-amber-100 text-amber-700',
+    new: 'bg-amber-100 text-amber-700',
     in_progress: 'bg-cyan-100 text-cyan-700',
     resolved: 'bg-green-100 text-green-700',
-    closed: 'bg-slate-100 text-slate-600',
+    spam: 'bg-slate-100 text-slate-600',
   }
 
   return (
@@ -98,9 +98,9 @@ export default async function SupportPage() {
               <Clock className="h-5 w-5 text-amber-600" />
             </div>
             <div>
-              <p className="text-sm text-slate-600">Pending</p>
+              <p className="text-sm text-slate-600">New</p>
               <p className="font-mono text-2xl font-bold text-amber-600">
-                {pendingSubmissions}
+                {newSubmissions}
               </p>
             </div>
           </div>
@@ -185,11 +185,11 @@ export default async function SupportPage() {
                   <TableCell>
                     <Badge
                       className={
-                        statusColors[submission.status || 'pending'] ||
-                        statusColors.pending
+                        statusColors[submission.status || 'new'] ||
+                        statusColors.new
                       }
                     >
-                      {submission.status || 'pending'}
+                      {submission.status || 'new'}
                     </Badge>
                   </TableCell>
                   <TableCell>

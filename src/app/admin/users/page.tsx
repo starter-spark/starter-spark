@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { UrlPagination } from '@/components/ui/pagination'
 import {
   Table,
   TableBody,
@@ -19,16 +20,33 @@ export const metadata = {
   title: 'Users | Admin',
 }
 
+const ITEMS_PER_PAGE = 50
+
 interface SearchParams {
   role?: string
   banned?: string
+  page?: string
 }
 
 type UserRole = 'admin' | 'staff' | 'user'
 
-async function getUsers(role?: string, showBanned?: boolean) {
+async function getUsers(role?: string, showBanned?: boolean, page: number = 1) {
   const supabase = await createClient()
 
+  // Build count query
+  let countQuery = supabase
+    .from('profiles')
+    .select('id', { count: 'exact', head: true })
+  if (role && role !== 'all' && ['admin', 'staff', 'user'].includes(role)) {
+    countQuery = countQuery.eq('role', role as UserRole)
+  }
+  if (showBanned) {
+    countQuery = countQuery.eq('is_banned_from_forums', true)
+  }
+  const { count } = await countQuery
+  const totalCount = count || 0
+
+  // Build data query
   let query = supabase
     .from('profiles')
     .select(
@@ -44,14 +62,15 @@ async function getUsers(role?: string, showBanned?: boolean) {
     query = query.eq('is_banned_from_forums', true)
   }
 
-  const { data, error } = await query.limit(100)
+  const offset = (page - 1) * ITEMS_PER_PAGE
+  const { data, error } = await query.range(offset, offset + ITEMS_PER_PAGE - 1)
 
   if (error) {
     console.error('Error fetching users:', error)
-    return []
+    return { data: [], totalCount: 0 }
   }
 
-  return data
+  return { data: data || [], totalCount }
 }
 
 async function getUserStats() {
@@ -89,10 +108,12 @@ export default async function UsersPage({
 }) {
   const params = await resolveParams(searchParams)
   const showBanned = params.banned === 'true'
-  const [users, stats] = await Promise.all([
-    getUsers(params.role, showBanned),
+  const currentPage = Math.max(1, parseInt(params.page || '1', 10) || 1)
+  const [{ data: users, totalCount }, stats] = await Promise.all([
+    getUsers(params.role, showBanned, currentPage),
     getUserStats(),
   ])
+  const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE)
 
   const filters = [
     { label: 'All', value: 'all' },
@@ -278,6 +299,20 @@ export default async function UsersPage({
               ))}
             </TableBody>
           </Table>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="p-4 border-t border-slate-200">
+              <UrlPagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalItems={totalCount}
+                itemsPerPage={ITEMS_PER_PAGE}
+                baseUrl={`/admin/users${params.role ? `?role=${params.role}` : ''}${showBanned ? `${params.role ? '&' : '?'}banned=true` : ''}`}
+                showItemCount
+              />
+            </div>
+          )}
         </div>
       )}
     </div>

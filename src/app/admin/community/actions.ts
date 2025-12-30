@@ -11,7 +11,7 @@ export async function updatePostStatus(
   postId: string,
   status: string,
 ): Promise<{ error: string | null }> {
-  const validStatuses = ['published', 'pending', 'flagged'] as const
+  const validStatuses = ['open', 'solved', 'unanswered', 'flagged'] as const
   if (!validStatuses.includes(status as (typeof validStatuses)[number])) {
     return { error: 'Invalid status' }
   }

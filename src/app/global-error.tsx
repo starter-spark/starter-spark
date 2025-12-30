@@ -22,7 +22,14 @@ export default function GlobalError({
           <h2 className="text-2xl font-mono text-slate-900">
             Something went wrong!
           </h2>
-          <p className="text-slate-600">{error.message}</p>
+          <p className="text-slate-600">
+            We encountered an unexpected error. Please try again.
+            {error.digest && (
+              <span className="block text-xs text-slate-400 mt-2">
+                Error ID: {error.digest}
+              </span>
+            )}
+          </p>
           <button
             onClick={() => {
               reset()

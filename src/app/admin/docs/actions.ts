@@ -2,13 +2,13 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import { requireAdminOrStaff } from '@/lib/auth'
+import { requireAdmin } from '@/lib/auth'
 import { logAuditEvent } from '@/lib/audit'
 
 // Doc Category Actions
 export async function createCategory(formData: FormData) {
   const supabase = await createClient()
-  const guard = await requireAdminOrStaff(supabase)
+  const guard = await requireAdmin(supabase)
   if (!guard.ok) return { error: guard.error }
   const user = guard.user
 
@@ -61,7 +61,7 @@ export async function createCategory(formData: FormData) {
 
 export async function updateCategory(id: string, formData: FormData) {
   const supabase = await createClient()
-  const guard = await requireAdminOrStaff(supabase)
+  const guard = await requireAdmin(supabase)
   if (!guard.ok) return { error: guard.error }
   const user = guard.user
 
@@ -116,7 +116,7 @@ export async function updateCategory(id: string, formData: FormData) {
 
 export async function deleteCategory(id: string) {
   const supabase = await createClient()
-  const guard = await requireAdminOrStaff(supabase)
+  const guard = await requireAdmin(supabase)
   if (!guard.ok) return { error: guard.error }
   const user = guard.user
 
@@ -154,7 +154,7 @@ export async function deleteCategory(id: string) {
 // Doc Page Actions
 export async function createDocPage(formData: FormData) {
   const supabase = await createClient()
-  const guard = await requireAdminOrStaff(supabase)
+  const guard = await requireAdmin(supabase)
   if (!guard.ok) return { error: guard.error }
   const user = guard.user
 
@@ -210,7 +210,7 @@ export async function createDocPage(formData: FormData) {
 
 export async function updateDocPage(id: string, formData: FormData) {
   const supabase = await createClient()
-  const guard = await requireAdminOrStaff(supabase)
+  const guard = await requireAdmin(supabase)
   if (!guard.ok) return { error: guard.error }
   const user = guard.user
 
@@ -267,7 +267,7 @@ export async function updateDocPage(id: string, formData: FormData) {
 
 export async function deleteDocPage(id: string) {
   const supabase = await createClient()
-  const guard = await requireAdminOrStaff(supabase)
+  const guard = await requireAdmin(supabase)
   if (!guard.ok) return { error: guard.error }
   const user = guard.user
 
@@ -304,7 +304,7 @@ export async function deleteDocPage(id: string) {
 
 export async function toggleDocPagePublished(id: string, isPublished: boolean) {
   const supabase = await createClient()
-  const guard = await requireAdminOrStaff(supabase)
+  const guard = await requireAdmin(supabase)
   if (!guard.ok) return { error: guard.error }
   const user = guard.user
 

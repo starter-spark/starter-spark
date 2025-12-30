@@ -3,6 +3,7 @@
 import { useState, useEffect, use } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { toast } from 'sonner'
 import {
   ArrowLeft,
   Save,
@@ -12,6 +13,16 @@ import {
   Trash2,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -62,6 +73,7 @@ export default function EditDocPage({
     sort_order: '0',
     is_published: false,
   })
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
 
   useEffect(() => {
     async function loadData() {
@@ -129,8 +141,9 @@ export default function EditDocPage({
     try {
       const result = await updateDocPage(pageId, data)
       if (result.error) {
-        alert(result.error)
+        toast.error('Failed to save page', { description: result.error })
       } else {
+        toast.success('Page saved')
         router.refresh()
       }
     } finally {
@@ -138,15 +151,13 @@ export default function EditDocPage({
     }
   }
 
-  async function handleDelete() {
-    if (!confirm(`Delete "${formData.title}"? This action cannot be undone.`)) {
-      return
-    }
-
+  async function handleDeleteConfirm() {
+    setShowDeleteDialog(false)
     const result = await deleteDocPage(pageId)
     if (result.error) {
-      alert(result.error)
+      toast.error('Failed to delete page', { description: result.error })
     } else {
+      toast.success('Page deleted')
       router.push('/admin/docs')
     }
   }
@@ -329,7 +340,7 @@ export default function EditDocPage({
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => void handleDelete()}
+                onClick={() => setShowDeleteDialog(true)}
                 className="text-red-600 hover:text-red-700 hover:bg-red-50"
               >
                 <Trash2 className="w-4 h-4 mr-2" />
@@ -343,6 +354,26 @@ export default function EditDocPage({
           </div>
         </div>
       </form>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete &ldquo;{formData.title}&rdquo;?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. The page will be permanently deleted.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => void handleDeleteConfirm()}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

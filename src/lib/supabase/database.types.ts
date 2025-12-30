@@ -748,6 +748,7 @@ export type Database = {
       page_content: {
         Row: {
           content: string
+          content_blocks: Json | null
           created_at: string | null
           id: string
           is_custom_page: boolean | null
@@ -756,13 +757,16 @@ export type Database = {
           published_at: string | null
           seo_description: string | null
           seo_title: string | null
+          show_last_updated: boolean | null
           slug: string | null
           title: string
+          toc_enabled: boolean | null
           updated_at: string | null
           version: number | null
         }
         Insert: {
           content: string
+          content_blocks?: Json | null
           created_at?: string | null
           id?: string
           is_custom_page?: boolean | null
@@ -771,13 +775,16 @@ export type Database = {
           published_at?: string | null
           seo_description?: string | null
           seo_title?: string | null
+          show_last_updated?: boolean | null
           slug?: string | null
           title: string
+          toc_enabled?: boolean | null
           updated_at?: string | null
           version?: number | null
         }
         Update: {
           content?: string
+          content_blocks?: Json | null
           created_at?: string | null
           id?: string
           is_custom_page?: boolean | null
@@ -786,8 +793,10 @@ export type Database = {
           published_at?: string | null
           seo_description?: string | null
           seo_title?: string | null
+          show_last_updated?: boolean | null
           slug?: string | null
           title?: string
+          toc_enabled?: boolean | null
           updated_at?: string | null
           version?: number | null
         }

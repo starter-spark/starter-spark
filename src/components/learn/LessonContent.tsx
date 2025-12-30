@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
 import {
   AlertTriangle,
@@ -12,6 +12,7 @@ import {
   Lightbulb,
   Square,
 } from 'lucide-react'
+import { useLessonStatsOptional } from './LessonStats'
 import { Highlight, themes } from 'prism-react-renderer'
 import ReactMarkdown from 'react-markdown'
 import type { Components } from 'react-markdown'
@@ -320,8 +321,35 @@ function getVideoEmbed(
   return null
 }
 
-function VideoPlayer({ url }: { url: string }) {
+interface VideoChapter {
+  time: number // seconds
+  title: string
+}
+
+interface VideoPlayerProps {
+  url: string
+  startTime?: number
+  chapters?: VideoChapter[]
+}
+
+function formatTime(seconds: number): string {
+  const mins = Math.floor(seconds / 60)
+  const secs = Math.floor(seconds % 60)
+  return `${mins}:${secs.toString().padStart(2, '0')}`
+}
+
+function VideoPlayer({ url, startTime, chapters }: VideoPlayerProps) {
   const embed = getVideoEmbed(url)
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const [currentTime, setCurrentTime] = useState(0)
+
+  // Jump to timestamp
+  const jumpToTime = useCallback((time: number) => {
+    if (videoRef.current) {
+      videoRef.current.currentTime = time
+      videoRef.current.play().catch(() => {})
+    }
+  }, [])
 
   if (!embed) {
     return (
@@ -332,34 +360,247 @@ function VideoPlayer({ url }: { url: string }) {
   }
 
   if (embed.type === 'youtube') {
+    // YouTube supports start time via URL param
+    const startParam = startTime ? `?start=${startTime}` : ''
     return (
-      <div className="relative aspect-video rounded-lg overflow-hidden my-6">
-        <iframe
-          src={`https://www.youtube.com/embed/${embed.id}`}
-          className="absolute inset-0 w-full h-full"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-        />
+      <div className="space-y-2 my-6">
+        <div className="relative aspect-video rounded-lg overflow-hidden">
+          <iframe
+            src={`https://www.youtube.com/embed/${embed.id}${startParam}`}
+            className="absolute inset-0 w-full h-full"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
+        </div>
+        {chapters && chapters.length > 0 && (
+          <VideoChapterList chapters={chapters} onJump={() => {}} isYouTube videoId={embed.id} />
+        )}
       </div>
     )
   }
 
   if (embed.type === 'vimeo') {
+    // Vimeo supports start time via #t=
+    const startHash = startTime ? `#t=${startTime}s` : ''
     return (
-      <div className="relative aspect-video rounded-lg overflow-hidden my-6">
-        <iframe
-          src={`https://player.vimeo.com/video/${embed.id}`}
-          className="absolute inset-0 w-full h-full"
-          allow="autoplay; fullscreen; picture-in-picture"
-          allowFullScreen
-        />
+      <div className="space-y-2 my-6">
+        <div className="relative aspect-video rounded-lg overflow-hidden">
+          <iframe
+            src={`https://player.vimeo.com/video/${embed.id}${startHash}`}
+            className="absolute inset-0 w-full h-full"
+            allow="autoplay; fullscreen; picture-in-picture"
+            allowFullScreen
+          />
+        </div>
+        {chapters && chapters.length > 0 && (
+          <VideoChapterList chapters={chapters} onJump={() => {}} isVimeo videoId={embed.id} />
+        )}
       </div>
     )
   }
 
+  // Direct video with full controls
   return (
-    <div className="relative aspect-video rounded-lg overflow-hidden my-6">
-      <video src={embed.id} className="w-full h-full" controls />
+    <div className="space-y-2 my-6">
+      <div className="relative aspect-video rounded-lg overflow-hidden bg-black">
+        <video
+          ref={videoRef}
+          src={embed.id}
+          className="w-full h-full"
+          controls
+          onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
+          onLoadedMetadata={() => {
+            if (startTime && videoRef.current) {
+              videoRef.current.currentTime = startTime
+            }
+          }}
+        />
+      </div>
+      {chapters && chapters.length > 0 && (
+        <VideoChapterList chapters={chapters} onJump={jumpToTime} currentTime={currentTime} />
+      )}
+    </div>
+  )
+}
+
+function VideoChapterList({
+  chapters,
+  onJump,
+  currentTime = 0,
+  isYouTube,
+  isVimeo,
+  videoId,
+}: {
+  chapters: VideoChapter[]
+  onJump: (time: number) => void
+  currentTime?: number
+  isYouTube?: boolean
+  isVimeo?: boolean
+  videoId?: string
+}) {
+  // Find current chapter
+  const currentChapter = chapters.reduce((acc, ch, idx) => {
+    if (ch.time <= currentTime) return idx
+    return acc
+  }, 0)
+
+  return (
+    <div className="bg-slate-50 rounded border border-slate-200 p-3">
+      <p className="font-mono text-xs font-semibold text-slate-700 mb-2">Chapters</p>
+      <div className="space-y-1">
+        {chapters.map((chapter, idx) => {
+          const isActive = idx === currentChapter
+
+          if (isYouTube && videoId) {
+            return (
+              <a
+                key={idx}
+                href={`https://www.youtube.com/watch?v=${videoId}&t=${chapter.time}s`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`flex items-center gap-2 text-sm px-2 py-1.5 rounded transition-colors ${
+                  isActive
+                    ? 'bg-cyan-100 text-cyan-800'
+                    : 'text-slate-600 hover:bg-slate-100'
+                }`}
+              >
+                <span className="font-mono text-xs text-slate-400 w-10">
+                  {formatTime(chapter.time)}
+                </span>
+                <span className="flex-1">{chapter.title}</span>
+              </a>
+            )
+          }
+
+          if (isVimeo && videoId) {
+            return (
+              <a
+                key={idx}
+                href={`https://vimeo.com/${videoId}#t=${chapter.time}s`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`flex items-center gap-2 text-sm px-2 py-1.5 rounded transition-colors ${
+                  isActive
+                    ? 'bg-cyan-100 text-cyan-800'
+                    : 'text-slate-600 hover:bg-slate-100'
+                }`}
+              >
+                <span className="font-mono text-xs text-slate-400 w-10">
+                  {formatTime(chapter.time)}
+                </span>
+                <span className="flex-1">{chapter.title}</span>
+              </a>
+            )
+          }
+
+          return (
+            <button
+              key={idx}
+              type="button"
+              onClick={() => onJump(chapter.time)}
+              className={`flex items-center gap-2 text-sm px-2 py-1.5 rounded transition-colors w-full text-left ${
+                isActive
+                  ? 'bg-cyan-100 text-cyan-800'
+                  : 'text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              <span className="font-mono text-xs text-slate-400 w-10">
+                {formatTime(chapter.time)}
+              </span>
+              <span className="flex-1">{chapter.title}</span>
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+// Collapsible advanced content section
+function AdvancedSection({
+  title,
+  children,
+  defaultOpen = false,
+}: {
+  title?: string
+  children: React.ReactNode
+  defaultOpen?: boolean
+}) {
+  const [isOpen, setIsOpen] = useState(defaultOpen)
+
+  return (
+    <div className="my-6 border border-purple-200 rounded-lg overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between px-4 py-3 bg-purple-50 hover:bg-purple-100 transition-colors text-left"
+      >
+        <div className="flex items-center gap-2">
+          <span className="text-purple-600 font-mono text-xs uppercase tracking-wide font-semibold">
+            Advanced
+          </span>
+          {title && <span className="text-sm text-purple-900 font-medium">{title}</span>}
+        </div>
+        <svg
+          className={`w-5 h-5 text-purple-600 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      {isOpen && (
+        <div className="p-4 bg-white border-t border-purple-200">
+          {children}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// Alternative explanation component
+function AlternativeExplanation({
+  title,
+  children,
+}: {
+  title?: string
+  children: React.ReactNode
+}) {
+  const [showAlternative, setShowAlternative] = useState(false)
+
+  return (
+    <div className="my-4">
+      {!showAlternative ? (
+        <button
+          type="button"
+          onClick={() => setShowAlternative(true)}
+          className="text-sm text-cyan-700 hover:text-cyan-600 font-medium flex items-center gap-1"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          {title || "Explain differently"}
+        </button>
+      ) : (
+        <div className="bg-cyan-50 border border-cyan-200 rounded-lg p-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-cyan-800 font-mono text-xs uppercase tracking-wide font-semibold">
+              Alternative Explanation
+            </span>
+            <button
+              type="button"
+              onClick={() => setShowAlternative(false)}
+              className="text-cyan-600 hover:text-cyan-800 text-sm"
+            >
+              Hide
+            </button>
+          </div>
+          <div className="text-sm text-cyan-900">
+            {children}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -375,8 +616,17 @@ function QuizBlock({
 }) {
   const [selected, setSelected] = useState<number | null>(null)
   const [submitted, setSubmitted] = useState(false)
+  const stats = useLessonStatsOptional()
 
   const isCorrect = submitted && selected === correctAnswer
+
+  const handleSubmit = () => {
+    setSubmitted(true)
+    // Record quiz answer for stats
+    if (stats) {
+      stats.recordQuizAnswer(selected === correctAnswer)
+    }
+  }
 
   return (
     <div className="rounded-lg border border-slate-200 bg-white p-6 my-6">
@@ -434,7 +684,7 @@ function QuizBlock({
       {!submitted && selected !== null && (
         <button
           type="button"
-          onClick={() => setSubmitted(true)}
+          onClick={handleSubmit}
           className="mt-4 px-4 py-2 rounded bg-cyan-700 hover:bg-cyan-600 text-white font-mono text-sm transition-colors"
         >
           Check Answer
@@ -479,6 +729,16 @@ function CodeChallenge({
   storageKey?: string
 }) {
   const [showSolution, setShowSolution] = useState(false)
+  const stats = useLessonStatsOptional()
+  const hasRecordedAttemptRef = useRef(false)
+
+  // Record attempt when user starts editing (first keypress)
+  const handleCodeChange = useCallback(() => {
+    if (!hasRecordedAttemptRef.current && stats) {
+      stats.incrementAttempts()
+      hasRecordedAttemptRef.current = true
+    }
+  }, [stats])
 
   return (
     <div className="space-y-4 my-8">
@@ -498,6 +758,7 @@ function CodeChallenge({
               storageKey={storageKey}
               diffAgainst={solutionCode}
               diffTitle="Diff vs Solution"
+              onChange={handleCodeChange}
             />
           </div>
           {solutionCode && (
@@ -718,10 +979,23 @@ export function LessonContent({
           if (type === 'video') {
             const url = asString(block.url)
             if (!url) return null
+            const startTime = asNumber(block.startTime) || asNumber(block.start_time) || undefined
+            // Parse chapters from block
+            const rawChapters = Array.isArray(block.chapters) ? block.chapters : []
+            const chapters: VideoChapter[] = rawChapters
+              .filter((ch): ch is Record<string, unknown> => isRecord(ch))
+              .map((ch) => ({
+                time: asNumber(ch.time) || 0,
+                title: asString(ch.title) || 'Chapter',
+              }))
+              .filter((ch) => ch.time >= 0)
+
             return (
               <VideoPlayer
                 key={asString(block.id) || String(index)}
                 url={url}
+                startTime={startTime}
+                chapters={chapters.length > 0 ? chapters : undefined}
               />
             )
           }
@@ -864,6 +1138,38 @@ export function LessonContent({
                 starterFlow={starterFlow}
                 solutionFlow={solutionFlow}
               />
+            )
+          }
+
+          // Advanced content section (collapsible)
+          if (type === 'advanced_section' || type === 'advanced') {
+            const title = asString(block.title)
+            const content = asString(block.content) || ''
+            const defaultOpen = block.defaultOpen === true
+
+            return (
+              <AdvancedSection
+                key={asString(block.id) || String(index)}
+                title={title || undefined}
+                defaultOpen={defaultOpen}
+              >
+                {renderMarkdown(content)}
+              </AdvancedSection>
+            )
+          }
+
+          // Alternative explanation
+          if (type === 'alternative_explanation' || type === 'alternative') {
+            const title = asString(block.title)
+            const content = asString(block.content) || ''
+
+            return (
+              <AlternativeExplanation
+                key={asString(block.id) || String(index)}
+                title={title || undefined}
+              >
+                {renderMarkdown(content)}
+              </AlternativeExplanation>
             )
           }
 

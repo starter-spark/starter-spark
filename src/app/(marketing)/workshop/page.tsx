@@ -1,11 +1,10 @@
 import { createClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
-import { Package, Key, LogIn, AlertCircle } from 'lucide-react'
+import { Package, Key, LogIn } from 'lucide-react'
 import Link from 'next/link'
 import { ClaimCodeForm } from './ClaimCodeForm'
 import { KitCard } from './KitCard'
-import { PendingLicenseCard } from './PendingLicenseCard'
-import { ClaimedByOtherCard } from './ClaimedByOtherCard'
+import { PendingLicensesSection } from './PendingLicensesSection'
 import { getContents } from '@/lib/content'
 import { getUserAchievements } from '@/lib/achievements'
 import { WorkshopTabs } from './WorkshopTabs'
@@ -417,45 +416,12 @@ export default async function WorkshopPage({
               {/* Left column (70%) */}
               <div className="w-full lg:w-[70%] space-y-6">
                 {/* Pending Licenses Alert */}
-                {(pendingLicenses.length > 0 ||
-                  claimedByOtherLicenses.length > 0) && (
-                  <div className="bg-amber-50 rounded border border-amber-200 p-6">
-                    <div className="flex items-center gap-2 mb-2">
-                      <AlertCircle className="w-5 h-5 text-amber-600" />
-                      <h2 className="font-mono text-xl text-slate-900">
-                        {content['workshop.pending.title']}
-                      </h2>
-                      {pendingLicenses.length > 0 && (
-                        <span className="text-sm font-mono text-amber-700 bg-amber-100 px-2 py-0.5 rounded">
-                          {pendingLicenses.length} pending
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-sm text-slate-600 mb-4">
-                      {content['workshop.pending.description']}
-                    </p>
-                    <div className="space-y-3">
-                      {pendingLicenses.map((license) => (
-                        <PendingLicenseCard
-                          key={license.id}
-                          licenseId={license.id}
-                          code={license.code}
-                          productName={license.productName}
-                          productDescription={license.productDescription}
-                          purchasedAt={license.purchasedAt}
-                        />
-                      ))}
-                      {claimedByOtherLicenses.map((license) => (
-                        <ClaimedByOtherCard
-                          key={license.code}
-                          code={license.code}
-                          productName={license.productName}
-                          purchasedAt={license.purchasedAt}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )}
+                <PendingLicensesSection
+                  pendingLicenses={pendingLicenses}
+                  claimedByOtherLicenses={claimedByOtherLicenses}
+                  title={content['workshop.pending.title']}
+                  description={content['workshop.pending.description']}
+                />
 
                 {/* Tabbed Content */}
                 <div className="bg-white rounded border border-slate-200 p-6">
