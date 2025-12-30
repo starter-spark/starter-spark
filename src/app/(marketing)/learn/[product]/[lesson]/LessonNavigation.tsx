@@ -1,9 +1,9 @@
 'use client'
 
 import Link from 'next/link'
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { CheckCircle2, ChevronLeft, ChevronRight } from 'lucide-react'
+import { CheckCircle2, ChevronLeft, ChevronRight, FastForward } from 'lucide-react'
 
 interface LessonNavigationProps {
   prevHref?: string | null
@@ -12,6 +12,7 @@ interface LessonNavigationProps {
   lessonId: string
   progressStorageKey: string
   nextProgressPercent: number
+  showSkipButton?: boolean
 }
 
 function safeSessionStorageSet(key: string, value: string) {
@@ -38,7 +39,10 @@ export function LessonNavigation({
   lessonId,
   progressStorageKey,
   nextProgressPercent,
+  showSkipButton = true,
 }: LessonNavigationProps) {
+  const [isSkipping, setIsSkipping] = useState(false)
+
   const markComplete = useCallback(
     (event: React.MouseEvent<HTMLElement>) => {
       if (globalThis.window === undefined) return
@@ -74,42 +78,75 @@ export function LessonNavigation({
     [lessonId, nextProgressPercent, progressStorageKey],
   )
 
+  const handleSkip = useCallback(async () => {
+    setIsSkipping(true)
+    try {
+      // Mark as complete via API
+      await fetch('/api/learn/complete', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ lessonId }),
+      })
+      // Navigate to next lesson
+      window.location.href = nextHref
+    } catch {
+      setIsSkipping(false)
+    }
+  }, [lessonId, nextHref])
+
   return (
-    <div className="flex items-center justify-between mt-12 pt-8 border-t border-slate-200">
-      {prevHref ? (
-        <Link
-          href={prevHref}
-          className="flex items-center gap-2 text-slate-600 hover:text-cyan-700 transition-colors"
-        >
-          <ChevronLeft className="w-4 h-4" />
-          <span>Previous</span>
-        </Link>
-      ) : (
-        <div />
+    <div className="mt-12 pt-8 border-t border-slate-200">
+      {/* Skip button */}
+      {showSkipButton && !isLastLesson && (
+        <div className="flex justify-center mb-6">
+          <button
+            type="button"
+            onClick={() => void handleSkip()}
+            disabled={isSkipping}
+            className="text-sm text-slate-500 hover:text-slate-700 flex items-center gap-1.5 transition-colors disabled:opacity-50"
+          >
+            <FastForward className="w-4 h-4" />
+            {isSkipping ? 'Skipping...' : 'I already know this — skip ahead'}
+          </button>
+        </div>
       )}
 
-      <Button
-        asChild
-        className={
-          isLastLesson
-            ? 'bg-green-600 hover:bg-green-500 text-white font-mono'
-            : 'bg-cyan-700 hover:bg-cyan-600 text-white font-mono'
-        }
-      >
-        <Link href={nextHref} onClick={markComplete}>
-          {isLastLesson ? (
-            <>
-              <CheckCircle2 className="w-4 h-4 mr-2" />
-              Complete Course
-            </>
-          ) : (
-            <>
-              Next Lesson
-              <ChevronRight className="w-4 h-4 ml-2" />
-            </>
-          )}
-        </Link>
-      </Button>
+      <div className="flex items-center justify-between">
+        {prevHref ? (
+          <Link
+            href={prevHref}
+            className="flex items-center gap-2 text-slate-600 hover:text-cyan-700 transition-colors"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            <span>Previous</span>
+          </Link>
+        ) : (
+          <div />
+        )}
+
+        <Button
+          asChild
+          className={
+            isLastLesson
+              ? 'bg-green-600 hover:bg-green-500 text-white font-mono'
+              : 'bg-cyan-700 hover:bg-cyan-600 text-white font-mono'
+          }
+        >
+          <Link href={nextHref} onClick={markComplete}>
+            {isLastLesson ? (
+              <>
+                <CheckCircle2 className="w-4 h-4 mr-2" />
+                Complete Course
+              </>
+            ) : (
+              <>
+                Next Lesson
+                <ChevronRight className="w-4 h-4 ml-2" />
+              </>
+            )}
+          </Link>
+        </Button>
+      </div>
     </div>
   )
 }

@@ -6,6 +6,7 @@ import { LessonSidebar } from './LessonSidebar'
 import { LessonContent } from '@/components/learn/LessonContent'
 import { LessonPrefetch } from './LessonPrefetch'
 import { LessonNavigation } from './LessonNavigation'
+import { LessonStatsWrapper } from './LessonStatsWrapper'
 import { resolveParams, type MaybePromise } from '@/lib/next-params'
 
 export default async function LessonPage({
@@ -300,14 +301,16 @@ export default async function LessonPage({
           </h1>
 
           {/* Lesson content (from DB) */}
-          <LessonContent
-            content={lessonContent?.content || ''}
-            contentBlocks={contentBlocks}
-            lessonType={lesson.lesson_type || 'content'}
-            videoUrl={lessonContent?.video_url}
-            codeStarter={lessonContent?.code_starter}
-            codeSolution={lessonContent?.code_solution}
-          />
+          <LessonStatsWrapper lessonId={lesson.id}>
+            <LessonContent
+              content={lessonContent?.content || ''}
+              contentBlocks={contentBlocks}
+              lessonType={lesson.lesson_type || 'content'}
+              videoUrl={lessonContent?.video_url}
+              codeStarter={lessonContent?.code_starter}
+              codeSolution={lessonContent?.code_solution}
+            />
+          </LessonStatsWrapper>
 
           {/* Navigation */}
           <LessonNavigation

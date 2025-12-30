@@ -9,12 +9,22 @@ export type VisualBlockType =
   | 'delay'
   | 'digital_write'
   | 'analog_write'
+  | 'analog_read'
+  | 'digital_read'
   | 'serial_print'
+  // Control flow blocks
+  | 'if_condition'
+  | 'if_else'
+  | 'for_loop'
+  | 'while_loop'
+  | 'end_block'
 
 export interface VisualNodeData {
   blockType?: VisualBlockType
   label?: string
   params?: Record<string, unknown>
+  // For nested blocks, track which block this ends
+  endsBlockId?: string
   [key: string]: unknown
 }
 
@@ -101,6 +111,20 @@ function topoSort(nodes: Node[], edges: Edge[]): string[] {
   return sorted
 }
 
+// Helper to get a numeric param
+function getNumParam(params: Record<string, unknown>, key: string, fallback: number): number {
+  const raw: unknown = Object.getOwnPropertyDescriptor(params, key)?.value
+  if (typeof raw === 'number' && Number.isFinite(raw)) return raw
+  if (typeof raw === 'string' && Number.isFinite(Number(raw))) return Number(raw)
+  return fallback
+}
+
+// Helper to get a string param
+function getStrParam(params: Record<string, unknown>, key: string, fallback: string): string {
+  const raw: unknown = Object.getOwnPropertyDescriptor(params, key)?.value
+  return typeof raw === 'string' ? raw : fallback
+}
+
 export function generateArduinoCode(
   nodes: Node<VisualNodeData>[],
   edges: Edge[],
@@ -114,6 +138,13 @@ export function generateArduinoCode(
 
   const servoVars = new Set<string>()
   const declaredVars = new Set<string>()
+  const usesSerial = { value: false }
+
+  // Track indentation for nested blocks
+  let indent = 0
+  const addLoopLine = (line: string) => {
+    loopLines.push('  '.repeat(indent) + line)
+  }
 
   for (const id of orderedIds) {
     const node = byId.get(id)
@@ -125,13 +156,11 @@ export function generateArduinoCode(
     if (!type || type === 'setup' || type === 'loop') continue
 
     if (type === 'variable') {
-      const name = typeof params.name === 'string' ? params.name : 'value'
-      const varType =
-        typeof params.varType === 'string' ? params.varType : 'int'
-      const value =
-        typeof params.value === 'string' || typeof params.value === 'number'
-          ? String(params.value)
-          : '0'
+      const name = getStrParam(params, 'name', 'value')
+      const varType = getStrParam(params, 'varType', 'int')
+      const value = typeof params.value === 'string' || typeof params.value === 'number'
+        ? String(params.value)
+        : '0'
       if (!declaredVars.has(name)) {
         declaredVars.add(name)
         globals.push(`${varType} ${name} = ${value};`)
@@ -140,86 +169,118 @@ export function generateArduinoCode(
     }
 
     if (type === 'servo_attach') {
-      const variable =
-        typeof params.variable === 'string' ? params.variable : 'servo'
-      const rawPin = params.pin
-      const pin =
-        typeof rawPin === 'number' && Number.isFinite(rawPin)
-          ? rawPin
-          : typeof rawPin === 'string' && Number.isFinite(Number(rawPin))
-            ? Number(rawPin)
-            : 9
+      const variable = getStrParam(params, 'variable', 'servo')
+      const pin = getNumParam(params, 'pin', 9)
       servoVars.add(variable)
       setupLines.push(`${variable}.attach(${pin});`)
       continue
     }
 
     if (type === 'servo_write') {
-      const variable =
-        typeof params.variable === 'string' ? params.variable : 'servo'
-      const rawAngle = params.angle
-      const angle =
-        typeof rawAngle === 'number' && Number.isFinite(rawAngle)
-          ? rawAngle
-          : typeof rawAngle === 'string' && Number.isFinite(Number(rawAngle))
-            ? Number(rawAngle)
-            : 90
-      loopLines.push(`${variable}.write(${angle});`)
+      const variable = getStrParam(params, 'variable', 'servo')
+      const angle = getNumParam(params, 'angle', 90)
+      addLoopLine(`${variable}.write(${angle});`)
       continue
     }
 
     if (type === 'delay') {
-      const rawMs = params.ms
-      const ms =
-        typeof rawMs === 'number' && Number.isFinite(rawMs)
-          ? rawMs
-          : typeof rawMs === 'string' && Number.isFinite(Number(rawMs))
-            ? Number(rawMs)
-            : 500
-      loopLines.push(`delay(${ms});`)
+      const ms = getNumParam(params, 'ms', 500)
+      addLoopLine(`delay(${ms});`)
       continue
     }
 
     if (type === 'digital_write') {
-      const rawPin = params.pin
-      const pin =
-        typeof rawPin === 'number' && Number.isFinite(rawPin)
-          ? rawPin
-          : typeof rawPin === 'string' && Number.isFinite(Number(rawPin))
-            ? Number(rawPin)
-            : 13
-      const value = typeof params.value === 'string' ? params.value : 'HIGH'
+      const pin = getNumParam(params, 'pin', 13)
+      const value = getStrParam(params, 'value', 'HIGH')
       setupLines.push(`pinMode(${pin}, OUTPUT);`)
-      loopLines.push(`digitalWrite(${pin}, ${value});`)
+      addLoopLine(`digitalWrite(${pin}, ${value});`)
+      continue
+    }
+
+    if (type === 'digital_read') {
+      const pin = getNumParam(params, 'pin', 2)
+      const variable = getStrParam(params, 'variable', 'buttonState')
+      setupLines.push(`pinMode(${pin}, INPUT);`)
+      if (!declaredVars.has(variable)) {
+        declaredVars.add(variable)
+        globals.push(`int ${variable} = 0;`)
+      }
+      addLoopLine(`${variable} = digitalRead(${pin});`)
       continue
     }
 
     if (type === 'analog_write') {
-      const rawPin = params.pin
-      const pin =
-        typeof rawPin === 'number' && Number.isFinite(rawPin)
-          ? rawPin
-          : typeof rawPin === 'string' && Number.isFinite(Number(rawPin))
-            ? Number(rawPin)
-            : 9
-      const rawValue = params.value
-      const value =
-        typeof rawValue === 'number' && Number.isFinite(rawValue)
-          ? rawValue
-          : typeof rawValue === 'string' && Number.isFinite(Number(rawValue))
-            ? Number(rawValue)
-            : 128
-      loopLines.push(`analogWrite(${pin}, ${value});`)
+      const pin = getNumParam(params, 'pin', 9)
+      const value = getNumParam(params, 'value', 128)
+      addLoopLine(`analogWrite(${pin}, ${value});`)
+      continue
+    }
+
+    if (type === 'analog_read') {
+      const pin = getStrParam(params, 'pin', 'A0')
+      const variable = getStrParam(params, 'variable', 'sensorValue')
+      if (!declaredVars.has(variable)) {
+        declaredVars.add(variable)
+        globals.push(`int ${variable} = 0;`)
+      }
+      addLoopLine(`${variable} = analogRead(${pin});`)
       continue
     }
 
     if (type === 'serial_print') {
-      const message =
-        typeof params.message === 'string' ? params.message : 'Hello'
-      setupLines.push('Serial.begin(9600);')
-      loopLines.push(`Serial.println(${JSON.stringify(message)});`)
+      const message = getStrParam(params, 'message', 'Hello')
+      usesSerial.value = true
+      addLoopLine(`Serial.println(${JSON.stringify(message)});`)
       continue
     }
+
+    // Control flow blocks
+    if (type === 'if_condition') {
+      const condition = getStrParam(params, 'condition', 'true')
+      addLoopLine(`if (${condition}) {`)
+      indent++
+      continue
+    }
+
+    if (type === 'if_else') {
+      const condition = getStrParam(params, 'condition', 'true')
+      addLoopLine(`if (${condition}) {`)
+      indent++
+      // Note: The else part would be added by connecting to an end_block then another block
+      continue
+    }
+
+    if (type === 'for_loop') {
+      const variable = getStrParam(params, 'variable', 'i')
+      const start = getNumParam(params, 'start', 0)
+      const end = getNumParam(params, 'end', 10)
+      const step = getNumParam(params, 'step', 1)
+      if (!declaredVars.has(variable)) {
+        declaredVars.add(variable)
+      }
+      addLoopLine(`for (int ${variable} = ${start}; ${variable} < ${end}; ${variable} += ${step}) {`)
+      indent++
+      continue
+    }
+
+    if (type === 'while_loop') {
+      const condition = getStrParam(params, 'condition', 'true')
+      addLoopLine(`while (${condition}) {`)
+      indent++
+      continue
+    }
+
+    if (type === 'end_block') {
+      if (indent > 0) indent--
+      addLoopLine('}')
+      continue
+    }
+  }
+
+  // Close any unclosed blocks
+  while (indent > 0) {
+    indent--
+    loopLines.push('  '.repeat(indent) + '}')
   }
 
   const header: string[] = []
@@ -228,6 +289,10 @@ export function generateArduinoCode(
 
   for (const v of servoVars) {
     globals.unshift(`Servo ${v};`)
+  }
+
+  if (usesSerial.value) {
+    setupLines.unshift('Serial.begin(9600);')
   }
 
   const body: string[] = []
@@ -245,4 +310,122 @@ export function generateArduinoCode(
   body.push('}', '')
 
   return body.join('\n')
+}
+
+/**
+ * Parse Arduino code back into visual blocks (best-effort)
+ * This handles common patterns but won't work for complex code
+ */
+export function parseArduinoToBlocks(code: string): FlowState {
+  const nodes: FlowState['nodes'] = []
+  const edges: FlowState['edges'] = []
+
+  // Default setup/loop nodes
+  const setupId = 'setup'
+  const loopId = 'loop'
+  nodes.push({
+    id: setupId,
+    position: { x: 60, y: 60 },
+    data: { label: 'setup()', blockType: 'setup' },
+  })
+  nodes.push({
+    id: loopId,
+    position: { x: 60, y: 180 },
+    data: { label: 'loop()', blockType: 'loop' },
+  })
+
+  let nodeId = 1
+  let yPos = 300
+  let lastNodeId = loopId
+
+  // Simple regex patterns for common Arduino statements
+  const patterns: { regex: RegExp; handler: (match: RegExpMatchArray) => VisualNodeData | null }[] = [
+    {
+      regex: /delay\s*\(\s*(\d+)\s*\)/,
+      handler: (m) => ({ blockType: 'delay', label: 'Delay', params: { ms: parseInt(m[1]) } }),
+    },
+    {
+      regex: /digitalWrite\s*\(\s*(\d+)\s*,\s*(HIGH|LOW)\s*\)/,
+      handler: (m) => ({ blockType: 'digital_write', label: 'Digital Write', params: { pin: parseInt(m[1]), value: m[2] } }),
+    },
+    {
+      regex: /analogWrite\s*\(\s*(\d+)\s*,\s*(\d+)\s*\)/,
+      handler: (m) => ({ blockType: 'analog_write', label: 'Analog Write', params: { pin: parseInt(m[1]), value: parseInt(m[2]) } }),
+    },
+    {
+      regex: /(\w+)\.write\s*\(\s*(\d+)\s*\)/,
+      handler: (m) => ({ blockType: 'servo_write', label: 'Servo Write', params: { variable: m[1], angle: parseInt(m[2]) } }),
+    },
+    {
+      regex: /(\w+)\.attach\s*\(\s*(\d+)\s*\)/,
+      handler: (m) => ({ blockType: 'servo_attach', label: 'Servo Attach', params: { variable: m[1], pin: parseInt(m[2]) } }),
+    },
+    {
+      regex: /Serial\.println\s*\(\s*"([^"]*)"\s*\)/,
+      handler: (m) => ({ blockType: 'serial_print', label: 'Serial Print', params: { message: m[1] } }),
+    },
+    {
+      regex: /for\s*\(\s*int\s+(\w+)\s*=\s*(\d+)\s*;\s*\w+\s*<\s*(\d+)\s*;/,
+      handler: (m) => ({ blockType: 'for_loop', label: 'For Loop', params: { variable: m[1], start: parseInt(m[2]), end: parseInt(m[3]), step: 1 } }),
+    },
+    {
+      regex: /if\s*\(\s*([^)]+)\s*\)\s*\{/,
+      handler: (m) => ({ blockType: 'if_condition', label: 'If', params: { condition: m[1].trim() } }),
+    },
+    {
+      regex: /while\s*\(\s*([^)]+)\s*\)\s*\{/,
+      handler: (m) => ({ blockType: 'while_loop', label: 'While', params: { condition: m[1].trim() } }),
+    },
+  ]
+
+  // Extract code from loop() function
+  const loopMatch = /void\s+loop\s*\(\s*\)\s*\{([\s\S]*?)\n\}/m.exec(code)
+  if (loopMatch) {
+    const loopCode = loopMatch[1]
+    const lines = loopCode.split('\n').map(l => l.trim()).filter(Boolean)
+
+    for (const line of lines) {
+      for (const { regex, handler } of patterns) {
+        const match = regex.exec(line)
+        if (match) {
+          const data = handler(match)
+          if (data) {
+            const id = `node_${nodeId++}`
+            nodes.push({
+              id,
+              position: { x: 200, y: yPos },
+              data,
+            })
+            edges.push({
+              id: `edge_${lastNodeId}_${id}`,
+              source: lastNodeId,
+              target: id,
+            })
+            lastNodeId = id
+            yPos += 80
+          }
+          break
+        }
+      }
+
+      // Handle closing braces
+      if (line === '}') {
+        const id = `node_${nodeId++}`
+        nodes.push({
+          id,
+          position: { x: 200, y: yPos },
+          data: { blockType: 'end_block', label: 'End' },
+        })
+        edges.push({
+          id: `edge_${lastNodeId}_${id}`,
+          source: lastNodeId,
+          target: id,
+        })
+        lastNodeId = id
+        yPos += 80
+      }
+    }
+  }
+
+  return { nodes, edges }
 }

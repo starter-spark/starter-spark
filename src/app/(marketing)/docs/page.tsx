@@ -57,9 +57,9 @@ export default async function DocsPage() {
           <nav aria-label="Breadcrumb" className="mb-6">
             <ol className="flex items-center gap-2 text-sm text-slate-500">
               <li>
-                <a href="/" className="hover:text-cyan-700 transition-colors">
+                <Link href="/" className="hover:text-cyan-700 transition-colors">
                   Home
-                </a>
+                </Link>
               </li>
               <li aria-hidden="true">/</li>
               <li className="text-slate-900 font-medium">Documentation</li>

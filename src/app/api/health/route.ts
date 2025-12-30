@@ -7,7 +7,7 @@
  *
  * @see https://github.com/vercel/next.js/discussions/75995
  */
-export async function GET() {
+export function GET() {
   return Response.json(
     { status: 'ok', timestamp: new Date().toISOString() },
     {

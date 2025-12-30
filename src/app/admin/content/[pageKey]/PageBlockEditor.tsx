@@ -6,15 +6,15 @@ import {
   ChevronUp,
   Plus,
   Trash2,
-  GripVertical,
-  Type,
-  Heading,
-  Image,
-  AlertCircle,
-  Code,
-  Video,
-  HelpCircle,
-  MousePointerClick,
+	GripVertical,
+	Type,
+	Heading,
+	Image as ImageIcon,
+	AlertCircle,
+	Code,
+	Video,
+	HelpCircle,
+	MousePointerClick,
   Minus,
   BarChart3,
 } from 'lucide-react'
@@ -60,19 +60,19 @@ import type {
   ButtonVariant,
   ButtonAlignment,
 } from '@/types/page-blocks'
-import { createBlock, generateBlockId } from '@/types/page-blocks'
+import { createBlock } from '@/types/page-blocks'
 
 const BLOCK_TYPE_CONFIG: Record<
-  PageBlockType,
-  { label: string; icon: React.ReactNode }
+	PageBlockType,
+	{ label: string; icon: React.ReactNode }
 > = {
-  heading: { label: 'Heading', icon: <Heading className="w-4 h-4" /> },
-  text: { label: 'Text', icon: <Type className="w-4 h-4" /> },
-  image: { label: 'Image', icon: <Image className="w-4 h-4" /> },
-  callout: { label: 'Callout', icon: <AlertCircle className="w-4 h-4" /> },
-  code: { label: 'Code', icon: <Code className="w-4 h-4" /> },
-  video: { label: 'Video', icon: <Video className="w-4 h-4" /> },
-  faq: { label: 'FAQ', icon: <HelpCircle className="w-4 h-4" /> },
+	heading: { label: 'Heading', icon: <Heading className="w-4 h-4" /> },
+	text: { label: 'Text', icon: <Type className="w-4 h-4" /> },
+	image: { label: 'Image', icon: <ImageIcon className="w-4 h-4" /> },
+	callout: { label: 'Callout', icon: <AlertCircle className="w-4 h-4" /> },
+	code: { label: 'Code', icon: <Code className="w-4 h-4" /> },
+	video: { label: 'Video', icon: <Video className="w-4 h-4" /> },
+	faq: { label: 'FAQ', icon: <HelpCircle className="w-4 h-4" /> },
   cta_button: {
     label: 'CTA Button',
     icon: <MousePointerClick className="w-4 h-4" />,
@@ -104,17 +104,19 @@ export function PageBlockEditor({ blocks, onChange }: PageBlockEditorProps) {
     })
   }
 
-  const addBlock = (type: PageBlockType) => {
-    const newBlock = createBlock(type)
-    onChange([...blocks, newBlock])
-    setExpandedBlocks((prev) => new Set(prev).add(newBlock.id))
-  }
+	const addBlock = (type: PageBlockType) => {
+		const newBlock = createBlock(type)
+		onChange([...blocks, newBlock])
+		setExpandedBlocks((prev) => new Set(prev).add(newBlock.id))
+	}
 
-  const updateBlock = (index: number, updates: Partial<PageBlock>) => {
-    const newBlocks = [...blocks]
-    newBlocks[index] = { ...newBlocks[index], ...updates } as PageBlock
-    onChange(newBlocks)
-  }
+	const updateBlock = (index: number, updates: Partial<PageBlock>) => {
+		if (index < 0 || index >= blocks.length) return
+		const newBlocks = blocks.map((block, i) =>
+			i === index ? ({ ...block, ...updates } as PageBlock) : block,
+		)
+		onChange(newBlocks)
+	}
 
   const deleteBlock = (index: number) => {
     const newBlocks = blocks.filter((_, i) => i !== index)
@@ -161,25 +163,25 @@ export function PageBlockEditor({ blocks, onChange }: PageBlockEditorProps) {
   const getBlockPreview = (block: PageBlock): string => {
     switch (block.type) {
       case 'heading':
-        return (block as HeadingBlock).content || 'Empty heading'
+        return (block).content || 'Empty heading'
       case 'text':
-        return ((block as TextBlock).content || 'Empty text').slice(0, 50) + '...'
+        return ((block).content || 'Empty text').slice(0, 50) + '...'
       case 'image':
-        return (block as ImageBlock).alt || 'Image'
+        return (block).alt || 'Image'
       case 'callout':
-        return `${(block as CalloutBlock).variant}: ${((block as CalloutBlock).content || '').slice(0, 30)}...`
+        return `${(block).variant}: ${((block).content || '').slice(0, 30)}...`
       case 'code':
-        return (block as CodeBlock).filename || (block as CodeBlock).language || 'Code'
+        return (block).filename || (block).language || 'Code'
       case 'video':
         return 'Video embed'
       case 'faq':
-        return `${(block as FAQBlock).items.length} questions`
+        return `${(block).items.length} questions`
       case 'cta_button':
-        return (block as CTAButtonBlock).text || 'Button'
+        return (block).text || 'Button'
       case 'divider':
-        return `${(block as DividerBlock).style || 'line'} divider`
+        return `${(block).style || 'line'} divider`
       case 'stat_counter':
-        return `${(block as StatCounterBlock).stats.length} stats`
+        return `${(block).stats.length} stats`
       default:
         return 'Block'
     }
@@ -259,30 +261,37 @@ export function PageBlockEditor({ blocks, onChange }: PageBlockEditorProps) {
       })}
 
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="outline" className="w-full">
-            <Plus className="w-4 h-4 mr-2" />
-            Add Block
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="center" className="w-48">
-          {(Object.keys(BLOCK_TYPE_CONFIG) as PageBlockType[]).map((type) => {
-            const config = BLOCK_TYPE_CONFIG[type]
-            return (
-              <DropdownMenuItem
-                key={type}
-                onClick={() => addBlock(type)}
-                className="cursor-pointer"
-              >
-                {config.icon}
-                <span className="ml-2">{config.label}</span>
-              </DropdownMenuItem>
-            )
-          })}
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </div>
-  )
+		  <DropdownMenuTrigger asChild>
+			<Button variant="outline" className="w-full">
+			  <Plus className="w-4 h-4 mr-2" />
+			  Add Block
+			</Button>
+		  </DropdownMenuTrigger>
+		  <DropdownMenuContent align="center" className="w-48">
+			{(
+			  Object.entries(BLOCK_TYPE_CONFIG) as Array<
+				[
+				  PageBlockType,
+				  {
+					label: string
+					icon: React.ReactNode
+				  },
+				]
+			  >
+			).map(([type, config]) => (
+			  <DropdownMenuItem
+				key={type}
+				onClick={() => addBlock(type)}
+				className="cursor-pointer"
+			  >
+				{config.icon}
+				<span className="ml-2">{config.label}</span>
+			  </DropdownMenuItem>
+			))}
+		  </DropdownMenuContent>
+		</DropdownMenu>
+	  </div>
+	)
 }
 
 // Individual block editors
@@ -551,13 +560,15 @@ function FAQBlockEditor({
 }) {
   const addItem = () => {
     onUpdate({ items: [...block.items, { question: '', answer: '' }] })
-  }
+	}
 
-  const updateItem = (index: number, field: 'question' | 'answer', value: string) => {
-    const newItems = [...block.items]
-    newItems[index] = { ...newItems[index], [field]: value }
-    onUpdate({ items: newItems })
-  }
+	const updateItem = (index: number, field: 'question' | 'answer', value: string) => {
+		const newItems = block.items.map((item, i) => {
+			if (i !== index) return item
+			return field === 'question' ? { ...item, question: value } : { ...item, answer: value }
+		})
+		onUpdate({ items: newItems })
+	}
 
   const removeItem = (index: number) => {
     onUpdate({ items: block.items.filter((_, i) => i !== index) })
@@ -705,13 +716,15 @@ function StatCounterBlockEditor({
 }) {
   const addStat = () => {
     onUpdate({ stats: [...block.stats, { value: '', label: '' }] })
-  }
+	}
 
-  const updateStat = (index: number, field: 'value' | 'label', value: string) => {
-    const newStats = [...block.stats]
-    newStats[index] = { ...newStats[index], [field]: value }
-    onUpdate({ stats: newStats })
-  }
+	const updateStat = (index: number, field: 'value' | 'label', value: string) => {
+		const newStats = block.stats.map((stat, i) => {
+			if (i !== index) return stat
+			return field === 'value' ? { ...stat, value } : { ...stat, label: value }
+		})
+		onUpdate({ stats: newStats })
+	}
 
   const removeStat = (index: number) => {
     onUpdate({ stats: block.stats.filter((_, i) => i !== index) })

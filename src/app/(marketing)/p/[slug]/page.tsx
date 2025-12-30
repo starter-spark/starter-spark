@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import ReactMarkdown from 'react-markdown'
 import type { Metadata } from 'next'
@@ -101,12 +102,12 @@ export default async function CustomPage({ params }: PageProps) {
               <nav aria-label="Breadcrumb" className="mb-6">
                 <ol className="flex items-center gap-2 text-sm text-slate-500">
                   <li>
-                    <a
+                    <Link
                       href="/"
                       className="hover:text-cyan-700 transition-colors"
                     >
                       Home
-                    </a>
+                    </Link>
                   </li>
                   <li aria-hidden="true">/</li>
                   <li className="text-slate-900 font-medium">{page.title}</li>

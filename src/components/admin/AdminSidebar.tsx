@@ -10,7 +10,7 @@ import {
   MessageSquare,
   Calendar,
   Users,
-  Settings,
+  BarChart3,
   LogOut,
   ChevronLeft,
   FileText,
@@ -37,7 +37,7 @@ const navItems = [
   { href: '/admin/banners', label: 'Banners', icon: Megaphone },
   { href: '/admin/users', label: 'Users', icon: Users },
   { href: '/admin/audit', label: 'Audit Log', icon: ScrollText },
-  { href: '/admin/settings', label: 'Settings', icon: Settings },
+  { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
 ]
 
 interface AdminSidebarProps {

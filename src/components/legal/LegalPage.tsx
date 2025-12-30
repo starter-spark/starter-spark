@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import ReactMarkdown from 'react-markdown'
 import { safeMarkdownUrlTransform } from '@/lib/safe-url'
 import { createMarkdownComponents } from '@/components/markdown/markdown-components'
@@ -41,12 +42,12 @@ export function LegalPage({
               <nav aria-label="Breadcrumb" className="mb-6">
                 <ol className="flex items-center gap-2 text-sm text-slate-500">
                   <li>
-                    <a
+                    <Link
                       href="/"
                       className="hover:text-cyan-700 transition-colors"
                     >
                       Home
-                    </a>
+                    </Link>
                   </li>
                   <li aria-hidden="true">/</li>
                   <li className="text-slate-900 font-medium">

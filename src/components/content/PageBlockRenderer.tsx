@@ -6,7 +6,6 @@ import { Highlight, themes } from 'prism-react-renderer'
 import {
   AlertTriangle,
   Check,
-  ChevronDown,
   Copy,
   Info,
   Lightbulb,
@@ -22,16 +21,6 @@ import { safeMarkdownUrlTransform } from '@/lib/safe-url'
 import { createMarkdownComponents } from '@/components/markdown/markdown-components'
 import type {
   PageBlock,
-  HeadingBlock,
-  TextBlock,
-  ImageBlock,
-  CalloutBlock,
-  CodeBlock as CodeBlockType,
-  VideoBlock,
-  FAQBlock,
-  CTAButtonBlock,
-  DividerBlock,
-  StatCounterBlock,
 } from '@/types/page-blocks'
 import { generateAnchor } from '@/types/page-blocks'
 
@@ -184,12 +173,24 @@ function Callout({
       icon: <AlertTriangle className="w-5 h-5 text-red-600" />,
       defaultTitle: 'Important',
     },
-  } as const
+	} as const
 
-  const style = styles[variant]
+	const style = (() => {
+		switch (variant) {
+			case 'tip':
+				return styles.tip
+			case 'warning':
+				return styles.warning
+			case 'danger':
+				return styles.danger
+			case 'info':
+			default:
+				return styles.info
+		}
+	})()
 
-  return (
-    <div className={`${style.bg} ${style.border} border rounded p-4 my-6`}>
+	return (
+		<div className={`${style.bg} ${style.border} border rounded p-4 my-6`}>
       <div className="flex items-center gap-2 mb-2">
         {style.icon}
         <span className="font-mono text-sm font-semibold">
@@ -286,7 +287,7 @@ export function PageBlockRenderer({ blocks }: PageBlockRendererProps) {
 
     switch (block.type) {
       case 'heading': {
-        const b = block as HeadingBlock
+        const b = block
         const anchor = b.anchor || generateAnchor(b.content)
         const Tag = b.level === 1 ? 'h2' : b.level === 2 ? 'h3' : 'h4'
         const className =
@@ -303,7 +304,7 @@ export function PageBlockRenderer({ blocks }: PageBlockRendererProps) {
       }
 
       case 'text': {
-        const b = block as TextBlock
+        const b = block
         return (
           <div key={key} className="prose prose-slate max-w-none">
             {renderMarkdown(b.content)}
@@ -312,7 +313,7 @@ export function PageBlockRenderer({ blocks }: PageBlockRendererProps) {
       }
 
       case 'image': {
-        const b = block as ImageBlock
+        const b = block
         const widthClass =
           b.width === 'small'
             ? 'max-w-sm mx-auto'
@@ -340,7 +341,7 @@ export function PageBlockRenderer({ blocks }: PageBlockRendererProps) {
       }
 
       case 'callout': {
-        const b = block as CalloutBlock
+        const b = block
         return (
           <Callout key={key} variant={b.variant} title={b.title}>
             {renderMarkdown(b.content)}
@@ -349,7 +350,7 @@ export function PageBlockRenderer({ blocks }: PageBlockRendererProps) {
       }
 
       case 'code': {
-        const b = block as CodeBlockType
+        const b = block
         return (
           <CodeBlock
             key={key}
@@ -362,12 +363,12 @@ export function PageBlockRenderer({ blocks }: PageBlockRendererProps) {
       }
 
       case 'video': {
-        const b = block as VideoBlock
+        const b = block
         return <VideoPlayer key={key} url={b.url} caption={b.caption} />
       }
 
       case 'faq': {
-        const b = block as FAQBlock
+        const b = block
         return (
           <Accordion key={key} type="single" collapsible className="my-6">
             {b.items.map((item, i) => (
@@ -387,7 +388,7 @@ export function PageBlockRenderer({ blocks }: PageBlockRendererProps) {
       }
 
       case 'cta_button': {
-        const b = block as CTAButtonBlock
+        const b = block
         const alignment =
           b.alignment === 'center'
             ? 'justify-center'
@@ -410,7 +411,7 @@ export function PageBlockRenderer({ blocks }: PageBlockRendererProps) {
       }
 
       case 'divider': {
-        const b = block as DividerBlock
+        const b = block
         if (b.style === 'space') {
           return <div key={key} className="my-12" />
         }
@@ -427,7 +428,7 @@ export function PageBlockRenderer({ blocks }: PageBlockRendererProps) {
       }
 
       case 'stat_counter': {
-        const b = block as StatCounterBlock
+        const b = block
         const statCount = b.stats.length
         // Use appropriate grid columns based on count
         const gridCols =
