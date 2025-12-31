@@ -3,6 +3,7 @@
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { rateLimitAction } from '@/lib/rate-limit'
 import { checkBotId } from '@/lib/botid'
+import { sendContactConfirmation, sendContactNotification } from '@/lib/email/send'
 import { headers } from 'next/headers'
 import type { Json } from '@/lib/supabase/database.types'
 
@@ -180,13 +181,13 @@ export async function submitContactForm(
       }
     }
 
-    const { error } = await supabaseAdmin.from('contact_submissions').insert({
+    const { data: inserted, error } = await supabaseAdmin.from('contact_submissions').insert({
       name: data.name.trim(),
       email: data.email.trim().toLowerCase(),
       subject: data.subject.trim(),
       message: data.situation.trim(), // stored as 'message' in DB
       attachments: (data.attachments || []) as unknown as Json,
-    })
+    }).select('id').single()
 
     if (error) {
       console.error('Error submitting contact form:', error)
@@ -196,8 +197,41 @@ export async function submitContactForm(
       }
     }
 
-    // TODO: Send confirmation email to user
-    // TODO: Send notification email to team
+    const safeName = data.name.trim()
+    const safeEmail = data.email.trim().toLowerCase()
+    const safeSubject = data.subject.trim()
+    const safeMessage = data.situation.trim()
+
+    const attachmentsForEmail =
+      data.attachments && data.attachments.length > 0
+        ? data.attachments.map((a) => ({
+            name: a.name,
+            size: a.size,
+            type: a.type,
+          }))
+        : undefined
+
+    const results = await Promise.allSettled([
+      sendContactConfirmation({
+        to: safeEmail,
+        name: safeName,
+        subject: safeSubject,
+      }),
+      sendContactNotification({
+        submissionId: inserted?.id,
+        name: safeName,
+        email: safeEmail,
+        subject: safeSubject,
+        message: safeMessage,
+        attachments: attachmentsForEmail,
+      }),
+    ])
+
+    for (const r of results) {
+      if (r.status === 'rejected') {
+        console.error('Contact email failed:', r.reason)
+      }
+    }
 
     return { success: true }
   } catch (err) {

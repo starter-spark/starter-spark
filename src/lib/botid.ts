@@ -4,8 +4,8 @@ import { NextResponse } from 'next/server'
 type BotIdResult = Awaited<ReturnType<typeof checkBotIdRaw>>
 
 function shouldRunBotId(): boolean {
-  if (process.env.NODE_ENV !== 'production') return true
-  return process.env.VERCEL === '1'
+  if (process.env.VERCEL === '1') return true
+  return process.env.BOTID_ALLOW_NON_VERCEL === '1'
 }
 
 function bypassResult(): BotIdResult {

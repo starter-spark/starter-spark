@@ -264,10 +264,10 @@ export async function Footer() {
               </li>
               <li>
                 <a
-                  href="mailto:kstewart27@punahou.edu"
+                  href="mailto:support@starterspark.org"
                   className={footerLinkClass}
                 >
-                  kstewart27@punahou.edu
+                  support@starterspark.org
                 </a>
               </li>
             </ul>

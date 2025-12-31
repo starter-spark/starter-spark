@@ -14,17 +14,24 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { reportPost } from './actions'
+import { reportPost, togglePostBookmark } from './actions'
 import { cn } from '@/lib/utils'
 
 interface PostActionsProps {
   postId: string
   isAuthenticated: boolean
+  initialBookmarked?: boolean
 }
 
-export function PostActions({ postId, isAuthenticated }: PostActionsProps) {
+export function PostActions({
+  postId,
+  isAuthenticated,
+  initialBookmarked = false,
+}: PostActionsProps) {
   const router = useRouter()
   const [copied, setCopied] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [bookmarked, setBookmarked] = useState(initialBookmarked)
   const [isReporting, setIsReporting] = useState(false)
   const [reported, setReported] = useState(false)
   const [showReportDialog, setShowReportDialog] = useState(false)
@@ -76,8 +83,35 @@ export function PostActions({ postId, isAuthenticated }: PostActionsProps) {
       )
       return
     }
-    // TODO: Implement save/bookmark functionality
-    toast.info('Bookmark feature coming soon!')
+
+    if (isSaving) return
+
+    setIsSaving(true)
+    void (async () => {
+      const result = await togglePostBookmark(postId)
+
+      if (result.error) {
+        if (result.requiresAuth) {
+          router.push(
+            '/login?redirect=' + encodeURIComponent(globalThis.location.pathname),
+          )
+          return
+        }
+        toast.error('Failed to save post', { description: result.error })
+        return
+      }
+
+      const next = Boolean((result as { bookmarked?: boolean }).bookmarked)
+      setBookmarked(next)
+      toast.success(next ? 'Saved' : 'Removed from saved')
+    })()
+      .catch((err: unknown) => {
+        console.error('Bookmark action failed:', err)
+        toast.error('Failed to save post')
+      })
+      .finally(() => {
+        setIsSaving(false)
+      })
   }
 
   const handleReportClick = () => {
@@ -130,10 +164,18 @@ export function PostActions({ postId, isAuthenticated }: PostActionsProps) {
         onClick={() => {
           handleSave()
         }}
-        className="flex items-center gap-2 text-sm text-slate-500 hover:text-cyan-700 transition-colors"
+        disabled={isSaving}
+        className={cn(
+          'flex items-center gap-2 text-sm transition-colors disabled:opacity-60',
+          bookmarked ? 'text-cyan-700 hover:text-cyan-800' : 'text-slate-500 hover:text-cyan-700',
+        )}
       >
-        <Bookmark className="w-4 h-4" />
-        Save
+        {isSaving ? (
+          <Loader2 className="w-4 h-4 animate-spin" />
+        ) : (
+          <Bookmark className="w-4 h-4" fill={bookmarked ? 'currentColor' : 'none'} />
+        )}
+        {bookmarked ? 'Saved' : 'Save'}
       </button>
       <button
         onClick={handleReportClick}

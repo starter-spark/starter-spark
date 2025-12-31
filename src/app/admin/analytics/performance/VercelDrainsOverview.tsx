@@ -328,11 +328,20 @@ export function VercelDrainsOverview() {
                 </div>
               </div>
 
-              <div className="rounded border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
-                Endpoint URLs:{' '}
-                <span className="font-mono">/api/vercel/drains/speed-insights</span>,{' '}
-                <span className="font-mono">/api/vercel/drains/web-analytics</span>,{' '}
-                <span className="font-mono">/api/vercel/drains/logs</span>
+              <div className="rounded border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700 space-y-2">
+                <p>
+                  Endpoint URLs:{' '}
+                  <span className="font-mono">/api/vercel/drains/speed-insights</span>,{' '}
+                  <span className="font-mono">/api/vercel/drains/web-analytics</span>,{' '}
+                  <span className="font-mono">/api/vercel/drains/logs</span>,{' '}
+                  <span className="font-mono">/api/vercel/drains/traces</span>
+                </p>
+                <p>
+                  Security: <span className="font-mono">POST</span> only; requires{' '}
+                  <span className="font-mono">x-vercel-signature</span> and{' '}
+                  <span className="font-mono">x-starterspark-drains-token</span>{' '}
+                  (value from <span className="font-mono">VERCEL_DRAINS_AUTH_TOKEN</span>).
+                </p>
               </div>
             </div>
           ) : null}

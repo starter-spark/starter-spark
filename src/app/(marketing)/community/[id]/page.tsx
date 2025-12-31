@@ -180,6 +180,7 @@ export default async function QuestionDetailPage({
   // Get user's votes on post and comments
   let userPostVote: 1 | -1 | null = null
   const userCommentVotes: Record<string, 1 | -1> = {}
+  let isBookmarked = false
 
   if (user) {
     // Fetch post vote
@@ -213,6 +214,19 @@ export default async function QuestionDetailPage({
         }
       }
     }
+
+    const { data: bookmarkData, error: bookmarkError } = await supabase
+      .from('post_bookmarks')
+      .select('id')
+      .eq('post_id', post.id)
+      .eq('user_id', user.id)
+      .maybeSingle()
+
+    if (bookmarkError) {
+      console.error('Error fetching post bookmark:', bookmarkError)
+    }
+
+    isBookmarked = Boolean(bookmarkData)
   }
 
   // Increment view count (safe + RLS-compatible)
@@ -356,7 +370,11 @@ export default async function QuestionDetailPage({
 
             {/* Actions */}
             <div className="mt-6 pl-14 pt-4 border-t border-slate-100">
-              <PostActions postId={post.id} isAuthenticated={!!user} />
+              <PostActions
+                postId={post.id}
+                isAuthenticated={!!user}
+                initialBookmarked={isBookmarked}
+              />
             </div>
           </article>
         </div>

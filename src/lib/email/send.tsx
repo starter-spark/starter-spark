@@ -4,6 +4,8 @@ import { randomUUID } from 'crypto'
 import { PurchaseConfirmationEmail } from './templates/purchase-confirmation'
 import { ClaimLinkEmail } from './templates/claim-link'
 import { WelcomeEmail } from './templates/welcome'
+import { ContactConfirmationEmail } from './templates/contact-confirmation'
+import { ContactNotificationEmail } from './templates/contact-notification'
 import { recordResendWebhookEvent } from '@/lib/email/webhook-status'
 
 const FROM_EMAIL =
@@ -41,6 +43,20 @@ function mockResendSend(to: string, subject: string) {
     },
   })
   return { id: emailId }
+}
+
+function getResendClient(): Resend | null {
+  const apiKey = process.env.RESEND_API_KEY
+  if (!apiKey) return null
+  return new Resend(apiKey)
+}
+
+function parseCommaSeparatedEmails(value: string | undefined): string[] {
+  if (!value) return []
+  return value
+    .split(',')
+    .map((v) => v.trim())
+    .filter(Boolean)
 }
 
 interface LicenseInfo {
@@ -157,12 +173,8 @@ export async function sendWelcomeEmail({
   to,
   userName,
 }: SendWelcomeEmailParams) {
-  const apiKey = process.env.RESEND_API_KEY
-  if (!apiKey) {
-    throw new Error('RESEND_API_KEY is not configured')
-  }
-
-  const resend = new Resend(apiKey)
+  const resend = getResendClient()
+  if (!resend) throw new Error('RESEND_API_KEY is not configured')
   const subject = "Welcome to StarterSpark! Let's Build Something Amazing"
 
   if (shouldSkipResend(to)) {
@@ -174,6 +186,100 @@ export async function sendWelcomeEmail({
     to,
     subject,
     react: <WelcomeEmail userName={userName} siteUrl={SITE_URL} />,
+  })
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  return data
+}
+
+interface SendContactConfirmationParams {
+  to: string
+  name?: string
+  subject: string
+}
+
+export async function sendContactConfirmation({
+  to,
+  name,
+  subject,
+}: SendContactConfirmationParams) {
+  const resend = getResendClient()
+  if (!resend) return null
+
+  const emailSubject = 'We received your message — StarterSpark'
+
+  if (shouldSkipResend(to)) {
+    return mockResendSend(to, emailSubject)
+  }
+
+  const supportEmails = parseCommaSeparatedEmails(process.env.SUPPORT_TEAM_EMAILS)
+  const replyTo = supportEmails.length > 0 ? supportEmails[0] : undefined
+
+  const { data, error } = await resend.emails.send({
+    from: FROM_EMAIL,
+    to,
+    subject: emailSubject,
+    replyTo,
+    react: (
+      <ContactConfirmationEmail name={name} subject={subject} siteUrl={SITE_URL} />
+    ),
+  })
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  return data
+}
+
+interface SendContactNotificationParams {
+  name: string
+  email: string
+  subject: string
+  message: string
+  submissionId?: string
+  attachments?: Array<{
+    name: string
+    size: number
+    type: string
+  }>
+}
+
+export async function sendContactNotification({
+  name,
+  email,
+  subject,
+  message,
+  submissionId,
+  attachments,
+}: SendContactNotificationParams) {
+  const resend = getResendClient()
+  if (!resend) return null
+
+  const supportEmails = parseCommaSeparatedEmails(process.env.SUPPORT_TEAM_EMAILS)
+  if (supportEmails.length === 0) return null
+
+  const emailSubject = `New contact submission: ${subject}`
+
+  const { data, error } = await resend.emails.send({
+    from: FROM_EMAIL,
+    to: supportEmails,
+    subject: emailSubject,
+    replyTo: email,
+    react: (
+      <ContactNotificationEmail
+        submissionId={submissionId}
+        name={name}
+        email={email}
+        subject={subject}
+        message={message}
+        attachments={attachments}
+        siteUrl={SITE_URL}
+      />
+    ),
   })
 
   if (error) {

@@ -306,3 +306,71 @@ export async function reportPost(postId: string) {
   revalidatePath('/community')
   return { success: true, message: 'Post reported for review. Thank you.' }
 }
+
+export async function togglePostBookmark(postId: string) {
+  if (!isUuid(postId)) {
+    return { error: 'Invalid post.', requiresAuth: false }
+  }
+
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { error: 'You must be signed in to save posts', requiresAuth: true }
+  }
+
+  const rateLimitResult = await rateLimitAction(user.id, 'communityBookmark')
+  if (!rateLimitResult.success) {
+    return {
+      error:
+        rateLimitResult.error || 'Too many requests. Please try again shortly.',
+    }
+  }
+
+  const { data: existing, error: existingError } = await supabase
+    .from('post_bookmarks')
+    .select('id')
+    .eq('post_id', postId)
+    .eq('user_id', user.id)
+    .maybeSingle()
+
+  if (existingError) {
+    console.error('Error checking existing bookmark:', existingError)
+    return { error: 'Failed to save post. Please try again.' }
+  }
+
+  if (existing) {
+    const { error: deleteError } = await supabase
+      .from('post_bookmarks')
+      .delete()
+      .eq('id', existing.id)
+
+    if (deleteError) {
+      console.error('Error removing bookmark:', deleteError)
+      return { error: 'Failed to remove saved post. Please try again.' }
+    }
+
+    revalidatePath(`/community/${postId}`)
+    return { success: true, bookmarked: false }
+  }
+
+  const { error: insertError } = await supabase.from('post_bookmarks').insert({
+    post_id: postId,
+    user_id: user.id,
+  })
+
+  if (insertError) {
+    if (insertError.code === '23505') {
+      revalidatePath(`/community/${postId}`)
+      return { success: true, bookmarked: true }
+    }
+    console.error('Error creating bookmark:', insertError)
+    return { error: 'Failed to save post. Please try again.' }
+  }
+
+  revalidatePath(`/community/${postId}`)
+  return { success: true, bookmarked: true }
+}

@@ -126,10 +126,10 @@ export default function ContactPage() {
                     <div>
                       <p className="font-medium text-slate-900">Email</p>
                       <a
-                        href="mailto:kstewart27@punahou.edu"
+                        href="mailto:support@starterspark.org"
                         className="text-sm text-cyan-700 hover:text-cyan-800"
                       >
-                        kstewart27@punahou.edu
+                        support@starterspark.org
                       </a>
                     </div>
                   </div>
