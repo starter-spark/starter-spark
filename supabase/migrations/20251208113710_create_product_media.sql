@@ -86,4 +86,4 @@ DROP TRIGGER IF EXISTS trigger_set_primary_product_media ON product_media;
 CREATE TRIGGER trigger_set_primary_product_media
 BEFORE INSERT OR UPDATE ON product_media
 FOR EACH ROW
-EXECUTE FUNCTION set_primary_product_media();;
+EXECUTE FUNCTION set_primary_product_media();
