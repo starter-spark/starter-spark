@@ -80,19 +80,6 @@ export async function Footer() {
   }
   return (
     <footer className="bg-white border-t border-slate-200">
-      {/* Charity Banner */}
-      <div className="bg-amber-50 border-b border-amber-200 py-4 px-6 lg:px-20">
-        <div className="max-w-7xl mx-auto flex items-center justify-center gap-2 text-sm">
-          <Heart className="w-4 h-4 text-amber-600" />
-          <span className="text-slate-600 break-words">
-            <span className="font-mono text-amber-700 font-semibold">
-              {content['global.charity.percentage']}
-            </span>{' '}
-            {content['global.charity.short']}
-          </span>
-        </div>
-      </div>
-
       <div className="py-16 px-6 lg:px-20">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-12">
           {/* Brand Column */}

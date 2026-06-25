@@ -13,10 +13,10 @@ const DEFAULT_CONTENT = {
     'Learn by doing with our web-based platform featuring interactive wiring diagrams, code editors with real-time feedback, and progress tracking across lessons.',
   'home.differentiators.card3.title': 'Support for Schools and Clubs',
   'home.differentiators.card3.description':
-    "We offer bulk discounts and classroom-ready kits to help educators bring hands-on STEM learning to their students. Whether you're running a robotics club, teaching a STEM unit, or hosting a workshop, StarterSpark provides guidance, resources, and affordable tools to make it happen.",
+    "We offer bulk discounts for schools and clubs, and the kits come classroom-ready so you don't have to figure out sourcing. If you're trying to set up a robotics program and don't know where to start, just email us.",
   'home.differentiators.card4.title': 'Hawaii Roots',
   'home.differentiators.card4.description':
-    'Founded by students from Hawaii who wanted to give back. Every kit sold directly supports local STEM education programs and school robotics teams across the islands.',
+    "We're students from Hawaii who couldn't find a good beginner robotics kit, so we built one. Everything was tested by real students before we shipped anything.",
 }
 
 export async function DifferentiatorsWrapper() {

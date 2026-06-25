@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { motion, useInView } from 'motion/react'
 import { useRef, useEffect, useState } from 'react'
 import { SectionIntro } from './SectionIntro'
@@ -64,12 +65,12 @@ interface MissionImpactSectionProps extends MissionContentProps {
 export function MissionImpactSection({
   stats,
   title = 'More Than a Kit',
-  subtitle = "We're building the next generation of Hawaii's engineers.",
-  story1 = 'StarterSpark started as a classroom project: students teaching students how to build robots with whatever parts we could find. We saw how hands-on learning sparked curiosity in ways textbooks never could.',
-  story2 = "Now we're taking that experience and packaging it for anyone to access. Each kit represents hundreds of hours of curriculum development, testing with real students, and refinement based on their feedback.",
-  commitmentTitle = 'Our Commitment',
-  commitmentText = '67% of every dollar goes directly to local STEM charities and school robotics programs. The rest funds new kit development and operations.',
-  commitmentSubtext = "Your purchase directly impacts Hawaii's next generation of engineers.",
+  subtitle = 'We built this because we wanted it to exist. Everything we make is designed for students who are just starting out.',
+  story1 = 'StarterSpark started as a little project to help our old local elementary school FLL team. We realized there was nothing good for beginners, so we started making it ourselves. A lot of testing, a lot of broken parts, and eventually something that actually works.',
+  story2 = 'Every kit we ship has been tested by real students. Not just us. We bring the kits to schools and run workshops to figure out what breaks and what works. The stuff that makes it into the kit is what actually survived that process.',
+  commitmentTitle = 'Open Source',
+  commitmentText = 'Hardware schematics, 3D print files, and curriculum are all open source. Everything is on GitHub. You do not need to buy the kit to use what we built.',
+  commitmentSubtext = 'If you want to build it yourself, go for it.',
 }: MissionImpactSectionProps) {
   return (
     <section className="py-24 px-6 lg:px-20 bg-slate-50">
@@ -91,7 +92,7 @@ export function MissionImpactSection({
             </div>
 
             {/* 70/30 model */}
-            <div className="bg-white rounded border-l-4 border-amber-500 p-6 shadow-sm">
+            <div className="bg-white rounded border-l-4 border-cyan-700 p-6 shadow-sm">
               <h3 className="font-mono text-lg text-slate-900 mb-2 break-words">
                 {commitmentTitle}
               </h3>
@@ -126,48 +127,29 @@ export function MissionImpactSection({
             <div className="grid grid-cols-2 gap-3">
               {/* Placeholders */}
               {[
-                'FTC Competition',
-                'Workshop',
-                'Team Photo',
-                'Student Building',
-                'Presentation',
-              ].map((label, idx) => (
+                { label: 'Elementary Outreach', caption: 'Running a workshop at a local elementary school' },
+                { label: 'Hands-on Workshop', caption: 'Students wiring their first circuits' },
+                { label: 'Student Collaboration', caption: 'Working through the build together' },
+              ].map(({ label, caption }, idx) => (
                 <div
                   key={label}
                   className={`
-                    relative bg-white rounded border border-slate-200 overflow-hidden
+                    relative group bg-white rounded border border-slate-200 overflow-hidden
                     ${idx === 0 ? 'col-span-2 aspect-[2/1]' : 'aspect-square'}
                   `}
                 >
-                  <div className="absolute inset-0 flex items-center justify-center bg-slate-50">
-                    <div className="text-center p-2">
-                      <div className="w-8 h-8 mx-auto mb-1 rounded bg-slate-200 flex items-center justify-center">
-                        <svg
-                          className="w-4 h-4 text-slate-500"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={1.5}
-                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                          />
-                        </svg>
-                      </div>
-                      <p className="text-slate-500 text-[10px] font-mono">
-                        {label}
-                      </p>
-                    </div>
-                  </div>
-                  {/* Enable when images exist */}
-                  {/* <Image
+                  <Image
                     src={`/assets/images/outreach-${idx + 1}.jpg`}
                     alt={label}
                     fill
-                    className="object-cover hover:scale-105 transition-transform duration-300"
-                  /> */}
+                    className="object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-slate-900/70 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
+                    <div>
+                      <p className="text-white font-medium text-sm">{label}</p>
+                      <p className="text-white/70 text-xs">{caption}</p>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>

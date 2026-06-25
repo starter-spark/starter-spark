@@ -58,7 +58,7 @@ export function HeroSection({
       {/* Left Content */}
       <motion.div
         style={{ y, opacity }}
-        className="w-full lg:w-1/2 px-6 lg:px-20 z-10 flex flex-col justify-center h-full space-y-8 pointer-events-none"
+        className="w-full lg:w-1/2 px-6 lg:px-28 z-10 flex flex-col justify-center h-full space-y-8 pointer-events-none"
       >
         <motion.div
           initial={{ opacity: 0, x: -20 }}
@@ -73,7 +73,7 @@ export function HeroSection({
             {taglineTop}
           </p>
 
-          <h1 className="font-mono text-5xl lg:text-7xl font-bold tracking-tighter text-slate-900 mb-6 leading-[1.1] break-words">
+          <h1 className="font-mono text-4xl lg:text-5xl font-bold tracking-tighter text-slate-900 mb-6 leading-[1.1] break-words">
             {hasLineBreaks
               ? headlineLines.map((line, index) => (
                   <span key={line + index}>

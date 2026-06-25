@@ -1,5 +1,4 @@
 import { createPublicClient } from '@/lib/supabase/public'
-import { getContent } from '@/lib/content'
 import { AboutGallery, type AboutStat } from './AboutGallery'
 
 /**
@@ -7,15 +6,12 @@ import { AboutGallery, type AboutStat } from './AboutGallery'
  * Falls back to default stats if database fetch fails
  */
 export async function AboutGalleryWrapper() {
-  // Fetch charity percentage and stats in parallel
-  const charityPercentage = await getContent('global.charity.percentage', '67%')
-
   // Default stats to use if fetch fails or returns empty
   const defaultStats: AboutStat[] = [
     { value: '0', label: 'Workshops Hosted' },
     { value: '0', label: 'Students Reached' },
     { value: '1', label: 'Partner Schools' },
-    { value: charityPercentage, label: 'Donated to STEM' },
+    { value: '2', label: 'Kits Available' },
   ]
 
   let dbStats:
@@ -96,7 +92,7 @@ export async function AboutGalleryWrapper() {
     statsMap['Workshops Hosted'] || { value: '0', label: 'Workshops Hosted' },
     statsMap['Students Reached'] || { value: '0', label: 'Students Reached' },
     statsMap['Partner Schools'] || { value: '1', label: 'Partner Schools' },
-    { value: charityPercentage, label: 'Donated to STEM' }, // From global.charity.percentage
+    statsMap['Kits Deployed'] || { value: '2', label: 'Kits Available' },
   ]
 
   return <AboutGallery stats={stats} />

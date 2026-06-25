@@ -16,7 +16,7 @@ import {
 export const metadata: Metadata = {
   title: 'About Us',
   description:
-    "Learn about StarterSpark's mission to make robotics education accessible to every student in Hawaii. 67% of every purchase supports local STEM programs.",
+    "StarterSpark makes robotics education kits designed for students who are just starting out. Built by students in Hawaii.",
 }
 
 export default function AboutPage() {

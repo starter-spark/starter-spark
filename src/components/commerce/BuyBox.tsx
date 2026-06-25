@@ -360,16 +360,6 @@ export function BuyBox({
         ))}
       </div>
 
-      {/* Charity Notice */}
-      <div
-        data-testid="product-charity"
-        className="p-3 bg-amber-50 rounded border border-amber-200 text-sm text-slate-700"
-      >
-        <span className="font-mono text-amber-700 font-semibold">
-          {charityPercentage}
-        </span>{' '}
-        of your purchase supports Hawaii STEM education.
-      </div>
     </div>
   )
 }

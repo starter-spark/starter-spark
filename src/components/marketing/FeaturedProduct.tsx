@@ -63,8 +63,12 @@ export async function FeaturedProduct() {
         : { message: 'Unknown error' }
   }
 
-  if (tagsError || !featuredTags?.products) {
-    console.error('Failed to fetch featured product:', tagsError?.message)
+  if (tagsError) {
+    console.error('Failed to fetch featured product:', tagsError.message)
+    return null
+  }
+
+  if (!featuredTags?.products) {
     return null
   }
 
