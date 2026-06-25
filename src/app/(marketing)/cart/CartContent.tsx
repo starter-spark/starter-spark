@@ -391,16 +391,6 @@ export function CartContent({
                     </div>
                   </div>
 
-                  {/* Charity Notice */}
-                  <div
-                    data-testid="cart-charity"
-                    className="p-3 bg-amber-50 rounded border border-amber-200 text-sm text-slate-600"
-                  >
-                    <span className="font-mono text-amber-600 font-semibold">
-                      {charityPercentage}
-                    </span>{' '}
-                    {charityNotice}
-                  </div>
                 </div>
               </div>
             </div>

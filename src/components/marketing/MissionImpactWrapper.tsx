@@ -1,20 +1,19 @@
 import { createClient } from '@/lib/supabase/server'
-import { getContents, getContent } from '@/lib/content'
+import { getContents } from '@/lib/content'
 import { MissionImpactSection, type Stat } from './MissionImpact'
 
 const DEFAULT_CONTENT = {
   'home.mission.title': 'More Than a Kit',
   'home.mission.subtitle':
-    "We're building the next generation of Hawaii's engineers.",
+    'We built this because we wanted it to exist. Everything we make is designed for students who are just starting out.',
   'home.mission.story1':
-    'StarterSpark started as a classroom project: students teaching students how to build robots with whatever parts we could find. We saw how hands-on learning sparked curiosity in ways textbooks never could.',
+    'StarterSpark started as a little project to help our old local elementary school FLL team. We realized there was nothing good for beginners, so we started making it ourselves. A lot of testing, a lot of broken parts, and eventually something that actually works.',
   'home.mission.story2':
-    "Now we're taking that experience and packaging it for anyone to access. Each kit represents hundreds of hours of curriculum development, testing with real students, and refinement based on their feedback.",
-  'home.mission.commitment.title': 'Our Commitment',
+    'Every kit we ship has been tested by real students. Not just us. We bring the kits to schools and run workshops to figure out what breaks and what works. The stuff that makes it into the kit is what actually survived that process.',
+  'home.mission.commitment.title': 'Open Source',
   'home.mission.commitment.text':
-    '{charityPercentage} of every dollar goes directly to local STEM charities and school robotics programs. The rest funds new kit development and operations.',
-  'home.mission.commitment.subtext':
-    "Your purchase directly impacts Hawaii's next generation of engineers.",
+    'Hardware schematics, 3D print files, and curriculum are all open source. Everything is on GitHub. You do not need to buy the kit to use what we built.',
+  'home.mission.commitment.subtext': 'If you want to build it yourself, go for it.',
 }
 
 interface MissionImpactProps {
@@ -31,13 +30,7 @@ export async function MissionImpact({ page = 'home' }: MissionImpactProps) {
     Object.keys(DEFAULT_CONTENT),
     DEFAULT_CONTENT,
   )
-  const charityPercentage = await getContent('global.charity.percentage', '67%')
-
-  // Interpolate charity percentage into commitment text
-  const commitmentText = content['home.mission.commitment.text'].replace(
-    '{charityPercentage}',
-    charityPercentage,
-  )
+  const commitmentText = content['home.mission.commitment.text']
 
   let transformedStats: Stat[] = []
   try {
