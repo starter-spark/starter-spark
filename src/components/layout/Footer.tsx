@@ -5,6 +5,7 @@ import {
   YoutubeIcon,
 } from '@/components/icons/brand-icons'
 import { Heart } from 'lucide-react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { NewsletterForm } from './NewsletterForm'
 import { createPublicClient } from '@/lib/supabase/public'
@@ -84,9 +85,19 @@ export async function Footer() {
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-12">
           {/* Brand Column */}
           <div className="lg:col-span-2">
-            <p className="text-2xl font-bold text-slate-900 mb-4 tracking-tighter font-mono">
-              STARTER<span className="text-cyan-700">SPARK</span>
-            </p>
+            <div className="flex items-center gap-2 mb-4">
+              <Image
+                src="/logo-mark.png"
+                alt=""
+                width={32}
+                height={32}
+                className="h-8 w-8"
+                quality={100}
+              />
+              <p className="text-2xl font-bold text-slate-900 tracking-tighter font-mono">
+                STARTER<span className="text-cyan-700">SPARK</span>
+              </p>
+            </div>
             <p className="text-slate-600 max-w-sm mb-6 leading-relaxed text-sm break-words">
               {content['footer.brand.tagline']}
             </p>
