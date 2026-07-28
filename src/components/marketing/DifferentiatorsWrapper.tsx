@@ -4,7 +4,7 @@ import { DifferentiatorsSection } from './Differentiators'
 const DEFAULT_CONTENT = {
   'home.differentiators.title': 'Why StarterSpark?',
   'home.differentiators.description':
-    'We built the kit we wished existed when we started learning robotics.',
+    'We built the kit we wished existed when we were kids.',
   'home.differentiators.card1.title': 'Complete Package',
   'home.differentiators.card1.description':
     'Everything you need in one box: pre-cut parts, electronics, fasteners, and our step-by-step digital curriculum. No hunting for components or compatibility issues.',
