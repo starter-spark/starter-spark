@@ -1,5 +1,6 @@
 import { unstable_cache } from 'next/cache'
 import { draftMode } from 'next/headers'
+import { createPublicClient } from '@/lib/supabase/public'
 import { cmsDb } from './db'
 import { cmsRegistry, typeSchema, type CmsData, type CmsType } from './registry'
 
@@ -49,7 +50,10 @@ async function isDraftMode(): Promise<boolean> {
 async function fetchPublishedEntries(
   type: CmsType,
 ): Promise<{ key: string; sort_order: number; data: unknown }[]> {
-  const { data, error } = await cmsDb
+  // Published content is public by design (RLS exposes exactly the published
+  // version of live documents), so this read needs no service role.
+  const supabase = createPublicClient()
+  const { data, error } = await supabase
     .from('cms_published')
     .select('key, sort_order, data')
     .eq('type', type)

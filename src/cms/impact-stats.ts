@@ -1,4 +1,5 @@
 import { supabaseAdmin } from '@/lib/supabase/admin'
+import { createPublicClient } from '@/lib/supabase/public'
 import { getCollection } from './content'
 
 export interface ResolvedImpactStat {
@@ -35,7 +36,8 @@ export async function getImpactStats(): Promise<ResolvedImpactStat[]> {
           })
       : Promise.resolve(0),
     needsEvents
-      ? supabaseAdmin
+      ? // Public events are anon-readable, so no service role needed here
+        createPublicClient()
           .from('events')
           .select('id', { count: 'exact', head: true })
           .eq('is_public', true)

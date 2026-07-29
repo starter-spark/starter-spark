@@ -17,8 +17,8 @@ BEGIN
     INSERT INTO public.cms_versions (document_id, version, data, note)
       VALUES (doc_id, 1, jsonb_build_object(
         'label', 'Donated to STEM',
-        'value', '30%',
-        'suffix', '',
+        'value', '30',
+        'suffix', '%',
         'autoSource', 'none',
         'visible', true
       ), 'Migrated from About page hardcoded charity stat')
