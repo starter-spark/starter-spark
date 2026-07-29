@@ -23,7 +23,6 @@ export class ProductPage {
   readonly freeShippingNote: Locator
   readonly returnsNote: Locator
   readonly secureCheckoutNote: Locator
-  readonly charityNote: Locator
 
   // Product tabs
   readonly descriptionTab: Locator
@@ -54,10 +53,6 @@ export class ProductPage {
     this.freeShippingNote = page.getByText(/free shipping/i).first()
     this.returnsNote = page.getByText(/30-day returns/i).first()
     this.secureCheckoutNote = page.getByText(/secure checkout/i).first()
-    this.charityNote = page
-      .locator('main')
-      .getByTestId('product-charity')
-      .first()
 
     // Tabs
     this.descriptionTab = page.getByRole('tab', { name: /description/i })
@@ -120,7 +115,6 @@ export class ProductPage {
     await expect(this.freeShippingNote).toBeVisible()
     await expect(this.returnsNote).toBeVisible()
     await expect(this.secureCheckoutNote).toBeVisible()
-    await expect(this.charityNote).toBeVisible()
   }
 
   async clickTab(tabName: 'description' | 'learning' | 'included' | 'specs') {

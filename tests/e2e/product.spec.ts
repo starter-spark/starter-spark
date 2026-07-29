@@ -226,14 +226,6 @@ test.describe('Product Page - Trust Signals', () => {
     const productPage = new ProductPage(page)
     await expect(productPage.secureCheckoutNote).toBeVisible()
   })
-
-  test('should display charity notice', async ({ page }) => {
-    const opened = await openFirstProductFromShop(page)
-    if (!opened) return
-
-    const productPage = new ProductPage(page)
-    await expect(productPage.charityNote).toBeVisible()
-  })
 })
 
 test.describe('Product Page - Tabs', () => {

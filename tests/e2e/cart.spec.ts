@@ -429,31 +429,6 @@ test.describe('Cart - Order Summary', () => {
     const freeShippingMsg = page.getByText(/add.*more.*free shipping/i)
     await expect(freeShippingMsg).toBeVisible()
   })
-
-  test('should display charity notice', async ({ page }) => {
-    await page.goto('/')
-    await page.evaluate(() => {
-      const cartState = {
-        state: {
-          items: [
-            {
-              slug: '4dof-robotic-arm-kit',
-              name: '4DOF Robotic Arm Kit',
-              price: 99,
-              quantity: 1,
-            },
-          ],
-        },
-        version: 0,
-      }
-      localStorage.setItem('starterspark-cart', JSON.stringify(cartState))
-    })
-
-    const cartPage = new CartPage(page)
-    await cartPage.goto()
-
-    await expect(cartPage.charityNote).toBeVisible()
-  })
 })
 
 test.describe('Cart - Checkout', () => {

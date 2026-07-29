@@ -27,7 +27,6 @@ export class CartPage {
   // Trust signals
   readonly freeShippingNote: Locator
   readonly secureCheckoutNote: Locator
-  readonly charityNote: Locator
 
   constructor(page: Page) {
     this.page = page
@@ -55,7 +54,6 @@ export class CartPage {
     // Trust signals
     this.freeShippingNote = page.getByText(/free shipping on orders/i)
     this.secureCheckoutNote = page.getByText(/secure checkout with stripe/i)
-    this.charityNote = page.getByTestId('cart-charity')
   }
 
   async goto() {
