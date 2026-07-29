@@ -49,7 +49,7 @@ async function getDatabaseStats() {
     events,
     posts,
     comments,
-    siteStats,
+    cmsDocuments,
     pageContent,
     docPages,
     lessonProgress,
@@ -65,7 +65,7 @@ async function getDatabaseStats() {
     supabase.from('events').select('id', { count: 'exact', head: true }),
     supabase.from('posts').select('id', { count: 'exact', head: true }),
     supabase.from('comments').select('id', { count: 'exact', head: true }),
-    supabase.from('site_stats').select('id', { count: 'exact', head: true }),
+    supabase.from('cms_documents').select('id', { count: 'exact', head: true }),
     supabase.from('page_content').select('id', { count: 'exact', head: true }),
     supabase.from('doc_pages').select('id', { count: 'exact', head: true }),
     supabase
@@ -87,7 +87,7 @@ async function getDatabaseStats() {
     events: events.count || 0,
     posts: posts.count || 0,
     comments: comments.count || 0,
-    siteStats: siteStats.count || 0,
+    cmsDocuments: cmsDocuments.count || 0,
     pageContent: pageContent.count || 0,
     docPages: docPages.count || 0,
     lessonProgress: lessonProgress.count || 0,
@@ -214,10 +214,10 @@ export default async function DatabaseAnalyticsPage() {
       description: 'Contact form entries',
     },
     {
-      name: 'Site Stats',
+      name: 'CMS Documents',
       icon: BarChart3,
-      count: stats.siteStats,
-      description: 'Homepage statistics',
+      count: stats.cmsDocuments,
+      description: 'Versioned content documents',
     },
   ]
 

@@ -20,7 +20,6 @@ import {
   Globe,
   ExternalLink,
   Type,
-  BarChart2,
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -125,44 +124,6 @@ export default async function ContentPage() {
                 <Link href="/admin/content/site">
                   <Edit className="h-4 w-4 mr-2" />
                   Edit Site Content
-                </Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Site Stats Section */}
-      <div>
-        <h2 className="text-lg font-mono text-slate-900 mb-4">Site Stats</h2>
-        <Card className="bg-white border-slate-200">
-          <CardHeader className="flex flex-row items-start justify-between space-y-0">
-            <div className="flex items-start gap-3">
-              <div className="p-2 bg-cyan-100 rounded">
-                <BarChart2 className="h-5 w-5 text-cyan-700" />
-              </div>
-              <div>
-                <CardTitle className="text-lg">Site Statistics</CardTitle>
-                <CardDescription>
-                  Configure stats displayed on the homepage and other pages
-                </CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-sm text-slate-500">
-                Edit customer counts, product stats, and other site metrics
-              </p>
-              <Button
-                asChild
-                size="sm"
-                variant="outline"
-                className="w-full sm:w-auto"
-              >
-                <Link href="/admin/content/stats">
-                  <Edit className="h-4 w-4 mr-2" />
-                  Manage Stats
                 </Link>
               </Button>
             </div>
