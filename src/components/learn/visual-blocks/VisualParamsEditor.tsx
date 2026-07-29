@@ -53,7 +53,9 @@ export function VisualParamsEditor({
           <div className="space-y-2">
             <Label>Type</Label>
             <select
-              value={typeof params.varType === 'string' ? params.varType : 'int'}
+              value={
+                typeof params.varType === 'string' ? params.varType : 'int'
+              }
               onChange={(e) => {
                 onChange({ varType: e.target.value })
               }}
@@ -146,7 +148,9 @@ export function VisualParamsEditor({
           <div className="space-y-2">
             <Label>Store result in</Label>
             <Input
-              value={typeof params.target === 'string' ? params.target : 'value'}
+              value={
+                typeof params.target === 'string' ? params.target : 'value'
+              }
               onChange={(e) => {
                 onChange({ target: e.target.value })
               }}
@@ -212,7 +216,9 @@ export function VisualParamsEditor({
           <div className="space-y-2">
             <Label>Store in</Label>
             <Input
-              value={typeof params.target === 'string' ? params.target : 'value'}
+              value={
+                typeof params.target === 'string' ? params.target : 'value'
+              }
               onChange={(e) => {
                 onChange({ target: e.target.value })
               }}
@@ -295,7 +301,8 @@ export function VisualParamsEditor({
             </div>
           </div>
           <p className="text-[10px] text-slate-500">
-            Pin modes are always emitted in <span className="font-mono">setup()</span>.
+            Pin modes are always emitted in{' '}
+            <span className="font-mono">setup()</span>.
           </p>
         </>
       )}
@@ -305,7 +312,9 @@ export function VisualParamsEditor({
           <div className="space-y-2">
             <Label>Servo variable</Label>
             <Input
-              value={typeof params.variable === 'string' ? params.variable : 'servo'}
+              value={
+                typeof params.variable === 'string' ? params.variable : 'servo'
+              }
               onChange={(e) => {
                 onChange({ variable: e.target.value })
               }}
@@ -331,7 +340,9 @@ export function VisualParamsEditor({
           <div className="space-y-2">
             <Label>Servo variable</Label>
             <Input
-              value={typeof params.variable === 'string' ? params.variable : 'servo'}
+              value={
+                typeof params.variable === 'string' ? params.variable : 'servo'
+              }
               onChange={(e) => {
                 onChange({ variable: e.target.value })
               }}
@@ -354,7 +365,8 @@ export function VisualParamsEditor({
               placeholder="90"
             />
             <p className="text-[10px] text-slate-500">
-              Supports expressions (e.g. <span className="font-mono">map(x,0,1023,0,180)</span>).
+              Supports expressions (e.g.{' '}
+              <span className="font-mono">map(x,0,1023,0,180)</span>).
             </p>
           </div>
         </>
@@ -504,7 +516,11 @@ export function VisualParamsEditor({
           <div className="space-y-2">
             <Label>Store in variable</Label>
             <Input
-              value={typeof params.variable === 'string' ? params.variable : 'buttonState'}
+              value={
+                typeof params.variable === 'string'
+                  ? params.variable
+                  : 'buttonState'
+              }
               onChange={(e) => {
                 onChange({ variable: e.target.value })
               }}
@@ -529,7 +545,11 @@ export function VisualParamsEditor({
           <div className="space-y-2">
             <Label>Store in variable</Label>
             <Input
-              value={typeof params.variable === 'string' ? params.variable : 'sensorValue'}
+              value={
+                typeof params.variable === 'string'
+                  ? params.variable
+                  : 'sensorValue'
+              }
               onChange={(e) => {
                 onChange({ variable: e.target.value })
               }}
@@ -543,7 +563,9 @@ export function VisualParamsEditor({
         <div className="space-y-2">
           <Label>Condition</Label>
           <Input
-            value={typeof params.condition === 'string' ? params.condition : 'true'}
+            value={
+              typeof params.condition === 'string' ? params.condition : 'true'
+            }
             onChange={(e) => {
               onChange({ condition: e.target.value })
             }}
@@ -560,7 +582,9 @@ export function VisualParamsEditor({
           <div className="space-y-2">
             <Label>Variable</Label>
             <Input
-              value={typeof params.variable === 'string' ? params.variable : 'i'}
+              value={
+                typeof params.variable === 'string' ? params.variable : 'i'
+              }
               onChange={(e) => {
                 onChange({ variable: e.target.value })
               }}
@@ -606,7 +630,9 @@ export function VisualParamsEditor({
         <div className="space-y-2">
           <Label>Condition</Label>
           <Input
-            value={typeof params.condition === 'string' ? params.condition : 'true'}
+            value={
+              typeof params.condition === 'string' ? params.condition : 'true'
+            }
             onChange={(e) => {
               onChange({ condition: e.target.value })
             }}
@@ -618,7 +644,9 @@ export function VisualParamsEditor({
         </div>
       )}
 
-      {(blockType === 'setup' || blockType === 'loop' || blockType === 'end_block') && (
+      {(blockType === 'setup' ||
+        blockType === 'loop' ||
+        blockType === 'end_block') && (
         <p className="text-sm text-slate-500">
           This block has no configurable parameters.
         </p>
@@ -630,4 +658,3 @@ export function VisualParamsEditor({
     </div>
   )
 }
-

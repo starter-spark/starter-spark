@@ -193,7 +193,8 @@ export default async function CommunityPage({
       if (statusFilter) countQuery = countQuery.eq('status', statusFilter)
       if (tagFilter) countQuery = countQuery.contains('tags', [tagFilter])
       if (productId) countQuery = countQuery.eq('product_id', productId)
-      if (searchQuery) countQuery = countQuery.ilike('title', `%${searchQuery}%`)
+      if (searchQuery)
+        countQuery = countQuery.ilike('title', `%${searchQuery}%`)
       const { count, error: countError } = await countQuery
       if (countError) {
         console.error('Error counting posts:', formatUpstreamError(countError))
@@ -228,7 +229,10 @@ export default async function CommunityPage({
           <nav aria-label="Breadcrumb" className="mb-6">
             <ol className="flex items-center gap-2 text-sm text-slate-500">
               <li>
-                <Link href="/" className="hover:text-cyan-700 transition-colors">
+                <Link
+                  href="/"
+                  className="hover:text-cyan-700 transition-colors"
+                >
                   Home
                 </Link>
               </li>

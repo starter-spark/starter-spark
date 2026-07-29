@@ -25,7 +25,8 @@ export const metadata = {
 
 export default function UsageAnalyticsPage() {
   const posthogKey = process.env.NEXT_PUBLIC_POSTHOG_KEY
-  const posthogHost = process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://app.posthog.com'
+  const posthogHost =
+    process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://app.posthog.com'
   const posthogPersonalApiKey = process.env.POSTHOG_PERSONAL_API_KEY
   const posthogProjectId = process.env.POSTHOG_PROJECT_ID
 
@@ -106,10 +107,10 @@ export default function UsageAnalyticsPage() {
                   <MousePointer className="h-5 w-5 text-slate-600" />
                 </div>
                 <div>
-                  <p className="font-medium text-slate-900">Session Recording</p>
-                  <p className="text-sm text-slate-500">
-                    User session replays
+                  <p className="font-medium text-slate-900">
+                    Session Recording
                   </p>
+                  <p className="text-sm text-slate-500">User session replays</p>
                 </div>
               </div>
               <Badge
@@ -130,7 +131,9 @@ export default function UsageAnalyticsPage() {
                   <Users className="h-5 w-5 text-slate-600" />
                 </div>
                 <div>
-                  <p className="font-medium text-slate-900">User Identification</p>
+                  <p className="font-medium text-slate-900">
+                    User Identification
+                  </p>
                   <p className="text-sm text-slate-500">
                     Link events to user profiles
                   </p>
@@ -192,16 +195,25 @@ export default function UsageAnalyticsPage() {
           <CardContent>
             <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
               <p className="text-sm text-slate-600 mb-4">
-                To display PostHog insights in this dashboard, add the following environment variables:
+                To display PostHog insights in this dashboard, add the following
+                environment variables:
               </p>
               <div className="space-y-2 font-mono text-sm">
                 <div className="flex items-start gap-2">
-                  <code className="rounded bg-slate-200 px-2 py-1">POSTHOG_PERSONAL_API_KEY</code>
-                  <span className="text-slate-500">- Personal API key with <code>query:read</code> scope</span>
+                  <code className="rounded bg-slate-200 px-2 py-1">
+                    POSTHOG_PERSONAL_API_KEY
+                  </code>
+                  <span className="text-slate-500">
+                    - Personal API key with <code>query:read</code> scope
+                  </span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <code className="rounded bg-slate-200 px-2 py-1">POSTHOG_PROJECT_ID</code>
-                  <span className="text-slate-500">- Your PostHog project ID</span>
+                  <code className="rounded bg-slate-200 px-2 py-1">
+                    POSTHOG_PROJECT_ID
+                  </code>
+                  <span className="text-slate-500">
+                    - Your PostHog project ID
+                  </span>
                 </div>
               </div>
               <div className="mt-4 pt-4 border-t border-slate-200">
@@ -229,7 +241,9 @@ export default function UsageAnalyticsPage() {
         <CardContent>
           <div className="space-y-2">
             <div className="flex justify-between rounded bg-slate-50 px-3 py-2">
-              <span className="text-sm text-slate-600">Client Key Configured</span>
+              <span className="text-sm text-slate-600">
+                Client Key Configured
+              </span>
               <code className="text-sm text-slate-900">
                 {isConfigured ? 'Yes' : 'No'}
               </code>

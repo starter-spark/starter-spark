@@ -3,7 +3,12 @@
 import Link from 'next/link'
 import { useCallback, useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { CheckCircle2, ChevronLeft, ChevronRight, FastForward } from 'lucide-react'
+import {
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  FastForward,
+} from 'lucide-react'
 
 interface LessonNavigationProps {
   prevHref?: string | null

@@ -163,9 +163,7 @@ export default function EditDocPage({
   }
 
   if (isLoading) {
-    return (
-      <div className="py-12 text-center text-slate-500">Loading...</div>
-    )
+    return <div className="py-12 text-center text-slate-500">Loading...</div>
   }
 
   if (!page) {
@@ -342,7 +340,11 @@ export default function EditDocPage({
                 <Trash2 className="w-4 h-4 mr-2" />
                 Delete
               </Button>
-              <Button type="submit" disabled={isSaving} className="w-full sm:w-auto">
+              <Button
+                type="submit"
+                disabled={isSaving}
+                className="w-full sm:w-auto"
+              >
                 <Save className="w-4 h-4 mr-2" />
                 {isSaving ? 'Saving...' : 'Save Changes'}
               </Button>
@@ -354,9 +356,12 @@ export default function EditDocPage({
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete &ldquo;{formData.title}&rdquo;?</AlertDialogTitle>
+            <AlertDialogTitle>
+              Delete &ldquo;{formData.title}&rdquo;?
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. The page will be permanently deleted.
+              This action cannot be undone. The page will be permanently
+              deleted.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

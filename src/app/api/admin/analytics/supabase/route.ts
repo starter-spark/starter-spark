@@ -27,9 +27,7 @@ function getSupabaseProjectRef(): string | null {
   const explicit = process.env.SUPABASE_PROJECT_REF
   if (explicit) return explicit
 
-  const url =
-    process.env.SUPABASE_URL ||
-    process.env.NEXT_PUBLIC_SUPABASE_URL
+  const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
 
   if (!url) return null
 
@@ -74,7 +72,10 @@ function normalizeUsageSeries(payload: unknown): {
   return { series, error }
 }
 
-function normalizeApiRequestsCount(payload: unknown): { count: number; error: string | null } {
+function normalizeApiRequestsCount(payload: unknown): {
+  count: number
+  error: string | null
+} {
   if (!isRecord(payload)) return { count: 0, error: null }
   const error = getString(payload.error) ?? null
   const rawResult = payload.result
@@ -202,7 +203,9 @@ export async function GET(request: Request) {
       )
 
       const totalRequests =
-        count > 0 ? count : totals.rest + totals.auth + totals.storage + totals.realtime
+        count > 0
+          ? count
+          : totals.rest + totals.auth + totals.storage + totals.realtime
 
       return {
         configured: true,

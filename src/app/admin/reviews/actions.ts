@@ -107,7 +107,7 @@ export async function updateReviewStatus(
       newStatus: nextStatus,
       productId: review.product_id,
       authorId: review.author_id,
-      reason: nextStatus === 'hidden' ? (reason || null) : null,
+      reason: nextStatus === 'hidden' ? reason || null : null,
     },
   })
 
@@ -126,7 +126,9 @@ export async function deleteReview(
   const supabase = await createClient()
   const guard = await requireAdmin(supabase)
   if (!guard.ok) {
-    return { error: guard.user ? 'Only admins can delete reviews' : guard.error }
+    return {
+      error: guard.user ? 'Only admins can delete reviews' : guard.error,
+    }
   }
   const user = guard.user
 
@@ -183,4 +185,3 @@ export async function deleteReview(
 
   return { error: null }
 }
-

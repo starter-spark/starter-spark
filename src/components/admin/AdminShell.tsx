@@ -5,7 +5,12 @@ import Link from 'next/link'
 import { Home, Menu } from 'lucide-react'
 import { AdminSidebar } from '@/components/admin/AdminSidebar'
 import { Button } from '@/components/ui/button'
-import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
+import {
+  Sheet,
+  SheetContent,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet'
 
 interface AdminShellProps {
   user: {
@@ -96,9 +101,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
         </header>
 
         <main className="min-h-0 min-w-0 flex-1 overflow-y-auto">
-          <div className="mx-auto w-full max-w-7xl p-4 sm:p-6">
-            {children}
-          </div>
+          <div className="mx-auto w-full max-w-7xl p-4 sm:p-6">{children}</div>
         </main>
       </div>
     </div>

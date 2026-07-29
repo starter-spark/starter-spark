@@ -89,9 +89,7 @@ export default function NewDocPage() {
   }
 
   if (isLoading) {
-    return (
-      <div className="py-12 text-center text-slate-500">Loading...</div>
-    )
+    return <div className="py-12 text-center text-slate-500">Loading...</div>
   }
 
   return (
@@ -125,7 +123,7 @@ export default function NewDocPage() {
       </div>
 
       <form onSubmit={(e) => void handleSubmit(e)}>
-          <div className="bg-white rounded border border-slate-200 p-6 space-y-6">
+        <div className="bg-white rounded border border-slate-200 p-6 space-y-6">
           {/* Category and Title */}
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
@@ -241,7 +239,11 @@ export default function NewDocPage() {
                 </p>
               </div>
             </div>
-            <Button type="submit" disabled={isSaving} className="w-full sm:w-auto">
+            <Button
+              type="submit"
+              disabled={isSaving}
+              className="w-full sm:w-auto"
+            >
               <Save className="w-4 h-4 mr-2" />
               {isSaving ? 'Creating...' : 'Create Page'}
             </Button>

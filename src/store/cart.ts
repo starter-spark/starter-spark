@@ -66,7 +66,9 @@ export const useCartStore = create<CartStore>()(
           // Respect maxQuantity if set
           const maxQty = item.maxQuantity ?? existingItem.maxQuantity
           const newQuantity = existingItem.quantity + quantity
-          const clampedQuantity = maxQty ? Math.min(newQuantity, maxQty) : newQuantity
+          const clampedQuantity = maxQty
+            ? Math.min(newQuantity, maxQty)
+            : newQuantity
 
           set({
             items: items.map((i) =>

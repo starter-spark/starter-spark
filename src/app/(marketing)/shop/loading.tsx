@@ -24,7 +24,10 @@ export default function ShopLoading() {
                   <LoadingBlock className="h-6 w-3/4 rounded" tone="strong" />
                   <LoadingBlock className="h-4 w-full rounded" tone="soft" />
                   <LoadingBlock className="h-4 w-2/3 rounded" tone="soft" />
-                  <LoadingBlock className="h-8 w-24 rounded mt-4" tone="strong" />
+                  <LoadingBlock
+                    className="h-8 w-24 rounded mt-4"
+                    tone="strong"
+                  />
                 </div>
               </div>
             ))}

@@ -93,7 +93,9 @@ export default async function CustomPage({ params }: PageProps) {
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto">
-        <div className={`${tocEnabled ? 'lg:grid lg:grid-cols-[1fr_220px] lg:gap-12' : ''}`}>
+        <div
+          className={`${tocEnabled ? 'lg:grid lg:grid-cols-[1fr_220px] lg:gap-12' : ''}`}
+        >
           {/* Main column */}
           <div className="min-w-0">
             {/* Header */}
@@ -150,10 +152,7 @@ export default async function CustomPage({ params }: PageProps) {
           {tocEnabled && (
             <aside className="hidden lg:block pr-6 lg:pr-8">
               <div className="sticky top-24 pt-8">
-                <TableOfContents
-                  blocks={contentBlocks}
-                  className="text-sm"
-                />
+                <TableOfContents blocks={contentBlocks} className="text-sm" />
               </div>
             </aside>
           )}

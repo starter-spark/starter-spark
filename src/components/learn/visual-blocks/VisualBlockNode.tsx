@@ -5,9 +5,14 @@ import { cn } from '@/lib/utils'
 import type { VisualNodeData } from '../visual-programming'
 import { visualBlockScheme } from './registry'
 
-function getParam(params: Record<string, unknown>, key: string, fallback: string | number): string {
+function getParam(
+  params: Record<string, unknown>,
+  key: string,
+  fallback: string | number,
+): string {
   const value: unknown = Object.getOwnPropertyDescriptor(params, key)?.value
-  if (typeof value === 'string' || typeof value === 'number') return String(value)
+  if (typeof value === 'string' || typeof value === 'number')
+    return String(value)
   return String(fallback)
 }
 
@@ -43,7 +48,8 @@ export function VisualBlockNode({ data }: { data: VisualNodeData }) {
       case 'serial_begin':
         return `${getParam(params, 'baud', 9600)} baud`
       case 'serial_print': {
-        const msg = typeof params.message === 'string' ? params.message : 'Hello'
+        const msg =
+          typeof params.message === 'string' ? params.message : 'Hello'
         return `"${truncate(msg, 12)}"`
       }
       case 'serial_print_value': {
@@ -88,7 +94,12 @@ export function VisualBlockNode({ data }: { data: VisualNodeData }) {
     }
   })()
 
-  const isControlFlow = ['if_condition', 'if_else', 'for_loop', 'while_loop'].includes(String(blockType))
+  const isControlFlow = [
+    'if_condition',
+    'if_else',
+    'for_loop',
+    'while_loop',
+  ].includes(String(blockType))
   const isEndBlock = blockType === 'end_block'
   const isRoot = blockType === 'setup' || blockType === 'loop'
   const showsBodySlot = isControlFlow || isRoot
@@ -146,13 +157,23 @@ export function VisualBlockNode({ data }: { data: VisualNodeData }) {
           <span className="font-mono text-xs font-semibold">{data.label}</span>
         </div>
         {displayValue && (
-          <div className={cn('font-mono text-[10px] mt-0.5 opacity-75', scheme.text)}>
+          <div
+            className={cn(
+              'font-mono text-[10px] mt-0.5 opacity-75',
+              scheme.text,
+            )}
+          >
             {displayValue}
           </div>
         )}
 
         {(isControlFlow || isRoot) && (
-          <div className={cn('mt-1 flex items-center justify-between text-[9px] font-mono opacity-75', scheme.text)}>
+          <div
+            className={cn(
+              'mt-1 flex items-center justify-between text-[9px] font-mono opacity-75',
+              scheme.text,
+            )}
+          >
             <span className="flex items-center gap-1">
               <span className="h-1.5 w-1.5 rounded-full bg-cyan-600" />
               body

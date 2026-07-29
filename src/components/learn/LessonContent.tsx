@@ -28,9 +28,7 @@ import {
   parseLearnAssetRef,
   resolveLearnAssetUrl,
 } from '@/lib/learn-assets'
-import {
-  safeMarkdownUrlTransform,
-} from '@/lib/safe-url'
+import { safeMarkdownUrlTransform } from '@/lib/safe-url'
 import { createMarkdownComponents } from '@/components/markdown/markdown-components'
 
 const LazyCodeEditor = dynamic(
@@ -373,7 +371,12 @@ function VideoPlayer({ url, startTime, chapters }: VideoPlayerProps) {
           />
         </div>
         {chapters && chapters.length > 0 && (
-          <VideoChapterList chapters={chapters} onJump={() => {}} isYouTube videoId={embed.id} />
+          <VideoChapterList
+            chapters={chapters}
+            onJump={() => {}}
+            isYouTube
+            videoId={embed.id}
+          />
         )}
       </div>
     )
@@ -393,7 +396,12 @@ function VideoPlayer({ url, startTime, chapters }: VideoPlayerProps) {
           />
         </div>
         {chapters && chapters.length > 0 && (
-          <VideoChapterList chapters={chapters} onJump={() => {}} isVimeo videoId={embed.id} />
+          <VideoChapterList
+            chapters={chapters}
+            onJump={() => {}}
+            isVimeo
+            videoId={embed.id}
+          />
         )}
       </div>
     )
@@ -417,7 +425,11 @@ function VideoPlayer({ url, startTime, chapters }: VideoPlayerProps) {
         />
       </div>
       {chapters && chapters.length > 0 && (
-        <VideoChapterList chapters={chapters} onJump={jumpToTime} currentTime={currentTime} />
+        <VideoChapterList
+          chapters={chapters}
+          onJump={jumpToTime}
+          currentTime={currentTime}
+        />
       )}
     </div>
   )
@@ -446,7 +458,9 @@ function VideoChapterList({
 
   return (
     <div className="bg-slate-50 rounded border border-slate-200 p-3">
-      <p className="font-mono text-xs font-semibold text-slate-700 mb-2">Chapters</p>
+      <p className="font-mono text-xs font-semibold text-slate-700 mb-2">
+        Chapters
+      </p>
       <div className="space-y-1">
         {chapters.map((chapter, idx) => {
           const isActive = idx === currentChapter
@@ -539,7 +553,9 @@ function AdvancedSection({
           <span className="text-purple-600 font-mono text-xs uppercase tracking-wide font-semibold">
             Advanced
           </span>
-          {title && <span className="text-sm text-purple-900 font-medium">{title}</span>}
+          {title && (
+            <span className="text-sm text-purple-900 font-medium">{title}</span>
+          )}
         </div>
         <svg
           className={`w-5 h-5 text-purple-600 transition-transform ${isOpen ? 'rotate-180' : ''}`}
@@ -547,7 +563,12 @@ function AdvancedSection({
           viewBox="0 0 24 24"
           stroke="currentColor"
         >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M19 9l-7 7-7-7"
+          />
         </svg>
       </button>
       {isOpen && (
@@ -577,10 +598,20 @@ function AlternativeExplanation({
           onClick={() => setShowAlternative(true)}
           className="text-sm text-cyan-700 hover:text-cyan-600 font-medium flex items-center gap-1"
         >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
           </svg>
-          {title || "Explain differently"}
+          {title || 'Explain differently'}
         </button>
       ) : (
         <div className="bg-cyan-50 border border-cyan-200 rounded-lg p-4">
@@ -596,9 +627,7 @@ function AlternativeExplanation({
               Hide
             </button>
           </div>
-          <div className="text-sm text-cyan-900">
-            {children}
-          </div>
+          <div className="text-sm text-cyan-900">{children}</div>
         </div>
       )}
     </div>
@@ -835,69 +864,76 @@ export function LessonContent({
     return ''
   }
 
-  const markdownComponents: Components = createMarkdownComponents(markdownStyles, {
-    strong: ({ children }) => <strong>{children}</strong>,
-    em: ({ children }) => <em>{children}</em>,
-    div: ({
-      children,
-      ...props
-    }: ComponentPropsWithoutRef<'div'> & { 'data-callout'?: string }) => {
-      const calloutType = props['data-callout']
-      if (calloutType && isCalloutVariant(calloutType)) {
-        return <Callout variant={calloutType}>{children}</Callout>
-      }
-      return <div {...props}>{children}</div>
-    },
-    code: ({ className, children }) => {
-      const match = /language-(\w+)/.exec(className || '')
-      const isInline = !match
+  const markdownComponents: Components = createMarkdownComponents(
+    markdownStyles,
+    {
+      strong: ({ children }) => <strong>{children}</strong>,
+      em: ({ children }) => <em>{children}</em>,
+      div: ({
+        children,
+        ...props
+      }: ComponentPropsWithoutRef<'div'> & { 'data-callout'?: string }) => {
+        const calloutType = props['data-callout']
+        if (calloutType && isCalloutVariant(calloutType)) {
+          return <Callout variant={calloutType}>{children}</Callout>
+        }
+        return <div {...props}>{children}</div>
+      },
+      code: ({ className, children }) => {
+        const match = /language-(\w+)/.exec(className || '')
+        const isInline = !match
 
-      if (isInline) {
+        if (isInline) {
+          return (
+            <code className={inlineCodeClassName}>
+              {getInlineCodeText(children)}
+            </code>
+          )
+        }
+
+        const language = match ? match[1] : 'text'
+        const codeText =
+          typeof children === 'string'
+            ? children
+            : Array.isArray(children)
+              ? children.join('')
+              : ''
         return (
-          <code className={inlineCodeClassName}>
-            {getInlineCodeText(children)}
-          </code>
+          <CodeBlock code={codeText.replace(/\n$/, '')} language={language} />
         )
-      }
+      },
+      pre: ({ children }) => <>{children}</>,
+      input: ({
+        type,
+        checked,
+        ...props
+      }: ComponentPropsWithoutRef<'input'>) => {
+        if (type === 'checkbox') {
+          const index = checkboxIndex++
+          const isChecked = checkedItems.has(index)
 
-      const language = match ? match[1] : 'text'
-      const codeText =
-        typeof children === 'string'
-          ? children
-          : Array.isArray(children)
-            ? children.join('')
-            : ''
-      return (
-        <CodeBlock code={codeText.replace(/\n$/, '')} language={language} />
-      )
+          return (
+            <button
+              type="button"
+              role="checkbox"
+              aria-checked={isChecked}
+              onClick={() => {
+                toggleCheckbox(index)
+              }}
+              className="inline-flex items-center justify-center w-5 h-5 mr-2 align-text-bottom rounded border border-slate-300 bg-white hover:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 transition-colors cursor-pointer"
+            >
+              {isChecked ? (
+                <CheckSquare className="w-4 h-4 text-cyan-600" />
+              ) : (
+                <Square className="w-4 h-4 text-slate-300" />
+              )}
+            </button>
+          )
+        }
+        return <input type={type} checked={checked} {...props} />
+      },
     },
-    pre: ({ children }) => <>{children}</>,
-    input: ({ type, checked, ...props }: ComponentPropsWithoutRef<'input'>) => {
-      if (type === 'checkbox') {
-        const index = checkboxIndex++
-        const isChecked = checkedItems.has(index)
-
-        return (
-          <button
-            type="button"
-            role="checkbox"
-            aria-checked={isChecked}
-            onClick={() => {
-              toggleCheckbox(index)
-            }}
-            className="inline-flex items-center justify-center w-5 h-5 mr-2 align-text-bottom rounded border border-slate-300 bg-white hover:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 transition-colors cursor-pointer"
-          >
-            {isChecked ? (
-              <CheckSquare className="w-4 h-4 text-cyan-600" />
-            ) : (
-              <Square className="w-4 h-4 text-slate-300" />
-            )}
-          </button>
-        )
-      }
-      return <input type={type} checked={checked} {...props} />
-    },
-  })
+  )
 
   const renderMarkdown = (markdown: string) => (
     <ReactMarkdown
@@ -979,9 +1015,14 @@ export function LessonContent({
           if (type === 'video') {
             const url = asString(block.url)
             if (!url) return null
-            const startTime = asNumber(block.startTime) || asNumber(block.start_time) || undefined
+            const startTime =
+              asNumber(block.startTime) ||
+              asNumber(block.start_time) ||
+              undefined
             // Parse chapters from block
-            const rawChapters = Array.isArray(block.chapters) ? block.chapters : []
+            const rawChapters = Array.isArray(block.chapters)
+              ? block.chapters
+              : []
             const chapters: VideoChapter[] = rawChapters
               .filter((ch): ch is Record<string, unknown> => isRecord(ch))
               .map((ch) => ({

@@ -25,16 +25,10 @@ export default function ClaimPage() {
           here for you.
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <Link
-            href="/workshop"
-            className={compactPrimaryLink}
-          >
+          <Link href="/workshop" className={compactPrimaryLink}>
             Go to Workshop
           </Link>
-          <Link
-            href="/support"
-            className={compactSecondaryLink}
-          >
+          <Link href="/support" className={compactSecondaryLink}>
             Contact Support
           </Link>
         </div>

@@ -41,7 +41,8 @@ function getNumber(value: unknown): number | null {
 
 function chunk<T>(items: T[], size: number): T[][] {
   const out: T[][] = []
-  for (let i = 0; i < items.length; i += size) out.push(items.slice(i, i + size))
+  for (let i = 0; i < items.length; i += size)
+    out.push(items.slice(i, i + size))
   return out
 }
 
@@ -60,7 +61,10 @@ export async function POST(request: Request) {
   }
 
   // Map events to rows and deduplicate by ID (Postgres can't handle duplicate IDs in same upsert)
-  const rowMap = new Map<string, NonNullable<ReturnType<typeof mapEventToRow>>>()
+  const rowMap = new Map<
+    string,
+    NonNullable<ReturnType<typeof mapEventToRow>>
+  >()
 
   function mapEventToRow(event: unknown) {
     if (!isRecord(event)) return null
@@ -76,7 +80,9 @@ export async function POST(request: Request) {
       ])
 
     const tsMs = getNumber(event.timestamp)
-    const timestamp = tsMs ? new Date(tsMs).toISOString() : new Date().toISOString()
+    const timestamp = tsMs
+      ? new Date(tsMs).toISOString()
+      : new Date().toISOString()
 
     return {
       id,

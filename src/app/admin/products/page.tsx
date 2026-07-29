@@ -56,7 +56,10 @@ export default async function ProductsPage() {
           </h1>
           <p className="text-slate-600">Manage your product catalog</p>
         </div>
-        <Button asChild className="bg-cyan-700 hover:bg-cyan-600 w-full sm:w-auto">
+        <Button
+          asChild
+          className="bg-cyan-700 hover:bg-cyan-600 w-full sm:w-auto"
+        >
           <Link href="/admin/products/new">
             <Plus className="mr-2 h-4 w-4" />
             Add Product

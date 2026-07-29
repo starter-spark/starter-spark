@@ -23,16 +23,10 @@ export default function CheckoutPage() {
           review your items and proceed.
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <Link
-            href="/cart"
-            className={compactPrimaryLink}
-          >
+          <Link href="/cart" className={compactPrimaryLink}>
             Go to Cart
           </Link>
-          <Link
-            href="/shop"
-            className={compactSecondaryLink}
-          >
+          <Link href="/shop" className={compactSecondaryLink}>
             Browse Kits
           </Link>
         </div>

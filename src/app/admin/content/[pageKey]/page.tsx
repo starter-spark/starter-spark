@@ -30,7 +30,9 @@ export default async function EditContentPage({
   // Transform Supabase Json type to compatible format
   const transformedPage = {
     ...page,
-    content_blocks: Array.isArray(page.content_blocks) ? page.content_blocks : null,
+    content_blocks: Array.isArray(page.content_blocks)
+      ? page.content_blocks
+      : null,
   }
 
   return (

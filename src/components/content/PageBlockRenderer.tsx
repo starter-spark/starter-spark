@@ -3,13 +3,7 @@
 import { useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import { Highlight, themes } from 'prism-react-renderer'
-import {
-  AlertTriangle,
-  Check,
-  Copy,
-  Info,
-  Lightbulb,
-} from 'lucide-react'
+import { AlertTriangle, Check, Copy, Info, Lightbulb } from 'lucide-react'
 import {
   Accordion,
   AccordionContent,
@@ -19,9 +13,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { safeMarkdownUrlTransform } from '@/lib/safe-url'
 import { createMarkdownComponents } from '@/components/markdown/markdown-components'
-import type {
-  PageBlock,
-} from '@/types/page-blocks'
+import type { PageBlock } from '@/types/page-blocks'
 import { generateAnchor } from '@/types/page-blocks'
 
 const markdownStyles = {
@@ -173,24 +165,24 @@ function Callout({
       icon: <AlertTriangle className="w-5 h-5 text-red-600" />,
       defaultTitle: 'Important',
     },
-	} as const
+  } as const
 
-	const style = (() => {
-		switch (variant) {
-			case 'tip':
-				return styles.tip
-			case 'warning':
-				return styles.warning
-			case 'danger':
-				return styles.danger
-			case 'info':
-			default:
-				return styles.info
-		}
-	})()
+  const style = (() => {
+    switch (variant) {
+      case 'tip':
+        return styles.tip
+      case 'warning':
+        return styles.warning
+      case 'danger':
+        return styles.danger
+      case 'info':
+      default:
+        return styles.info
+    }
+  })()
 
-	return (
-		<div className={`${style.bg} ${style.border} border rounded p-4 my-6`}>
+  return (
+    <div className={`${style.bg} ${style.border} border rounded p-4 my-6`}>
       <div className="flex items-center gap-2 mb-2">
         {style.icon}
         <span className="font-mono text-sm font-semibold">
@@ -213,13 +205,19 @@ function getVideoEmbed(
       url,
     )
   if (youtubeMatch) {
-    return { type: 'youtube', embedUrl: `https://www.youtube.com/embed/${youtubeMatch[1]}` }
+    return {
+      type: 'youtube',
+      embedUrl: `https://www.youtube.com/embed/${youtubeMatch[1]}`,
+    }
   }
 
   // Vimeo
   const vimeoMatch = /vimeo\.com\/(?:video\/)?(\d+)/.exec(url)
   if (vimeoMatch) {
-    return { type: 'vimeo', embedUrl: `https://player.vimeo.com/video/${vimeoMatch[1]}` }
+    return {
+      type: 'vimeo',
+      embedUrl: `https://player.vimeo.com/video/${vimeoMatch[1]}`,
+    }
   }
 
   // Direct video
@@ -244,11 +242,7 @@ function VideoPlayer({ url, caption }: { url: string; caption?: string }) {
   return (
     <figure className="my-6">
       {embed.type === 'direct' ? (
-        <video
-          src={embed.embedUrl}
-          className="w-full rounded-lg"
-          controls
-        />
+        <video src={embed.embedUrl} className="w-full rounded-lg" controls />
       ) : (
         <div className="relative aspect-video rounded-lg overflow-hidden">
           <iframe
@@ -403,7 +397,13 @@ export function PageBlockRenderer({ blocks }: PageBlockRendererProps) {
               : 'default'
         return (
           <div key={key} className={`flex ${alignment} my-6`}>
-            <Button asChild variant={variant} className={variant === 'default' ? 'bg-cyan-700 hover:bg-cyan-600' : ''}>
+            <Button
+              asChild
+              variant={variant}
+              className={
+                variant === 'default' ? 'bg-cyan-700 hover:bg-cyan-600' : ''
+              }
+            >
               <a href={b.url}>{b.text}</a>
             </Button>
           </div>
@@ -462,7 +462,8 @@ export function PageBlockRenderer({ blocks }: PageBlockRendererProps) {
             key={key}
             className="rounded border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-600 my-4"
           >
-            Unsupported block type: <span className="font-mono">{(block as PageBlock).type}</span>
+            Unsupported block type:{' '}
+            <span className="font-mono">{(block as PageBlock).type}</span>
           </div>
         )
     }

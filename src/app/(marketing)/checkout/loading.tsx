@@ -6,7 +6,10 @@ export default function CheckoutLoading() {
       <div className="mx-auto max-w-2xl text-center">
         <LoadingBlock className="h-4 w-24 mx-auto mb-3" tone="soft" />
         <LoadingBlock className="h-10 w-2/3 mx-auto mb-4" tone="strong" />
-        <LoadingBlock className="h-4 w-full max-w-xl mx-auto mb-2" tone="soft" />
+        <LoadingBlock
+          className="h-4 w-full max-w-xl mx-auto mb-2"
+          tone="soft"
+        />
         <LoadingBlock className="h-4 w-5/6 max-w-lg mx-auto mb-8" tone="soft" />
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <LoadingBlock className="h-10 w-32" tone="strong" />

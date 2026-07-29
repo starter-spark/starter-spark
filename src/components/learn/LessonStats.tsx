@@ -1,6 +1,12 @@
 'use client'
 
-import { useEffect, useState, useCallback, createContext, useContext } from 'react'
+import {
+  useEffect,
+  useState,
+  useCallback,
+  createContext,
+  useContext,
+} from 'react'
 import { Clock, RotateCcw, Target, Trophy } from 'lucide-react'
 
 // Context for sharing stats across lesson components
@@ -93,16 +99,24 @@ export function LessonStatsBar() {
   return (
     <div className="flex items-center gap-4 text-xs font-mono text-slate-500">
       {/* Time spent */}
-      <div className="flex items-center gap-1.5" title="Time spent on this lesson">
+      <div
+        className="flex items-center gap-1.5"
+        title="Time spent on this lesson"
+      >
         <Clock className="w-3.5 h-3.5" />
         <span>{formatDuration(timeSpent)}</span>
       </div>
 
       {/* Code attempts */}
       {codeAttempts > 0 && (
-        <div className="flex items-center gap-1.5" title="Code challenge attempts">
+        <div
+          className="flex items-center gap-1.5"
+          title="Code challenge attempts"
+        >
           <RotateCcw className="w-3.5 h-3.5" />
-          <span>{codeAttempts} {codeAttempts === 1 ? 'attempt' : 'attempts'}</span>
+          <span>
+            {codeAttempts} {codeAttempts === 1 ? 'attempt' : 'attempts'}
+          </span>
         </div>
       )}
 
@@ -110,7 +124,9 @@ export function LessonStatsBar() {
       {hasQuizzes && (
         <div className="flex items-center gap-1.5" title="Quiz score">
           <Target className="w-3.5 h-3.5" />
-          <span>{quizScore.correct}/{quizScore.total} correct</span>
+          <span>
+            {quizScore.correct}/{quizScore.total} correct
+          </span>
         </div>
       )}
     </div>
@@ -130,7 +146,9 @@ export function LessonStatsWidget({ className }: { className?: string }) {
     : 0
 
   return (
-    <div className={`bg-white rounded border border-slate-200 p-4 ${className || ''}`}>
+    <div
+      className={`bg-white rounded border border-slate-200 p-4 ${className || ''}`}
+    >
       <p className="font-mono text-xs font-semibold text-slate-700 mb-3 flex items-center gap-1.5">
         <Trophy className="w-4 h-4 text-amber-500" />
         Session Stats
@@ -154,7 +172,9 @@ export function LessonStatsWidget({ className }: { className?: string }) {
             <RotateCcw className="w-4 h-4" />
             <span>Code Attempts</span>
           </div>
-          <span className="font-mono text-sm text-slate-900">{codeAttempts}</span>
+          <span className="font-mono text-sm text-slate-900">
+            {codeAttempts}
+          </span>
         </div>
 
         {/* Quiz Score */}
@@ -164,7 +184,9 @@ export function LessonStatsWidget({ className }: { className?: string }) {
               <Target className="w-4 h-4" />
               <span>Quiz Score</span>
             </div>
-            <span className={`font-mono text-sm ${quizPercentage >= 70 ? 'text-green-600' : quizPercentage >= 50 ? 'text-amber-600' : 'text-slate-900'}`}>
+            <span
+              className={`font-mono text-sm ${quizPercentage >= 70 ? 'text-green-600' : quizPercentage >= 50 ? 'text-amber-600' : 'text-slate-900'}`}
+            >
               {quizScore.correct}/{quizScore.total} ({quizPercentage}%)
             </span>
           </div>

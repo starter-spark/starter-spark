@@ -485,10 +485,7 @@ export function SiteStatsManager({
                         </SelectTrigger>
                         <SelectContent>
                           {AUTO_SOURCES.map((source) => (
-                            <SelectItem
-                              key={source.value}
-                              value={source.value}
-                            >
+                            <SelectItem key={source.value} value={source.value}>
                               <div className="flex items-center gap-2">
                                 <Database className="h-3 w-3 text-cyan-600" />
                                 {source.label}
@@ -636,7 +633,10 @@ export function SiteStatsManager({
             </div>
           ))}
 
-          <AlertDialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)}>
+          <AlertDialog
+            open={!!deleteTarget}
+            onOpenChange={() => setDeleteTarget(null)}
+          >
             <AlertDialogContent>
               <AlertDialogHeader>
                 <AlertDialogTitle>Delete this stat?</AlertDialogTitle>

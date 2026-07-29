@@ -18,10 +18,7 @@ export function StarRating({
   const full = Math.floor(rounded)
   const hasHalf = rounded - full >= 0.5
 
-  const iconClassName = cn(
-    size === 'sm' ? 'h-4 w-4' : 'h-5 w-5',
-    'shrink-0',
-  )
+  const iconClassName = cn(size === 'sm' ? 'h-4 w-4' : 'h-5 w-5', 'shrink-0')
 
   const ariaLabel = label || `${rounded.toFixed(1)} out of 5 stars`
 

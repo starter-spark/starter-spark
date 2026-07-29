@@ -66,9 +66,7 @@ function PastEventCard({ event }: { event: Event }) {
             </div>
             <div className="flex items-center gap-1.5">
               <Clock className="w-4 h-4" />
-              <span>
-                {formatEventRange(event.event_date, event.end_date)}
-              </span>
+              <span>{formatEventRange(event.event_date, event.end_date)}</span>
             </div>
           </div>
         </div>

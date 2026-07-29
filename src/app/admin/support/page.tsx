@@ -129,16 +129,16 @@ export default async function SupportPage() {
       ) : (
         <div className="rounded-lg border border-slate-200 bg-white">
           <Table>
-	            <TableHeader>
-	              <TableRow>
-	                <TableHead>Date</TableHead>
-	                <TableHead>From</TableHead>
-	                <TableHead>Subject</TableHead>
-	                <TableHead className="hidden md:table-cell">Message</TableHead>
-	                <TableHead className="w-[60px]">Files</TableHead>
-	                <TableHead>Status</TableHead>
-	                <TableHead className="w-[100px]">Actions</TableHead>
-	              </TableRow>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Date</TableHead>
+                <TableHead>From</TableHead>
+                <TableHead>Subject</TableHead>
+                <TableHead className="hidden md:table-cell">Message</TableHead>
+                <TableHead className="w-[60px]">Files</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="w-[100px]">Actions</TableHead>
+              </TableRow>
             </TableHeader>
             <TableBody>
               {submissions.map((submission) => (
@@ -147,30 +147,30 @@ export default async function SupportPage() {
                     {submission.created_at
                       ? formatRelativeTime(submission.created_at)
                       : '-'}
-	                  </TableCell>
-	                  <TableCell>
-	                    <div className="min-w-0">
-	                      <p className="truncate font-medium text-slate-900">
-	                        {submission.name}
-	                      </p>
-	                      <p className="truncate text-sm text-slate-500">
-	                        {submission.email}
-	                      </p>
-	                      <p className="mt-1 text-xs text-slate-500 line-clamp-2 whitespace-normal md:hidden">
-	                        {submission.message}
-	                      </p>
-	                    </div>
-	                  </TableCell>
-	                  <TableCell>
-	                    <Badge variant="outline" className="font-mono text-xs">
-	                      {subjectLabels[submission.subject] || submission.subject}
-	                    </Badge>
-	                  </TableCell>
-	                  <TableCell className="hidden md:table-cell max-w-[300px]">
-	                    <p className="truncate text-sm text-slate-600">
-	                      {submission.message}
-	                    </p>
-	                  </TableCell>
+                  </TableCell>
+                  <TableCell>
+                    <div className="min-w-0">
+                      <p className="truncate font-medium text-slate-900">
+                        {submission.name}
+                      </p>
+                      <p className="truncate text-sm text-slate-500">
+                        {submission.email}
+                      </p>
+                      <p className="mt-1 text-xs text-slate-500 line-clamp-2 whitespace-normal md:hidden">
+                        {submission.message}
+                      </p>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className="font-mono text-xs">
+                      {subjectLabels[submission.subject] || submission.subject}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell max-w-[300px]">
+                    <p className="truncate text-sm text-slate-600">
+                      {submission.message}
+                    </p>
+                  </TableCell>
                   <TableCell>
                     {submission.attachments &&
                     Array.isArray(submission.attachments) &&

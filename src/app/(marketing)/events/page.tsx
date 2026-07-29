@@ -153,9 +153,7 @@ function EventCard({
             </div>
             <div className="flex items-center gap-1.5">
               <Clock className="w-4 h-4" />
-              <span>
-                {formatEventRange(event.event_date, event.end_date)}
-              </span>
+              <span>{formatEventRange(event.event_date, event.end_date)}</span>
             </div>
           </div>
 
@@ -259,7 +257,10 @@ export default async function EventsPage() {
           <nav aria-label="Breadcrumb" className="mb-6">
             <ol className="flex items-center gap-2 text-sm text-slate-500">
               <li>
-                <Link href="/" className="hover:text-cyan-700 transition-colors">
+                <Link
+                  href="/"
+                  className="hover:text-cyan-700 transition-colors"
+                >
                   Home
                 </Link>
               </li>
@@ -283,7 +284,10 @@ export default async function EventsPage() {
         <main className="px-6 lg:px-8 pb-16">
           {/* Upcoming Events */}
           <section aria-labelledby="upcoming-heading" className="mb-12">
-            <h2 id="upcoming-heading" className="font-mono text-xl font-bold text-slate-900 mb-6">
+            <h2
+              id="upcoming-heading"
+              className="font-mono text-xl font-bold text-slate-900 mb-6"
+            >
               Upcoming Events
             </h2>
 

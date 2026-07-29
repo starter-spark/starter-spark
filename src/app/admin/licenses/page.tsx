@@ -125,7 +125,10 @@ export default async function LicensesPage({
           </h1>
           <p className="text-slate-600">Manage license codes and assignments</p>
         </div>
-        <Button asChild className="bg-cyan-700 hover:bg-cyan-600 w-full sm:w-auto">
+        <Button
+          asChild
+          className="bg-cyan-700 hover:bg-cyan-600 w-full sm:w-auto"
+        >
           <Link href="/admin/licenses/generate">
             <Plus className="mr-2 h-4 w-4" />
             Generate Licenses
@@ -162,11 +165,11 @@ export default async function LicensesPage({
         </div>
 
         {/* Product Filter */}
-      <ProductFilterClient
-        products={products}
-        currentProduct={params.product}
-        currentFilter={params.filter}
-      />
+        <ProductFilterClient
+          products={products}
+          currentProduct={params.product}
+          currentFilter={params.filter}
+        />
       </div>
 
       {/* Licenses Table */}

@@ -1,6 +1,8 @@
 import type { ReviewListItem, ReviewSummary } from './types'
 
-export function computeReviewSummary(reviews: readonly ReviewListItem[]): ReviewSummary {
+export function computeReviewSummary(
+  reviews: readonly ReviewListItem[],
+): ReviewSummary {
   const byStar: ReviewSummary['byStar'] = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
   let sum = 0
   let verifiedCount = 0
@@ -17,4 +19,3 @@ export function computeReviewSummary(reviews: readonly ReviewListItem[]): Review
 
   return { total, average, byStar, verifiedCount }
 }
-

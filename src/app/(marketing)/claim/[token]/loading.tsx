@@ -6,7 +6,10 @@ export default function ClaimTokenLoading() {
       <section className="pt-32 pb-24 px-6 lg:px-20">
         <div className="max-w-lg mx-auto">
           <div className="text-center mb-8">
-            <LoadingBlock className="h-20 w-20 rounded-full mx-auto mb-6" tone="soft" />
+            <LoadingBlock
+              className="h-20 w-20 rounded-full mx-auto mb-6"
+              tone="soft"
+            />
             <LoadingBlock className="h-7 w-40 mx-auto mb-2" tone="strong" />
             <LoadingBlock className="h-4 w-64 mx-auto" tone="soft" />
           </div>

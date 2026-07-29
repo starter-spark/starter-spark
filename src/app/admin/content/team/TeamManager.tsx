@@ -216,7 +216,8 @@ export function TeamManager({ initialMembers }: TeamManagerProps) {
     const result = await reorderTeamMembers(orderedIds)
     if (!result.success) {
       setListError(
-        result.error || 'Failed to save the new order — refresh to see the saved state',
+        result.error ||
+          'Failed to save the new order — refresh to see the saved state',
       )
     } else {
       setListError(null)

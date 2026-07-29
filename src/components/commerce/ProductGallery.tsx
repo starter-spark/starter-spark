@@ -131,9 +131,7 @@ export function ProductGallery({
                 sizes="(max-width: 1024px) 100vw, 60vw"
                 quality={95}
                 wrapperClassName="absolute inset-0"
-                fallback={
-                  <ImageFallback label="Image unavailable" />
-                }
+                fallback={<ImageFallback label="Image unavailable" />}
               />
               <div
                 className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors"
@@ -194,9 +192,7 @@ export function ProductGallery({
               }}
               className={cn(
                 `${thumbBaseClass} bg-slate-50`,
-                view === '3d'
-                  ? thumbActiveClass
-                  : thumbInactiveClass,
+                view === '3d' ? thumbActiveClass : thumbInactiveClass,
               )}
               aria-label="View 3D model"
             >

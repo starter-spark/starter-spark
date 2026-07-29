@@ -190,10 +190,7 @@ void loop() {
             <p className="text-slate-600 leading-relaxed mb-6 break-words">
               {block1Description2}
             </p>
-            <Button
-              asChild
-              className={ctaPrimaryAuto}
-            >
+            <Button asChild className={ctaPrimaryAuto}>
               <Link href="/learn">
                 {block1Cta}
                 <ArrowRight className="w-4 h-4 ml-2" />
@@ -222,11 +219,7 @@ void loop() {
             <p className="text-slate-600 mb-6 leading-relaxed break-words">
               {block2Description2}
             </p>
-            <Button
-              asChild
-              variant="outline"
-              className={ctaOutlineAuto}
-            >
+            <Button asChild variant="outline" className={ctaOutlineAuto}>
               <Link href="/community">
                 {block2Cta}
                 <ArrowRight className="w-4 h-4 ml-2" />

@@ -118,10 +118,16 @@ export async function GET(request: NextRequest) {
   try {
     ;[geistMono, geistSans] = await Promise.all([
       fetchFont(
-        new URL(['s', 'geistmono', 'v1', geistMonoFile].join('/'), fontOrigin).toString(),
+        new URL(
+          ['s', 'geistmono', 'v1', geistMonoFile].join('/'),
+          fontOrigin,
+        ).toString(),
       ),
       fetchFont(
-        new URL(['s', 'geist', 'v1', geistSansFile].join('/'), fontOrigin).toString(),
+        new URL(
+          ['s', 'geist', 'v1', geistSansFile].join('/'),
+          fontOrigin,
+        ).toString(),
       ),
     ])
   } catch {
@@ -136,256 +142,257 @@ export async function GET(request: NextRequest) {
   // This prevents "failed to pipe response" errors when the connection closes
   try {
     return new ImageResponse(
-    <div
-      style={{
-        height: '100%',
-        width: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        backgroundColor: '#F8FAFC',
-        position: 'relative',
-      }}
-    >
-      {/* Grid pattern background */}
       <div
         style={{
-          position: 'absolute',
-          inset: 0,
-          backgroundImage: 'radial-gradient(#CBD5E1 1.5px, transparent 1.5px)',
-          backgroundSize: '32px 32px',
-        }}
-      />
-
-      {/* Content container */}
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'row',
           height: '100%',
           width: '100%',
-          padding: '48px',
+          display: 'flex',
+          flexDirection: 'column',
+          backgroundColor: '#F8FAFC',
           position: 'relative',
         }}
       >
-        {/* Left (text) */}
+        {/* Grid pattern background */}
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            backgroundImage:
+              'radial-gradient(#CBD5E1 1.5px, transparent 1.5px)',
+            backgroundSize: '32px 32px',
+          }}
+        />
+
+        {/* Content container */}
         <div
           style={{
             display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            flex: 1,
-            paddingRight: imageUrl ? '32px' : '0',
+            flexDirection: 'row',
+            height: '100%',
+            width: '100%',
+            padding: '48px',
+            position: 'relative',
           }}
         >
-          {/* Top section */}
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            {/* Type badge */}
-            {type !== 'default' && (
+          {/* Left (text) */}
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              flex: 1,
+              paddingRight: imageUrl ? '32px' : '0',
+            }}
+          >
+            {/* Top section */}
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              {/* Type badge */}
+              {type !== 'default' && (
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    marginBottom: '16px',
+                  }}
+                >
+                  <span
+                    style={{
+                      backgroundColor:
+                        type === 'product'
+                          ? '#0E7490'
+                          : type === 'event'
+                            ? '#F59E0B'
+                            : '#06B6D4',
+                      color: 'white',
+                      padding: '6px 16px',
+                      borderRadius: '9999px',
+                      fontSize: '18px',
+                      fontFamily: 'Geist Mono',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em',
+                    }}
+                  >
+                    {type === 'product'
+                      ? 'Product'
+                      : type === 'event'
+                        ? 'Event'
+                        : 'Community'}
+                  </span>
+                </div>
+              )}
+
+              {/* Title */}
+              <h1
+                style={{
+                  fontSize: title.length > 40 ? '48px' : '64px',
+                  fontFamily: 'Geist Mono',
+                  fontWeight: 600,
+                  color: '#0F172A',
+                  lineHeight: 1.1,
+                  margin: 0,
+                  maxWidth: imageUrl ? '600px' : '100%',
+                }}
+              >
+                {title}
+              </h1>
+
+              {/* Subtitle */}
+              {subtitle && (
+                <p
+                  style={{
+                    fontSize: '24px',
+                    fontFamily: 'Geist Sans',
+                    color: '#475569',
+                    marginTop: '16px',
+                    maxWidth: imageUrl ? '550px' : '100%',
+                    lineHeight: 1.4,
+                  }}
+                >
+                  {subtitle.length > 120
+                    ? subtitle.slice(0, 120) + '...'
+                    : subtitle}
+                </p>
+              )}
+            </div>
+
+            {/* Bottom (brand) */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '16px',
+              }}
+            >
+              {/* Logo placeholder (cyan square, S) */}
               <div
                 style={{
+                  width: '48px',
+                  height: '48px',
+                  backgroundColor: '#0E7490',
+                  borderRadius: '8px',
                   display: 'flex',
                   alignItems: 'center',
-                  marginBottom: '16px',
+                  justifyContent: 'center',
                 }}
               >
                 <span
                   style={{
-                    backgroundColor:
-                      type === 'product'
-                        ? '#0E7490'
-                        : type === 'event'
-                          ? '#F59E0B'
-                          : '#06B6D4',
                     color: 'white',
-                    padding: '6px 16px',
-                    borderRadius: '9999px',
-                    fontSize: '18px',
+                    fontSize: '28px',
                     fontFamily: 'Geist Mono',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em',
+                    fontWeight: 700,
                   }}
                 >
-                  {type === 'product'
-                    ? 'Product'
-                    : type === 'event'
-                      ? 'Event'
-                      : 'Community'}
+                  S
                 </span>
               </div>
-            )}
-
-            {/* Title */}
-            <h1
-              style={{
-                fontSize: title.length > 40 ? '48px' : '64px',
-                fontFamily: 'Geist Mono',
-                fontWeight: 600,
-                color: '#0F172A',
-                lineHeight: 1.1,
-                margin: 0,
-                maxWidth: imageUrl ? '600px' : '100%',
-              }}
-            >
-              {title}
-            </h1>
-
-            {/* Subtitle */}
-            {subtitle && (
-              <p
-                style={{
-                  fontSize: '24px',
-                  fontFamily: 'Geist Sans',
-                  color: '#475569',
-                  marginTop: '16px',
-                  maxWidth: imageUrl ? '550px' : '100%',
-                  lineHeight: 1.4,
-                }}
-              >
-                {subtitle.length > 120
-                  ? subtitle.slice(0, 120) + '...'
-                  : subtitle}
-              </p>
-            )}
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <span
+                  style={{
+                    fontSize: '24px',
+                    fontFamily: 'Geist Mono',
+                    fontWeight: 600,
+                    color: '#0F172A',
+                  }}
+                >
+                  StarterSpark
+                </span>
+                <span
+                  style={{
+                    fontSize: '14px',
+                    fontFamily: 'Geist Sans',
+                    color: '#64748B',
+                  }}
+                >
+                  starterspark.org
+                </span>
+              </div>
+            </div>
           </div>
 
-          {/* Bottom (brand) */}
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '16px',
-            }}
-          >
-            {/* Logo placeholder (cyan square, S) */}
+          {/* Right (image, optional) */}
+          {imageUrl && (
             <div
               style={{
-                width: '48px',
-                height: '48px',
-                backgroundColor: '#0E7490',
-                borderRadius: '8px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                width: '450px',
+                height: '100%',
               }}
             >
-              <span
+              <div
                 style={{
-                  color: 'white',
-                  fontSize: '28px',
-                  fontFamily: 'Geist Mono',
-                  fontWeight: 700,
+                  width: '400px',
+                  height: '400px',
+                  borderRadius: '16px',
+                  backgroundColor: 'white',
+                  border: '2px solid #E2E8F0',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  overflow: 'hidden',
                 }}
               >
-                S
-              </span>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={imageUrl}
+                  alt=""
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                  }}
+                />
+              </div>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <span
-                style={{
-                  fontSize: '24px',
-                  fontFamily: 'Geist Mono',
-                  fontWeight: 600,
-                  color: '#0F172A',
-                }}
-              >
-                StarterSpark
-              </span>
-              <span
-                style={{
-                  fontSize: '14px',
-                  fontFamily: 'Geist Sans',
-                  color: '#64748B',
-                }}
-              >
-                starterspark.org
-              </span>
-            </div>
-          </div>
+          )}
         </div>
 
-        {/* Right (image, optional) */}
-        {imageUrl && (
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: '450px',
-              height: '100%',
-            }}
-          >
-            <div
-              style={{
-                width: '400px',
-                height: '400px',
-                borderRadius: '16px',
-                backgroundColor: 'white',
-                border: '2px solid #E2E8F0',
-                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                overflow: 'hidden',
-              }}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={imageUrl}
-                alt=""
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'cover',
-                }}
-              />
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Charity banner at bottom */}
-      <div
-        style={{
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          height: '48px',
-          backgroundColor: '#0E7490',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <span
+        {/* Charity banner at bottom */}
+        <div
           style={{
-            color: 'white',
-            fontSize: '16px',
-            fontFamily: 'Geist Sans',
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: '48px',
+            backgroundColor: '#0E7490',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
           }}
         >
-          67% of profits donated to local STEM charities in Hawaii
-        </span>
-      </div>
-    </div>,
-    {
-      ...size,
-      fonts: [
-        {
-          name: 'Geist Mono',
-          data: geistMono,
-          style: 'normal',
-          weight: 600,
-        },
-        {
-          name: 'Geist Sans',
-          data: geistSans,
-          style: 'normal',
-          weight: 400,
-        },
-      ],
-    },
-  )
+          <span
+            style={{
+              color: 'white',
+              fontSize: '16px',
+              fontFamily: 'Geist Sans',
+            }}
+          >
+            67% of profits donated to local STEM charities in Hawaii
+          </span>
+        </div>
+      </div>,
+      {
+        ...size,
+        fonts: [
+          {
+            name: 'Geist Mono',
+            data: geistMono,
+            style: 'normal',
+            weight: 600,
+          },
+          {
+            name: 'Geist Sans',
+            data: geistSans,
+            style: 'normal',
+            weight: 400,
+          },
+        ],
+      },
+    )
   } catch {
     // Image generation failed - return a simple error response
     return new Response('Failed to generate OG image', {

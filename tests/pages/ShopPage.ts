@@ -59,7 +59,10 @@ export class ShopPage {
     const products = this.page.locator('main a[href^="/shop/"]')
 
     // Wait for at least one product to be visible
-    await products.first().waitFor({ state: 'visible', timeout: 10000 }).catch(() => {})
+    await products
+      .first()
+      .waitFor({ state: 'visible', timeout: 10000 })
+      .catch(() => {})
 
     if ((await products.count()) === 0) {
       return false

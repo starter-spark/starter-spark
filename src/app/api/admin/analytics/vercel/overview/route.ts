@@ -84,7 +84,9 @@ function normalizeLogsOverview(value: unknown): {
           if (!message) return null
           return { message, count: getNumber(row.count) }
         })
-        .filter((row): row is { message: string; count: number } => row !== null)
+        .filter(
+          (row): row is { message: string; count: number } => row !== null,
+        )
     : []
 
   return {
@@ -142,7 +144,9 @@ export async function GET(request: Request) {
     const now = new Date()
     const nowIso = now.toISOString()
     const start24h = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString()
-    const start7d = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString()
+    const start7d = new Date(
+      now.getTime() - 7 * 24 * 60 * 60 * 1000,
+    ).toISOString()
 
     const [
       speedP75Res,

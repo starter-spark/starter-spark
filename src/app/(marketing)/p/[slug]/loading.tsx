@@ -29,7 +29,10 @@ export default function CustomPageLoading() {
             <div className="space-y-2">
               {Array.from({ length: 3 }, (_, i) => (
                 <div key={i} className="flex items-center gap-2">
-                  <LoadingBlock className="h-2 w-2 rounded-full" tone="strong" />
+                  <LoadingBlock
+                    className="h-2 w-2 rounded-full"
+                    tone="strong"
+                  />
                   <LoadingBlock className="h-4 w-2/3" tone="soft" />
                 </div>
               ))}

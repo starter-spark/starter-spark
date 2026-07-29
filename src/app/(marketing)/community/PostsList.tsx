@@ -183,7 +183,11 @@ export function PostsList({
           const commentCount = post.comments?.[0]?.count || 0
 
           return (
-            <Link key={post.id} href={`/community/${post.id}`} className="block">
+            <Link
+              key={post.id}
+              href={`/community/${post.id}`}
+              className="block"
+            >
               <article className="bg-white border border-slate-200 rounded p-6 hover:border-cyan-300 transition-colors">
                 <div className="flex gap-4">
                   {/* Vote/Status Column */}
@@ -200,7 +204,9 @@ export function PostsList({
                     </div>
                     <div className="flex items-center gap-1 text-slate-500">
                       <Eye className="w-3 h-3" />
-                      <span className="font-mono text-xs">{post.view_count}</span>
+                      <span className="font-mono text-xs">
+                        {post.view_count}
+                      </span>
                     </div>
                   </div>
 

@@ -17,7 +17,7 @@ export default function LearnLoading() {
         {Array.from({ length: 4 }, (_, i) => (
           <div
             key={i}
-              className="rounded-lg border border-slate-200 bg-white p-4"
+            className="rounded-lg border border-slate-200 bg-white p-4"
           >
             <div className="flex items-center gap-3">
               <LoadingBlock className="h-9 w-9 rounded-lg" tone="soft" />

@@ -48,11 +48,17 @@ function ContactFormSkeleton() {
     <div className="bg-white border border-slate-200 rounded-lg p-6 md:p-8 space-y-6 animate-pulse">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">
-          <LoadingBlock className="h-4 w-16 rounded animate-none" tone="strong" />
+          <LoadingBlock
+            className="h-4 w-16 rounded animate-none"
+            tone="strong"
+          />
           <LoadingBlock className="h-10 rounded animate-none" tone="soft" />
         </div>
         <div className="space-y-2">
-          <LoadingBlock className="h-4 w-16 rounded animate-none" tone="strong" />
+          <LoadingBlock
+            className="h-4 w-16 rounded animate-none"
+            tone="strong"
+          />
           <LoadingBlock className="h-10 rounded animate-none" tone="soft" />
         </div>
       </div>
@@ -79,7 +85,10 @@ export default function ContactPage() {
           <nav aria-label="Breadcrumb" className="mb-6">
             <ol className="flex items-center gap-2 text-sm text-slate-500">
               <li>
-                <Link href="/" className="hover:text-cyan-700 transition-colors">
+                <Link
+                  href="/"
+                  className="hover:text-cyan-700 transition-colors"
+                >
                   Home
                 </Link>
               </li>

@@ -94,7 +94,9 @@ export async function sendPurchaseConfirmation({
     return mockResendSend(to, subject)
   }
 
-  console.log(`[Email] Sending purchase confirmation to ${to.substring(0, 3)}***`)
+  console.log(
+    `[Email] Sending purchase confirmation to ${to.substring(0, 3)}***`,
+  )
 
   const { data, error } = await resend.emails.send({
     from: FROM_EMAIL,
@@ -215,7 +217,9 @@ export async function sendContactConfirmation({
     return mockResendSend(to, emailSubject)
   }
 
-  const supportEmails = parseCommaSeparatedEmails(process.env.SUPPORT_TEAM_EMAILS)
+  const supportEmails = parseCommaSeparatedEmails(
+    process.env.SUPPORT_TEAM_EMAILS,
+  )
   const replyTo = supportEmails.length > 0 ? supportEmails[0] : undefined
 
   const { data, error } = await resend.emails.send({
@@ -224,7 +228,11 @@ export async function sendContactConfirmation({
     subject: emailSubject,
     replyTo,
     react: (
-      <ContactConfirmationEmail name={name} subject={subject} siteUrl={SITE_URL} />
+      <ContactConfirmationEmail
+        name={name}
+        subject={subject}
+        siteUrl={SITE_URL}
+      />
     ),
   })
 
@@ -259,7 +267,9 @@ export async function sendContactNotification({
   const resend = getResendClient()
   if (!resend) return null
 
-  const supportEmails = parseCommaSeparatedEmails(process.env.SUPPORT_TEAM_EMAILS)
+  const supportEmails = parseCommaSeparatedEmails(
+    process.env.SUPPORT_TEAM_EMAILS,
+  )
   if (supportEmails.length === 0) return null
 
   const emailSubject = `New contact submission: ${subject}`

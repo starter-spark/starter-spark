@@ -135,8 +135,12 @@ export async function FeaturedProduct() {
       console.error('Failed to fetch featured product reviews:', ratingsError)
     } else {
       const total = ratingRows?.length ?? 0
-      const sum = (ratingRows ?? []).reduce((acc, row) => acc + (row.rating ?? 0), 0)
-      reviewSummary = total > 0 ? { total, average: sum / total } : { total: 0, average: 0 }
+      const sum = (ratingRows ?? []).reduce(
+        (acc, row) => acc + (row.rating ?? 0),
+        0,
+      )
+      reviewSummary =
+        total > 0 ? { total, average: sum / total } : { total: 0, average: 0 }
     }
   } catch (error) {
     console.error('Failed to fetch featured product review summary:', error)

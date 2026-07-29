@@ -7,7 +7,10 @@ export default function CommunityLoading() {
         <div className="max-w-7xl mx-auto">
           <LoadingBlock className="h-4 w-20 rounded mb-2" tone="strong" />
           <LoadingBlock className="h-10 w-32 rounded mb-4" tone="strong" />
-          <LoadingBlock className="h-6 w-[450px] max-w-full rounded" tone="strong" />
+          <LoadingBlock
+            className="h-6 w-[450px] max-w-full rounded"
+            tone="strong"
+          />
         </div>
       </section>
 
@@ -44,13 +47,28 @@ export default function CommunityLoading() {
                     className="bg-white rounded border border-slate-200 p-4"
                   >
                     <div className="flex gap-4">
-                      <LoadingBlock className="w-10 h-10 rounded-full" tone="soft" />
+                      <LoadingBlock
+                        className="w-10 h-10 rounded-full"
+                        tone="soft"
+                      />
                       <div className="flex-1">
-                        <LoadingBlock className="h-5 w-3/4 rounded mb-2" tone="strong" />
-                        <LoadingBlock className="h-4 w-full rounded mb-2" tone="soft" />
+                        <LoadingBlock
+                          className="h-5 w-3/4 rounded mb-2"
+                          tone="strong"
+                        />
+                        <LoadingBlock
+                          className="h-4 w-full rounded mb-2"
+                          tone="soft"
+                        />
                         <div className="flex gap-4">
-                          <LoadingBlock className="h-3 w-20 rounded" tone="soft" />
-                          <LoadingBlock className="h-3 w-16 rounded" tone="soft" />
+                          <LoadingBlock
+                            className="h-3 w-20 rounded"
+                            tone="soft"
+                          />
+                          <LoadingBlock
+                            className="h-3 w-16 rounded"
+                            tone="soft"
+                          />
                         </div>
                       </div>
                     </div>

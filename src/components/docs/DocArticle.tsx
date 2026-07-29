@@ -108,9 +108,7 @@ export function DocContent({ content }: DocContentProps) {
   return (
     <div className={proseClassName}>
       {content ? (
-        <ReactMarkdown remarkPlugins={[remarkGfm]}>
-          {content}
-        </ReactMarkdown>
+        <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
       ) : (
         <p className="text-slate-500 italic">
           This article is being written. Check back soon!

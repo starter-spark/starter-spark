@@ -193,10 +193,7 @@ export async function Footer() {
                 </li>
               ))}
               <li>
-                <Link
-                  href="/shop"
-                  className={footerLinkClass}
-                >
+                <Link href="/shop" className={footerLinkClass}>
                   All Kits
                 </Link>
               </li>
@@ -208,34 +205,22 @@ export async function Footer() {
             <p className={footerHeadingClass}>Learn</p>
             <ul className="space-y-3 text-sm text-slate-600">
               <li>
-                <Link
-                  href="/learn"
-                  className={footerLinkClass}
-                >
+                <Link href="/learn" className={footerLinkClass}>
                   Documentation
                 </Link>
               </li>
               <li>
-                <Link
-                  href="/community"
-                  className={footerLinkClass}
-                >
+                <Link href="/community" className={footerLinkClass}>
                   The Lab (Q&A)
                 </Link>
               </li>
               <li>
-                <Link
-                  href="/events"
-                  className={footerLinkClass}
-                >
+                <Link href="/events" className={footerLinkClass}>
                   Workshops
                 </Link>
               </li>
               <li>
-                <Link
-                  href="/support"
-                  className={footerLinkClass}
-                >
+                <Link href="/support" className={footerLinkClass}>
                   Troubleshooting
                 </Link>
               </li>
@@ -247,18 +232,12 @@ export async function Footer() {
             <p className={footerHeadingClass}>Company</p>
             <ul className="space-y-3 text-sm text-slate-600">
               <li>
-                <Link
-                  href="/about"
-                  className={footerLinkClass}
-                >
+                <Link href="/about" className={footerLinkClass}>
                   About Us
                 </Link>
               </li>
               <li>
-                <Link
-                  href="/contact"
-                  className={footerLinkClass}
-                >
+                <Link href="/contact" className={footerLinkClass}>
                   Contact
                 </Link>
               </li>
@@ -292,22 +271,13 @@ export async function Footer() {
           <p className="font-mono break-words">{content['footer.copyright']}</p>
           <nav aria-label="Legal">
             <div className="flex gap-6">
-              <Link
-                href="/privacy"
-                className={footerLinkClass}
-              >
+              <Link href="/privacy" className={footerLinkClass}>
                 Privacy
               </Link>
-              <Link
-                href="/terms"
-                className={footerLinkClass}
-              >
+              <Link href="/terms" className={footerLinkClass}>
                 Terms
               </Link>
-              <Link
-                href="/contact"
-                className={footerLinkClass}
-              >
+              <Link href="/contact" className={footerLinkClass}>
                 Contact
               </Link>
             </div>

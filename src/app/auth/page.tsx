@@ -19,10 +19,7 @@ export default function AuthLandingPage() {
           Please use the sign-in page to access your kits, workshops, and
           learning materials.
         </p>
-        <Link
-          href="/login"
-          className={compactPrimaryLink}
-        >
+        <Link href="/login" className={compactPrimaryLink}>
           Go to Sign In
         </Link>
       </div>

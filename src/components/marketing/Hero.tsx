@@ -103,11 +103,7 @@ export function HeroSection({
           transition={{ duration: 0.8, delay: 0.4 }}
           className="flex w-full flex-col gap-4 pointer-events-auto sm:w-auto sm:flex-row"
         >
-          <Button
-            asChild
-            size="lg"
-            className={ctaPrimaryClass}
-          >
+          <Button asChild size="lg" className={ctaPrimaryClass}>
             <Link href="/shop">{ctaPrimary}</Link>
           </Button>
           <Button

@@ -302,21 +302,27 @@ export function AccountSettings({ user }: AccountSettingsProps) {
       </Card>
 
       {/* Delete Account Dialog */}
-      <AlertDialog open={showDeleteDialog} onOpenChange={(open) => {
-        if (!open) {
-          setShowDeleteDialog(false)
-          setDeleteStep(1)
-          setConfirmText('')
-        }
-      }}>
+      <AlertDialog
+        open={showDeleteDialog}
+        onOpenChange={(open) => {
+          if (!open) {
+            setShowDeleteDialog(false)
+            setDeleteStep(1)
+            setConfirmText('')
+          }
+        }}
+      >
         <AlertDialogContent>
           {deleteStep === 1 ? (
             <>
               <AlertDialogHeader>
-                <AlertDialogTitle className="text-red-600">Delete Your Account?</AlertDialogTitle>
+                <AlertDialogTitle className="text-red-600">
+                  Delete Your Account?
+                </AlertDialogTitle>
                 <AlertDialogDescription className="space-y-2">
                   <span className="block">
-                    Are you absolutely sure you want to delete your account? This action cannot be undone.
+                    Are you absolutely sure you want to delete your account?
+                    This action cannot be undone.
                   </span>
                   <span className="block font-medium text-slate-700">
                     All your data will be permanently deleted, including:
@@ -344,9 +350,12 @@ export function AccountSettings({ user }: AccountSettingsProps) {
           ) : (
             <>
               <AlertDialogHeader>
-                <AlertDialogTitle className="text-red-600">Final Confirmation</AlertDialogTitle>
+                <AlertDialogTitle className="text-red-600">
+                  Final Confirmation
+                </AlertDialogTitle>
                 <AlertDialogDescription>
-                  This is your final warning. Type <strong>DELETE</strong> below to permanently delete your account.
+                  This is your final warning. Type <strong>DELETE</strong> below
+                  to permanently delete your account.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <div className="py-4">
@@ -358,7 +367,9 @@ export function AccountSettings({ user }: AccountSettingsProps) {
                 />
               </div>
               <AlertDialogFooter>
-                <AlertDialogCancel onClick={() => setDeleteStep(1)}>Back</AlertDialogCancel>
+                <AlertDialogCancel onClick={() => setDeleteStep(1)}>
+                  Back
+                </AlertDialogCancel>
                 <AlertDialogAction
                   onClick={() => void handleDeleteConfirm()}
                   disabled={confirmText !== 'DELETE'}

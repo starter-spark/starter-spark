@@ -25,10 +25,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Loader2 } from 'lucide-react'
 import { updateEvent, deleteEvent } from '../actions'
-import {
-  AdminLabel,
-  AdminSelect,
-} from '@/components/admin/form-controls'
+import { AdminLabel, AdminSelect } from '@/components/admin/form-controls'
 
 interface Event {
   id: string
@@ -224,9 +221,7 @@ export function EditEventForm({ event }: EditEventFormProps) {
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <AdminLabel htmlFor="event_date">
-                Start Date & Time *
-              </AdminLabel>
+              <AdminLabel htmlFor="event_date">Start Date & Time *</AdminLabel>
               <Input
                 id="event_date"
                 type="datetime-local"
@@ -340,7 +335,8 @@ export function EditEventForm({ event }: EditEventFormProps) {
             <AlertDialogHeader>
               <AlertDialogTitle>Delete this event?</AlertDialogTitle>
               <AlertDialogDescription>
-                This action cannot be undone. The event will be permanently deleted.
+                This action cannot be undone. The event will be permanently
+                deleted.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

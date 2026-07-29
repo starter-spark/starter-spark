@@ -98,7 +98,8 @@ export async function upsertProductReview(input: {
   if (!rateLimitResult.success) {
     return {
       success: false,
-      error: rateLimitResult.error || 'Too many requests. Please try again later.',
+      error:
+        rateLimitResult.error || 'Too many requests. Please try again later.',
     }
   }
 
@@ -204,8 +205,7 @@ export async function deleteProductReview(input: {
   reviewId: string
   productSlug: string
 }): Promise<
-  | { success: true }
-  | { success: false; error: string; requiresAuth?: boolean }
+  { success: true } | { success: false; error: string; requiresAuth?: boolean }
 > {
   const reviewId = input.reviewId.trim()
   if (!isUuid(reviewId)) {
@@ -229,7 +229,8 @@ export async function deleteProductReview(input: {
   if (!rateLimitResult.success) {
     return {
       success: false,
-      error: rateLimitResult.error || 'Too many requests. Please try again later.',
+      error:
+        rateLimitResult.error || 'Too many requests. Please try again later.',
     }
   }
 
@@ -287,7 +288,8 @@ export async function reportProductReview(input: {
   if (!rateLimitResult.success) {
     return {
       success: false,
-      error: rateLimitResult.error || 'Too many requests. Please try again later.',
+      error:
+        rateLimitResult.error || 'Too many requests. Please try again later.',
     }
   }
 
@@ -335,5 +337,8 @@ export async function reportProductReview(input: {
     revalidatePath(`/shop/${slug}`)
   }
 
-  return { success: true, message: 'Review reported for moderator review. Thanks.' }
+  return {
+    success: true,
+    message: 'Review reported for moderator review. Thanks.',
+  }
 }

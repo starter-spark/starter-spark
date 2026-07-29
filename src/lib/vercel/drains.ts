@@ -43,7 +43,10 @@ export function parseJsonOrNdjson(text: string): unknown[] {
     // Fall through to NDJSON.
   }
 
-  const lines = trimmed.split('\n').map((l) => l.trim()).filter(Boolean)
+  const lines = trimmed
+    .split('\n')
+    .map((l) => l.trim())
+    .filter(Boolean)
   const events: unknown[] = []
   for (const line of lines) {
     try {
@@ -55,7 +58,11 @@ export function parseJsonOrNdjson(text: string): unknown[] {
   return events
 }
 
-export function stableEventId(parts: Array<string | number | null | undefined>) {
-  const input = parts.map((p) => (p === null || p === undefined ? '' : String(p))).join('|')
+export function stableEventId(
+  parts: Array<string | number | null | undefined>,
+) {
+  const input = parts
+    .map((p) => (p === null || p === undefined ? '' : String(p)))
+    .join('|')
   return crypto.createHash('sha256').update(input).digest('hex')
 }

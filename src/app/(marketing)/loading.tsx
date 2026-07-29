@@ -17,8 +17,14 @@ export function HeroSkeleton() {
           <LoadingBlock className="h-4 w-64" tone="soft" />
         </div>
         <div className="flex w-full flex-col gap-4 sm:flex-row sm:w-auto">
-          <LoadingBlock className="h-14 w-full sm:w-48 rounded-none" tone="strong" />
-          <LoadingBlock className="h-14 w-full sm:w-56 rounded-none" tone="soft" />
+          <LoadingBlock
+            className="h-14 w-full sm:w-48 rounded-none"
+            tone="strong"
+          />
+          <LoadingBlock
+            className="h-14 w-full sm:w-56 rounded-none"
+            tone="soft"
+          />
         </div>
       </div>
 
@@ -146,7 +152,10 @@ export function LearningPreviewSkeleton() {
                 <LoadingBlock className="h-3 w-2/3" tone="deep" />
                 <LoadingBlock className="h-3 w-1/2" tone="deep" />
               </div>
-              <LoadingBlock className="absolute bottom-3 right-3 h-5 w-36" tone="deep" />
+              <LoadingBlock
+                className="absolute bottom-3 right-3 h-5 w-36"
+                tone="deep"
+              />
             </div>
           </div>
 
@@ -262,7 +271,10 @@ export function EventsPreviewSkeleton() {
             </div>
             <div className="space-y-4">
               {Array.from({ length: 2 }, (_, i) => (
-                <div key={i} className="bg-white border border-slate-200 rounded p-4">
+                <div
+                  key={i}
+                  className="bg-white border border-slate-200 rounded p-4"
+                >
                   <div className="flex items-start justify-between mb-3">
                     <div className="space-y-2">
                       <LoadingBlock className="h-4 w-24" tone="soft" />
@@ -289,7 +301,10 @@ export function EventsPreviewSkeleton() {
             </div>
             <div className="space-y-4">
               {Array.from({ length: 2 }, (_, i) => (
-                <div key={i} className="bg-white border border-slate-200 rounded p-4">
+                <div
+                  key={i}
+                  className="bg-white border border-slate-200 rounded p-4"
+                >
                   <div className="flex gap-4">
                     <div className="min-w-[40px] space-y-2">
                       <LoadingBlock className="h-4 w-10" tone="soft" />

@@ -47,7 +47,5 @@ export function LoadingBlock({
   tone = 'neutral',
   ...props
 }: LoadingBlockProps) {
-  return (
-    <Skeleton className={cn(getToneClass(tone), className)} {...props} />
-  )
+  return <Skeleton className={cn(getToneClass(tone), className)} {...props} />
 }

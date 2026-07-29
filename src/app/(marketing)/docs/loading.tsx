@@ -52,8 +52,14 @@ export default function DocsLoading() {
         <div className="max-w-7xl mx-auto">
           <div className="p-8 bg-white rounded border border-slate-200 text-center">
             <LoadingBlock className="h-7 w-64 mx-auto mb-3" tone="strong" />
-            <LoadingBlock className="h-4 w-full max-w-xl mx-auto mb-2" tone="soft" />
-            <LoadingBlock className="h-4 w-5/6 max-w-lg mx-auto mb-6" tone="soft" />
+            <LoadingBlock
+              className="h-4 w-full max-w-xl mx-auto mb-2"
+              tone="soft"
+            />
+            <LoadingBlock
+              className="h-4 w-5/6 max-w-lg mx-auto mb-6"
+              tone="soft"
+            />
             <LoadingBlock className="h-11 w-48 mx-auto" tone="strong" />
           </div>
         </div>

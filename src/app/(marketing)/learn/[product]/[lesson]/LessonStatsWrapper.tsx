@@ -1,13 +1,19 @@
 'use client'
 
-import { LessonStatsProvider, LessonStatsBar } from '@/components/learn/LessonStats'
+import {
+  LessonStatsProvider,
+  LessonStatsBar,
+} from '@/components/learn/LessonStats'
 
 interface LessonStatsWrapperProps {
   lessonId: string
   children: React.ReactNode
 }
 
-export function LessonStatsWrapper({ lessonId, children }: LessonStatsWrapperProps) {
+export function LessonStatsWrapper({
+  lessonId,
+  children,
+}: LessonStatsWrapperProps) {
   // Key by lessonId to reset stats when lesson changes
   return (
     <LessonStatsProvider key={lessonId} lessonId={lessonId}>

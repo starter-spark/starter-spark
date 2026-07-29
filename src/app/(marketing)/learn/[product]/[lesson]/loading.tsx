@@ -28,7 +28,10 @@ export default function LessonLoading() {
                     key={lessonIndex}
                     className="flex items-center gap-3 px-4 py-2"
                   >
-                    <LoadingBlock className="h-4 w-4 rounded-full" tone="soft" />
+                    <LoadingBlock
+                      className="h-4 w-4 rounded-full"
+                      tone="soft"
+                    />
                     <LoadingBlock className="h-3 w-32" tone="soft" />
                   </div>
                 ))}

@@ -26,8 +26,14 @@ export default function LearnLoading() {
                       key={i}
                       className="p-4 border border-slate-200 rounded"
                     >
-                      <LoadingBlock className="h-5 w-48 rounded mb-2" tone="strong" />
-                      <LoadingBlock className="h-4 w-full rounded" tone="soft" />
+                      <LoadingBlock
+                        className="h-5 w-48 rounded mb-2"
+                        tone="strong"
+                      />
+                      <LoadingBlock
+                        className="h-4 w-full rounded"
+                        tone="soft"
+                      />
                     </div>
                   ))}
                 </div>

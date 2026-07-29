@@ -90,7 +90,9 @@ function parseOverview(value: unknown): VercelOverviewResponse | null {
   if (!isRecord(value.logs)) return null
   if (!isRecord(value.errors)) return null
 
-  const normalizeTopPages = (top: unknown): Array<{ path: string; views: number }> =>
+  const normalizeTopPages = (
+    top: unknown,
+  ): Array<{ path: string; views: number }> =>
     Array.isArray(top)
       ? top
           .map((row) => {
@@ -109,7 +111,8 @@ function parseOverview(value: unknown): VercelOverviewResponse | null {
     unique_sessions: number
     top_pages: Array<{ path: string; views: number }>
   } => {
-    if (!isRecord(w)) return { pageviews: 0, events: 0, unique_sessions: 0, top_pages: [] }
+    if (!isRecord(w))
+      return { pageviews: 0, events: 0, unique_sessions: 0, top_pages: [] }
     return {
       pageviews: getNumber(w.pageviews),
       events: getNumber(w.events),
@@ -120,7 +123,11 @@ function parseOverview(value: unknown): VercelOverviewResponse | null {
 
   const normalizeLogs = (
     l: unknown,
-  ): { errors: number; warnings: number; top_errors: Array<{ message: string; count: number }> } => {
+  ): {
+    errors: number
+    warnings: number
+    top_errors: Array<{ message: string; count: number }>
+  } => {
     if (!isRecord(l)) return { errors: 0, warnings: 0, top_errors: [] }
 
     const top_errors = Array.isArray(l.top_errors)
@@ -131,10 +138,16 @@ function parseOverview(value: unknown): VercelOverviewResponse | null {
             if (!message) return null
             return { message, count: getNumber(row.count) }
           })
-          .filter((row): row is { message: string; count: number } => row !== null)
+          .filter(
+            (row): row is { message: string; count: number } => row !== null,
+          )
       : []
 
-    return { errors: getNumber(l.errors), warnings: getNumber(l.warnings), top_errors }
+    return {
+      errors: getNumber(l.errors),
+      warnings: getNumber(l.warnings),
+      top_errors,
+    }
   }
 
   const speedP75 = Array.isArray(value.speedInsights.p75)
@@ -209,9 +222,12 @@ export function VercelDrainsOverview() {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch(`/api/admin/analytics/vercel/overview${force ? '?force=1' : ''}`, {
-        cache: 'no-store',
-      })
+      const res = await fetch(
+        `/api/admin/analytics/vercel/overview${force ? '?force=1' : ''}`,
+        {
+          cache: 'no-store',
+        },
+      )
       const raw: unknown = await res.json()
       const parsed = parseOverview(raw)
       if (!parsed) {
@@ -291,16 +307,44 @@ export function VercelDrainsOverview() {
                 <div className="rounded border border-slate-200 bg-white p-4">
                   <p className="text-xs text-slate-600">Secrets</p>
                   <div className="mt-2 flex flex-wrap gap-2">
-                    <Badge variant="outline" className={data.ingestConfigured.speedInsights ? 'border-green-300 text-green-700' : ''}>
+                    <Badge
+                      variant="outline"
+                      className={
+                        data.ingestConfigured.speedInsights
+                          ? 'border-green-300 text-green-700'
+                          : ''
+                      }
+                    >
                       Speed Insights
                     </Badge>
-                    <Badge variant="outline" className={data.ingestConfigured.webAnalytics ? 'border-green-300 text-green-700' : ''}>
+                    <Badge
+                      variant="outline"
+                      className={
+                        data.ingestConfigured.webAnalytics
+                          ? 'border-green-300 text-green-700'
+                          : ''
+                      }
+                    >
                       Web Analytics
                     </Badge>
-                    <Badge variant="outline" className={data.ingestConfigured.logs ? 'border-green-300 text-green-700' : ''}>
+                    <Badge
+                      variant="outline"
+                      className={
+                        data.ingestConfigured.logs
+                          ? 'border-green-300 text-green-700'
+                          : ''
+                      }
+                    >
                       Logs
                     </Badge>
-                    <Badge variant="outline" className={data.ingestConfigured.traces ? 'border-green-300 text-green-700' : ''}>
+                    <Badge
+                      variant="outline"
+                      className={
+                        data.ingestConfigured.traces
+                          ? 'border-green-300 text-green-700'
+                          : ''
+                      }
+                    >
                       Traces
                     </Badge>
                   </div>
@@ -331,16 +375,23 @@ export function VercelDrainsOverview() {
               <div className="rounded border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700 space-y-2">
                 <p>
                   Endpoint URLs:{' '}
-                  <span className="font-mono">/api/vercel/drains/speed-insights</span>,{' '}
-                  <span className="font-mono">/api/vercel/drains/web-analytics</span>,{' '}
-                  <span className="font-mono">/api/vercel/drains/logs</span>,{' '}
+                  <span className="font-mono">
+                    /api/vercel/drains/speed-insights
+                  </span>
+                  ,{' '}
+                  <span className="font-mono">
+                    /api/vercel/drains/web-analytics
+                  </span>
+                  , <span className="font-mono">/api/vercel/drains/logs</span>,{' '}
                   <span className="font-mono">/api/vercel/drains/traces</span>
                 </p>
                 <p>
-                  Security: <span className="font-mono">POST</span> only; requires{' '}
-                  <span className="font-mono">x-vercel-signature</span> and{' '}
+                  Security: <span className="font-mono">POST</span> only;
+                  requires <span className="font-mono">x-vercel-signature</span>{' '}
+                  and{' '}
                   <span className="font-mono">x-starterspark-drains-token</span>{' '}
-                  (value from <span className="font-mono">VERCEL_DRAINS_AUTH_TOKEN</span>).
+                  (value from{' '}
+                  <span className="font-mono">VERCEL_DRAINS_AUTH_TOKEN</span>).
                 </p>
               </div>
             </div>
@@ -354,7 +405,9 @@ export function VercelDrainsOverview() {
             <Activity className="h-5 w-5" />
             Speed Insights (p75, last 7 days)
           </CardTitle>
-          <CardDescription>Computed from ingested Speed Insights events</CardDescription>
+          <CardDescription>
+            Computed from ingested Speed Insights events
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {!data ? (
@@ -365,13 +418,19 @@ export function VercelDrainsOverview() {
                 const row = p75.find((r) => r.metric_type === m.key)
                 const value = row ? formatVercelMetric(m.key, row.p75) : '—'
                 return (
-                  <div key={m.key} className="rounded border border-slate-200 bg-white p-4">
+                  <div
+                    key={m.key}
+                    className="rounded border border-slate-200 bg-white p-4"
+                  >
                     <p className="text-xs text-slate-600">{m.label}</p>
                     <p className="mt-2 font-mono text-xl font-bold text-slate-900">
                       {value}
                     </p>
                     <p className="mt-1 text-xs text-slate-500">
-                      samples: <span className="font-mono">{row?.sample_count ?? 0}</span>
+                      samples:{' '}
+                      <span className="font-mono">
+                        {row?.sample_count ?? 0}
+                      </span>
                     </p>
                   </div>
                 )
@@ -387,7 +446,9 @@ export function VercelDrainsOverview() {
             <Activity className="h-5 w-5" />
             Web Analytics
           </CardTitle>
-          <CardDescription>Ingested pageviews and custom events</CardDescription>
+          <CardDescription>
+            Ingested pageviews and custom events
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {!data ? (
@@ -420,7 +481,9 @@ export function VercelDrainsOverview() {
                   Top Pages (7 days)
                 </p>
                 {data.webAnalytics.last7d.top_pages.length === 0 ? (
-                  <div className="text-sm text-slate-600">No pageviews found.</div>
+                  <div className="text-sm text-slate-600">
+                    No pageviews found.
+                  </div>
                 ) : (
                   <div className="space-y-2">
                     {data.webAnalytics.last7d.top_pages.map((page, idx) => (

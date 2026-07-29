@@ -156,17 +156,11 @@ export default async function CheckoutSuccessPage({
 
             {/* Actions */}
             <div className="flex flex-col sm:flex-row gap-4">
-              <Link
-                href="/shop"
-                className={cn(actionPrimaryLink, 'flex-1')}
-              >
+              <Link href="/shop" className={cn(actionPrimaryLink, 'flex-1')}>
                 Continue Shopping
                 <ArrowRight className="w-4 h-4" />
               </Link>
-              <Link
-                href="/"
-                className={cn(actionSecondaryLink, 'flex-1')}
-              >
+              <Link href="/" className={cn(actionSecondaryLink, 'flex-1')}>
                 Back to Home
               </Link>
             </div>

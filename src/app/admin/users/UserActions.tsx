@@ -59,7 +59,9 @@ export function UserActions({
   const [pendingAction, setPendingAction] = useState<PendingAction>(null)
   const [banReason, setBanReason] = useState('')
 
-  const handleRoleChangeConfirm = async (newRole: 'admin' | 'staff' | 'user') => {
+  const handleRoleChangeConfirm = async (
+    newRole: 'admin' | 'staff' | 'user',
+  ) => {
     setPendingAction(null)
     setIsLoading(true)
     const result = await updateUserRole(userId, newRole)
@@ -201,7 +203,9 @@ export function UserActions({
             <>
               <DropdownMenuSeparator />
               {isBanned ? (
-                <DropdownMenuItem onClick={() => setPendingAction({ type: 'unban' })}>
+                <DropdownMenuItem
+                  onClick={() => setPendingAction({ type: 'unban' })}
+                >
                   <UserCheck className="mr-2 h-4 w-4 text-green-600" />
                   Unban from Forums
                 </DropdownMenuItem>

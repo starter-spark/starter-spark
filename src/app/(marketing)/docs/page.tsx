@@ -12,10 +12,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { DocSearch } from './DocSearch'
-import {
-  fetchDocCategories,
-  type DocCategoryListItem,
-} from '@/lib/docs'
+import { fetchDocCategories, type DocCategoryListItem } from '@/lib/docs'
 
 export const metadata = {
   title: 'Documentation - StarterSpark Robotics',
@@ -57,7 +54,10 @@ export default async function DocsPage() {
           <nav aria-label="Breadcrumb" className="mb-6">
             <ol className="flex items-center gap-2 text-sm text-slate-500">
               <li>
-                <Link href="/" className="hover:text-cyan-700 transition-colors">
+                <Link
+                  href="/"
+                  className="hover:text-cyan-700 transition-colors"
+                >
                   Home
                 </Link>
               </li>
@@ -73,8 +73,8 @@ export default async function DocsPage() {
             </h1>
             <p className="mt-2 text-slate-600 max-w-2xl">
               Comprehensive guides for assembly, wiring, and programming your
-              robotics kit. Everything you need to go from unboxing to autonomous
-              operation.
+              robotics kit. Everything you need to go from unboxing to
+              autonomous operation.
             </p>
           </div>
 
@@ -95,7 +95,9 @@ export default async function DocsPage() {
         <main className="px-6 lg:px-8 pb-16">
           {/* Categories Grid */}
           <section aria-labelledby="categories-heading" className="mb-12">
-            <h2 id="categories-heading" className="sr-only">Documentation Categories</h2>
+            <h2 id="categories-heading" className="sr-only">
+              Documentation Categories
+            </h2>
             {typedCategories.length === 0 ? (
               <div className="text-center py-16 bg-white rounded border border-slate-200">
                 <BookOpen className="w-12 h-12 mx-auto text-slate-300 mb-4" />
@@ -117,8 +119,14 @@ export default async function DocsPage() {
           </section>
 
           {/* CTA Section */}
-          <section aria-labelledby="cta-heading" className="bg-white rounded border border-slate-200 p-8 text-center">
-            <h2 id="cta-heading" className="font-mono text-xl text-slate-900 mb-3">
+          <section
+            aria-labelledby="cta-heading"
+            className="bg-white rounded border border-slate-200 p-8 text-center"
+          >
+            <h2
+              id="cta-heading"
+              className="font-mono text-xl text-slate-900 mb-3"
+            >
               Looking for Hands-On Learning?
             </h2>
             <p className="text-slate-600 mb-6 max-w-xl mx-auto">

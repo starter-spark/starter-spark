@@ -209,47 +209,47 @@ export default async function UsersPage({
       ) : (
         <div className="rounded-lg border border-slate-200 bg-white">
           <Table>
-	            <TableHeader>
-	              <TableRow>
-	                <TableHead>User</TableHead>
-	                <TableHead className="hidden md:table-cell">Email</TableHead>
-	                <TableHead>Role</TableHead>
-	                <TableHead>Status</TableHead>
-	                <TableHead className="hidden sm:table-cell">Joined</TableHead>
-	                <TableHead className="w-[100px]">Actions</TableHead>
-	              </TableRow>
-	            </TableHeader>
+            <TableHeader>
+              <TableRow>
+                <TableHead>User</TableHead>
+                <TableHead className="hidden md:table-cell">Email</TableHead>
+                <TableHead>Role</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="hidden sm:table-cell">Joined</TableHead>
+                <TableHead className="w-[100px]">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
             <TableBody>
               {users.map((user) => (
                 <TableRow
                   key={user.id}
                   className={user.is_banned_from_forums ? 'bg-red-50/50' : ''}
                 >
-	                  <TableCell>
-	                    <div className="flex min-w-0 items-center gap-3">
-	                      <UserAvatar
-	                        user={{
-	                          id: user.id,
-	                          full_name: user.full_name,
+                  <TableCell>
+                    <div className="flex min-w-0 items-center gap-3">
+                      <UserAvatar
+                        user={{
+                          id: user.id,
+                          full_name: user.full_name,
                           email: user.email,
                           avatar_url: user.avatar_url,
-	                          avatar_seed: user.avatar_seed,
-	                        }}
-	                        size="md"
-	                      />
-	                      <div className="min-w-0">
-	                        <p className="truncate font-medium text-slate-900">
-	                          {user.full_name || 'No name'}
-	                        </p>
-	                        <p className="truncate text-xs text-slate-500 md:hidden">
-	                          {user.email}
-	                        </p>
-	                      </div>
-	                    </div>
-	                  </TableCell>
-	                  <TableCell className="hidden md:table-cell text-sm text-slate-600">
-	                    {user.email}
-	                  </TableCell>
+                          avatar_seed: user.avatar_seed,
+                        }}
+                        size="md"
+                      />
+                      <div className="min-w-0">
+                        <p className="truncate font-medium text-slate-900">
+                          {user.full_name || 'No name'}
+                        </p>
+                        <p className="truncate text-xs text-slate-500 md:hidden">
+                          {user.email}
+                        </p>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell text-sm text-slate-600">
+                    {user.email}
+                  </TableCell>
                   <TableCell>
                     <Badge
                       variant="outline"
@@ -288,11 +288,11 @@ export default async function UsersPage({
                       </Badge>
                     )}
                   </TableCell>
-	                  <TableCell className="hidden sm:table-cell text-sm text-slate-500">
-	                    {user.created_at
-	                      ? new Date(user.created_at).toLocaleDateString()
-	                      : '-'}
-	                  </TableCell>
+                  <TableCell className="hidden sm:table-cell text-sm text-slate-500">
+                    {user.created_at
+                      ? new Date(user.created_at).toLocaleDateString()
+                      : '-'}
+                  </TableCell>
                   <TableCell>
                     <UserActions
                       userId={user.id}

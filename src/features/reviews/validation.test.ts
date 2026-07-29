@@ -62,8 +62,7 @@ describe('reviews/validateReviewInput', () => {
     const result = validateReviewInput({
       rating: 4,
       title: '  Great kit  ',
-      body:
-        'This is a valid-length review body with enough characters for submission.',
+      body: 'This is a valid-length review body with enough characters for submission.',
       incentiveDisclosure: '  StarterSpark sent this at a discount.  ',
     })
     expect(result.ok).toBe(true)

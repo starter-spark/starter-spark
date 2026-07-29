@@ -57,7 +57,9 @@ export function NewCustomPageForm() {
   const [slugChecking, setSlugChecking] = useState(false)
   const [content, setContent] = useState('')
   const [contentBlocks, setContentBlocks] = useState<PageBlock[]>([])
-  const [editorMode, setEditorMode] = useState<'markdown' | 'blocks'>('markdown')
+  const [editorMode, setEditorMode] = useState<'markdown' | 'blocks'>(
+    'markdown',
+  )
   const [tocEnabled, setTocEnabled] = useState(false)
   const [showLastUpdated, setShowLastUpdated] = useState(true)
   const [seoTitle, setSeoTitle] = useState('')
@@ -205,10 +207,7 @@ export function NewCustomPageForm() {
         <CardContent className="space-y-4">
           {/* Title */}
           <div className="space-y-2">
-            <label
-              htmlFor="title"
-              className={adminLabelClass}
-            >
+            <label htmlFor="title" className={adminLabelClass}>
               Page Title <span className="text-red-500">*</span>
             </label>
             <Input
@@ -223,10 +222,7 @@ export function NewCustomPageForm() {
 
           {/* Slug */}
           <div className="space-y-2">
-            <label
-              htmlFor="slug"
-              className={adminLabelClass}
-            >
+            <label htmlFor="slug" className={adminLabelClass}>
               URL Slug <span className="text-red-500">*</span>
             </label>
             <div className="flex items-center gap-2">
@@ -276,10 +272,7 @@ export function NewCustomPageForm() {
                 Show a navigation sidebar with headings
               </p>
             </div>
-            <Switch
-              checked={tocEnabled}
-              onCheckedChange={setTocEnabled}
-            />
+            <Switch checked={tocEnabled} onCheckedChange={setTocEnabled} />
           </div>
           <div className="flex items-center justify-between">
             <div>
@@ -445,10 +438,7 @@ Write your content here using Markdown...
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <label
-              htmlFor="seo-title"
-              className={adminLabelClass}
-            >
+            <label htmlFor="seo-title" className={adminLabelClass}>
               SEO Title
             </label>
             <Input
@@ -465,10 +455,7 @@ Write your content here using Markdown...
           </div>
 
           <div className="space-y-2">
-            <label
-              htmlFor="seo-description"
-              className={adminLabelClass}
-            >
+            <label htmlFor="seo-description" className={adminLabelClass}>
               Meta Description
             </label>
             <AdminTextArea

@@ -173,7 +173,11 @@ describe('visual-programming (Visual Blocks)', () => {
         {
           id: 'serial1',
           position: { x: 800, y: 0 },
-          data: { label: 'Serial Print', blockType: 'serial_print', params: { message: 'Hi' } },
+          data: {
+            label: 'Serial Print',
+            blockType: 'serial_print',
+            params: { message: 'Hi' },
+          },
         },
       ],
       edges: [
@@ -190,14 +194,19 @@ describe('visual-programming (Visual Blocks)', () => {
     expect(migrated.nodes.some((n) => n.id === 'end1')).toBe(false)
     expect(
       migrated.edges.some(
-        (e) => e.source === 'if1' && e.target === 'delay1' && e.data?.kind === 'body',
+        (e) =>
+          e.source === 'if1' &&
+          e.target === 'delay1' &&
+          e.data?.kind === 'body',
       ),
     ).toBe(true)
     expect(
       migrated.edges.some(
-        (e) => e.source === 'if1' && e.target === 'serial1' && e.data?.kind === 'next',
+        (e) =>
+          e.source === 'if1' &&
+          e.target === 'serial1' &&
+          e.data?.kind === 'next',
       ),
     ).toBe(true)
   })
 })
-

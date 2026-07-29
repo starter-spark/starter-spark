@@ -21,7 +21,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { MoreHorizontal, Check, RotateCcw, Flag, Trash2, Loader2 } from 'lucide-react'
+import {
+  MoreHorizontal,
+  Check,
+  RotateCcw,
+  Flag,
+  Trash2,
+  Loader2,
+} from 'lucide-react'
 import { updatePostStatus, deletePost } from './actions'
 
 interface CommunityActionsProps {
@@ -77,9 +84,7 @@ export function CommunityActions({ postId, status }: CommunityActionsProps) {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           {status === 'flagged' && (
-            <DropdownMenuItem
-              onClick={() => void handleStatusChange('open')}
-            >
+            <DropdownMenuItem onClick={() => void handleStatusChange('open')}>
               <Check className="mr-2 h-4 w-4 text-green-600" />
               Approve
             </DropdownMenuItem>
@@ -91,7 +96,9 @@ export function CommunityActions({ postId, status }: CommunityActionsProps) {
             </DropdownMenuItem>
           )}
           {status !== 'flagged' && (
-            <DropdownMenuItem onClick={() => void handleStatusChange('flagged')}>
+            <DropdownMenuItem
+              onClick={() => void handleStatusChange('flagged')}
+            >
               <Flag className="mr-2 h-4 w-4 text-amber-600" />
               Flag
             </DropdownMenuItem>

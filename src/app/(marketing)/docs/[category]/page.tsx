@@ -116,9 +116,7 @@ export default async function DocCategoryPage({ params }: Props) {
 }
 
 function sortCategoryPages(pages: DocCategoryPage[]) {
-  return [...pages].sort(
-    (a, b) => (a.sort_order || 0) - (b.sort_order || 0),
-  )
+  return [...pages].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
 }
 
 function DocCategoryPageCard({

@@ -48,7 +48,9 @@ Sentry.init({
   // Filter out browser extension and non-actionable errors
   beforeSend(event) {
     const errorMessage = event.exception?.values?.[0]?.value || ''
-    const stackTrace = JSON.stringify(event.exception?.values?.[0]?.stacktrace || '')
+    const stackTrace = JSON.stringify(
+      event.exception?.values?.[0]?.stacktrace || '',
+    )
 
     // Ignore CSP violations from browser extensions trying to use eval
     if (

@@ -29,7 +29,8 @@ function asJson(value: unknown): Json {
 
 function chunk<T>(items: T[], size: number): T[][] {
   const out: T[][] = []
-  for (let i = 0; i < items.length; i += size) out.push(items.slice(i, i + size))
+  for (let i = 0; i < items.length; i += size)
+    out.push(items.slice(i, i + size))
   return out
 }
 
@@ -72,7 +73,10 @@ export async function POST(request: Request) {
   }
 
   // Deduplicate by event_id (Postgres can't handle duplicate IDs in same upsert)
-  const rowMap = new Map<string, { event_id: string; content_type: string; body_json: Json }>()
+  const rowMap = new Map<
+    string,
+    { event_id: string; content_type: string; body_json: Json }
+  >()
 
   for (const event of events) {
     if (!isRecord(event)) continue

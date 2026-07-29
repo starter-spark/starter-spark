@@ -269,10 +269,7 @@ export function Header({ user }: HeaderProps) {
             )}
 
             {/* Workshop Link (no dropdown) */}
-            <Link
-              href="/workshop"
-              className={navLinkClass}
-            >
+            <Link href="/workshop" className={navLinkClass}>
               Workshop
             </Link>
           </nav>
@@ -296,10 +293,7 @@ export function Header({ user }: HeaderProps) {
                 </span>
               )}
             </Button>
-            <Link
-              href="/shop"
-              className={desktopShopLinkClass}
-            >
+            <Link href="/shop" className={desktopShopLinkClass}>
               Shop Kits
             </Link>
             <UserMenu user={user ?? null} />

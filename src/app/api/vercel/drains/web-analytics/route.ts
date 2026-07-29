@@ -50,7 +50,8 @@ function tryParseJsonString(value: unknown): unknown {
 
 function chunk<T>(items: T[], size: number): T[][] {
   const out: T[][] = []
-  for (let i = 0; i < items.length; i += size) out.push(items.slice(i, i + size))
+  for (let i = 0; i < items.length; i += size)
+    out.push(items.slice(i, i + size))
   return out
 }
 
@@ -69,7 +70,10 @@ export async function POST(request: Request) {
   }
 
   // Deduplicate by event_id (Postgres can't handle duplicate IDs in same upsert)
-  const rowMap = new Map<string, NonNullable<ReturnType<typeof mapEventToRow>>>()
+  const rowMap = new Map<
+    string,
+    NonNullable<ReturnType<typeof mapEventToRow>>
+  >()
 
   function mapEventToRow(event: unknown) {
     if (!isRecord(event)) return null
@@ -139,7 +143,10 @@ export async function POST(request: Request) {
       sdk_version_full: getString(event.sdkVersionFull),
       vercel_environment: getString(event.vercelEnvironment),
       vercel_url: getString(event.vercelUrl),
-      flags: isRecord(flagsParsed) || Array.isArray(flagsParsed) ? asJson(flagsParsed) : null,
+      flags:
+        isRecord(flagsParsed) || Array.isArray(flagsParsed)
+          ? asJson(flagsParsed)
+          : null,
       deployment: getString(event.deployment),
       raw: asJson(event),
     }

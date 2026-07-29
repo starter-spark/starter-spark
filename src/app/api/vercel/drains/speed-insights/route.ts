@@ -41,7 +41,8 @@ function getNumber(value: unknown): number | null {
 
 function chunk<T>(items: T[], size: number): T[][] {
   const out: T[][] = []
-  for (let i = 0; i < items.length; i += size) out.push(items.slice(i, i + size))
+  for (let i = 0; i < items.length; i += size)
+    out.push(items.slice(i, i + size))
   return out
 }
 
@@ -60,13 +61,18 @@ export async function POST(request: Request) {
   }
 
   // Deduplicate by event_id (Postgres can't handle duplicate IDs in same upsert)
-  const rowMap = new Map<string, NonNullable<ReturnType<typeof mapEventToRow>>>()
+  const rowMap = new Map<
+    string,
+    NonNullable<ReturnType<typeof mapEventToRow>>
+  >()
 
   function mapEventToRow(event: unknown) {
     if (!isRecord(event)) return null
 
     const timestampIso = getString(event.timestamp)
-    const timestamp = timestampIso ? new Date(timestampIso).toISOString() : new Date().toISOString()
+    const timestamp = timestampIso
+      ? new Date(timestampIso).toISOString()
+      : new Date().toISOString()
     const metricType = getString(event.metricType) ?? 'unknown'
     const value = getNumber(event.value) ?? 0
     const path = getString(event.path)
@@ -75,7 +81,14 @@ export async function POST(request: Request) {
 
     const event_id =
       getString(event.eventId) ??
-      stableEventId([timestamp, metricType, value, path ?? '', route ?? '', deviceId ?? ''])
+      stableEventId([
+        timestamp,
+        metricType,
+        value,
+        path ?? '',
+        route ?? '',
+        deviceId ?? '',
+      ])
 
     return {
       event_id,

@@ -73,7 +73,10 @@ export function AdminSidebar({
         'flex h-full min-h-0 flex-col bg-white',
         variant === 'mobile'
           ? 'w-full'
-          : cn('border-r border-slate-200 transition-[width] duration-200', collapsed ? 'w-[72px]' : 'w-64'),
+          : cn(
+              'border-r border-slate-200 transition-[width] duration-200',
+              collapsed ? 'w-[72px]' : 'w-64',
+            ),
       )}
     >
       {/* Header */}
@@ -83,7 +86,12 @@ export function AdminSidebar({
           collapsed && 'px-2',
         )}
       >
-        <div className={cn('flex min-w-0 items-center gap-2', collapsed && 'justify-center')}>
+        <div
+          className={cn(
+            'flex min-w-0 items-center gap-2',
+            collapsed && 'justify-center',
+          )}
+        >
           <Link
             href="/"
             onClick={() => onNavigate?.()}
@@ -92,7 +100,9 @@ export function AdminSidebar({
             <span className={cn(collapsed && 'sr-only')}>StarterSpark</span>
             <span className={cn(!collapsed && 'sr-only')}>SS</span>
           </Link>
-          <span className={cn('text-slate-300', collapsed && 'sr-only')}>/</span>
+          <span className={cn('text-slate-300', collapsed && 'sr-only')}>
+            /
+          </span>
           <Link
             href="/admin"
             onClick={() => onNavigate?.()}

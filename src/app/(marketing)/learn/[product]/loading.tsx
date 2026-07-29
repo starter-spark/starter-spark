@@ -52,7 +52,10 @@ export default function CourseLoading() {
                       key={lessonIndex}
                       className="flex items-center gap-4 p-4"
                     >
-                      <LoadingBlock className="h-5 w-5 rounded-full" tone="soft" />
+                      <LoadingBlock
+                        className="h-5 w-5 rounded-full"
+                        tone="soft"
+                      />
                       <div className="flex-1 min-w-0">
                         <LoadingBlock className="h-4 w-2/3 mb-2" tone="soft" />
                         <LoadingBlock className="h-3 w-1/2" tone="soft" />

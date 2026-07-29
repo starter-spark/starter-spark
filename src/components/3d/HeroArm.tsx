@@ -45,41 +45,40 @@ export default function HeroArm({ className }: { className?: string }) {
       role="img"
       aria-label="Interactive 3D model of a 4DOF robotic arm kit"
     >
-      {shouldLoad && canRender3d ? (
-        <ClientErrorBoundary
-          fallback={
-            <div
-              className="absolute inset-0 flex items-center justify-center bg-slate-50"
-              aria-hidden="true"
-            >
-              <p className="text-sm text-slate-500 font-mono">
-                3D preview unavailable
-              </p>
-            </div>
-          }
-          onError={() => {
-            setCanRender3d(false)
-            setIsLoaded(true)
-          }}
-        >
-          <div
-            className={cn(
-              'w-full h-full transition-opacity duration-500',
-              isLoaded ? 'opacity-100' : 'opacity-0',
-            )}
+      {
+        shouldLoad && canRender3d ? (
+          <ClientErrorBoundary
+            fallback={
+              <div
+                className="absolute inset-0 flex items-center justify-center bg-slate-50"
+                aria-hidden="true"
+              >
+                <p className="text-sm text-slate-500 font-mono">
+                  3D preview unavailable
+                </p>
+              </div>
+            }
+            onError={() => {
+              setCanRender3d(false)
+              setIsLoaded(true)
+            }}
           >
-            <Suspense fallback={null}>
-              <ThreeScene
-                prefersReducedMotion={prefersReducedMotion}
-                onLoaded={() => setIsLoaded(true)}
-              />
-            </Suspense>
-          </div>
-        </ClientErrorBoundary>
-      ) : !canRender3d && !shouldLoad ? null : (
-        // Show nothing until shouldLoad is true - crosshairs show through
-        null
-      )}
+            <div
+              className={cn(
+                'w-full h-full transition-opacity duration-500',
+                isLoaded ? 'opacity-100' : 'opacity-0',
+              )}
+            >
+              <Suspense fallback={null}>
+                <ThreeScene
+                  prefersReducedMotion={prefersReducedMotion}
+                  onLoaded={() => setIsLoaded(true)}
+                />
+              </Suspense>
+            </div>
+          </ClientErrorBoundary>
+        ) : !canRender3d && !shouldLoad ? null : null // Show nothing until shouldLoad is true - crosshairs show through
+      }
     </div>
   )
 }

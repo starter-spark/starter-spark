@@ -49,7 +49,10 @@ export default function AdminDocCategoriesPage() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [isCreating, setIsCreating] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
-  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<{
+    id: string
+    name: string
+  } | null>(null)
 
   // Form state
   const [formData, setFormData] = useState({
@@ -120,7 +123,9 @@ export default function AdminDocCategoriesPage() {
       if (isCreating) {
         const result = await createCategory(data)
         if (result.error) {
-          toast.error('Failed to create category', { description: result.error })
+          toast.error('Failed to create category', {
+            description: result.error,
+          })
         } else {
           toast.success('Category created')
           await loadCategories()
@@ -129,7 +134,9 @@ export default function AdminDocCategoriesPage() {
       } else if (editingId) {
         const result = await updateCategory(editingId, data)
         if (result.error) {
-          toast.error('Failed to update category', { description: result.error })
+          toast.error('Failed to update category', {
+            description: result.error,
+          })
         } else {
           toast.success('Category updated')
           await loadCategories()
@@ -335,7 +342,9 @@ export default function AdminDocCategoriesPage() {
                   variant="ghost"
                   size="sm"
                   className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                  onClick={() => setDeleteTarget({ id: category.id, name: category.name })}
+                  onClick={() =>
+                    setDeleteTarget({ id: category.id, name: category.name })
+                  }
                 >
                   <Trash2 className="w-4 h-4" />
                 </Button>
@@ -345,10 +354,15 @@ export default function AdminDocCategoriesPage() {
         </div>
       )}
 
-      <AlertDialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)}>
+      <AlertDialog
+        open={!!deleteTarget}
+        onOpenChange={() => setDeleteTarget(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete category &ldquo;{deleteTarget?.name}&rdquo;?</AlertDialogTitle>
+            <AlertDialogTitle>
+              Delete category &ldquo;{deleteTarget?.name}&rdquo;?
+            </AlertDialogTitle>
             <AlertDialogDescription>
               This action cannot be undone. All pages in this category will also
               be permanently deleted.

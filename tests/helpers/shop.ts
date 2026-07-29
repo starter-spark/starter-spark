@@ -30,10 +30,13 @@ export async function openFirstProductFromShop(page: Page): Promise<boolean> {
   await page.goto(href, { waitUntil: 'domcontentloaded' })
 
   await page.getByRole('heading', { level: 1 }).waitFor({ timeout: 15000 })
-  await page.waitForSelector('[aria-label*="ncrease"], [aria-label*="ecrease"]', {
-    state: 'visible',
-    timeout: 30000,
-  })
+  await page.waitForSelector(
+    '[aria-label*="ncrease"], [aria-label*="ecrease"]',
+    {
+      state: 'visible',
+      timeout: 30000,
+    },
+  )
 
   return true
 }

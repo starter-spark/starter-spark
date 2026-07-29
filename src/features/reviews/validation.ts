@@ -63,9 +63,7 @@ export function validateReviewInput(input: {
   title: string
   body: string
   incentiveDisclosure?: string | null
-}):
-  | { ok: true; value: ValidatedReviewInput }
-  | { ok: false; error: string } {
+}): { ok: true; value: ValidatedReviewInput } | { ok: false; error: string } {
   const rating = Number(input.rating)
   if (!Number.isFinite(rating)) {
     return { ok: false, error: 'Please select a star rating.' }

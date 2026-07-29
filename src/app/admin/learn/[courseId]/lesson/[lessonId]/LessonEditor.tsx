@@ -1062,13 +1062,16 @@ export function LessonEditor({
             </AlertDialog>
 
             {/* Template Confirm Dialog */}
-            <AlertDialog open={showTemplateConfirm} onOpenChange={setShowTemplateConfirm}>
+            <AlertDialog
+              open={showTemplateConfirm}
+              onOpenChange={setShowTemplateConfirm}
+            >
               <AlertDialogContent>
                 <AlertDialogHeader>
                   <AlertDialogTitle>Replace current blocks?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    This will replace all existing content blocks with the selected template.
-                    This action cannot be undone.
+                    This will replace all existing content blocks with the
+                    selected template. This action cannot be undone.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>

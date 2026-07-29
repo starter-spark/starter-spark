@@ -620,7 +620,9 @@ export function CircuitDiagramEditor({
 
   const exportAsImage = async () => {
     // Find the ReactFlow viewport element
-    const viewport = document.querySelector('.react-flow__viewport') as HTMLElement
+    const viewport = document.querySelector(
+      '.react-flow__viewport',
+    ) as HTMLElement
     if (!viewport) return
 
     try {

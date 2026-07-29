@@ -116,7 +116,10 @@ export default async function AdminLearnPage() {
           <h1 className="font-mono text-2xl font-bold text-slate-900">Learn</h1>
           <p className="text-slate-600">Manage courses, modules, and lessons</p>
         </div>
-        <Button asChild className="bg-cyan-700 hover:bg-cyan-600 w-full sm:w-auto">
+        <Button
+          asChild
+          className="bg-cyan-700 hover:bg-cyan-600 w-full sm:w-auto"
+        >
           <Link href="/admin/learn/new">
             <Plus className="mr-2 h-4 w-4" />
             New Course

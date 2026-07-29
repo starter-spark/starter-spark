@@ -10,13 +10,14 @@ type GlobalCacheStore = typeof globalThis & {
   __startersparkCacheStore?: Map<string, { value: string; expiresAtMs: number }>
 }
 
-const memoryStore: Map<string, { value: string; expiresAtMs: number }> = (() => {
-  const globalWithStore = globalThis as GlobalCacheStore
-  if (!globalWithStore.__startersparkCacheStore) {
-    globalWithStore.__startersparkCacheStore = new Map()
-  }
-  return globalWithStore.__startersparkCacheStore
-})()
+const memoryStore: Map<string, { value: string; expiresAtMs: number }> =
+  (() => {
+    const globalWithStore = globalThis as GlobalCacheStore
+    if (!globalWithStore.__startersparkCacheStore) {
+      globalWithStore.__startersparkCacheStore = new Map()
+    }
+    return globalWithStore.__startersparkCacheStore
+  })()
 
 let lastMemoryCleanupMs = 0
 function maybeCleanupMemoryStore(nowMs: number) {
@@ -104,4 +105,3 @@ export async function cacheWrapJson<T>(
   await cacheSetJson(key, value, ttlSeconds)
   return value
 }
-

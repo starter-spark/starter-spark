@@ -28,7 +28,9 @@ export function PagePreview({
   return (
     <div className="bg-white rounded border border-slate-200 overflow-hidden">
       <div className="max-w-4xl mx-auto">
-        <div className={showToc ? 'lg:grid lg:grid-cols-[1fr_180px] lg:gap-8' : ''}>
+        <div
+          className={showToc ? 'lg:grid lg:grid-cols-[1fr_180px] lg:gap-8' : ''}
+        >
           {/* Main column */}
           <div className="min-w-0">
             {/* Header */}
@@ -38,7 +40,9 @@ export function PagePreview({
                 <ol className="flex items-center gap-2 text-xs text-slate-400">
                   <li>Home</li>
                   <li aria-hidden="true">/</li>
-                  <li className="text-slate-600 font-medium">{title || 'Page Title'}</li>
+                  <li className="text-slate-600 font-medium">
+                    {title || 'Page Title'}
+                  </li>
                 </ol>
               </nav>
 

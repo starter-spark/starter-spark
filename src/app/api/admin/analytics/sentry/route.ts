@@ -29,7 +29,12 @@ interface SentryStats {
   ignoredCount: number
   totalEvents24h: number
   totalUsersAffected: number
-  levelBreakdown: { fatal: number; error: number; warning: number; info: number }
+  levelBreakdown: {
+    fatal: number
+    error: number
+    warning: number
+    info: number
+  }
   hourlyTrend: Array<{ hour: number; count: number }>
 }
 
@@ -116,7 +121,11 @@ function normalizeIssue(value: unknown): SentryIssue | null {
 
 // Parse Link header for pagination
 // Sentry format: <URL>; rel="next"; results="true"; cursor="..."
-function parseLinkHeader(header: string | null): { next: string | null; cursor: string | null; hasMore: boolean } {
+function parseLinkHeader(header: string | null): {
+  next: string | null
+  cursor: string | null
+  hasMore: boolean
+} {
   if (!header) return { next: null, cursor: null, hasMore: false }
 
   const parts = header.split(',')
@@ -146,7 +155,9 @@ function parseLinkHeader(header: string | null): { next: string | null; cursor: 
 export async function GET(request: NextRequest) {
   // Verify admin access
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -165,11 +176,13 @@ export async function GET(request: NextRequest) {
   // Check for Sentry configuration - use SENTRY_READ_TOKEN for dashboard access
   const sentryOrg = process.env.SENTRY_ORG
   const sentryProject = process.env.SENTRY_PROJECT
-  const sentryAuthToken = process.env.SENTRY_READ_TOKEN || process.env.SENTRY_AUTH_TOKEN
+  const sentryAuthToken =
+    process.env.SENTRY_READ_TOKEN || process.env.SENTRY_AUTH_TOKEN
 
   if (!sentryOrg || !sentryProject || !sentryAuthToken) {
     return NextResponse.json({
-      error: 'Sentry API not configured. Set SENTRY_ORG, SENTRY_PROJECT, and SENTRY_READ_TOKEN.',
+      error:
+        'Sentry API not configured. Set SENTRY_ORG, SENTRY_PROJECT, and SENTRY_READ_TOKEN.',
       dashboard: null,
     })
   }
@@ -184,185 +197,205 @@ export async function GET(request: NextRequest) {
     // Build cache key based on params
     const cacheKey = `admin:sentry:dashboard:${sentryOrg}:${sentryProject}:${status}:${cursor || 'initial'}:${limit}`
 
-    const dashboard = await cacheWrapJson<SentryDashboard>(cacheKey, 60, async () => {
-      // Step 1: Get project ID
-      const projectUrl = `https://sentry.io/api/0/projects/${sentryOrg}/${sentryProject}/`
-      const projectResponse = await fetch(projectUrl, {
-        headers: { Authorization: `Bearer ${sentryAuthToken}` },
-        cache: 'no-store',
-      })
-
-      let projectId: string | null = null
-      if (projectResponse.ok) {
-        const projectData: unknown = await projectResponse.json()
-        if (isRecord(projectData)) {
-          projectId = getString(projectData.id)
-        }
-      } else if (projectResponse.status === 404) {
-        throw new Error(
-          `Sentry project "${sentryProject}" not found in org "${sentryOrg}".`,
-        )
-      } else if (projectResponse.status === 403) {
-        throw new Error(
-          `Sentry access denied. Ensure SENTRY_READ_TOKEN has "project:read", "event:read", and "org:read" scopes.`,
-        )
-      }
-
-      // Step 2: Fetch issues with stats
-      const issuesUrl = new URL(
-        `https://sentry.io/api/0/organizations/${sentryOrg}/issues/`,
-      )
-      if (projectId && /^\d+$/.test(projectId)) {
-        issuesUrl.searchParams.set('project', projectId)
-      }
-
-      // Build query based on status filter
-      let query = ''
-      if (status === 'unresolved') {
-        query = 'is:unresolved'
-      } else if (status === 'resolved') {
-        query = 'is:resolved'
-      } else if (status === 'ignored') {
-        query = 'is:ignored'
-      } else if (status === 'all') {
-        query = '' // No filter
-      } else {
-        query = 'is:unresolved'
-      }
-
-      if (query) {
-        issuesUrl.searchParams.set('query', query)
-      }
-      // Use groupStatsPeriod to get stats without filtering issues by time period
-      // statsPeriod would filter to only issues with events in that period
-      issuesUrl.searchParams.set('groupStatsPeriod', '24h')
-      issuesUrl.searchParams.set('limit', String(limit))
-      issuesUrl.searchParams.set('sort', 'date') // Sort by last seen
-
-      if (cursor) {
-        issuesUrl.searchParams.set('cursor', cursor)
-      }
-
-      const issuesResponse = await fetch(issuesUrl.toString(), {
-        headers: { Authorization: `Bearer ${sentryAuthToken}` },
-        cache: 'no-store',
-      })
-
-      if (!issuesResponse.ok) {
-        const errorText = await issuesResponse.text()
-        console.error('Sentry API error:', issuesResponse.status, errorText)
-
-        if (issuesResponse.status === 403) {
-          throw new Error(
-            `Sentry access denied. Ensure SENTRY_READ_TOKEN has "event:read" scope.`,
-          )
-        }
-        throw new Error(`Sentry API error: ${issuesResponse.status}`)
-      }
-
-      const linkHeader = issuesResponse.headers.get('Link')
-      const paginationInfo = parseLinkHeader(linkHeader)
-
-      const issuesRaw: unknown = await issuesResponse.json()
-
-      const issues: SentryIssue[] = Array.isArray(issuesRaw)
-        ? issuesRaw.map(normalizeIssue).filter((i): i is SentryIssue => i !== null)
-        : []
-
-      // Step 3: Fetch counts for all statuses (for stats)
-      // We fetch with limit=100 to get actual counts (Sentry doesn't have a count-only endpoint)
-      const fetchStatusCount = async (query: string): Promise<{ count: number; hasMore: boolean }> => {
-        const url = new URL(`https://sentry.io/api/0/organizations/${sentryOrg}/issues/`)
-        if (projectId && /^\d+$/.test(projectId)) {
-          url.searchParams.set('project', projectId)
-        }
-        url.searchParams.set('query', query)
-        // Don't filter by statsPeriod - we want total counts
-        url.searchParams.set('limit', '100')
-
-        const res = await fetch(url.toString(), {
+    const dashboard = await cacheWrapJson<SentryDashboard>(
+      cacheKey,
+      60,
+      async () => {
+        // Step 1: Get project ID
+        const projectUrl = `https://sentry.io/api/0/projects/${sentryOrg}/${sentryProject}/`
+        const projectResponse = await fetch(projectUrl, {
           headers: { Authorization: `Bearer ${sentryAuthToken}` },
           cache: 'no-store',
         })
 
-        if (!res.ok) {
-          return { count: 0, hasMore: false }
+        let projectId: string | null = null
+        if (projectResponse.ok) {
+          const projectData: unknown = await projectResponse.json()
+          if (isRecord(projectData)) {
+            projectId = getString(projectData.id)
+          }
+        } else if (projectResponse.status === 404) {
+          throw new Error(
+            `Sentry project "${sentryProject}" not found in org "${sentryOrg}".`,
+          )
+        } else if (projectResponse.status === 403) {
+          throw new Error(
+            `Sentry access denied. Ensure SENTRY_READ_TOKEN has "project:read", "event:read", and "org:read" scopes.`,
+          )
         }
 
-        const data: unknown = await res.json()
-        const count = Array.isArray(data) ? data.length : 0
-        const link = res.headers.get('Link')
-        // Sentry uses results="true" or results="false" to indicate if there are more pages
-        // The rel="next" is ALWAYS present, so we need to check results="true" specifically
-        const hasMore = !!link && link.includes('rel="next"') && link.includes('results="true"')
+        // Step 2: Fetch issues with stats
+        const issuesUrl = new URL(
+          `https://sentry.io/api/0/organizations/${sentryOrg}/issues/`,
+        )
+        if (projectId && /^\d+$/.test(projectId)) {
+          issuesUrl.searchParams.set('project', projectId)
+        }
 
-        return { count, hasMore }
-      }
+        // Build query based on status filter
+        let query = ''
+        if (status === 'unresolved') {
+          query = 'is:unresolved'
+        } else if (status === 'resolved') {
+          query = 'is:resolved'
+        } else if (status === 'ignored') {
+          query = 'is:ignored'
+        } else if (status === 'all') {
+          query = '' // No filter
+        } else {
+          query = 'is:unresolved'
+        }
 
-      const [unresolvedData, resolvedData, ignoredData] = await Promise.all([
-        fetchStatusCount('is:unresolved'),
-        fetchStatusCount('is:resolved'),
-        fetchStatusCount('is:ignored'),
-      ])
+        if (query) {
+          issuesUrl.searchParams.set('query', query)
+        }
+        // Use groupStatsPeriod to get stats without filtering issues by time period
+        // statsPeriod would filter to only issues with events in that period
+        issuesUrl.searchParams.set('groupStatsPeriod', '24h')
+        issuesUrl.searchParams.set('limit', String(limit))
+        issuesUrl.searchParams.set('sort', 'date') // Sort by last seen
 
-      const unresolvedCount = unresolvedData.count + (unresolvedData.hasMore ? 100 : 0) // Add 100+ indicator if paginated
-      const resolvedCount = resolvedData.count + (resolvedData.hasMore ? 100 : 0)
-      const ignoredCount = ignoredData.count + (ignoredData.hasMore ? 100 : 0)
+        if (cursor) {
+          issuesUrl.searchParams.set('cursor', cursor)
+        }
 
-      // Calculate stats from issues
-      const levelBreakdown = { fatal: 0, error: 0, warning: 0, info: 0 }
-      let totalEvents24h = 0
-      let totalUsersAffected = 0
-      const hourlyBuckets = new Map<number, number>()
+        const issuesResponse = await fetch(issuesUrl.toString(), {
+          headers: { Authorization: `Bearer ${sentryAuthToken}` },
+          cache: 'no-store',
+        })
 
-      for (const issue of issues) {
-        // Count by level with explicit checks
-        if (issue.level === 'fatal') levelBreakdown.fatal++
-        else if (issue.level === 'warning') levelBreakdown.warning++
-        else if (issue.level === 'info') levelBreakdown.info++
-        else levelBreakdown.error++
+        if (!issuesResponse.ok) {
+          const errorText = await issuesResponse.text()
+          console.error('Sentry API error:', issuesResponse.status, errorText)
 
-        totalEvents24h += getNumber(issue.count)
-        totalUsersAffected += issue.userCount
+          if (issuesResponse.status === 403) {
+            throw new Error(
+              `Sentry access denied. Ensure SENTRY_READ_TOKEN has "event:read" scope.`,
+            )
+          }
+          throw new Error(`Sentry API error: ${issuesResponse.status}`)
+        }
 
-        // Aggregate hourly stats
-        if (issue.stats?.['24h']) {
-          for (const [timestamp, count] of issue.stats['24h']) {
-            const hour = new Date(timestamp * 1000).getHours()
-            hourlyBuckets.set(hour, (hourlyBuckets.get(hour) ?? 0) + count)
+        const linkHeader = issuesResponse.headers.get('Link')
+        const paginationInfo = parseLinkHeader(linkHeader)
+
+        const issuesRaw: unknown = await issuesResponse.json()
+
+        const issues: SentryIssue[] = Array.isArray(issuesRaw)
+          ? issuesRaw
+              .map(normalizeIssue)
+              .filter((i): i is SentryIssue => i !== null)
+          : []
+
+        // Step 3: Fetch counts for all statuses (for stats)
+        // We fetch with limit=100 to get actual counts (Sentry doesn't have a count-only endpoint)
+        const fetchStatusCount = async (
+          query: string,
+        ): Promise<{ count: number; hasMore: boolean }> => {
+          const url = new URL(
+            `https://sentry.io/api/0/organizations/${sentryOrg}/issues/`,
+          )
+          if (projectId && /^\d+$/.test(projectId)) {
+            url.searchParams.set('project', projectId)
+          }
+          url.searchParams.set('query', query)
+          // Don't filter by statsPeriod - we want total counts
+          url.searchParams.set('limit', '100')
+
+          const res = await fetch(url.toString(), {
+            headers: { Authorization: `Bearer ${sentryAuthToken}` },
+            cache: 'no-store',
+          })
+
+          if (!res.ok) {
+            return { count: 0, hasMore: false }
+          }
+
+          const data: unknown = await res.json()
+          const count = Array.isArray(data) ? data.length : 0
+          const link = res.headers.get('Link')
+          // Sentry uses results="true" or results="false" to indicate if there are more pages
+          // The rel="next" is ALWAYS present, so we need to check results="true" specifically
+          const hasMore =
+            !!link &&
+            link.includes('rel="next"') &&
+            link.includes('results="true"')
+
+          return { count, hasMore }
+        }
+
+        const [unresolvedData, resolvedData, ignoredData] = await Promise.all([
+          fetchStatusCount('is:unresolved'),
+          fetchStatusCount('is:resolved'),
+          fetchStatusCount('is:ignored'),
+        ])
+
+        const unresolvedCount =
+          unresolvedData.count + (unresolvedData.hasMore ? 100 : 0) // Add 100+ indicator if paginated
+        const resolvedCount =
+          resolvedData.count + (resolvedData.hasMore ? 100 : 0)
+        const ignoredCount = ignoredData.count + (ignoredData.hasMore ? 100 : 0)
+
+        // Calculate stats from issues
+        const levelBreakdown = { fatal: 0, error: 0, warning: 0, info: 0 }
+        let totalEvents24h = 0
+        let totalUsersAffected = 0
+        const hourlyBuckets = new Map<number, number>()
+
+        for (const issue of issues) {
+          // Count by level with explicit checks
+          if (issue.level === 'fatal') levelBreakdown.fatal++
+          else if (issue.level === 'warning') levelBreakdown.warning++
+          else if (issue.level === 'info') levelBreakdown.info++
+          else levelBreakdown.error++
+
+          totalEvents24h += getNumber(issue.count)
+          totalUsersAffected += issue.userCount
+
+          // Aggregate hourly stats
+          if (issue.stats?.['24h']) {
+            for (const [timestamp, count] of issue.stats['24h']) {
+              const hour = new Date(timestamp * 1000).getHours()
+              hourlyBuckets.set(hour, (hourlyBuckets.get(hour) ?? 0) + count)
+            }
           }
         }
-      }
 
-      // Build hourly trend (last 24 hours)
-      const hourlyTrend: Array<{ hour: number; count: number }> = []
-      const now = new Date()
-      for (let i = 23; i >= 0; i--) {
-        const hour = (now.getHours() - i + 24) % 24
-        hourlyTrend.push({ hour, count: hourlyBuckets.get(hour) ?? 0 })
-      }
+        // Build hourly trend (last 24 hours)
+        const hourlyTrend: Array<{ hour: number; count: number }> = []
+        const now = new Date()
+        for (let i = 23; i >= 0; i--) {
+          const hour = (now.getHours() - i + 24) % 24
+          hourlyTrend.push({ hour, count: hourlyBuckets.get(hour) ?? 0 })
+        }
 
-      const stats: SentryStats = {
-        totalIssues: issues.length,
-        unresolvedCount: unresolvedCount || issues.filter((i) => i.status === 'unresolved').length,
-        resolvedCount: resolvedCount || issues.filter((i) => i.status === 'resolved').length,
-        ignoredCount: ignoredCount || issues.filter((i) => i.status === 'ignored').length,
-        totalEvents24h,
-        totalUsersAffected,
-        levelBreakdown,
-        hourlyTrend,
-      }
+        const stats: SentryStats = {
+          totalIssues: issues.length,
+          unresolvedCount:
+            unresolvedCount ||
+            issues.filter((i) => i.status === 'unresolved').length,
+          resolvedCount:
+            resolvedCount ||
+            issues.filter((i) => i.status === 'resolved').length,
+          ignoredCount:
+            ignoredCount || issues.filter((i) => i.status === 'ignored').length,
+          totalEvents24h,
+          totalUsersAffected,
+          levelBreakdown,
+          hourlyTrend,
+        }
 
-      return {
-        issues,
-        stats,
-        pagination: {
-          cursor: paginationInfo.cursor,
-          hasMore: paginationInfo.hasMore,
-          total: issues.length,
-        },
-      }
-    })
+        return {
+          issues,
+          stats,
+          pagination: {
+            cursor: paginationInfo.cursor,
+            hasMore: paginationInfo.hasMore,
+            total: issues.length,
+          },
+        }
+      },
+    )
 
     return NextResponse.json({ dashboard })
   } catch (error) {

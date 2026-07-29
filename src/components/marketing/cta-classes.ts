@@ -30,7 +30,4 @@ export const ctaOutlineSm = cn(
   'border-slate-200 hover:border-cyan-700 text-slate-600 hover:text-cyan-700',
 )
 
-export const ctaGhost = cn(
-  ctaGhostBase,
-  'text-cyan-700 hover:text-cyan-600',
-)
+export const ctaGhost = cn(ctaGhostBase, 'text-cyan-700 hover:text-cyan-600')

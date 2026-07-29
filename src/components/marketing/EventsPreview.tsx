@@ -122,12 +122,7 @@ export function EventsPreviewSection({
                 <Calendar className="w-5 h-5 text-cyan-700" />
                 {workshopsTitle}
               </h3>
-              <Button
-                asChild
-                variant="ghost"
-                size="sm"
-                className={ctaGhost}
-              >
+              <Button asChild variant="ghost" size="sm" className={ctaGhost}>
                 <Link href="/events">
                   {workshopsViewAll}
                   <ArrowRight className="w-4 h-4 ml-1" />
@@ -226,12 +221,7 @@ export function EventsPreviewSection({
                 <Users className="w-5 h-5 text-cyan-700" />
                 {labTitle}
               </h3>
-              <Button
-                asChild
-                variant="ghost"
-                size="sm"
-                className={ctaGhost}
-              >
+              <Button asChild variant="ghost" size="sm" className={ctaGhost}>
                 <Link href="/community">
                   {labJoinNow}
                   <ArrowRight className="w-4 h-4 ml-1" />
@@ -345,21 +335,14 @@ export function EventsPreviewSection({
                 <p className="text-sm text-slate-500 mb-4 break-words">
                   {labEmptyDescription}
                 </p>
-                <Button
-                  asChild
-                  size="sm"
-                  className={ctaPrimarySm}
-                >
+                <Button asChild size="sm" className={ctaPrimarySm}>
                   <Link href="/community/new">{labEmptyCta}</Link>
                 </Button>
               </div>
             )}
 
             <div className="mt-auto pt-6">
-              <Button
-                asChild
-                className={cn(ctaPrimary, 'w-full')}
-              >
+              <Button asChild className={cn(ctaPrimary, 'w-full')}>
                 <Link href="/community">
                   {labCta}
                   <ArrowRight className="w-4 h-4 ml-2" />

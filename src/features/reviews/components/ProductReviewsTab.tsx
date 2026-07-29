@@ -76,7 +76,8 @@ export function ProductReviewsTab({
       const bTs = new Date(b.created_at).getTime()
 
       if (sort === 'newest') return bTs - aTs
-      if (sort === 'highest') return b.rating !== a.rating ? b.rating - a.rating : bTs - aTs
+      if (sort === 'highest')
+        return b.rating !== a.rating ? b.rating - a.rating : bTs - aTs
       return a.rating !== b.rating ? a.rating - b.rating : bTs - aTs
     })
 
@@ -325,7 +326,10 @@ export function ProductReviewsTab({
           </AlertDialogHeader>
 
           <div className="mt-4">
-            <Label htmlFor="review-report-reason" className="text-sm text-slate-700">
+            <Label
+              htmlFor="review-report-reason"
+              className="text-sm text-slate-700"
+            >
               Optional details
             </Label>
             <Textarea
@@ -548,7 +552,10 @@ function ReviewComposer({
             disabled={isPending}
           />
           <div className="min-w-0">
-            <Label htmlFor="review-incentive" className="text-sm text-slate-700">
+            <Label
+              htmlFor="review-incentive"
+              className="text-sm text-slate-700"
+            >
               I received this product for free or at a discount
             </Label>
             <p className="text-xs text-slate-500 mt-1">

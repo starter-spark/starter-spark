@@ -1,7 +1,9 @@
 import type { Database } from '@/lib/supabase/database.types'
 
-export type ProductReviewStatus = Database['public']['Enums']['product_review_status']
-export type ProductReviewRow = Database['public']['Tables']['product_reviews']['Row']
+export type ProductReviewStatus =
+  Database['public']['Enums']['product_review_status']
+export type ProductReviewRow =
+  Database['public']['Tables']['product_reviews']['Row']
 export type ProductReviewReportRow =
   Database['public']['Tables']['product_review_reports']['Row']
 
@@ -46,4 +48,3 @@ export type ReviewSummary = {
   byStar: Record<1 | 2 | 3 | 4 | 5, number>
   verifiedCount: number
 }
-

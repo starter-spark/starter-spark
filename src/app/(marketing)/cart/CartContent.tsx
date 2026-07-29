@@ -101,11 +101,15 @@ export function CartContent({
       if (data.url) {
         globalThis.location.href = data.url
       } else {
-        setCheckoutError(data.error || 'Unable to start checkout. Please try again.')
+        setCheckoutError(
+          data.error || 'Unable to start checkout. Please try again.',
+        )
         setIsLoading(false)
       }
     } catch {
-      setCheckoutError('Connection error. Please check your internet and try again.')
+      setCheckoutError(
+        'Connection error. Please check your internet and try again.',
+      )
       setIsLoading(false)
     }
   }
@@ -248,7 +252,9 @@ export function CartContent({
                             <div className="flex items-center gap-2">
                               <QuantityButton
                                 size="md"
-                                tone={item.quantity === 1 ? 'danger' : 'neutral'}
+                                tone={
+                                  item.quantity === 1 ? 'danger' : 'neutral'
+                                }
                                 onClick={() => {
                                   if (item.quantity === 1) {
                                     removeItem(item.slug)
@@ -276,14 +282,20 @@ export function CartContent({
                                 onClick={() => {
                                   updateQuantity(item.slug, item.quantity + 1)
                                 }}
-                                disabled={item.maxQuantity !== undefined && item.quantity >= item.maxQuantity}
+                                disabled={
+                                  item.maxQuantity !== undefined &&
+                                  item.quantity >= item.maxQuantity
+                                }
                                 aria-label="Increase quantity"
                               >
                                 <Plus className="w-3 h-3 text-slate-600" />
                               </QuantityButton>
-                              {item.maxQuantity !== undefined && item.quantity >= item.maxQuantity && (
-                                <span className="text-xs text-amber-600 ml-2">Max</span>
-                              )}
+                              {item.maxQuantity !== undefined &&
+                                item.quantity >= item.maxQuantity && (
+                                  <span className="text-xs text-amber-600 ml-2">
+                                    Max
+                                  </span>
+                                )}
                             </div>
 
                             <span className="font-mono text-slate-900">

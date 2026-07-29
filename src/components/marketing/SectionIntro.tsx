@@ -31,7 +31,11 @@ export function SectionIntro({
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      className={cn(isCentered ? 'text-center' : 'text-left', 'mb-16', className)}
+      className={cn(
+        isCentered ? 'text-center' : 'text-left',
+        'mb-16',
+        className,
+      )}
     >
       {eyebrow && (
         <p

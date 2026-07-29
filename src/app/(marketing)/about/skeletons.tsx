@@ -5,7 +5,10 @@ export function AboutHeroSkeleton() {
     <section className="pt-32 pb-20 px-6 lg:px-20 bg-slate-50">
       <div className="max-w-4xl mx-auto text-center">
         <LoadingBlock className="h-4 w-24 rounded mx-auto mb-4" tone="strong" />
-        <LoadingBlock className="h-12 w-3/4 rounded mx-auto mb-4" tone="strong" />
+        <LoadingBlock
+          className="h-12 w-3/4 rounded mx-auto mb-4"
+          tone="strong"
+        />
         <LoadingBlock className="h-12 w-1/2 rounded mx-auto mb-8" tone="soft" />
         <LoadingBlock className="h-6 w-2/3 rounded mx-auto" tone="soft" />
       </div>
@@ -34,7 +37,10 @@ export function AboutTeamSkeleton() {
     <section className="py-24 px-6 lg:px-20 bg-slate-50">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
-          <LoadingBlock className="h-10 w-64 rounded mx-auto mb-4" tone="strong" />
+          <LoadingBlock
+            className="h-10 w-64 rounded mx-auto mb-4"
+            tone="strong"
+          />
           <LoadingBlock className="h-6 w-96 rounded mx-auto" tone="soft" />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -43,9 +49,18 @@ export function AboutTeamSkeleton() {
               key={i}
               className="bg-white border border-slate-200 rounded p-6"
             >
-              <LoadingBlock className="w-24 h-24 mx-auto mb-4 rounded-full" tone="soft" />
-              <LoadingBlock className="h-5 w-32 rounded mx-auto mb-2" tone="strong" />
-              <LoadingBlock className="h-4 w-24 rounded mx-auto mb-3" tone="soft" />
+              <LoadingBlock
+                className="w-24 h-24 mx-auto mb-4 rounded-full"
+                tone="soft"
+              />
+              <LoadingBlock
+                className="h-5 w-32 rounded mx-auto mb-2"
+                tone="strong"
+              />
+              <LoadingBlock
+                className="h-4 w-24 rounded mx-auto mb-3"
+                tone="soft"
+              />
               <LoadingBlock className="h-16 rounded" tone="subtle" />
             </div>
           ))}

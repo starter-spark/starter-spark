@@ -18,7 +18,11 @@ export default function ProductLoading() {
               </div>
               <div className="flex gap-2 overflow-x-auto">
                 {Array.from({ length: 4 }, (_, i) => (
-                  <LoadingBlock key={i} className="h-20 w-20 rounded" tone="soft" />
+                  <LoadingBlock
+                    key={i}
+                    className="h-20 w-20 rounded"
+                    tone="soft"
+                  />
                 ))}
               </div>
             </div>

@@ -154,7 +154,12 @@ export default async function ContentPage() {
               <p className="text-sm text-slate-500">
                 Edit customer counts, product stats, and other site metrics
               </p>
-              <Button asChild size="sm" variant="outline" className="w-full sm:w-auto">
+              <Button
+                asChild
+                size="sm"
+                variant="outline"
+                className="w-full sm:w-auto"
+              >
                 <Link href="/admin/content/stats">
                   <Edit className="h-4 w-4 mr-2" />
                   Manage Stats
@@ -193,7 +198,12 @@ export default async function ContentPage() {
               <p className="text-sm text-slate-500">
                 Add, edit, and reorder team member profiles
               </p>
-              <Button asChild size="sm" variant="outline" className="w-full sm:w-auto">
+              <Button
+                asChild
+                size="sm"
+                variant="outline"
+                className="w-full sm:w-auto"
+              >
                 <Link href="/admin/content/team">
                   <Edit className="h-4 w-4 mr-2" />
                   Manage Team
@@ -261,7 +271,12 @@ export default async function ContentPage() {
                       <Clock className="h-4 w-4" />
                       {lastUpdated ? `Updated ${lastUpdated}` : 'Never updated'}
                     </div>
-                    <Button asChild size="sm" variant="outline" className="w-full sm:w-auto">
+                    <Button
+                      asChild
+                      size="sm"
+                      variant="outline"
+                      className="w-full sm:w-auto"
+                    >
                       <Link href={`/admin/content/${page.page_key}`}>
                         <Edit className="h-4 w-4 mr-2" />
                         Edit
@@ -291,7 +306,11 @@ export default async function ContentPage() {
       <div>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
           <h2 className="text-lg font-mono text-slate-900">Custom Pages</h2>
-          <Button asChild size="sm" className="bg-cyan-700 hover:bg-cyan-600 w-full sm:w-auto">
+          <Button
+            asChild
+            size="sm"
+            className="bg-cyan-700 hover:bg-cyan-600 w-full sm:w-auto"
+          >
             <Link href="/admin/content/new">
               <Plus className="h-4 w-4 mr-2" />
               Create Page
@@ -361,7 +380,12 @@ export default async function ContentPage() {
                           ? `Updated ${lastUpdated}`
                           : 'Never updated'}
                       </div>
-                      <Button asChild size="sm" variant="outline" className="w-full sm:w-auto">
+                      <Button
+                        asChild
+                        size="sm"
+                        variant="outline"
+                        className="w-full sm:w-auto"
+                      >
                         <Link href={`/admin/content/${page.page_key}`}>
                           <Edit className="h-4 w-4 mr-2" />
                           Edit

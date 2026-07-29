@@ -234,7 +234,9 @@ export function PostHogInsights() {
                         <Badge variant="outline" className="text-xs">
                           {index + 1}
                         </Badge>
-                        <code className="text-sm text-slate-700">{page.path}</code>
+                        <code className="text-sm text-slate-700">
+                          {page.path}
+                        </code>
                       </div>
                       <span className="font-mono text-sm text-slate-600">
                         {page.count.toLocaleString()}

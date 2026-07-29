@@ -3,7 +3,10 @@
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { rateLimitAction } from '@/lib/rate-limit'
 import { checkBotId } from '@/lib/botid'
-import { sendContactConfirmation, sendContactNotification } from '@/lib/email/send'
+import {
+  sendContactConfirmation,
+  sendContactNotification,
+} from '@/lib/email/send'
 import { headers } from 'next/headers'
 import type { Json } from '@/lib/supabase/database.types'
 
@@ -181,13 +184,17 @@ export async function submitContactForm(
       }
     }
 
-    const { data: inserted, error } = await supabaseAdmin.from('contact_submissions').insert({
-      name: data.name.trim(),
-      email: data.email.trim().toLowerCase(),
-      subject: data.subject.trim(),
-      message: data.situation.trim(), // stored as 'message' in DB
-      attachments: (data.attachments || []) as unknown as Json,
-    }).select('id').single()
+    const { data: inserted, error } = await supabaseAdmin
+      .from('contact_submissions')
+      .insert({
+        name: data.name.trim(),
+        email: data.email.trim().toLowerCase(),
+        subject: data.subject.trim(),
+        message: data.situation.trim(), // stored as 'message' in DB
+        attachments: (data.attachments || []) as unknown as Json,
+      })
+      .select('id')
+      .single()
 
     if (error) {
       console.error('Error submitting contact form:', error)

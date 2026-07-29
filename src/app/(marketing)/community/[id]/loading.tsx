@@ -30,7 +30,10 @@ export default function CommunityPostLoading() {
                   ))}
                 </div>
                 <div className="flex items-center gap-3">
-                  <LoadingBlock className="h-10 w-10 rounded-full" tone="soft" />
+                  <LoadingBlock
+                    className="h-10 w-10 rounded-full"
+                    tone="soft"
+                  />
                   <LoadingBlock className="h-4 w-40" tone="soft" />
                 </div>
               </div>
@@ -70,7 +73,10 @@ export default function CommunityPostLoading() {
                     <LoadingBlock className="h-4 w-11/12 mb-2" tone="soft" />
                     <LoadingBlock className="h-4 w-10/12 mb-4" tone="soft" />
                     <div className="flex items-center gap-3 pt-4 border-t border-slate-100">
-                      <LoadingBlock className="h-8 w-8 rounded-full" tone="soft" />
+                      <LoadingBlock
+                        className="h-8 w-8 rounded-full"
+                        tone="soft"
+                      />
                       <LoadingBlock className="h-4 w-40" tone="soft" />
                     </div>
                   </div>

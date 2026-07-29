@@ -7,10 +7,7 @@ import {
   MissionImpact,
   EventsPreview,
 } from '@/components/marketing'
-import {
-  getOrganizationSchema,
-  getWebsiteSchema,
-} from '@/lib/structured-data'
+import { getOrganizationSchema, getWebsiteSchema } from '@/lib/structured-data'
 import {
   HeroSkeleton,
   DifferentiatorsSkeleton,
@@ -38,24 +35,24 @@ export default function Home() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
       />
       <div>
-      <Suspense fallback={<HeroSkeleton />}>
-        <HeroWrapper />
-      </Suspense>
-      <Suspense fallback={<DifferentiatorsSkeleton />}>
-        <DifferentiatorsWrapper />
-      </Suspense>
-      <Suspense fallback={<FeaturedProductSkeleton />}>
-        <FeaturedProduct />
-      </Suspense>
-      <Suspense fallback={<LearningPreviewSkeleton />}>
-        <LearningPreviewWrapper />
-      </Suspense>
-      <Suspense fallback={<MissionImpactSkeleton />}>
-        <MissionImpact />
-      </Suspense>
-      <Suspense fallback={<EventsPreviewSkeleton />}>
-        <EventsPreview />
-      </Suspense>
+        <Suspense fallback={<HeroSkeleton />}>
+          <HeroWrapper />
+        </Suspense>
+        <Suspense fallback={<DifferentiatorsSkeleton />}>
+          <DifferentiatorsWrapper />
+        </Suspense>
+        <Suspense fallback={<FeaturedProductSkeleton />}>
+          <FeaturedProduct />
+        </Suspense>
+        <Suspense fallback={<LearningPreviewSkeleton />}>
+          <LearningPreviewWrapper />
+        </Suspense>
+        <Suspense fallback={<MissionImpactSkeleton />}>
+          <MissionImpact />
+        </Suspense>
+        <Suspense fallback={<EventsPreviewSkeleton />}>
+          <EventsPreview />
+        </Suspense>
       </div>
     </>
   )

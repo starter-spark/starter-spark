@@ -183,9 +183,9 @@ test.describe('Protected Routes - Unauthenticated', () => {
 
       // Workshop page shows "Sign in to access your kits" message for unauthenticated users
       const mainContent = page.locator('main')
-      await expect(
-        mainContent.getByText(/sign in to access/i),
-      ).toBeVisible({ timeout: 5000 })
+      await expect(mainContent.getByText(/sign in to access/i)).toBeVisible({
+        timeout: 5000,
+      })
     }
   })
 

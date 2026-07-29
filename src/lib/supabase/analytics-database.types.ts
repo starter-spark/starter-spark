@@ -257,7 +257,11 @@ export type AnalyticsDatabase = Database & {
     Functions: Database['public']['Functions'] & {
       analytics_speed_insights_p75: {
         Args: { start_ts: string; end_ts: string }
-        Returns: Array<{ metric_type: string; p75: number; sample_count: number }>
+        Returns: Array<{
+          metric_type: string
+          p75: number
+          sample_count: number
+        }>
       }
       analytics_web_analytics_overview: {
         Args: { start_ts: string; end_ts: string }
@@ -270,4 +274,3 @@ export type AnalyticsDatabase = Database & {
     }
   }
 }
-

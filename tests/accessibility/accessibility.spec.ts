@@ -417,7 +417,9 @@ test.describe('Images and Alt Text', () => {
 
     // Wait for page to be fully loaded and hydrated
     await page.waitForLoadState('networkidle')
-    await page.waitForSelector('header[data-hydrated="true"]', { timeout: 10000 }).catch(() => {})
+    await page
+      .waitForSelector('header[data-hydrated="true"]', { timeout: 10000 })
+      .catch(() => {})
 
     // Only check visible images (skip lazy-loaded ones not yet in viewport)
     const images = page.locator('img:visible')

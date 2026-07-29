@@ -53,7 +53,10 @@ export default async function EventsPage() {
             Manage workshops and community events
           </p>
         </div>
-        <Button asChild className="bg-cyan-700 hover:bg-cyan-600 w-full sm:w-auto">
+        <Button
+          asChild
+          className="bg-cyan-700 hover:bg-cyan-600 w-full sm:w-auto"
+        >
           <Link href="/admin/events/new">
             <Plus className="mr-2 h-4 w-4" />
             Create Event

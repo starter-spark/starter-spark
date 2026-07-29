@@ -353,10 +353,7 @@ export function ProductForm({
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <label
-                htmlFor="name"
-                className={adminLabelClass}
-              >
+              <label htmlFor="name" className={adminLabelClass}>
                 Name
               </label>
               <Input
@@ -369,10 +366,7 @@ export function ProductForm({
               />
             </div>
             <div className="space-y-2">
-              <label
-                htmlFor="slug"
-                className={adminLabelClass}
-              >
+              <label htmlFor="slug" className={adminLabelClass}>
                 Slug
               </label>
               <Input
@@ -388,10 +382,7 @@ export function ProductForm({
             </div>
           </div>
           <div className="space-y-2">
-            <label
-              htmlFor="description"
-              className={adminLabelClass}
-            >
+            <label htmlFor="description" className={adminLabelClass}>
               Description
             </label>
             <AdminTextArea
@@ -416,10 +407,7 @@ export function ProductForm({
           {/* Price */}
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <label
-                htmlFor="price"
-                className={adminLabelClass}
-              >
+              <label htmlFor="price" className={adminLabelClass}>
                 Price (cents)
               </label>
               <Input
@@ -437,10 +425,7 @@ export function ProductForm({
               </p>
             </div>
             <div className="space-y-2">
-              <label
-                htmlFor="stripe"
-                className={adminLabelClass}
-              >
+              <label htmlFor="stripe" className={adminLabelClass}>
                 Stripe Price ID
               </label>
               <Input
@@ -470,10 +455,7 @@ export function ProductForm({
                 }}
                 className="h-4 w-4 rounded border-slate-300 text-cyan-700 focus:ring-cyan-700"
               />
-              <label
-                htmlFor="onSale"
-                className={adminLabelClass}
-              >
+              <label htmlFor="onSale" className={adminLabelClass}>
                 On Sale
               </label>
             </div>
@@ -586,10 +568,7 @@ export function ProductForm({
               }}
               className="h-4 w-4 rounded border-slate-300 text-cyan-700 focus:ring-cyan-700"
             />
-            <label
-              htmlFor="trackInventory"
-              className={adminLabelClass}
-            >
+            <label htmlFor="trackInventory" className={adminLabelClass}>
               Track Inventory
             </label>
           </div>
@@ -603,10 +582,7 @@ export function ProductForm({
             <div className="mt-4 p-4 bg-slate-50 rounded-md border border-slate-200 space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <label
-                    htmlFor="stockQuantity"
-                    className={adminLabelClass}
-                  >
+                  <label htmlFor="stockQuantity" className={adminLabelClass}>
                     Stock Quantity
                   </label>
                   <Input
@@ -668,7 +644,8 @@ export function ProductForm({
                   placeholder="No limit"
                 />
                 <p className="text-xs text-slate-500">
-                  Maximum quantity a customer can add to their cart. Leave empty for no limit.
+                  Maximum quantity a customer can add to their cart. Leave empty
+                  for no limit.
                 </p>
               </div>
 
@@ -947,8 +924,8 @@ export function ProductForm({
           <AlertDialogHeader>
             <AlertDialogTitle>Delete this product?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. The product, its associated licenses,
-              and all related data will be permanently deleted.
+              This action cannot be undone. The product, its associated
+              licenses, and all related data will be permanently deleted.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

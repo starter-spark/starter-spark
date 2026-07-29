@@ -21,4 +21,3 @@ export const supabaseAnalyticsAdmin = createClient<AnalyticsDatabase>(
     },
   },
 )
-

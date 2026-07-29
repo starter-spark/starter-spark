@@ -108,7 +108,9 @@ function parseUsageResponse(value: unknown): SupabaseUsageResponse | null {
         realtime: getNumber(totals.realtime),
       },
       totalRequests: getNumber(value.totalRequests),
-      errors: isRecord(value.errors) ? (value.errors as SupabaseUsageSuccess['errors']) : null,
+      errors: isRecord(value.errors)
+        ? (value.errors as SupabaseUsageSuccess['errors'])
+        : null,
     }
   }
 
@@ -139,7 +141,9 @@ export function SupabaseUsage() {
     setError(null)
 
     try {
-      const res = await fetch('/api/admin/analytics/supabase', { cache: 'no-store' })
+      const res = await fetch('/api/admin/analytics/supabase', {
+        cache: 'no-store',
+      })
       const raw: unknown = await res.json()
       const parsed = parseUsageResponse(raw)
 
@@ -292,7 +296,8 @@ export function SupabaseUsage() {
 
             <div className="flex items-center justify-between rounded bg-slate-50 px-3 py-2 text-xs text-slate-600">
               <span>
-                Series points: <span className="font-mono">{data.series.length}</span>
+                Series points:{' '}
+                <span className="font-mono">{data.series.length}</span>
               </span>
               <span>
                 Updated:{' '}
@@ -311,4 +316,3 @@ export function SupabaseUsage() {
     </Card>
   )
 }
-

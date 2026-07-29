@@ -109,21 +109,27 @@ export default async function AnalyticsPage() {
       name: 'Sentry',
       description: 'Error tracking',
       icon: Shield,
-      status: process.env.NEXT_PUBLIC_SENTRY_DSN ? 'connected' : 'not configured',
+      status: process.env.NEXT_PUBLIC_SENTRY_DSN
+        ? 'connected'
+        : 'not configured',
       url: 'https://sentry.io',
     },
     {
       name: 'PostHog',
       description: 'Product analytics',
       icon: BarChart3,
-      status: process.env.NEXT_PUBLIC_POSTHOG_KEY ? 'connected' : 'not configured',
+      status: process.env.NEXT_PUBLIC_POSTHOG_KEY
+        ? 'connected'
+        : 'not configured',
       url: 'https://app.posthog.com',
     },
     {
       name: 'Upstash',
       description: 'Redis rate limiting',
       icon: Zap,
-      status: process.env.UPSTASH_REDIS_REST_URL ? 'connected' : 'not configured',
+      status: process.env.UPSTASH_REDIS_REST_URL
+        ? 'connected'
+        : 'not configured',
       url: 'https://console.upstash.com',
     },
   ]
@@ -296,7 +302,9 @@ export default async function AnalyticsPage() {
                           : 'border-amber-300 text-amber-700'
                       }
                     >
-                      {integration.status === 'connected' ? 'Active' : 'Inactive'}
+                      {integration.status === 'connected'
+                        ? 'Active'
+                        : 'Inactive'}
                     </Badge>
                     {integration.url && (
                       <a
@@ -340,9 +348,7 @@ export default async function AnalyticsPage() {
             </div>
             <div className="flex justify-between rounded bg-slate-50 px-3 py-2">
               <span className="text-sm text-slate-600">App URL</span>
-              <code className="text-sm text-slate-900">
-                {getAppUrl()}
-              </code>
+              <code className="text-sm text-slate-900">{getAppUrl()}</code>
             </div>
             <div className="flex justify-between rounded bg-slate-50 px-3 py-2">
               <span className="text-sm text-slate-600">Vercel Region</span>

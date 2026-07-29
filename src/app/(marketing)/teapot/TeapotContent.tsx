@@ -43,16 +43,10 @@ export function TeapotContent({ viewCount }: TeapotContentProps) {
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link
-            href="/"
-            className={roomyPrimaryLink}
-          >
+          <Link href="/" className={roomyPrimaryLink}>
             Tip me over
           </Link>
-          <Link
-            href="/shop"
-            className={roomySecondaryLink}
-          >
+          <Link href="/shop" className={roomySecondaryLink}>
             Pour me out
           </Link>
         </div>

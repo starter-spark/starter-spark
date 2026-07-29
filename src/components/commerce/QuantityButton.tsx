@@ -34,8 +34,7 @@ function getToneClass(tone: QuantityButtonProps['tone']) {
   }
 }
 
-export interface QuantityButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+export interface QuantityButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   size?: keyof typeof sizeClasses
   tone?: keyof typeof toneClasses
 }
@@ -54,9 +53,7 @@ export function QuantityButton({
       disabled={disabled}
       className={cn(
         'rounded border flex items-center justify-center transition-colors',
-        disabled
-          ? 'cursor-not-allowed opacity-40'
-          : 'cursor-pointer',
+        disabled ? 'cursor-not-allowed opacity-40' : 'cursor-pointer',
         getSizeClass(size),
         !disabled && getToneClass(tone),
         className,

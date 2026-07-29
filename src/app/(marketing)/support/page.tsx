@@ -45,8 +45,14 @@ function ArticlesSkeleton() {
           key={i}
           className="bg-white border border-slate-200 rounded-lg p-4 animate-pulse"
         >
-          <LoadingBlock className="h-5 w-2/3 rounded mb-2 animate-none" tone="strong" />
-          <LoadingBlock className="h-4 w-1/2 rounded animate-none" tone="soft" />
+          <LoadingBlock
+            className="h-5 w-2/3 rounded mb-2 animate-none"
+            tone="strong"
+          />
+          <LoadingBlock
+            className="h-4 w-1/2 rounded animate-none"
+            tone="soft"
+          />
         </div>
       ))}
     </div>
@@ -77,7 +83,10 @@ export default async function SupportPage() {
           <nav aria-label="Breadcrumb" className="mb-6">
             <ol className="flex items-center gap-2 text-sm text-slate-500">
               <li>
-                <Link href="/" className="hover:text-cyan-700 transition-colors">
+                <Link
+                  href="/"
+                  className="hover:text-cyan-700 transition-colors"
+                >
                   Home
                 </Link>
               </li>
@@ -152,7 +161,10 @@ export default async function SupportPage() {
 
           {/* Troubleshooting Articles */}
           <section aria-labelledby="troubleshooting-heading">
-            <h2 id="troubleshooting-heading" className="font-mono text-xl font-bold text-slate-900 mb-6">
+            <h2
+              id="troubleshooting-heading"
+              className="font-mono text-xl font-bold text-slate-900 mb-6"
+            >
               Troubleshooting Guides
             </h2>
 
@@ -169,8 +181,8 @@ export default async function SupportPage() {
                 Can&apos;t find what you&apos;re looking for?
               </h3>
               <p className="text-slate-600 mb-4">
-                Our team is here to help. Reach out and we&apos;ll get back to you
-                within 24-48 hours.
+                Our team is here to help. Reach out and we&apos;ll get back to
+                you within 24-48 hours.
               </p>
               <Link
                 href="/contact?subject=technical"

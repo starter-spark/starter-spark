@@ -228,7 +228,7 @@ export function ContentEditor({ page }: ContentEditorProps) {
 
   const liveUrlInfo = getLiveUrl()
 
-      return (
+  return (
     <>
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -299,10 +299,7 @@ export function ContentEditor({ page }: ContentEditorProps) {
                   Show a navigation sidebar with headings
                 </p>
               </div>
-              <Switch
-                checked={tocEnabled}
-                onCheckedChange={setTocEnabled}
-              />
+              <Switch checked={tocEnabled} onCheckedChange={setTocEnabled} />
             </div>
             <div className="flex items-center justify-between">
               <div>

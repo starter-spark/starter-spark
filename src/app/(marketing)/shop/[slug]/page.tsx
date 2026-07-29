@@ -16,7 +16,11 @@ import { siteConfig } from '@/config/site'
 import { getContent } from '@/lib/content'
 import { resolveParams, type MaybePromise } from '@/lib/next-params'
 import type { Json } from '@/lib/supabase/database.types'
-import type { ReviewAuthor, ReviewListItem, UserReview } from '@/features/reviews/types'
+import type {
+  ReviewAuthor,
+  ReviewListItem,
+  UserReview,
+} from '@/features/reviews/types'
 import { computeReviewSummary } from '@/features/reviews/summary'
 
 // Type for product specs JSONB
@@ -290,18 +294,22 @@ export default async function ProductDetailPage({
     if (!canReview && user.email) {
       const emails = Array.from(new Set([user.email, user.email.toLowerCase()]))
       for (const email of emails) {
-        const { data: pendingPurchase, error: pendingError } = await supabaseAdmin
-          .from('licenses')
-          .select('id')
-          .eq('product_id', product.id)
-          .eq('source', 'online_purchase')
-          .eq('status', 'pending')
-          .is('owner_id', null)
-          .eq('customer_email', email)
-          .limit(1)
+        const { data: pendingPurchase, error: pendingError } =
+          await supabaseAdmin
+            .from('licenses')
+            .select('id')
+            .eq('product_id', product.id)
+            .eq('source', 'online_purchase')
+            .eq('status', 'pending')
+            .is('owner_id', null)
+            .eq('customer_email', email)
+            .limit(1)
 
         if (pendingError) {
-          console.error('Error checking pending purchase license:', pendingError)
+          console.error(
+            'Error checking pending purchase license:',
+            pendingError,
+          )
           continue
         }
         if (pendingPurchase && pendingPurchase.length > 0) {
@@ -345,7 +353,8 @@ export default async function ProductDetailPage({
   }
 
   const reviews: ReviewListItem[] = (reviewRows || []).map((row) => {
-    const author = (row as unknown as { author?: ReviewAuthor | null }).author ?? null
+    const author =
+      (row as unknown as { author?: ReviewAuthor | null }).author ?? null
 
     return {
       id: row.id,

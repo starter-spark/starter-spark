@@ -94,7 +94,10 @@ export function LegalPage({
           {hasContent && (
             <aside className="hidden lg:block pr-6 lg:pr-8">
               <div className="sticky top-24 pt-8">
-                <MarkdownTableOfContents content={content} className="text-sm" />
+                <MarkdownTableOfContents
+                  content={content}
+                  className="text-sm"
+                />
               </div>
             </aside>
           )}

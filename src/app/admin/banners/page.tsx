@@ -116,7 +116,10 @@ export default async function BannersPage() {
             Manage site-wide announcements and promotions
           </p>
         </div>
-        <Button asChild className="bg-cyan-700 hover:bg-cyan-600 w-full sm:w-auto">
+        <Button
+          asChild
+          className="bg-cyan-700 hover:bg-cyan-600 w-full sm:w-auto"
+        >
           <Link href="/admin/banners/new">
             <Plus className="mr-2 h-4 w-4" />
             Create Banner

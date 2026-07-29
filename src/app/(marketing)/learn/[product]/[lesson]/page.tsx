@@ -14,9 +14,8 @@ export default async function LessonPage({
 }: {
   params: MaybePromise<{ product: string; lesson: string }>
 }) {
-  const { product: productSlug, lesson: lessonSlug } = await resolveParams(
-    params,
-  )
+  const { product: productSlug, lesson: lessonSlug } =
+    await resolveParams(params)
   const supabase = await createClient()
 
   // First fetch the product by slug

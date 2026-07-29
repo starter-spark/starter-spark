@@ -68,12 +68,16 @@ async function getDatabaseStats() {
     supabase.from('site_stats').select('id', { count: 'exact', head: true }),
     supabase.from('page_content').select('id', { count: 'exact', head: true }),
     supabase.from('doc_pages').select('id', { count: 'exact', head: true }),
-    supabase.from('lesson_progress').select('id', { count: 'exact', head: true }),
+    supabase
+      .from('lesson_progress')
+      .select('id', { count: 'exact', head: true }),
     supabase.from('site_banners').select('id', { count: 'exact', head: true }),
     supabase.from('courses').select('id', { count: 'exact', head: true }),
     supabase.from('lessons').select('id', { count: 'exact', head: true }),
     supabase.from('achievements').select('id', { count: 'exact', head: true }),
-    supabase.from('contact_submissions').select('id', { count: 'exact', head: true }),
+    supabase
+      .from('contact_submissions')
+      .select('id', { count: 'exact', head: true }),
   ])
 
   return {
@@ -125,26 +129,102 @@ export default async function DatabaseAnalyticsPage() {
   ])
 
   const tableStats: TableStats[] = [
-    { name: 'Users', icon: Users, count: stats.profiles, description: 'Registered user profiles' },
-    { name: 'Products', icon: Package, count: stats.products, description: 'Shop products' },
-    { name: 'Licenses', icon: KeyRound, count: stats.licenses, description: 'Product licenses' },
-    { name: 'Events', icon: Calendar, count: stats.events, description: 'Scheduled events' },
-    { name: 'Posts', icon: MessageSquare, count: stats.posts, description: 'Community posts' },
-    { name: 'Comments', icon: MessageSquare, count: stats.comments, description: 'Post comments' },
-    { name: 'Courses', icon: GraduationCap, count: stats.courses, description: 'Learning courses' },
-    { name: 'Lessons', icon: GraduationCap, count: stats.lessons, description: 'Course lessons' },
-    { name: 'Lesson Progress', icon: BarChart3, count: stats.lessonProgress, description: 'Learning progress records' },
-    { name: 'Doc Pages', icon: FileText, count: stats.docPages, description: 'Documentation pages' },
-    { name: 'Page Content', icon: FileText, count: stats.pageContent, description: 'CMS pages' },
-    { name: 'Site Banners', icon: Megaphone, count: stats.siteBanners, description: 'Site announcements' },
-    { name: 'Achievements', icon: Trophy, count: stats.achievements, description: 'User achievements' },
-    { name: 'Contact Submissions', icon: MessageSquare, count: stats.contactSubmissions, description: 'Contact form entries' },
-    { name: 'Site Stats', icon: BarChart3, count: stats.siteStats, description: 'Homepage statistics' },
+    {
+      name: 'Users',
+      icon: Users,
+      count: stats.profiles,
+      description: 'Registered user profiles',
+    },
+    {
+      name: 'Products',
+      icon: Package,
+      count: stats.products,
+      description: 'Shop products',
+    },
+    {
+      name: 'Licenses',
+      icon: KeyRound,
+      count: stats.licenses,
+      description: 'Product licenses',
+    },
+    {
+      name: 'Events',
+      icon: Calendar,
+      count: stats.events,
+      description: 'Scheduled events',
+    },
+    {
+      name: 'Posts',
+      icon: MessageSquare,
+      count: stats.posts,
+      description: 'Community posts',
+    },
+    {
+      name: 'Comments',
+      icon: MessageSquare,
+      count: stats.comments,
+      description: 'Post comments',
+    },
+    {
+      name: 'Courses',
+      icon: GraduationCap,
+      count: stats.courses,
+      description: 'Learning courses',
+    },
+    {
+      name: 'Lessons',
+      icon: GraduationCap,
+      count: stats.lessons,
+      description: 'Course lessons',
+    },
+    {
+      name: 'Lesson Progress',
+      icon: BarChart3,
+      count: stats.lessonProgress,
+      description: 'Learning progress records',
+    },
+    {
+      name: 'Doc Pages',
+      icon: FileText,
+      count: stats.docPages,
+      description: 'Documentation pages',
+    },
+    {
+      name: 'Page Content',
+      icon: FileText,
+      count: stats.pageContent,
+      description: 'CMS pages',
+    },
+    {
+      name: 'Site Banners',
+      icon: Megaphone,
+      count: stats.siteBanners,
+      description: 'Site announcements',
+    },
+    {
+      name: 'Achievements',
+      icon: Trophy,
+      count: stats.achievements,
+      description: 'User achievements',
+    },
+    {
+      name: 'Contact Submissions',
+      icon: MessageSquare,
+      count: stats.contactSubmissions,
+      description: 'Contact form entries',
+    },
+    {
+      name: 'Site Stats',
+      icon: BarChart3,
+      count: stats.siteStats,
+      description: 'Homepage statistics',
+    },
   ]
 
   const totalRows = Object.values(stats).reduce((sum, count) => sum + count, 0)
 
-  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+  const supabaseUrl =
+    process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || ''
   const projectRef = supabaseUrl.match(/https:\/\/([^.]+)\.supabase\.co/)?.[1]
 
   return (
@@ -274,8 +354,12 @@ export default async function DatabaseAnalyticsPage() {
                       <Icon className="h-4 w-4 text-slate-600" />
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-slate-900">{table.name}</p>
-                      <p className="text-xs text-slate-500">{table.description}</p>
+                      <p className="text-sm font-medium text-slate-900">
+                        {table.name}
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        {table.description}
+                      </p>
                     </div>
                   </div>
                   <Badge variant="secondary" className="font-mono">
@@ -298,11 +382,15 @@ export default async function DatabaseAnalyticsPage() {
           <div className="space-y-2">
             <div className="flex justify-between rounded bg-slate-50 px-3 py-2">
               <span className="text-sm text-slate-600">Provider</span>
-              <code className="text-sm text-slate-900">Supabase (PostgreSQL)</code>
+              <code className="text-sm text-slate-900">
+                Supabase (PostgreSQL)
+              </code>
             </div>
             <div className="flex justify-between rounded bg-slate-50 px-3 py-2">
               <span className="text-sm text-slate-600">Project Reference</span>
-              <code className="text-sm text-slate-900">{projectRef || 'N/A'}</code>
+              <code className="text-sm text-slate-900">
+                {projectRef || 'N/A'}
+              </code>
             </div>
             <div className="flex justify-between rounded bg-slate-50 px-3 py-2">
               <span className="text-sm text-slate-600">API URL</span>
@@ -312,7 +400,10 @@ export default async function DatabaseAnalyticsPage() {
             </div>
             <div className="flex justify-between rounded bg-slate-50 px-3 py-2">
               <span className="text-sm text-slate-600">Row Level Security</span>
-              <Badge variant="outline" className="border-green-300 text-green-700">
+              <Badge
+                variant="outline"
+                className="border-green-300 text-green-700"
+              >
                 Enabled
               </Badge>
             </div>

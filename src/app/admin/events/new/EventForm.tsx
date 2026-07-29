@@ -14,10 +14,7 @@ import {
 } from '@/components/ui/card'
 import { Loader2 } from 'lucide-react'
 import { createEvent } from '../actions'
-import {
-  AdminLabel,
-  AdminSelect,
-} from '@/components/admin/form-controls'
+import { AdminLabel, AdminSelect } from '@/components/admin/form-controls'
 
 export function EventForm() {
   const router = useRouter()
@@ -186,9 +183,7 @@ export function EventForm() {
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <AdminLabel htmlFor="event_date">
-                Start Date & Time *
-              </AdminLabel>
+              <AdminLabel htmlFor="event_date">Start Date & Time *</AdminLabel>
               <Input
                 id="event_date"
                 type="datetime-local"
@@ -200,9 +195,7 @@ export function EventForm() {
               />
             </div>
             <div className="space-y-2">
-              <AdminLabel htmlFor="end_date">
-                End Date & Time
-              </AdminLabel>
+              <AdminLabel htmlFor="end_date">End Date & Time</AdminLabel>
               <Input
                 id="end_date"
                 type="datetime-local"

@@ -29,7 +29,9 @@ function safePath(value: unknown): string {
 export async function GET() {
   // Verify admin access
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -49,12 +51,16 @@ export async function GET() {
   const posthogPersonalApiKey = process.env.POSTHOG_PERSONAL_API_KEY
   const posthogProjectId = process.env.POSTHOG_PROJECT_ID
   // API host is different from ingest host - strip the .i. subdomain if present
-  const ingestHost = process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://app.posthog.com'
-  const posthogHost = process.env.POSTHOG_API_HOST || ingestHost.replace('.i.posthog.com', '.posthog.com')
+  const ingestHost =
+    process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://app.posthog.com'
+  const posthogHost =
+    process.env.POSTHOG_API_HOST ||
+    ingestHost.replace('.i.posthog.com', '.posthog.com')
 
   if (!posthogPersonalApiKey || !posthogProjectId) {
     return NextResponse.json({
-      error: 'PostHog API not configured. Set POSTHOG_PERSONAL_API_KEY and POSTHOG_PROJECT_ID.',
+      error:
+        'PostHog API not configured. Set POSTHOG_PERSONAL_API_KEY and POSTHOG_PROJECT_ID.',
       stats: null,
     })
   }

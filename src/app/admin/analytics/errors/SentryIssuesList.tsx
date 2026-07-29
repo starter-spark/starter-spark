@@ -53,7 +53,12 @@ interface SentryStats {
   ignoredCount: number
   totalEvents24h: number
   totalUsersAffected: number
-  levelBreakdown: { fatal: number; error: number; warning: number; info: number }
+  levelBreakdown: {
+    fatal: number
+    error: number
+    warning: number
+    info: number
+  }
   hourlyTrend: Array<{ hour: number; count: number }>
 }
 
@@ -137,7 +142,10 @@ function parseIssue(row: unknown): SentryIssue | null {
     firstSeen: getString(row.firstSeen) ?? '',
     lastSeen: getString(row.lastSeen) ?? '',
     level:
-      level === 'fatal' || level === 'error' || level === 'warning' || level === 'info'
+      level === 'fatal' ||
+      level === 'error' ||
+      level === 'warning' ||
+      level === 'info'
         ? level
         : 'error',
     status:
@@ -199,11 +207,16 @@ function parseSentryResponse(value: unknown): SentryResponse | null {
         ? (s.hourlyTrend as unknown[])
             .map((item) => {
               if (isRecord(item)) {
-                return { hour: getNumber(item.hour), count: getNumber(item.count) }
+                return {
+                  hour: getNumber(item.hour),
+                  count: getNumber(item.count),
+                }
               }
               return null
             })
-            .filter((item): item is { hour: number; count: number } => item !== null)
+            .filter(
+              (item): item is { hour: number; count: number } => item !== null,
+            )
         : [],
     }
   }
@@ -253,7 +266,11 @@ const statusIcons = {
 }
 
 // Mini sparkline chart for hourly trend
-function TrendChart({ data }: { data: Array<{ hour: number; count: number }> }) {
+function TrendChart({
+  data,
+}: {
+  data: Array<{ hour: number; count: number }>
+}) {
   if (data.length === 0) return null
 
   const max = Math.max(...data.map((d) => d.count), 1)
@@ -318,7 +335,9 @@ export function SentryIssuesList() {
         params.set('status', statusFilter)
         if (cursor) params.set('cursor', cursor)
 
-        const res = await fetch(`/api/admin/analytics/sentry?${params.toString()}`)
+        const res = await fetch(
+          `/api/admin/analytics/sentry?${params.toString()}`,
+        )
         const raw: unknown = await res.json()
         const data = parseSentryResponse(raw)
 
@@ -457,7 +476,9 @@ export function SentryIssuesList() {
                   <div className="text-right text-xs text-slate-500">
                     <div>
                       Peak:{' '}
-                      {Math.max(...stats.hourlyTrend.map((d) => d.count)).toLocaleString()}
+                      {Math.max(
+                        ...stats.hourlyTrend.map((d) => d.count),
+                      ).toLocaleString()}
                     </div>
                     <div>
                       Avg:{' '}
@@ -469,7 +490,9 @@ export function SentryIssuesList() {
                   </div>
                 </div>
               ) : (
-                <div className="text-sm text-slate-500">No trend data available</div>
+                <div className="text-sm text-slate-500">
+                  No trend data available
+                </div>
               )}
             </CardContent>
           </Card>
@@ -524,8 +547,10 @@ export function SentryIssuesList() {
                 Issues
               </CardTitle>
               <CardDescription>
-                {statusFilter === 'all' ? 'All issues' : `${statusFilter} issues`} sorted by last
-                seen
+                {statusFilter === 'all'
+                  ? 'All issues'
+                  : `${statusFilter} issues`}{' '}
+                sorted by last seen
               </CardDescription>
             </div>
             <div className="flex items-center gap-2">
@@ -596,7 +621,9 @@ export function SentryIssuesList() {
                 )}
               </div>
               <p className="font-medium text-slate-900">
-                {statusFilter === 'unresolved' ? 'No unresolved issues!' : 'No issues found'}
+                {statusFilter === 'unresolved'
+                  ? 'No unresolved issues!'
+                  : 'No issues found'}
               </p>
               <p className="mt-1 text-sm text-slate-500">
                 {statusFilter === 'unresolved'
@@ -618,7 +645,9 @@ export function SentryIssuesList() {
                         <div className="mb-1 flex flex-wrap items-center gap-2">
                           <Badge
                             variant="outline"
-                            className={levelColors[issue.level] || levelColors.error}
+                            className={
+                              levelColors[issue.level] || levelColors.error
+                            }
                           >
                             {issue.level}
                           </Badge>
@@ -637,16 +666,23 @@ export function SentryIssuesList() {
                               Unhandled
                             </Badge>
                           )}
-                          <span className="text-xs text-slate-400">{issue.platform}</span>
+                          <span className="text-xs text-slate-400">
+                            {issue.platform}
+                          </span>
                         </div>
-                        <p className="truncate font-medium text-slate-900">{issue.title}</p>
+                        <p className="truncate font-medium text-slate-900">
+                          {issue.title}
+                        </p>
                         {issue.metadata?.type && (
                           <p className="mt-0.5 truncate text-sm text-slate-600">
                             {issue.metadata.type}
-                            {issue.metadata.value && `: ${issue.metadata.value}`}
+                            {issue.metadata.value &&
+                              `: ${issue.metadata.value}`}
                           </p>
                         )}
-                        <p className="mt-1 truncate text-sm text-slate-500">{issue.culprit}</p>
+                        <p className="mt-1 truncate text-sm text-slate-500">
+                          {issue.culprit}
+                        </p>
                         <div className="mt-2 flex flex-wrap items-center gap-4 text-xs text-slate-500">
                           <span className="flex items-center gap-1">
                             <Clock className="h-3 w-3" />
@@ -654,10 +690,12 @@ export function SentryIssuesList() {
                           </span>
                           <span className="flex items-center gap-1">
                             <Users className="h-3 w-3" />
-                            {issue.userCount} user{issue.userCount !== 1 ? 's' : ''}
+                            {issue.userCount} user
+                            {issue.userCount !== 1 ? 's' : ''}
                           </span>
                           <span>
-                            {issue.count} event{Number(issue.count) !== 1 ? 's' : ''}
+                            {issue.count} event
+                            {Number(issue.count) !== 1 ? 's' : ''}
                           </span>
                           <span className="text-slate-400">
                             First seen: {formatTimeAgo(issue.firstSeen)}

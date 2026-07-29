@@ -7,7 +7,11 @@ const DEFAULT_AUTH_HEADER_NAME = 'x-starterspark-drains-token'
 
 function isTruthy(value: string | undefined | null): boolean {
   if (!value) return false
-  return value === '1' || value.toLowerCase() === 'true' || value.toLowerCase() === 'yes'
+  return (
+    value === '1' ||
+    value.toLowerCase() === 'true' ||
+    value.toLowerCase() === 'yes'
+  )
 }
 
 function timingSafeEqualString(a: string, b: string): boolean {
@@ -71,7 +75,11 @@ export async function guardVercelDrainRequest(
   const maxBytes = options.maxBytes ?? DEFAULT_MAX_BYTES
   const contentType = request.headers.get('content-type') ?? ''
 
-  if (options.allowedContentType && contentType && !options.allowedContentType.test(contentType)) {
+  if (
+    options.allowedContentType &&
+    contentType &&
+    !options.allowedContentType.test(contentType)
+  ) {
     return { ok: false, response: new NextResponse(null, { status: 415 }) }
   }
 

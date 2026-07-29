@@ -97,7 +97,8 @@ export function EventActions({ eventId, slug }: EventActionsProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete this event?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. The event will be permanently deleted.
+              This action cannot be undone. The event will be permanently
+              deleted.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

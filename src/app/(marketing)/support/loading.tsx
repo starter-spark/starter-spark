@@ -45,7 +45,10 @@ export default function SupportLoading() {
 
           <div className="mt-12 bg-cyan-50 border border-cyan-200 rounded-lg p-6 text-center">
             <LoadingBlock className="h-5 w-64 mx-auto mb-2" tone="accent" />
-            <LoadingBlock className="h-4 w-full max-w-xl mx-auto mb-4" tone="accent" />
+            <LoadingBlock
+              className="h-4 w-full max-w-xl mx-auto mb-4"
+              tone="accent"
+            />
             <LoadingBlock className="h-9 w-40 mx-auto" tone="accent" />
           </div>
         </div>

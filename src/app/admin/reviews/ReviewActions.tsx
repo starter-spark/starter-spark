@@ -21,7 +21,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { MoreHorizontal, EyeOff, Check, Flag, Clock, Trash2, Loader2 } from 'lucide-react'
+import {
+  MoreHorizontal,
+  EyeOff,
+  Check,
+  Flag,
+  Clock,
+  Trash2,
+  Loader2,
+} from 'lucide-react'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { deleteReview, updateReviewStatus } from './actions'
@@ -39,7 +47,10 @@ export function ReviewActions({
   const [showHideDialog, setShowHideDialog] = useState(false)
   const [hideReason, setHideReason] = useState('')
 
-  const runStatusChange = async (nextStatus: string, reason?: string | null) => {
+  const runStatusChange = async (
+    nextStatus: string,
+    reason?: string | null,
+  ) => {
     setIsLoading(true)
     const result = await updateReviewStatus(reviewId, nextStatus, reason)
 
@@ -128,8 +139,8 @@ export function ReviewActions({
           <AlertDialogHeader>
             <AlertDialogTitle>Hide this review?</AlertDialogTitle>
             <AlertDialogDescription>
-              Hidden reviews are removed from the public product page. Use this for spam,
-              harassment, personal info, or other policy violations.
+              Hidden reviews are removed from the public product page. Use this
+              for spam, harassment, personal info, or other policy violations.
             </AlertDialogDescription>
           </AlertDialogHeader>
 
@@ -166,7 +177,8 @@ export function ReviewActions({
           <AlertDialogHeader>
             <AlertDialogTitle>Delete this review?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. The review will be permanently deleted.
+              This action cannot be undone. The review will be permanently
+              deleted.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -183,4 +195,3 @@ export function ReviewActions({
     </>
   )
 }
-

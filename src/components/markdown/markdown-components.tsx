@@ -1,4 +1,9 @@
-import { Children, isValidElement, type ComponentPropsWithoutRef, type ReactNode } from 'react'
+import {
+  Children,
+  isValidElement,
+  type ComponentPropsWithoutRef,
+  type ReactNode,
+} from 'react'
 import type { Components } from 'react-markdown'
 import { isExternalHref, sanitizeMarkdownUrl } from '@/lib/safe-url'
 import { cn } from '@/lib/utils'
@@ -9,7 +14,10 @@ function getTextContent(children: ReactNode): string {
   Children.forEach(children, (child) => {
     if (typeof child === 'string' || typeof child === 'number') {
       text += child
-    } else if (isValidElement<{ children?: ReactNode }>(child) && child.props.children) {
+    } else if (
+      isValidElement<{ children?: ReactNode }>(child) &&
+      child.props.children
+    ) {
       text += getTextContent(child.props.children)
     }
   })

@@ -99,9 +99,11 @@ export async function fetchDocMetadata(
     .eq('is_published', true)
     .single()
 
-  const page = data as
-    | { title: string; excerpt: string | null; category: { slug: string } }
-    | null
+  const page = data as {
+    title: string
+    excerpt: string | null
+    category: { slug: string }
+  } | null
 
   if (!page?.category?.slug) return null
 

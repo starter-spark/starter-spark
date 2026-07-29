@@ -25,7 +25,8 @@ export default function ErrorAnalyticsPage() {
   const sentryDsn = process.env.NEXT_PUBLIC_SENTRY_DSN
   const sentryOrg = process.env.SENTRY_ORG
   const sentryProject = process.env.SENTRY_PROJECT
-  const sentryReadToken = process.env.SENTRY_READ_TOKEN || process.env.SENTRY_AUTH_TOKEN
+  const sentryReadToken =
+    process.env.SENTRY_READ_TOKEN || process.env.SENTRY_AUTH_TOKEN
 
   const isConfigured = !!sentryDsn
   const hasApiAccess = !!(sentryOrg && sentryProject && sentryReadToken)
@@ -151,25 +152,41 @@ export default function ErrorAnalyticsPage() {
           <CardContent>
             <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
               <p className="text-sm text-slate-600 mb-4">
-                To display Sentry issues in this dashboard, add the following environment variables:
+                To display Sentry issues in this dashboard, add the following
+                environment variables:
               </p>
               <div className="space-y-2 font-mono text-sm">
                 <div className="flex items-start gap-2">
-                  <code className="rounded bg-slate-200 px-2 py-1">SENTRY_ORG</code>
-                  <span className="text-slate-500">- Your Sentry organization slug</span>
+                  <code className="rounded bg-slate-200 px-2 py-1">
+                    SENTRY_ORG
+                  </code>
+                  <span className="text-slate-500">
+                    - Your Sentry organization slug
+                  </span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <code className="rounded bg-slate-200 px-2 py-1">SENTRY_PROJECT</code>
-                  <span className="text-slate-500">- Your Sentry project slug</span>
+                  <code className="rounded bg-slate-200 px-2 py-1">
+                    SENTRY_PROJECT
+                  </code>
+                  <span className="text-slate-500">
+                    - Your Sentry project slug
+                  </span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <code className="rounded bg-slate-200 px-2 py-1">SENTRY_READ_TOKEN</code>
-                  <span className="text-slate-500">- API token with <code>event:read</code>, <code>project:read</code>, <code>org:read</code> scopes</span>
+                  <code className="rounded bg-slate-200 px-2 py-1">
+                    SENTRY_READ_TOKEN
+                  </code>
+                  <span className="text-slate-500">
+                    - API token with <code>event:read</code>,{' '}
+                    <code>project:read</code>, <code>org:read</code> scopes
+                  </span>
                 </div>
               </div>
               <p className="mt-4 text-xs text-slate-500">
-                Note: <code>SENTRY_READ_TOKEN</code> is separate from <code>SENTRY_AUTH_TOKEN</code> (used for source map uploads).
-                Create a new token in Sentry under Settings → Auth Tokens with read-only permissions.
+                Note: <code>SENTRY_READ_TOKEN</code> is separate from{' '}
+                <code>SENTRY_AUTH_TOKEN</code> (used for source map uploads).
+                Create a new token in Sentry under Settings → Auth Tokens with
+                read-only permissions.
               </p>
               <div className="mt-4 pt-4 border-t border-slate-200">
                 <a
@@ -197,29 +214,49 @@ export default function ErrorAnalyticsPage() {
           <div className="space-y-2">
             <div className="flex justify-between rounded bg-slate-50 px-3 py-2">
               <span className="text-sm text-slate-600">DSN Configured</span>
-              <Badge variant="outline" className={isConfigured ? 'border-green-300 text-green-700' : 'border-slate-300 text-slate-600'}>
+              <Badge
+                variant="outline"
+                className={
+                  isConfigured
+                    ? 'border-green-300 text-green-700'
+                    : 'border-slate-300 text-slate-600'
+                }
+              >
                 {isConfigured ? 'Yes' : 'No'}
               </Badge>
             </div>
             <div className="flex justify-between rounded bg-slate-50 px-3 py-2">
               <span className="text-sm text-slate-600">Read Token</span>
-              <Badge variant="outline" className={sentryReadToken ? 'border-green-300 text-green-700' : 'border-slate-300 text-slate-600'}>
+              <Badge
+                variant="outline"
+                className={
+                  sentryReadToken
+                    ? 'border-green-300 text-green-700'
+                    : 'border-slate-300 text-slate-600'
+                }
+              >
                 {sentryReadToken ? 'Configured' : 'Not set'}
               </Badge>
             </div>
             {projectId && (
               <div className="flex justify-between rounded bg-slate-50 px-3 py-2">
-                <span className="text-sm text-slate-600">Project ID (from DSN)</span>
+                <span className="text-sm text-slate-600">
+                  Project ID (from DSN)
+                </span>
                 <code className="text-sm text-slate-900">{projectId}</code>
               </div>
             )}
             <div className="flex justify-between rounded bg-slate-50 px-3 py-2">
               <span className="text-sm text-slate-600">Organization</span>
-              <code className="text-sm text-slate-900">{sentryOrg || 'Not set'}</code>
+              <code className="text-sm text-slate-900">
+                {sentryOrg || 'Not set'}
+              </code>
             </div>
             <div className="flex justify-between rounded bg-slate-50 px-3 py-2">
               <span className="text-sm text-slate-600">Project</span>
-              <code className="text-sm text-slate-900">{sentryProject || 'Not set'}</code>
+              <code className="text-sm text-slate-900">
+                {sentryProject || 'Not set'}
+              </code>
             </div>
             {sentryOrg && sentryProject && (
               <div className="flex justify-between rounded bg-slate-50 px-3 py-2">

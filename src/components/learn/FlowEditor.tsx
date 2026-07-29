@@ -1,13 +1,6 @@
 'use client'
 
-import {
-  useCallback,
-  useEffect,
-  useId,
-  useMemo,
-  useRef,
-  useState,
-} from 'react'
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 import {
   ReactFlow,
   addEdge,
@@ -60,7 +53,10 @@ import {
 import { CodeEditor } from './CodeEditor'
 import { VisualBlockNode } from './visual-blocks/VisualBlockNode'
 import { VisualParamsEditor } from './visual-blocks/VisualParamsEditor'
-import { getVisualBlockDefaults, visualBlockPalette } from './visual-blocks/registry'
+import {
+  getVisualBlockDefaults,
+  visualBlockPalette,
+} from './visual-blocks/registry'
 
 type EditorMode = 'diagram' | 'visual'
 
@@ -197,7 +193,10 @@ export function FlowEditor({
   }, [mode, nodes])
 
   // Undo/redo state
-  const [history, setHistory] = useState<{ past: FlowState[]; future: FlowState[] }>({
+  const [history, setHistory] = useState<{
+    past: FlowState[]
+    future: FlowState[]
+  }>({
     past: [],
     future: [],
   })
@@ -333,7 +332,10 @@ export function FlowEditor({
         e.preventDefault()
         handleUndo()
       }
-      if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+      if (
+        (e.ctrlKey || e.metaKey) &&
+        (e.key === 'y' || (e.key === 'z' && e.shiftKey))
+      ) {
         e.preventDefault()
         handleRedo()
       }
@@ -386,7 +388,9 @@ export function FlowEditor({
     if (sig === lastSentSigRef.current) return
     lastSentSigRef.current = sig
 
-    onChangeRef.current(mode === 'visual' ? { version: 2, nodes, edges } : { nodes, edges })
+    onChangeRef.current(
+      mode === 'visual' ? { version: 2, nodes, edges } : { nodes, edges },
+    )
   }, [edges, mode, nodes])
 
   const isValidConnection = useCallback(
@@ -396,7 +400,11 @@ export function FlowEditor({
       if (connection.source === connection.target) return false
       if (connection.targetHandle !== 'in') return false
       const sourceHandle = connection.sourceHandle
-      return sourceHandle === 'next' || sourceHandle === 'body' || sourceHandle === 'else'
+      return (
+        sourceHandle === 'next' ||
+        sourceHandle === 'body' ||
+        sourceHandle === 'else'
+      )
     },
     [mode],
   )
@@ -407,7 +415,12 @@ export function FlowEditor({
         if (!connection.source || !connection.target) return
         if (connection.targetHandle !== 'in') return
         const sourceHandle = connection.sourceHandle
-        if (sourceHandle !== 'next' && sourceHandle !== 'body' && sourceHandle !== 'else') return
+        if (
+          sourceHandle !== 'next' &&
+          sourceHandle !== 'body' &&
+          sourceHandle !== 'else'
+        )
+          return
         if (connection.source === connection.target) return
 
         const kind = sourceHandle as VisualEdgeKind
@@ -421,8 +434,13 @@ export function FlowEditor({
         pushToHistory()
         setEdges((eds) => {
           const filtered = eds.filter((e) => {
-            if (e.source === connection.source && e.sourceHandle === sourceHandle) return false
-            if (e.target === connection.target && e.targetHandle === 'in') return false
+            if (
+              e.source === connection.source &&
+              e.sourceHandle === sourceHandle
+            )
+              return false
+            if (e.target === connection.target && e.targetHandle === 'in')
+              return false
             return true
           })
           return addEdge(
@@ -501,12 +519,17 @@ export function FlowEditor({
 
       const existingBody =
         canAutoConnect && isSelectedContainer
-          ? edges.some((e) => e.source === selectedId && (e.sourceHandle === 'body' || e.data?.kind === 'body'))
+          ? edges.some(
+              (e) =>
+                e.source === selectedId &&
+                (e.sourceHandle === 'body' || e.data?.kind === 'body'),
+            )
           : false
 
       const preferredKind: VisualEdgeKind | null = (() => {
         if (!canAutoConnect) return null
-        if (selectedBlockType === 'setup' || selectedBlockType === 'loop') return 'body'
+        if (selectedBlockType === 'setup' || selectedBlockType === 'loop')
+          return 'body'
         if (isSelectedContainer && !existingBody) return 'body'
         return 'next'
       })()
@@ -514,7 +537,10 @@ export function FlowEditor({
       const position = (() => {
         if (!selectedNode) return baseNode.position
         if (preferredKind === 'body' && isSelectedContainer) {
-          return { x: selectedNode.position.x + 240, y: selectedNode.position.y }
+          return {
+            x: selectedNode.position.x + 240,
+            y: selectedNode.position.y,
+          }
         }
         return { x: selectedNode.position.x, y: selectedNode.position.y + 96 }
       })()
@@ -528,7 +554,8 @@ export function FlowEditor({
           const existingOut = prevEdges.find(
             (e) =>
               e.source === selectedId &&
-              (e.sourceHandle === preferredKind || e.data?.kind === preferredKind),
+              (e.sourceHandle === preferredKind ||
+                e.data?.kind === preferredKind),
           )
 
           const existingTarget = existingOut?.target
@@ -541,13 +568,21 @@ export function FlowEditor({
 
           const nextEdges = [
             ...filtered,
-            createVisualEdge({ source: selectedId, target: node.id, kind: preferredKind }),
+            createVisualEdge({
+              source: selectedId,
+              target: node.id,
+              kind: preferredKind,
+            }),
           ]
 
           if (!existingTarget) return nextEdges
           return [
             ...nextEdges,
-            createVisualEdge({ source: node.id, target: existingTarget, kind: 'next' }),
+            createVisualEdge({
+              source: node.id,
+              target: existingTarget,
+              kind: 'next',
+            }),
           ]
         })
       }
@@ -581,7 +616,11 @@ export function FlowEditor({
 
   const deleteSelected = () => {
     if (!selectedId) return
-    if (selectedNode?.data?.blockType === 'setup' || selectedNode?.data?.blockType === 'loop') return
+    if (
+      selectedNode?.data?.blockType === 'setup' ||
+      selectedNode?.data?.blockType === 'loop'
+    )
+      return
     pushToHistory()
     setNodes((prev) => prev.filter((n) => n.id !== selectedId))
     setEdges((prev) =>
@@ -631,7 +670,9 @@ export function FlowEditor({
   }
 
   const exportAsImage = async () => {
-    const viewport = document.querySelector('.react-flow__viewport') as HTMLElement
+    const viewport = document.querySelector(
+      '.react-flow__viewport',
+    ) as HTMLElement
     if (!viewport) return
 
     try {
@@ -733,7 +774,9 @@ export function FlowEditor({
                 {mode === 'visual' ? (
                   <div className="space-y-3">
                     <div className="space-y-1">
-                      <Label className="text-[10px] text-slate-500">Search</Label>
+                      <Label className="text-[10px] text-slate-500">
+                        Search
+                      </Label>
                       <Input
                         value={paletteSearch}
                         onChange={(e) => {
@@ -746,7 +789,11 @@ export function FlowEditor({
 
                     {filteredVisualPalette.length === 0 ? (
                       <p className="text-xs text-slate-500">
-                        No blocks match <span className="font-mono">{paletteSearch.trim()}</span>.
+                        No blocks match{' '}
+                        <span className="font-mono">
+                          {paletteSearch.trim()}
+                        </span>
+                        .
                       </p>
                     ) : (
                       <Accordion
@@ -970,11 +1017,7 @@ export function FlowEditor({
               type: 'smoothstep',
             }}
           >
-            <Background
-              gap={16}
-              size={1}
-              color="#e2e8f0"
-            />
+            <Background gap={16} size={1} color="#e2e8f0" />
             <Controls />
             <MiniMap zoomable pannable nodeColor="#0e7490" />
           </ReactFlow>
@@ -1068,8 +1111,9 @@ export function FlowEditor({
                             </p>
                             <p className="text-xs text-slate-500">
                               {generatedAst.errors.length} error
-                              {generatedAst.errors.length === 1 ? '' : 's'},{' '}
-                              {generatedAst.warnings.length} warning
+                              {generatedAst.errors.length === 1
+                                ? ''
+                                : 's'}, {generatedAst.warnings.length} warning
                               {generatedAst.warnings.length === 1 ? '' : 's'}
                             </p>
                           </div>
@@ -1101,12 +1145,14 @@ export function FlowEditor({
                                 Warnings
                               </p>
                               <ul className="mt-1 space-y-1 text-[11px] text-amber-700">
-                                {generatedAst.warnings.slice(0, 6).map((msg) => (
-                                  <li key={msg} className="flex gap-2">
-                                    <span aria-hidden="true">•</span>
-                                    <span className="min-w-0">{msg}</span>
-                                  </li>
-                                ))}
+                                {generatedAst.warnings
+                                  .slice(0, 6)
+                                  .map((msg) => (
+                                    <li key={msg} className="flex gap-2">
+                                      <span aria-hidden="true">•</span>
+                                      <span className="min-w-0">{msg}</span>
+                                    </li>
+                                  ))}
                                 {generatedAst.warnings.length > 6 && (
                                   <li className="text-[11px] text-amber-700">
                                     …and {generatedAst.warnings.length - 6} more
@@ -1262,7 +1308,8 @@ void loop() {
                 className="w-full h-64 font-mono text-sm p-3 rounded border border-slate-200 bg-slate-50 resize-none focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500"
               />
               <p className="text-xs text-slate-500 mt-2">
-                Supported: delay(), digitalWrite(), analogWrite(), servo commands, for loops, if statements
+                Supported: delay(), digitalWrite(), analogWrite(), servo
+                commands, for loops, if statements
               </p>
             </div>
             <div className="flex items-center justify-end gap-2 p-4 border-t border-slate-200">

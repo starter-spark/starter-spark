@@ -250,10 +250,7 @@ export function ProductSpotlightSection({
                   ${priceDisplay}
                 </p>
               </div>
-              <Button
-                asChild
-                className={ctaPrimaryCompact}
-              >
+              <Button asChild className={ctaPrimaryCompact}>
                 <Link href={`/shop/${product.slug}`}>
                   View Details
                   <ArrowRight className="w-4 h-4 ml-2" />

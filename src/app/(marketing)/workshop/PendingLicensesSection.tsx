@@ -65,8 +65,7 @@ export function PendingLicensesSection({
   >('idle')
   const [bulkMessage, setBulkMessage] = useState<string | null>(null)
 
-  const hasAny =
-    pendingLicenses.length > 0 || claimedByOtherLicenses.length > 0
+  const hasAny = pendingLicenses.length > 0 || claimedByOtherLicenses.length > 0
 
   const displayedLicenses = showAll
     ? pendingLicenses

@@ -93,7 +93,8 @@ export function PostActions({
       if (result.error) {
         if (result.requiresAuth) {
           router.push(
-            '/login?redirect=' + encodeURIComponent(globalThis.location.pathname),
+            '/login?redirect=' +
+              encodeURIComponent(globalThis.location.pathname),
           )
           return
         }
@@ -167,13 +168,18 @@ export function PostActions({
         disabled={isSaving}
         className={cn(
           'flex items-center gap-2 text-sm transition-colors disabled:opacity-60',
-          bookmarked ? 'text-cyan-700 hover:text-cyan-800' : 'text-slate-500 hover:text-cyan-700',
+          bookmarked
+            ? 'text-cyan-700 hover:text-cyan-800'
+            : 'text-slate-500 hover:text-cyan-700',
         )}
       >
         {isSaving ? (
           <Loader2 className="w-4 h-4 animate-spin" />
         ) : (
-          <Bookmark className="w-4 h-4" fill={bookmarked ? 'currentColor' : 'none'} />
+          <Bookmark
+            className="w-4 h-4"
+            fill={bookmarked ? 'currentColor' : 'none'}
+          />
         )}
         {bookmarked ? 'Saved' : 'Save'}
       </button>

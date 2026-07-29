@@ -137,9 +137,7 @@ export interface PageContentWithBlocks {
 export function hasContentBlocks(
   page: PageContentWithBlocks,
 ): page is PageContentWithBlocks & { content_blocks: PageBlock[] } {
-  return (
-    Array.isArray(page.content_blocks) && page.content_blocks.length > 0
-  )
+  return Array.isArray(page.content_blocks) && page.content_blocks.length > 0
 }
 
 /**

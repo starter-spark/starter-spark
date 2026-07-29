@@ -140,12 +140,12 @@ export function BuyBox({
   const step = shiftHeld ? 10 : 1
 
   // Max quantity is the lower of: stock quantity, admin limit, or default 99
-  const stockLimit = stockQuantity !== null && stockQuantity !== undefined
-    ? stockQuantity
-    : 99
-  const adminLimit = maxQuantityPerOrder !== null && maxQuantityPerOrder !== undefined
-    ? maxQuantityPerOrder
-    : 99
+  const stockLimit =
+    stockQuantity !== null && stockQuantity !== undefined ? stockQuantity : 99
+  const adminLimit =
+    maxQuantityPerOrder !== null && maxQuantityPerOrder !== undefined
+      ? maxQuantityPerOrder
+      : 99
   const maxQuantity = Math.min(stockLimit, adminLimit)
 
   // Hydration-safe clock: null until mounted, so expiry is ignored on the
@@ -156,8 +156,8 @@ export function BuyBox({
   // Check if discount is active (exists and not expired)
   const hasActiveDiscount = Boolean(
     discountPercent &&
-      originalPrice &&
-      (!discountExpiresAt || !now || new Date(discountExpiresAt) > now),
+    originalPrice &&
+    (!discountExpiresAt || !now || new Date(discountExpiresAt) > now),
   )
 
   // Calculate time remaining for countdown (if discount expires within 7 days)
@@ -292,15 +292,17 @@ export function BuyBox({
 
       {/* Quantity Selector - only show when in stock */}
       {inStock && (
-        <div className="space-y-2" role="group" aria-labelledby={quantityLabelId}>
+        <div
+          className="space-y-2"
+          role="group"
+          aria-labelledby={quantityLabelId}
+        >
           <div className="flex items-center justify-between">
             <span id={quantityLabelId} className="text-sm text-slate-700">
               Quantity
             </span>
             {shiftHeld && (
-              <span className="text-xs text-cyan-600 font-mono">
-                ±10 mode
-              </span>
+              <span className="text-xs text-cyan-600 font-mono">±10 mode</span>
             )}
           </div>
           <div className="flex items-center gap-3">
@@ -316,11 +318,16 @@ export function BuyBox({
                 {shiftHeld ? (
                   <span className="text-xs font-mono text-slate-600">-10</span>
                 ) : (
-                  <Minus className="w-4 h-4 text-slate-600" aria-hidden="true" />
+                  <Minus
+                    className="w-4 h-4 text-slate-600"
+                    aria-hidden="true"
+                  />
                 )}
               </span>
             </QuantityButton>
-            <span className="w-12 text-center font-mono text-lg">{quantity}</span>
+            <span className="w-12 text-center font-mono text-lg">
+              {quantity}
+            </span>
             <QuantityButton
               size="lg"
               onClick={() => {

@@ -46,7 +46,10 @@ export default function ContactLoading() {
                   <div className="space-y-4">
                     {Array.from({ length: 3 }, (_, j) => (
                       <div key={j} className="flex items-start gap-3">
-                        <LoadingBlock className="h-10 w-10 rounded" tone="soft" />
+                        <LoadingBlock
+                          className="h-10 w-10 rounded"
+                          tone="soft"
+                        />
                         <div className="space-y-2">
                           <LoadingBlock className="h-4 w-24" tone="soft" />
                           <LoadingBlock className="h-4 w-40" tone="soft" />
