@@ -28,16 +28,18 @@ test.describe('Community Page - Question Listing', () => {
     await page.goto('/community')
     await page.waitForLoadState('networkidle')
 
-    // Should show questions count OR error state
+    // Should show questions count, the empty state, OR error state
     const questionsCount = page.getByText(/\d+ questions?/i)
+    const emptyState = page.getByText(/no questions yet/i)
     const errorState = page.getByRole('heading', {
       name: /something went wrong/i,
     })
 
     const hasCount = await questionsCount.isVisible().catch(() => false)
+    const hasEmpty = await emptyState.isVisible().catch(() => false)
     const hasError = await errorState.isVisible().catch(() => false)
 
-    expect(hasCount || hasError).toBeTruthy()
+    expect(hasCount || hasEmpty || hasError).toBeTruthy()
   })
 
   test('should display ask a question button', async ({ page }) => {

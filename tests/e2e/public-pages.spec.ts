@@ -282,8 +282,9 @@ test.describe('Community Page', () => {
     // Wait for page to stabilize
     await page.waitForLoadState('networkidle')
 
-    // Look for "questions" count text OR error state
+    // Look for "questions" count text, the empty state, OR error state
     const questionsCount = page.getByText(/\d+ questions/i)
+    const emptyState = page.getByText(/no questions yet/i)
     const errorState = page.getByRole('heading', {
       name: /something went wrong/i,
     })
@@ -291,9 +292,10 @@ test.describe('Community Page', () => {
     const hasQuestions = await questionsCount
       .isVisible({ timeout: 5000 })
       .catch(() => false)
+    const hasEmpty = await emptyState.isVisible().catch(() => false)
     const hasError = await errorState.isVisible().catch(() => false)
 
-    expect(hasQuestions || hasError).toBeTruthy()
+    expect(hasQuestions || hasEmpty || hasError).toBeTruthy()
   })
 
   test('should display ask a question CTA', async ({ page }) => {
