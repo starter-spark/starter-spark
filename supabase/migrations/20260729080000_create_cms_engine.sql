@@ -2,8 +2,9 @@
 -- document store. A document is (type, key) with two pointers into an
 -- append-only version table; save-draft, publish, and rollback are pointer
 -- moves, so drafts can never leak and history is never destroyed.
+-- Replay-safe: every statement is idempotent.
 
-CREATE TABLE public.cms_documents (
+CREATE TABLE IF NOT EXISTS public.cms_documents (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   type text NOT NULL,
   key text NOT NULL,
@@ -16,7 +17,7 @@ CREATE TABLE public.cms_documents (
   UNIQUE (type, key)
 );
 
-CREATE TABLE public.cms_versions (
+CREATE TABLE IF NOT EXISTS public.cms_versions (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   document_id uuid NOT NULL REFERENCES public.cms_documents(id) ON DELETE CASCADE,
   version integer NOT NULL,
@@ -27,14 +28,26 @@ CREATE TABLE public.cms_versions (
   UNIQUE (document_id, version)
 );
 
-ALTER TABLE public.cms_documents
-  ADD CONSTRAINT cms_documents_published_version_fkey
-    FOREIGN KEY (published_version_id) REFERENCES public.cms_versions(id) ON DELETE SET NULL,
-  ADD CONSTRAINT cms_documents_draft_version_fkey
-    FOREIGN KEY (draft_version_id) REFERENCES public.cms_versions(id) ON DELETE SET NULL;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'cms_documents_published_version_fkey'
+  ) THEN
+    ALTER TABLE public.cms_documents
+      ADD CONSTRAINT cms_documents_published_version_fkey
+        FOREIGN KEY (published_version_id) REFERENCES public.cms_versions(id) ON DELETE SET NULL;
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'cms_documents_draft_version_fkey'
+  ) THEN
+    ALTER TABLE public.cms_documents
+      ADD CONSTRAINT cms_documents_draft_version_fkey
+        FOREIGN KEY (draft_version_id) REFERENCES public.cms_versions(id) ON DELETE SET NULL;
+  END IF;
+END $$;
 
-CREATE INDEX idx_cms_versions_document ON public.cms_versions(document_id);
-CREATE INDEX idx_cms_documents_type_live ON public.cms_documents(type, sort_order)
+CREATE INDEX IF NOT EXISTS idx_cms_versions_document ON public.cms_versions(document_id);
+CREATE INDEX IF NOT EXISTS idx_cms_documents_type_live ON public.cms_documents(type, sort_order)
   WHERE published_version_id IS NOT NULL AND deleted_at IS NULL;
 
 ALTER TABLE public.cms_documents ENABLE ROW LEVEL SECURITY;
@@ -43,10 +56,12 @@ ALTER TABLE public.cms_versions ENABLE ROW LEVEL SECURITY;
 -- Public reads: published, non-deleted documents and exactly their published
 -- version. Writes have NO policies at all — every mutation goes through
 -- server actions using the service role (guarded by requireAdminOrStaff).
+DROP POLICY IF EXISTS "Public can read published cms documents" ON public.cms_documents;
 CREATE POLICY "Public can read published cms documents"
   ON public.cms_documents FOR SELECT
   USING (published_version_id IS NOT NULL AND deleted_at IS NULL);
 
+DROP POLICY IF EXISTS "Public can read published cms versions" ON public.cms_versions;
 CREATE POLICY "Public can read published cms versions"
   ON public.cms_versions FOR SELECT
   USING (
@@ -57,16 +72,18 @@ CREATE POLICY "Public can read published cms versions"
     )
   );
 
+DROP POLICY IF EXISTS "Staff can read all cms documents" ON public.cms_documents;
 CREATE POLICY "Staff can read all cms documents"
   ON public.cms_documents FOR SELECT TO authenticated
   USING ((SELECT is_staff((SELECT auth.uid()))));
 
+DROP POLICY IF EXISTS "Staff can read all cms versions" ON public.cms_versions;
 CREATE POLICY "Staff can read all cms versions"
   ON public.cms_versions FOR SELECT TO authenticated
   USING ((SELECT is_staff((SELECT auth.uid()))));
 
 -- Convenience view for the public read path (RLS of the caller applies).
-CREATE VIEW public.cms_published
+CREATE OR REPLACE VIEW public.cms_published
   WITH (security_invoker = true) AS
   SELECT d.type, d.key, d.sort_order, v.data,
          v.created_at AS published_at, d.updated_at
@@ -96,21 +113,25 @@ BEGIN
     UPDATE public.cms_documents SET published_version_id = ver_id WHERE id = doc_id;
   END IF;
 
-  FOR rec IN SELECT * FROM public.site_stats LOOP
-    IF NOT EXISTS (SELECT 1 FROM public.cms_documents WHERE type = 'impact_stat' AND key = rec.key) THEN
-      INSERT INTO public.cms_documents (type, key, sort_order)
-        VALUES ('impact_stat', rec.key, COALESCE(rec.sort_order, 0))
-        RETURNING id INTO doc_id;
-      INSERT INTO public.cms_versions (document_id, version, data, note)
-        VALUES (doc_id, 1, jsonb_build_object(
-          'label', rec.label,
-          'value', rec.value::text,
-          'suffix', COALESCE(rec.suffix, ''),
-          'autoSource', COALESCE(rec.auto_source, 'none'),
-          'visible', 'home' = ANY(rec.visible_on)
-        ), 'Migrated from site_stats')
-        RETURNING id INTO ver_id;
-      UPDATE public.cms_documents SET published_version_id = ver_id WHERE id = doc_id;
-    END IF;
-  END LOOP;
+  -- Guard on site_stats existing so this migration also replays cleanly
+  -- after 20260729090000_remove_site_stats has dropped it.
+  IF to_regclass('public.site_stats') IS NOT NULL THEN
+    FOR rec IN SELECT * FROM public.site_stats LOOP
+      IF NOT EXISTS (SELECT 1 FROM public.cms_documents WHERE type = 'impact_stat' AND key = rec.key) THEN
+        INSERT INTO public.cms_documents (type, key, sort_order)
+          VALUES ('impact_stat', rec.key, COALESCE(rec.sort_order, 0))
+          RETURNING id INTO doc_id;
+        INSERT INTO public.cms_versions (document_id, version, data, note)
+          VALUES (doc_id, 1, jsonb_build_object(
+            'label', rec.label,
+            'value', rec.value::text,
+            'suffix', COALESCE(rec.suffix, ''),
+            'autoSource', COALESCE(rec.auto_source, 'none'),
+            'visible', 'home' = ANY(rec.visible_on)
+          ), 'Migrated from site_stats')
+          RETURNING id INTO ver_id;
+        UPDATE public.cms_documents SET published_version_id = ver_id WHERE id = doc_id;
+      END IF;
+    END LOOP;
+  END IF;
 END $$;
