@@ -6,7 +6,6 @@ import {
   normalizeLicenseCode,
   isValidClaimToken,
   formatPrice,
-  formatPriceWithCurrency,
   isValidEmail,
   LICENSE_CODE_LENGTH,
 } from './validation'
@@ -157,23 +156,6 @@ describe('formatPrice', () => {
   it('should always show two decimal places', () => {
     expect(formatPrice(100)).toBe('$1.00')
     expect(formatPrice(10)).toBe('$0.10')
-  })
-})
-
-describe('formatPriceWithCurrency', () => {
-  it('should format with USD by default', () => {
-    const result = formatPriceWithCurrency(9900)
-    expect(result).toMatch(/\$99\.00/)
-  })
-
-  it('should format with specified currency', () => {
-    const eurResult = formatPriceWithCurrency(9900, 'EUR')
-    expect(eurResult).toContain('99')
-  })
-
-  it('should handle zero', () => {
-    const result = formatPriceWithCurrency(0)
-    expect(result).toMatch(/\$0\.00/)
   })
 })
 

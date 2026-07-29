@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { rateLimitAction } from '@/lib/rate-limit'
 import { revalidatePath } from 'next/cache'
 import { isUuid } from '@/lib/uuid'
+import { checkCommunityAchievements } from '@/lib/achievements'
 
 /**
  * Check if the current user is banned from forums
@@ -144,6 +145,13 @@ export async function createPost(input: {
     }
   }
 
+  // Never let achievement bookkeeping fail the post itself
+  try {
+    await checkCommunityAchievements(user.id, 'post')
+  } catch (achievementError) {
+    console.error('Error checking community achievements:', achievementError)
+  }
+
   revalidatePath('/community')
   return { success: true, postId: post.id }
 }
@@ -211,6 +219,12 @@ export async function createAnswer(input: { postId: string; content: string }) {
       success: false,
       error: 'Failed to post your answer. Please try again.',
     }
+  }
+
+  try {
+    await checkCommunityAchievements(user.id, 'answer')
+  } catch (achievementError) {
+    console.error('Error checking community achievements:', achievementError)
   }
 
   revalidatePath(`/community/${postId}`)

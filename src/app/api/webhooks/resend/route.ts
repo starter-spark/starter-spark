@@ -1,9 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
-import {
-  recordResendWebhookEvent,
-  getResendWebhookStatus,
-} from '@/lib/email/webhook-status'
 
 export async function POST(request: NextRequest) {
   const webhookSecret = process.env.RESEND_WEBHOOK_SECRET
@@ -43,19 +39,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
   }
 
-  recordResendWebhookEvent(
-    event as { type?: string; data?: { email_id?: string } },
-  )
-
-  return NextResponse.json({ received: true })
-}
-
-export function GET(request: NextRequest) {
-  const emailId = request.nextUrl.searchParams.get('id')
-  if (!emailId) {
-    return NextResponse.json({ error: 'Missing id' }, { status: 400 })
+  const { type, data } = (event ?? {}) as {
+    type?: string
+    data?: { email_id?: string }
+  }
+  if (type === 'email.bounced' || type === 'email.complained') {
+    console.error(`Resend delivery problem: ${type} for ${data?.email_id}`)
   }
 
-  const status = getResendWebhookStatus(emailId)
-  return NextResponse.json({ id: emailId, status })
+  return NextResponse.json({ received: true })
 }

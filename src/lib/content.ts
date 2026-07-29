@@ -43,23 +43,6 @@ export async function getContents(
   return result
 }
 
-export async function getContentsByCategory(
-  category: string,
-): Promise<Record<string, string>> {
-  const supabase = createPublicClient()
-  const { data } = await supabase
-    .from('site_content')
-    .select('content_key, content')
-    .eq('category', category)
-    .order('sort_order', { ascending: true })
-
-  const result: Record<string, string> = {}
-  for (const item of data ?? []) {
-    result[item.content_key] = item.content
-  }
-  return result
-}
-
 export interface ContentItem {
   id: string
   content_key: string
@@ -70,28 +53,4 @@ export interface ContentItem {
   category: string
   sort_order: number | null
   updated_at: string | null
-}
-
-export async function getAllContent(): Promise<ContentItem[]> {
-  const supabase = createPublicClient()
-  const { data } = await supabase
-    .from('site_content')
-    .select('*')
-    .order('category', { ascending: true })
-    .order('sort_order', { ascending: true })
-
-  return (data || []) as ContentItem[]
-}
-
-export async function getContentByCategory(
-  category: string,
-): Promise<ContentItem[]> {
-  const supabase = createPublicClient()
-  const { data } = await supabase
-    .from('site_content')
-    .select('*')
-    .eq('category', category)
-    .order('sort_order', { ascending: true })
-
-  return (data || []) as ContentItem[]
 }

@@ -18,6 +18,7 @@ import {
   Megaphone,
   LifeBuoy,
   GraduationCap,
+  BookOpen,
   PanelLeftClose,
   PanelLeftOpen,
 } from 'lucide-react'
@@ -37,6 +38,7 @@ const navItems = [
   { href: '/admin/community', label: 'Community', icon: MessageSquare },
   { href: '/admin/events', label: 'Events', icon: Calendar },
   { href: '/admin/content', label: 'Content', icon: FileText },
+  { href: '/admin/docs', label: 'Docs', icon: BookOpen },
   { href: '/admin/banners', label: 'Banners', icon: Megaphone },
   { href: '/admin/users', label: 'Users', icon: Users },
   { href: '/admin/audit', label: 'Audit Log', icon: ScrollText },

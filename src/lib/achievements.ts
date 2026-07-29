@@ -361,11 +361,13 @@ export async function checkCommunityAchievements(
 
     const postCount = posts?.length || 0
 
-    if (postCount === 1) {
+    // >= not ===: awardAchievement is idempotent, and exact equality would
+    // skip the award if concurrent posts jump the count past the threshold
+    if (postCount >= 1) {
       results.push(await awardAchievement(userId, 'first_question'))
     }
 
-    if (postCount === 5) {
+    if (postCount >= 5) {
       results.push(await awardAchievement(userId, 'five_posts'))
     }
   }
@@ -376,7 +378,7 @@ export async function checkCommunityAchievements(
       .select('id')
       .eq('author_id', userId)
 
-    if (answers?.length === 1) {
+    if ((answers?.length || 0) >= 1) {
       results.push(await awardAchievement(userId, 'first_answer'))
     }
   }

@@ -65,16 +65,6 @@ export function formatPrice(cents: number): string {
   return `$${(cents / 100).toFixed(2)}`
 }
 
-export function formatPriceWithCurrency(
-  cents: number,
-  currency = 'USD',
-): string {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency,
-  }).format(cents / 100)
-}
-
 export function isValidEmail(email: string): boolean {
   if (!email || typeof email !== 'string') return false
   const trimmed = email.trim()

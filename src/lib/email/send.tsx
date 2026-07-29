@@ -2,11 +2,9 @@ import { Resend } from 'resend'
 import * as React from 'react'
 import { randomUUID } from 'crypto'
 import { PurchaseConfirmationEmail } from './templates/purchase-confirmation'
-import { ClaimLinkEmail } from './templates/claim-link'
 import { WelcomeEmail } from './templates/welcome'
 import { ContactConfirmationEmail } from './templates/contact-confirmation'
 import { ContactNotificationEmail } from './templates/contact-notification'
-import { recordResendWebhookEvent } from '@/lib/email/webhook-status'
 
 const FROM_EMAIL =
   process.env.RESEND_FROM_EMAIL || 'StarterSpark <no-reply@starterspark.org>'
@@ -34,14 +32,6 @@ function shouldSkipResend(to: string): boolean {
 function mockResendSend(to: string, subject: string) {
   const emailId = `skip_${randomUUID()}`
   console.log(`[Email] SKIPPED (example.com): ${subject} to ${to}`)
-  recordResendWebhookEvent({
-    type: 'email.sent',
-    data: {
-      email_id: emailId,
-      to: [extractEmailAddress(to)],
-      subject,
-    },
-  })
   return { id: emailId }
 }
 
@@ -108,52 +98,6 @@ export async function sendPurchaseConfirmation({
         orderTotal={orderTotal}
         licenses={licenses}
         isGuestPurchase={isGuestPurchase}
-        siteUrl={SITE_URL}
-      />
-    ),
-  })
-
-  if (error) {
-    throw new Error(error.message)
-  }
-
-  return data
-}
-
-interface SendClaimLinkParams {
-  to: string
-  productName: string
-  licenseCode: string
-  claimToken: string
-}
-
-export async function sendClaimLink({
-  to,
-  productName,
-  licenseCode,
-  claimToken,
-}: SendClaimLinkParams) {
-  const apiKey = process.env.RESEND_API_KEY
-  if (!apiKey) {
-    throw new Error('RESEND_API_KEY is not configured')
-  }
-
-  const resend = new Resend(apiKey)
-  const subject = `Claim Your ${productName} License - StarterSpark`
-
-  if (shouldSkipResend(to)) {
-    return mockResendSend(to, subject)
-  }
-
-  const { data, error } = await resend.emails.send({
-    from: FROM_EMAIL,
-    to,
-    subject,
-    react: (
-      <ClaimLinkEmail
-        productName={productName}
-        licenseCode={licenseCode}
-        claimToken={claimToken}
         siteUrl={SITE_URL}
       />
     ),
