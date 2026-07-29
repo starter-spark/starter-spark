@@ -54,6 +54,12 @@ function buildContentSecurityPolicy({
   const isVercelPreview = vercelEnv === 'preview'
   const isStrictProduction =
     process.env.NODE_ENV === 'production' && !isVercelPreview
+  // upgrade-insecure-requests is only meaningful once the page is already
+  // served over https. On a plain-http origin (e.g. a local production build)
+  // WebKit -- unlike Chromium and Firefox -- upgrades even localhost
+  // subresources to https, so every script/style fails TLS and the page
+  // never hydrates.
+  const isHttpsRequest = requestOrigin.startsWith('https:')
   const scriptSrc = [
     "'self'",
     `'nonce-${nonce}'`,
@@ -137,7 +143,9 @@ function buildContentSecurityPolicy({
     `media-src ${Array.from(mediaOrigins).join(' ')}`,
     "worker-src 'self' blob:",
     "manifest-src 'self'",
-    ...(isStrictProduction ? ['upgrade-insecure-requests'] : []),
+    ...(isStrictProduction && isHttpsRequest
+      ? ['upgrade-insecure-requests']
+      : []),
   ].join('; ')
 }
 
