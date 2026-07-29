@@ -20,8 +20,8 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,
-  /* Opt out of parallel tests on CI. */
-  workers: process.env.CI ? 1 : undefined,
+  /* Bounded parallelism on CI; tests are read-mostly against a live DB */
+  workers: process.env.CI ? 4 : undefined,
   reporter: 'html',
   use: {
     baseURL: `http://localhost:${playwrightPort}`,
@@ -29,23 +29,20 @@ export default defineConfig({
     trace: 'on-first-retry',
   },
 
+  // One project per engine: Chromium desktop, Firefox desktop, WebKit as
+  // mobile Safari (the browser most of our customers actually use).
   projects: [
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
     },
-
     {
       name: 'firefox',
       use: { ...devices['Desktop Firefox'] },
     },
     {
-      name: 'Mobile Chrome',
-      use: { ...devices['Pixel 5'] },
-    },
-    {
-      name: 'Google Chrome',
-      use: { ...devices['Desktop Chrome'], channel: 'chrome' },
+      name: 'Mobile Safari',
+      use: { ...devices['iPhone 13'] },
     },
   ],
 

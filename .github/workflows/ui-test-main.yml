@@ -99,9 +99,6 @@ jobs:
       - name: Wait for Server
         run: npx wait-on http://localhost:3000 --timeout 60000
 
-      - name: Install Google Chrome for Playwright
-        run: npx playwright install --with-deps chrome
-
       - name: Run Playwright tests
         run: npx playwright test
         env:
