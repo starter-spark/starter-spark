@@ -164,7 +164,9 @@ export function ContentEditor({ page }: ContentEditorProps) {
       const result = await updatePageContent(page.page_key, {
         title,
         content,
-        contentBlocks: editorMode === 'blocks' ? contentBlocks : [],
+        // Only send blocks when editing blocks; undefined preserves what's
+        // stored (previously this sent [] and silently wiped block pages)
+        contentBlocks: editorMode === 'blocks' ? contentBlocks : undefined,
         tocEnabled,
         showLastUpdated,
         publish,
@@ -586,7 +588,9 @@ export function ContentEditor({ page }: ContentEditorProps) {
             ) : (
               <Save className="h-4 w-4 mr-2" />
             )}
-            Save Draft
+            {/* On a published page there is no separate draft storage yet,
+                so a save is immediately live — say so honestly */}
+            {isPublished ? 'Save (updates live page)' : 'Save Draft'}
           </Button>
           <Button
             type="button"

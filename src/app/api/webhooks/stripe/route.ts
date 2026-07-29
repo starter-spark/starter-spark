@@ -190,8 +190,18 @@ export async function POST(request: Request) {
 
   // Handle the event
   switch (event.type) {
-    case 'checkout.session.completed': {
+    case 'checkout.session.completed':
+    case 'checkout.session.async_payment_succeeded': {
       const session = event.data.object
+
+      // Delayed payment methods (ACH, Affirm, etc.) fire `completed` with
+      // payment_status 'unpaid'; fulfillment then happens on async_payment_succeeded.
+      if (session.payment_status !== 'paid') {
+        console.log(
+          `Session ${session.id} payment_status=${session.payment_status}, deferring fulfillment`,
+        )
+        return NextResponse.json({ received: true, status: 'awaiting_payment' })
+      }
 
       // DB idempotency: fulfillment row prevents double stock decrement and repeated email sends.
       // Also records failures.
@@ -354,10 +364,12 @@ export async function POST(request: Request) {
           const message = `Product not found for slug: ${item.slug}`
           console.error(message)
           await markFulfillmentFailed(session.id, message)
-          return NextResponse.json(
-            { error: 'Unknown product' },
-            { status: 500 },
-          )
+          // Permanent data misconfiguration: acknowledge so Stripe stops
+          // retrying; the failed fulfillment row is the recovery signal.
+          return NextResponse.json({
+            received: true,
+            status: 'failed_permanently',
+          })
         }
 
         // Create one license per quantity
@@ -576,6 +588,14 @@ export async function POST(request: Request) {
         status: 'licenses_created',
         count: createdOrExisting.length,
       })
+    }
+
+    case 'checkout.session.async_payment_failed': {
+      const session = event.data.object
+      console.error(`Async payment failed for session ${session.id}`)
+      // No-op if fulfillment never started; otherwise records the failure.
+      await markFulfillmentFailed(session.id, 'Async payment failed')
+      return NextResponse.json({ received: true, status: 'payment_failed' })
     }
 
     default:

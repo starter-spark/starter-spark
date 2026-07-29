@@ -449,7 +449,7 @@ export async function saveProductMedia(
   // Get existing media for this product
   const { data: existingMedia, error: existingError } = await supabase
     .from('product_media')
-    .select('id')
+    .select('id, storage_path')
     .eq('product_id', productId)
 
   if (existingError) {
@@ -473,6 +473,20 @@ export async function saveProductMedia(
     if (deleteError) {
       console.error('Error deleting media:', deleteError)
       return { error: deleteError.message }
+    }
+
+    // Rows are gone; now the files are safe to remove. Storage cleanup is
+    // best-effort — an orphaned file is harmless, a dangling DB row is not.
+    const removedPaths = (existingMedia || [])
+      .filter((m) => toDelete.includes(m.id) && m.storage_path)
+      .map((m) => m.storage_path as string)
+    if (removedPaths.length > 0) {
+      const { error: storageError } = await supabase.storage
+        .from('products')
+        .remove(removedPaths)
+      if (storageError) {
+        console.error('Error removing media files from storage:', storageError)
+      }
     }
   }
 

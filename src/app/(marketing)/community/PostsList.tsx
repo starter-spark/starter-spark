@@ -36,7 +36,7 @@ export interface Post {
     avatar_seed: string | null
   } | null
   product: { id: string; name: string; slug: string } | null
-  comments: { id: string }[]
+  comments: { count: number }[]
 }
 
 interface PostsListProps {
@@ -180,7 +180,7 @@ export function PostsList({
       >
         {posts.map((post) => {
           const author = post.author
-          const commentCount = post.comments?.length || 0
+          const commentCount = post.comments?.[0]?.count || 0
 
           return (
             <Link key={post.id} href={`/community/${post.id}`} className="block">

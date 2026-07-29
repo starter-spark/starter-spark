@@ -15,6 +15,7 @@ import { useCartStore } from '@/store/cart'
 import { trackAddToCart } from '@/lib/analytics'
 import { cn } from '@/lib/utils'
 import { QuantityButton } from '@/components/commerce/QuantityButton'
+import { useNow } from '@/hooks/use-now'
 import { StarRating } from '@/features/reviews/components/StarRating'
 
 interface BuyBoxProps {
@@ -44,9 +45,11 @@ const trustSignals = [
   { icon: Shield, label: 'Secure checkout' },
 ]
 
-function getDiscountTimeRemaining(discountExpiresAt?: string | null) {
+function getDiscountTimeRemaining(
+  now: Date,
+  discountExpiresAt?: string | null,
+) {
   if (!discountExpiresAt) return null
-  const now = new Date()
   const expires = new Date(discountExpiresAt)
   const diff = expires.getTime() - now.getTime()
   if (diff <= 0) return null
@@ -145,17 +148,23 @@ export function BuyBox({
     : 99
   const maxQuantity = Math.min(stockLimit, adminLimit)
 
+  // Hydration-safe clock: null until mounted, so expiry is ignored on the
+  // server and initial client render (a brief flash of a just-expired
+  // discount beats a hydration mismatch).
+  const now = useNow()
+
   // Check if discount is active (exists and not expired)
   const hasActiveDiscount = Boolean(
     discountPercent &&
       originalPrice &&
-      (!discountExpiresAt || new Date(discountExpiresAt) > new Date()),
+      (!discountExpiresAt || !now || new Date(discountExpiresAt) > now),
   )
 
   // Calculate time remaining for countdown (if discount expires within 7 days)
-  const timeRemaining = hasActiveDiscount
-    ? getDiscountTimeRemaining(discountExpiresAt)
-    : null
+  const timeRemaining =
+    hasActiveDiscount && now
+      ? getDiscountTimeRemaining(now, discountExpiresAt)
+      : null
   const stockBadge = getStockBadge({
     inStock,
     stockQuantity,

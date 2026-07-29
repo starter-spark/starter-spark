@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { Star, ImageIcon } from 'lucide-react'
 import { type Database } from '@/lib/supabase/database.types'
 import { ProductImage } from '@/components/ui/optimized-image'
+import { useNow } from '@/hooks/use-now'
 
 type ProductTagType = Database['public']['Enums']['product_tag_type']
 
@@ -64,11 +65,12 @@ export function ProductCard({
 }: ProductCardProps) {
   const isComingSoon = status === 'coming_soon'
 
-  // Check if discount is active (exists and not expired)
+  // Hydration-safe clock: expiry is ignored until mounted (see useNow)
+  const now = useNow()
   const hasActiveDiscount =
     discountPercent &&
     originalPrice &&
-    (!discountExpiresAt || new Date(discountExpiresAt) > new Date())
+    (!discountExpiresAt || !now || new Date(discountExpiresAt) > now)
 
   // Sort tags by priority (higher = first), exclude out_of_stock (shown as badge), limit to 3
   const sortedTags = [...tags]

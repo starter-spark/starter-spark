@@ -49,7 +49,10 @@ export async function updatePageContent(
     .update({
       title: data.title,
       content: data.content,
-      content_blocks: (data.contentBlocks ?? []) as Json,
+      // Leave stored blocks untouched unless the caller sent them
+      ...(data.contentBlocks !== undefined
+        ? { content_blocks: data.contentBlocks as Json }
+        : {}),
       toc_enabled: data.tocEnabled ?? false,
       show_last_updated: data.showLastUpdated ?? true,
       last_updated_by: user.id,

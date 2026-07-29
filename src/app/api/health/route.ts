@@ -19,6 +19,3 @@ export function GET() {
     },
   )
 }
-
-// Force static to avoid streaming
-export const dynamic = 'force-static'

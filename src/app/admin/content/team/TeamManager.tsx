@@ -80,16 +80,20 @@ export function TeamManager({ initialMembers }: TeamManagerProps) {
   const [deletingMember, setDeletingMember] = useState<TeamMember | null>(null)
   const [formData, setFormData] = useState(EMPTY_FORM)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [formError, setFormError] = useState<string | null>(null)
+  const [listError, setListError] = useState<string | null>(null)
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
 
   const openCreateDialog = () => {
     setEditingMember(null)
     setFormData(EMPTY_FORM)
+    setFormError(null)
     setIsDialogOpen(true)
   }
 
   const openEditDialog = (member: TeamMember) => {
     setEditingMember(member)
+    setFormError(null)
     setFormData({
       name: member.name,
       role: member.role,
@@ -129,12 +133,15 @@ export function TeamManager({ initialMembers }: TeamManagerProps) {
       is_active: formData.is_active,
     }
 
+    let errorMessage: string | null = null
     if (editingMember) {
       const result = await updateTeamMember(editingMember.id, data)
       if (result.success) {
         setMembers((prev) =>
           prev.map((m) => (m.id === editingMember.id ? { ...m, ...data } : m)),
         )
+      } else {
+        errorMessage = result.error || 'Failed to save team member'
       }
     } else {
       const result = await createTeamMember(data)
@@ -152,10 +159,18 @@ export function TeamManager({ initialMembers }: TeamManagerProps) {
           created_at: result.member.created_at ?? new Date().toISOString(),
         }
         setMembers((prev) => [...prev, newMember])
+      } else {
+        errorMessage = result.error || 'Failed to save team member'
       }
     }
 
     setIsSubmitting(false)
+    if (errorMessage) {
+      // Keep the dialog (and the admin's typed input) open on failure
+      setFormError(errorMessage)
+      return
+    }
+    setFormError(null)
     setIsDialogOpen(false)
   }
 
@@ -167,6 +182,9 @@ export function TeamManager({ initialMembers }: TeamManagerProps) {
 
     if (result.success) {
       setMembers((prev) => prev.filter((m) => m.id !== deletingMember.id))
+      setListError(null)
+    } else {
+      setListError(result.error || 'Failed to delete team member')
     }
 
     setIsSubmitting(false)
@@ -195,11 +213,26 @@ export function TeamManager({ initialMembers }: TeamManagerProps) {
 
     // Save new order
     const orderedIds = members.map((m) => m.id)
-    await reorderTeamMembers(orderedIds)
+    const result = await reorderTeamMembers(orderedIds)
+    if (!result.success) {
+      setListError(
+        result.error || 'Failed to save the new order — refresh to see the saved state',
+      )
+    } else {
+      setListError(null)
+    }
   }
 
   return (
     <>
+      {listError && (
+        <div
+          role="alert"
+          className="mb-4 rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+        >
+          {listError}
+        </div>
+      )}
       <div className="flex justify-end mb-4">
         <Button
           onClick={openCreateDialog}
@@ -450,6 +483,15 @@ export function TeamManager({ initialMembers }: TeamManagerProps) {
               />
             </div>
           </div>
+
+          {formError && (
+            <div
+              role="alert"
+              className="rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+            >
+              {formError}
+            </div>
+          )}
 
           <DialogFooter>
             <Button

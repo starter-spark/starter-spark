@@ -289,8 +289,11 @@ export function MediaUploader({
     const item = media.at(index)
     if (!item) return
 
-    // If it was uploaded to storage, delete it
-    if (item.storage_path) {
+    // Only delete from storage immediately when the upload was never saved
+    // (no DB row references it). Saved items keep their file until the form
+    // is submitted — saveProductMedia removes storage after the row delete —
+    // so cancelling the form can't break images on the live site.
+    if (item.storage_path && !item.id) {
       await supabase.storage.from(bucket).remove([item.storage_path])
     }
 

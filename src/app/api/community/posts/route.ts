@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { PUBLIC_POST_STATUSES } from '@/app/(marketing)/community/constants'
 
 function formatUpstreamError(error: unknown): string {
   const raw =
@@ -33,11 +34,12 @@ export async function GET(request: NextRequest) {
   const status = searchParams.get('status')
   const tag = searchParams.get('tag')
   const q = searchParams.get('q')
+  const product = searchParams.get('product')
 
   const supabase = await createClient()
 
   // Validate filters
-  const allowedStatuses = new Set(['open', 'solved'])
+  const allowedStatuses = new Set<string>(PUBLIC_POST_STATUSES)
   const statusFilter =
     status && allowedStatuses.has(status) ? status : undefined
 
@@ -48,21 +50,60 @@ export async function GET(request: NextRequest) {
     return /^[\w\s-]+$/.test(trimmed) ? trimmed : undefined
   })()
 
+  const productSlug = (() => {
+    if (!product) return undefined
+    const trimmed = product.trim()
+    if (!trimmed || trimmed.length > 60) return undefined
+    return /^[\w-]+$/.test(trimmed) ? trimmed : undefined
+  })()
+
   const searchQuery = q?.trim().slice(0, 120)
 
   try {
+    // The product filter arrives as a slug; posts store product_id
+    let productId: string | undefined
+    if (productSlug) {
+      const { data: productRow, error: productError } = await supabase
+        .from('products')
+        .select('id')
+        .eq('slug', productSlug)
+        .maybeSingle()
+      if (productError) {
+        console.error(
+          'Error resolving product filter:',
+          formatUpstreamError(productError),
+        )
+        return NextResponse.json(
+          { error: 'Failed to fetch posts' },
+          { status: 500 },
+        )
+      }
+      if (!productRow) {
+        return NextResponse.json({
+          posts: [],
+          totalCount: 0,
+          page,
+          limit,
+          totalPages: 0,
+        })
+      }
+      productId = productRow.id
+    }
+
     // Build count query
     let countQuery = supabase
       .from('posts')
       .select('id', { count: 'exact', head: true })
-      .eq('status', 'published')
-      .or('status.eq.open,status.eq.solved')
+      .in('status', [...PUBLIC_POST_STATUSES])
 
     if (statusFilter) {
       countQuery = countQuery.eq('status', statusFilter)
     }
     if (tagFilter) {
       countQuery = countQuery.contains('tags', [tagFilter])
+    }
+    if (productId) {
+      countQuery = countQuery.eq('product_id', productId)
     }
     if (searchQuery) {
       countQuery = countQuery.ilike('title', `%${searchQuery}%`)
@@ -94,9 +135,10 @@ export async function GET(request: NextRequest) {
           name,
           slug
         ),
-        comments (id)
+        comments (count)
       `,
       )
+      .in('status', [...PUBLIC_POST_STATUSES])
       .order('created_at', { ascending: false })
 
     if (statusFilter) {
@@ -104,6 +146,9 @@ export async function GET(request: NextRequest) {
     }
     if (tagFilter) {
       query = query.contains('tags', [tagFilter])
+    }
+    if (productId) {
+      query = query.eq('product_id', productId)
     }
     if (searchQuery) {
       query = query.ilike('title', `%${searchQuery}%`)
@@ -114,6 +159,17 @@ export async function GET(request: NextRequest) {
       countQuery,
       query.range((page - 1) * limit, page * limit - 1),
     ])
+
+    if (countResult.error || dataResult.error) {
+      console.error(
+        'Error fetching posts:',
+        formatUpstreamError(countResult.error ?? dataResult.error),
+      )
+      return NextResponse.json(
+        { error: 'Failed to fetch posts' },
+        { status: 500 },
+      )
+    }
 
     const totalCount = countResult.count || 0
     const posts = dataResult.data || []

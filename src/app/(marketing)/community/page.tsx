@@ -4,6 +4,7 @@ import { Plus } from 'lucide-react'
 import Link from 'next/link'
 import { ForumFilters } from './ForumFilters'
 import { PostsList, type Post } from './PostsList'
+import { PUBLIC_POST_STATUSES } from './constants'
 import { Suspense } from 'react'
 import { getContents } from '@/lib/content'
 import type { Metadata } from 'next'
@@ -78,7 +79,7 @@ export default async function CommunityPage({
 }) {
   const params = await resolveParams(searchParams)
   const supabase = await createClient()
-  const allowedStatuses = new Set(['open', 'solved'])
+  const allowedStatuses = new Set<string>(PUBLIC_POST_STATUSES)
   const statusFilter =
     params.status && allowedStatuses.has(params.status)
       ? params.status
@@ -88,6 +89,12 @@ export default async function CommunityPage({
     const trimmed = params.tag.trim()
     if (!trimmed || trimmed.length > 40) return undefined
     return /^[\w\s-]+$/.test(trimmed) ? trimmed : undefined
+  })()
+  const productSlug = (() => {
+    if (!params.product) return undefined
+    const trimmed = params.product.trim()
+    if (!trimmed || trimmed.length > 60) return undefined
+    return /^[\w-]+$/.test(trimmed) ? trimmed : undefined
   })()
   const searchQuery = params.q?.trim().slice(0, 120)
 
@@ -111,11 +118,28 @@ export default async function CommunityPage({
   let totalCount = 0
 
   try {
-    // Fetch posts with author info and comment count
-    let query = supabase
-      .from('posts')
-      .select(
-        `
+    const { data: productData } = await supabase
+      .from('products')
+      .select('id, name, slug')
+      .order('name')
+    products = (productData as typeof products) || []
+  } catch (error) {
+    console.error('Error fetching products:', formatUpstreamError(error))
+  }
+
+  // The product filter arrives as a slug; posts store product_id
+  const productId = productSlug
+    ? products.find((p) => p.slug === productSlug)?.id
+    : undefined
+  const unknownProductFilter = Boolean(productSlug) && !productId
+
+  try {
+    if (!unknownProductFilter) {
+      // Fetch posts with author info and comment count
+      let query = supabase
+        .from('posts')
+        .select(
+          `
         id,
         slug,
         title,
@@ -137,54 +161,55 @@ export default async function CommunityPage({
           name,
           slug
         ),
-        comments (id)
+        comments (count)
       `,
-      )
-      .order('created_at', { ascending: false })
+        )
+        .in('status', [...PUBLIC_POST_STATUSES])
+        .order('created_at', { ascending: false })
 
-    // Apply filters
-    if (statusFilter) {
-      query = query.eq('status', statusFilter)
+      // Apply filters
+      if (statusFilter) {
+        query = query.eq('status', statusFilter)
+      }
+
+      if (tagFilter) {
+        query = query.contains('tags', [tagFilter])
+      }
+
+      if (productId) {
+        query = query.eq('product_id', productId)
+      }
+
+      // Apply text search
+      if (searchQuery) {
+        query = query.ilike('title', `%${searchQuery}%`)
+      }
+
+      // Get total count first
+      let countQuery = supabase
+        .from('posts')
+        .select('id', { count: 'exact', head: true })
+        .in('status', [...PUBLIC_POST_STATUSES])
+      if (statusFilter) countQuery = countQuery.eq('status', statusFilter)
+      if (tagFilter) countQuery = countQuery.contains('tags', [tagFilter])
+      if (productId) countQuery = countQuery.eq('product_id', productId)
+      if (searchQuery) countQuery = countQuery.ilike('title', `%${searchQuery}%`)
+      const { count, error: countError } = await countQuery
+      if (countError) {
+        console.error('Error counting posts:', formatUpstreamError(countError))
+      }
+      totalCount = count || 0
+
+      // Apply pagination - only fetch first page for initial render
+      const { data: postData, error } = await query.range(0, ITEMS_PER_PAGE - 1)
+
+      if (error) {
+        console.error('Error fetching posts:', formatUpstreamError(error))
+      }
+      posts = (postData as Post[]) || []
     }
-
-    if (tagFilter) {
-      query = query.contains('tags', [tagFilter])
-    }
-
-    // Apply text search
-    if (searchQuery) {
-      query = query.ilike('title', `%${searchQuery}%`)
-    }
-
-    // Get total count first
-    let countQuery = supabase
-      .from('posts')
-      .select('id', { count: 'exact', head: true })
-    if (statusFilter) countQuery = countQuery.eq('status', statusFilter)
-    if (tagFilter) countQuery = countQuery.contains('tags', [tagFilter])
-    if (searchQuery) countQuery = countQuery.ilike('title', `%${searchQuery}%`)
-    const { count } = await countQuery
-    totalCount = count || 0
-
-    // Apply pagination - only fetch first page for initial render
-    const { data: postData, error } = await query.range(0, ITEMS_PER_PAGE - 1)
-
-    if (error) {
-      console.error('Error fetching posts:', formatUpstreamError(error))
-    }
-    posts = (postData as Post[]) || []
   } catch (error) {
     console.error('Error fetching posts:', formatUpstreamError(error))
-  }
-
-  try {
-    const { data: productData } = await supabase
-      .from('products')
-      .select('id, name, slug')
-      .order('name')
-    products = (productData as typeof products) || []
-  } catch (error) {
-    console.error('Error fetching products:', formatUpstreamError(error))
   }
 
   // Get unique tags from posts

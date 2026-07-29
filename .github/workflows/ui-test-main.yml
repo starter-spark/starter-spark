@@ -1,14 +1,14 @@
-name: Playwright (development)
+name: Playwright (main)
 
 on:
   pull_request:
-    branches: [development]
+    branches: [main]
   push:
-    branches: [development]
+    branches: [main]
   workflow_dispatch: {}
 
 concurrency:
-  group: playwright-development-${{ github.ref }}
+  group: playwright-main-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -111,7 +111,7 @@ jobs:
         uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
-          name: playwright-report-development
+          name: playwright-report-main
           path: |
             playwright-report/
             server.log
