@@ -1,4 +1,5 @@
 import { getContents } from '@/lib/content'
+import { getSettings } from '@/cms/content'
 import { CartContent } from './CartContent'
 
 const DEFAULT_CONTENT = {
@@ -24,10 +25,10 @@ const DEFAULT_CONTENT = {
 }
 
 export default async function CartPage() {
-  const content = await getContents(
-    Object.keys(DEFAULT_CONTENT),
-    DEFAULT_CONTENT,
-  )
+  const [content, commerce] = await Promise.all([
+    getContents(Object.keys(DEFAULT_CONTENT), DEFAULT_CONTENT),
+    getSettings('settings_commerce'),
+  ])
 
   return (
     <CartContent
@@ -48,6 +49,8 @@ export default async function CartPage() {
       trustSecureCheckout={content['cart.trust.secureCheckout']}
       charityNotice={content['global.charity.short']}
       charityPercentage={content['global.charity.percentage']}
+      freeShippingThresholdCents={commerce.freeShippingThresholdCents}
+      shippingRateCents={commerce.shippingRateCents}
     />
   )
 }

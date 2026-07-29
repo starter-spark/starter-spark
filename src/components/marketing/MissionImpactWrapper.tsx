@@ -1,5 +1,5 @@
-import { createClient } from '@/lib/supabase/server'
 import { getContents, getContent } from '@/lib/content'
+import { getImpactStats } from '@/cms/impact-stats'
 import { MissionImpactSection, type Stat } from './MissionImpact'
 
 const DEFAULT_CONTENT = {
@@ -17,16 +17,11 @@ const DEFAULT_CONTENT = {
     "Your purchase directly impacts Hawaii's next generation of engineers.",
 }
 
-interface MissionImpactProps {
-  /** Page key to filter stats visibility (e.g., 'home', 'about', 'workshop') */
-  page?: string
-}
-
 /**
- * Server component that fetches site stats and content, then renders MissionImpact
- * Uses the get_site_stats() function for auto-calculated values
+ * Server component that renders the mission section with CMS-driven impact
+ * stats (impact_stat collection; auto-sourced values resolved server-side).
  */
-export async function MissionImpact({ page = 'home' }: MissionImpactProps) {
+export async function MissionImpact() {
   const content = await getContents(
     Object.keys(DEFAULT_CONTENT),
     DEFAULT_CONTENT,
@@ -39,24 +34,19 @@ export async function MissionImpact({ page = 'home' }: MissionImpactProps) {
     charityPercentage,
   )
 
+  // Stats come from the CMS impact_stat collection: whatever entries an
+  // admin has published render here, in their order — no hardcoded keys.
   let transformedStats: Stat[] = []
   try {
-    const supabase = await createClient()
-    const { data: stats, error } = await supabase.rpc('get_site_stats', {
-      page_filter: page,
-    })
-    if (!error && stats && stats.length > 0) {
-      transformedStats = stats.map((stat) => ({
-        key: stat.key,
-        value: stat.value,
-        label: stat.label,
-        suffix: stat.suffix || '',
-      }))
-    } else if (error) {
-      console.error('Failed to fetch site stats:', error.message)
-    }
+    const stats = await getImpactStats()
+    transformedStats = stats.map((stat) => ({
+      key: stat.key,
+      value: Number(stat.value) || 0,
+      label: stat.label,
+      suffix: stat.suffix,
+    }))
   } catch (error) {
-    console.error('Failed to fetch site stats:', error)
+    console.error('Failed to fetch impact stats:', error)
   }
 
   return (

@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: '13.0.5'
+    PostgrestVersion: '14.5'
   }
   public: {
     Tables: {
@@ -91,6 +91,321 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      analytics_daily_summary: {
+        Row: {
+          avg_cls: number | null
+          avg_fcp: number | null
+          avg_inp: number | null
+          avg_lcp: number | null
+          avg_ttfb: number | null
+          created_at: string | null
+          date: string
+          id: string
+          top_pages: Json | null
+          total_custom_events: number | null
+          total_errors: number | null
+          total_pageviews: number | null
+          total_warnings: number | null
+          unique_sessions: number | null
+          unique_visitors: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          avg_cls?: number | null
+          avg_fcp?: number | null
+          avg_inp?: number | null
+          avg_lcp?: number | null
+          avg_ttfb?: number | null
+          created_at?: string | null
+          date: string
+          id?: string
+          top_pages?: Json | null
+          total_custom_events?: number | null
+          total_errors?: number | null
+          total_pageviews?: number | null
+          total_warnings?: number | null
+          unique_sessions?: number | null
+          unique_visitors?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          avg_cls?: number | null
+          avg_fcp?: number | null
+          avg_inp?: number | null
+          avg_lcp?: number | null
+          avg_ttfb?: number | null
+          created_at?: string | null
+          date?: string
+          id?: string
+          top_pages?: Json | null
+          total_custom_events?: number | null
+          total_errors?: number | null
+          total_pageviews?: number | null
+          total_warnings?: number | null
+          unique_sessions?: number | null
+          unique_visitors?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      analytics_logs: {
+        Row: {
+          created_at: string | null
+          error_count: number | null
+          error_paths: Json | null
+          fatal_count: number | null
+          hour_bucket: string
+          id: string
+          info_count: number | null
+          source: string
+          status_codes: Json | null
+          total_count: number | null
+          updated_at: string | null
+          warning_count: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          error_count?: number | null
+          error_paths?: Json | null
+          fatal_count?: number | null
+          hour_bucket: string
+          id?: string
+          info_count?: number | null
+          source: string
+          status_codes?: Json | null
+          total_count?: number | null
+          updated_at?: string | null
+          warning_count?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          error_count?: number | null
+          error_paths?: Json | null
+          fatal_count?: number | null
+          hour_bucket?: string
+          id?: string
+          info_count?: number | null
+          source?: string
+          status_codes?: Json | null
+          total_count?: number | null
+          updated_at?: string | null
+          warning_count?: number | null
+        }
+        Relationships: []
+      }
+      analytics_speed_insights: {
+        Row: {
+          cls_count: number | null
+          cls_p75: number | null
+          created_at: string | null
+          desktop_count: number | null
+          fcp_count: number | null
+          fcp_p75: number | null
+          hour_bucket: string
+          id: string
+          inp_count: number | null
+          inp_p75: number | null
+          lcp_count: number | null
+          lcp_p75: number | null
+          mobile_count: number | null
+          path: string
+          route: string | null
+          tablet_count: number | null
+          total_samples: number | null
+          ttfb_count: number | null
+          ttfb_p75: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          cls_count?: number | null
+          cls_p75?: number | null
+          created_at?: string | null
+          desktop_count?: number | null
+          fcp_count?: number | null
+          fcp_p75?: number | null
+          hour_bucket: string
+          id?: string
+          inp_count?: number | null
+          inp_p75?: number | null
+          lcp_count?: number | null
+          lcp_p75?: number | null
+          mobile_count?: number | null
+          path: string
+          route?: string | null
+          tablet_count?: number | null
+          total_samples?: number | null
+          ttfb_count?: number | null
+          ttfb_p75?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          cls_count?: number | null
+          cls_p75?: number | null
+          created_at?: string | null
+          desktop_count?: number | null
+          fcp_count?: number | null
+          fcp_p75?: number | null
+          hour_bucket?: string
+          id?: string
+          inp_count?: number | null
+          inp_p75?: number | null
+          lcp_count?: number | null
+          lcp_p75?: number | null
+          mobile_count?: number | null
+          path?: string
+          route?: string | null
+          tablet_count?: number | null
+          total_samples?: number | null
+          ttfb_count?: number | null
+          ttfb_p75?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      analytics_web_events: {
+        Row: {
+          created_at: string | null
+          event_count: number | null
+          event_name: string | null
+          event_type: string
+          hour_bucket: string
+          id: string
+          path: string
+          route: string | null
+          top_countries: Json | null
+          top_referrers: Json | null
+          unique_devices: number | null
+          unique_sessions: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          event_count?: number | null
+          event_name?: string | null
+          event_type: string
+          hour_bucket: string
+          id?: string
+          path: string
+          route?: string | null
+          top_countries?: Json | null
+          top_referrers?: Json | null
+          unique_devices?: number | null
+          unique_sessions?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          event_count?: number | null
+          event_name?: string | null
+          event_type?: string
+          hour_bucket?: string
+          id?: string
+          path?: string
+          route?: string | null
+          top_countries?: Json | null
+          top_referrers?: Json | null
+          unique_devices?: number | null
+          unique_sessions?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      cms_documents: {
+        Row: {
+          created_at: string
+          deleted_at: string | null
+          draft_version_id: string | null
+          id: string
+          key: string
+          published_version_id: string | null
+          sort_order: number
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          deleted_at?: string | null
+          draft_version_id?: string | null
+          id?: string
+          key: string
+          published_version_id?: string | null
+          sort_order?: number
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          deleted_at?: string | null
+          draft_version_id?: string | null
+          id?: string
+          key?: string
+          published_version_id?: string | null
+          sort_order?: number
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'cms_documents_draft_version_fkey'
+            columns: ['draft_version_id']
+            isOneToOne: false
+            referencedRelation: 'cms_versions'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'cms_documents_published_version_fkey'
+            columns: ['published_version_id']
+            isOneToOne: false
+            referencedRelation: 'cms_versions'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      cms_versions: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          data: Json
+          document_id: string
+          id: string
+          note: string | null
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          data: Json
+          document_id: string
+          id?: string
+          note?: string | null
+          version: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          data?: Json
+          document_id?: string
+          id?: string
+          note?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'cms_versions_created_by_fkey'
+            columns: ['created_by']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'cms_versions_document_id_fkey'
+            columns: ['document_id']
+            isOneToOne: false
+            referencedRelation: 'cms_documents'
+            referencedColumns: ['id']
+          },
+        ]
       }
       comment_votes: {
         Row: {
@@ -1035,44 +1350,6 @@ export type Database = {
           },
         ]
       }
-      product_tags: {
-        Row: {
-          created_at: string | null
-          discount_percent: number | null
-          expires_at: string | null
-          id: string
-          priority: number | null
-          product_id: string
-          tag: Database['public']['Enums']['product_tag_type']
-        }
-        Insert: {
-          created_at?: string | null
-          discount_percent?: number | null
-          expires_at?: string | null
-          id?: string
-          priority?: number | null
-          product_id: string
-          tag: Database['public']['Enums']['product_tag_type']
-        }
-        Update: {
-          created_at?: string | null
-          discount_percent?: number | null
-          expires_at?: string | null
-          id?: string
-          priority?: number | null
-          product_id?: string
-          tag?: Database['public']['Enums']['product_tag_type']
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'product_tags_product_id_fkey'
-            columns: ['product_id']
-            isOneToOne: false
-            referencedRelation: 'products'
-            referencedColumns: ['id']
-          },
-        ]
-      }
       product_review_reports: {
         Row: {
           created_at: string
@@ -1181,6 +1458,44 @@ export type Database = {
           },
           {
             foreignKeyName: 'product_reviews_product_id_fkey'
+            columns: ['product_id']
+            isOneToOne: false
+            referencedRelation: 'products'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      product_tags: {
+        Row: {
+          created_at: string | null
+          discount_percent: number | null
+          expires_at: string | null
+          id: string
+          priority: number | null
+          product_id: string
+          tag: Database['public']['Enums']['product_tag_type']
+        }
+        Insert: {
+          created_at?: string | null
+          discount_percent?: number | null
+          expires_at?: string | null
+          id?: string
+          priority?: number | null
+          product_id: string
+          tag: Database['public']['Enums']['product_tag_type']
+        }
+        Update: {
+          created_at?: string | null
+          discount_percent?: number | null
+          expires_at?: string | null
+          id?: string
+          priority?: number | null
+          product_id?: string
+          tag?: Database['public']['Enums']['product_tag_type']
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'product_tags_product_id_fkey'
             columns: ['product_id']
             isOneToOne: false
             referencedRelation: 'products'
@@ -1681,11 +1996,380 @@ export type Database = {
         }
         Relationships: []
       }
+      vercel_log_entries: {
+        Row: {
+          branch: string | null
+          build_id: string | null
+          deployment_id: string | null
+          destination: string | null
+          edge_type: string | null
+          entrypoint: string | null
+          environment: string | null
+          execution_region: string | null
+          host: string | null
+          id: string
+          ja3_digest: string | null
+          ja4_digest: string | null
+          level: string
+          message: string | null
+          path: string | null
+          project_id: string | null
+          project_name: string | null
+          proxy: Json | null
+          raw: Json
+          received_at: string
+          request_id: string | null
+          source: string
+          span_id: string | null
+          status_code: number | null
+          timestamp: string
+          trace_id: string | null
+          type: string | null
+        }
+        Insert: {
+          branch?: string | null
+          build_id?: string | null
+          deployment_id?: string | null
+          destination?: string | null
+          edge_type?: string | null
+          entrypoint?: string | null
+          environment?: string | null
+          execution_region?: string | null
+          host?: string | null
+          id: string
+          ja3_digest?: string | null
+          ja4_digest?: string | null
+          level: string
+          message?: string | null
+          path?: string | null
+          project_id?: string | null
+          project_name?: string | null
+          proxy?: Json | null
+          raw: Json
+          received_at?: string
+          request_id?: string | null
+          source: string
+          span_id?: string | null
+          status_code?: number | null
+          timestamp: string
+          trace_id?: string | null
+          type?: string | null
+        }
+        Update: {
+          branch?: string | null
+          build_id?: string | null
+          deployment_id?: string | null
+          destination?: string | null
+          edge_type?: string | null
+          entrypoint?: string | null
+          environment?: string | null
+          execution_region?: string | null
+          host?: string | null
+          id?: string
+          ja3_digest?: string | null
+          ja4_digest?: string | null
+          level?: string
+          message?: string | null
+          path?: string | null
+          project_id?: string | null
+          project_name?: string | null
+          proxy?: Json | null
+          raw?: Json
+          received_at?: string
+          request_id?: string | null
+          source?: string
+          span_id?: string | null
+          status_code?: number | null
+          timestamp?: string
+          trace_id?: string | null
+          type?: string | null
+        }
+        Relationships: []
+      }
+      vercel_speed_insights_events: {
+        Row: {
+          browser_engine: string | null
+          browser_engine_version: string | null
+          city: string | null
+          client_name: string | null
+          client_type: string | null
+          client_version: string | null
+          connection_speed: string | null
+          country: string | null
+          deployment_id: string | null
+          device_brand: string | null
+          device_id: string | null
+          device_type: string | null
+          event_id: string
+          metric_type: string
+          origin: string | null
+          os_name: string | null
+          os_version: string | null
+          owner_id: string | null
+          path: string | null
+          project_id: string | null
+          raw: Json
+          received_at: string
+          region: string | null
+          route: string | null
+          sdk_name: string | null
+          sdk_version: string | null
+          timestamp: string
+          value: number
+          vercel_environment: string | null
+          vercel_url: string | null
+        }
+        Insert: {
+          browser_engine?: string | null
+          browser_engine_version?: string | null
+          city?: string | null
+          client_name?: string | null
+          client_type?: string | null
+          client_version?: string | null
+          connection_speed?: string | null
+          country?: string | null
+          deployment_id?: string | null
+          device_brand?: string | null
+          device_id?: string | null
+          device_type?: string | null
+          event_id: string
+          metric_type: string
+          origin?: string | null
+          os_name?: string | null
+          os_version?: string | null
+          owner_id?: string | null
+          path?: string | null
+          project_id?: string | null
+          raw: Json
+          received_at?: string
+          region?: string | null
+          route?: string | null
+          sdk_name?: string | null
+          sdk_version?: string | null
+          timestamp: string
+          value: number
+          vercel_environment?: string | null
+          vercel_url?: string | null
+        }
+        Update: {
+          browser_engine?: string | null
+          browser_engine_version?: string | null
+          city?: string | null
+          client_name?: string | null
+          client_type?: string | null
+          client_version?: string | null
+          connection_speed?: string | null
+          country?: string | null
+          deployment_id?: string | null
+          device_brand?: string | null
+          device_id?: string | null
+          device_type?: string | null
+          event_id?: string
+          metric_type?: string
+          origin?: string | null
+          os_name?: string | null
+          os_version?: string | null
+          owner_id?: string | null
+          path?: string | null
+          project_id?: string | null
+          raw?: Json
+          received_at?: string
+          region?: string | null
+          route?: string | null
+          sdk_name?: string | null
+          sdk_version?: string | null
+          timestamp?: string
+          value?: number
+          vercel_environment?: string | null
+          vercel_url?: string | null
+        }
+        Relationships: []
+      }
+      vercel_trace_events: {
+        Row: {
+          body_base64: string | null
+          body_json: Json | null
+          content_type: string
+          event_id: string
+          received_at: string
+        }
+        Insert: {
+          body_base64?: string | null
+          body_json?: Json | null
+          content_type: string
+          event_id: string
+          received_at?: string
+        }
+        Update: {
+          body_base64?: string | null
+          body_json?: Json | null
+          content_type?: string
+          event_id?: string
+          received_at?: string
+        }
+        Relationships: []
+      }
+      vercel_web_analytics_events: {
+        Row: {
+          browser_engine: string | null
+          browser_engine_version: string | null
+          city: string | null
+          client_name: string | null
+          client_type: string | null
+          client_version: string | null
+          country: string | null
+          data_source_name: string | null
+          deployment: string | null
+          device_brand: string | null
+          device_id: string | null
+          device_model: string | null
+          device_type: string | null
+          event_data: string | null
+          event_data_json: Json | null
+          event_id: string
+          event_name: string | null
+          event_type: string
+          flags: Json | null
+          origin: string | null
+          os_name: string | null
+          os_version: string | null
+          owner_id: string | null
+          path: string
+          project_id: string | null
+          query_params: string | null
+          raw: Json
+          received_at: string
+          referrer: string | null
+          region: string | null
+          route: string | null
+          schema: string | null
+          sdk_name: string | null
+          sdk_version: string | null
+          sdk_version_full: string | null
+          session_id: string | null
+          timestamp: string
+          vercel_environment: string | null
+          vercel_url: string | null
+        }
+        Insert: {
+          browser_engine?: string | null
+          browser_engine_version?: string | null
+          city?: string | null
+          client_name?: string | null
+          client_type?: string | null
+          client_version?: string | null
+          country?: string | null
+          data_source_name?: string | null
+          deployment?: string | null
+          device_brand?: string | null
+          device_id?: string | null
+          device_model?: string | null
+          device_type?: string | null
+          event_data?: string | null
+          event_data_json?: Json | null
+          event_id: string
+          event_name?: string | null
+          event_type: string
+          flags?: Json | null
+          origin?: string | null
+          os_name?: string | null
+          os_version?: string | null
+          owner_id?: string | null
+          path: string
+          project_id?: string | null
+          query_params?: string | null
+          raw: Json
+          received_at?: string
+          referrer?: string | null
+          region?: string | null
+          route?: string | null
+          schema?: string | null
+          sdk_name?: string | null
+          sdk_version?: string | null
+          sdk_version_full?: string | null
+          session_id?: string | null
+          timestamp: string
+          vercel_environment?: string | null
+          vercel_url?: string | null
+        }
+        Update: {
+          browser_engine?: string | null
+          browser_engine_version?: string | null
+          city?: string | null
+          client_name?: string | null
+          client_type?: string | null
+          client_version?: string | null
+          country?: string | null
+          data_source_name?: string | null
+          deployment?: string | null
+          device_brand?: string | null
+          device_id?: string | null
+          device_model?: string | null
+          device_type?: string | null
+          event_data?: string | null
+          event_data_json?: Json | null
+          event_id?: string
+          event_name?: string | null
+          event_type?: string
+          flags?: Json | null
+          origin?: string | null
+          os_name?: string | null
+          os_version?: string | null
+          owner_id?: string | null
+          path?: string
+          project_id?: string | null
+          query_params?: string | null
+          raw?: Json
+          received_at?: string
+          referrer?: string | null
+          region?: string | null
+          route?: string | null
+          schema?: string | null
+          sdk_name?: string | null
+          sdk_version?: string | null
+          sdk_version_full?: string | null
+          session_id?: string | null
+          timestamp?: string
+          vercel_environment?: string | null
+          vercel_url?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
-      [_ in never]: never
+      cms_published: {
+        Row: {
+          data: Json | null
+          key: string | null
+          published_at: string | null
+          sort_order: number | null
+          type: string | null
+          updated_at: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      aggregate_daily_analytics: {
+        Args: { target_date?: string }
+        Returns: undefined
+      }
+      analytics_logs_overview: {
+        Args: { end_ts: string; start_ts: string }
+        Returns: Json
+      }
+      analytics_speed_insights_p75: {
+        Args: { end_ts: string; start_ts: string }
+        Returns: {
+          metric_type: string
+          p75: number
+          sample_count: number
+        }[]
+      }
+      analytics_web_analytics_overview: {
+        Args: { end_ts: string; start_ts: string }
+        Returns: Json
+      }
       apply_learning_xp: {
         Args: { p_completed_at?: string; p_user_id: string; p_xp: number }
         Returns: {

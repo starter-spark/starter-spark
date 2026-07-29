@@ -78,6 +78,13 @@ export type AuditAction =
   | 'team_member.updated'
   | 'team_member.deleted'
   | 'team_member.reordered'
+  // CMS engine
+  | 'cms.draft_saved'
+  | 'cms.published'
+  | 'cms.version_restored'
+  | 'cms.draft_discarded'
+  | 'cms.entry_deleted'
+  | 'cms.reordered'
 
 export type AuditResourceType =
   | 'user'
@@ -98,6 +105,7 @@ export type AuditResourceType =
   | 'doc_category'
   | 'doc_page'
   | 'team_member'
+  | 'cms_document'
 
 interface AuditLogParams {
   userId: string

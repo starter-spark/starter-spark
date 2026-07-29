@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { rateLimit } from '@/lib/rate-limit'
 import { createClient } from '@/lib/supabase/server'
 import { checkBotAndReject } from '@/lib/botid'
+import { getSettings } from '@/cms/content'
 
 interface CartItem {
   slug: string
@@ -145,12 +146,17 @@ export async function POST(request: Request) {
       })
     }
 
-    // Calculate shipping (free over $75)
-    const subtotal = verifiedItems.reduce(
-      (sum, item) => sum + (item.priceCents / 100) * item.quantity,
+    // Shipping from settings_commerce — same source the cart UI displays.
+    // All math in integer cents; float sums here once charged $9.99 shipping
+    // on a cart totalling exactly the threshold.
+    const { freeShippingThresholdCents, shippingRateCents } =
+      await getSettings('settings_commerce')
+    const subtotalCents = verifiedItems.reduce(
+      (sum, item) => sum + item.priceCents * item.quantity,
       0,
     )
-    const shippingCost = subtotal >= 75 ? 0 : 999 // 9.99 in cents
+    const shippingCost =
+      subtotalCents >= freeShippingThresholdCents ? 0 : shippingRateCents
 
     // Build line items for Stripe using verified prices
     const lineItems = verifiedItems.map((item) => ({

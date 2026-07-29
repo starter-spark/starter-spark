@@ -37,13 +37,17 @@ interface BuyBoxProps {
   // Charity percentage from site content
   charityPercentage?: string
   reviewSummary?: { average: number; total: number } | null
+  freeShippingThresholdCents?: number
 }
 
-const trustSignals = [
-  { icon: Truck, label: 'Free shipping on orders $75+' },
-  { icon: RotateCcw, label: '30-day returns' },
-  { icon: Shield, label: 'Secure checkout' },
-]
+function getTrustSignals(freeShippingThresholdCents: number) {
+  const threshold = Math.round(freeShippingThresholdCents / 100)
+  return [
+    { icon: Truck, label: `Free shipping on orders $${threshold}+` },
+    { icon: RotateCcw, label: '30-day returns' },
+    { icon: Shield, label: 'Secure checkout' },
+  ]
+}
 
 function getDiscountTimeRemaining(
   now: Date,
@@ -114,6 +118,7 @@ export function BuyBox({
   maxQuantityPerOrder,
   charityPercentage = '67%',
   reviewSummary,
+  freeShippingThresholdCents = 7500,
 }: BuyBoxProps) {
   const [quantity, setQuantity] = useState(1)
   const [shiftHeld, setShiftHeld] = useState(false)
@@ -152,6 +157,7 @@ export function BuyBox({
   // server and initial client render (a brief flash of a just-expired
   // discount beats a hydration mismatch).
   const now = useNow()
+  const trustSignals = getTrustSignals(freeShippingThresholdCents)
 
   // Check if discount is active (exists and not expired)
   const hasActiveDiscount = Boolean(

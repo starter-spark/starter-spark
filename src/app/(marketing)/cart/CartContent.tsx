@@ -46,6 +46,8 @@ export interface CartContentProps {
   trustSecureCheckout?: string
   charityNotice?: string
   charityPercentage?: string
+  freeShippingThresholdCents?: number
+  shippingRateCents?: number
 }
 
 export function CartContent({
@@ -66,6 +68,8 @@ export function CartContent({
   trustSecureCheckout = 'Secure checkout with Stripe',
   charityNotice = 'of your purchase supports Hawaii STEM education.',
   charityPercentage = '67%',
+  freeShippingThresholdCents = 7500,
+  shippingRateCents = 999,
 }: CartContentProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [checkoutError, setCheckoutError] = useState<string | null>(null)
@@ -114,9 +118,12 @@ export function CartContent({
     }
   }
 
-  const shipping = total >= 75 ? 0 : 9.99
+  // Display math only — checkout re-verifies everything server-side in cents
+  // from the same settings_commerce source.
+  const freeShippingThreshold = freeShippingThresholdCents / 100
+  const shipping = total >= freeShippingThreshold ? 0 : shippingRateCents / 100
   const grandTotal = total + shipping
-  const amountForFreeShipping = (75 - total).toFixed(2)
+  const amountForFreeShipping = (freeShippingThreshold - total).toFixed(2)
 
   // Show loading state during hydration
   if (!hasHydrated) {
