@@ -44,8 +44,6 @@ export interface CartContentProps {
   processingText?: string
   trustFreeShipping?: string
   trustSecureCheckout?: string
-  charityNotice?: string
-  charityPercentage?: string
   freeShippingThresholdCents?: number
   shippingRateCents?: number
 }
@@ -66,8 +64,6 @@ export function CartContent({
   processingText = 'Processing...',
   trustFreeShipping = 'Free shipping on orders $75+',
   trustSecureCheckout = 'Secure checkout with Stripe',
-  charityNotice = 'of your purchase supports Hawaii STEM education.',
-  charityPercentage = '67%',
   freeShippingThresholdCents = 7500,
   shippingRateCents = 999,
 }: CartContentProps) {
@@ -408,17 +404,6 @@ export function CartContent({
                       <Shield className="w-4 h-4 text-cyan-700" />
                       <span>{trustSecureCheckout}</span>
                     </div>
-                  </div>
-
-                  {/* Charity Notice */}
-                  <div
-                    data-testid="cart-charity"
-                    className="p-3 bg-amber-50 rounded border border-amber-200 text-sm text-slate-600"
-                  >
-                    <span className="font-mono text-amber-600 font-semibold">
-                      {charityPercentage}
-                    </span>{' '}
-                    {charityNotice}
                   </div>
                 </div>
               </div>

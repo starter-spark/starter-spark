@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useSyncExternalStore } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import {
@@ -215,6 +216,15 @@ export function Header({ user }: HeaderProps) {
             href="/"
             className="flex items-center gap-2 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-700 focus-visible:ring-offset-2"
           >
+            <Image
+              src="/logo-mark.png"
+              alt=""
+              width={32}
+              height={32}
+              className="h-8 w-8"
+              quality={100}
+              priority
+            />
             <span className="font-mono text-xl font-bold text-slate-900 tracking-tighter">
               STARTER<span className="text-cyan-700">SPARK</span>
             </span>

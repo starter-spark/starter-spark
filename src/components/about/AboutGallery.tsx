@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { motion } from 'motion/react'
 
 export interface AboutStat {
@@ -19,28 +20,28 @@ interface GalleryImage {
 
 const galleryImages: GalleryImage[] = [
   {
-    label: 'FTC Competition',
-    caption: 'Hawaii State Championship 2024',
+    label: 'Elementary School Outreach',
+    caption: 'Students building their first circuits',
     span: 'wide',
   },
   {
     label: 'Workshop',
-    caption: 'Punahou School, December 2024',
+    caption: 'Hands-on robotics session',
     span: 'normal',
   },
   {
-    label: 'Student Building',
-    caption: 'First successful arm build',
+    label: 'Collaboration',
+    caption: 'Working through the build together',
     span: 'tall',
   },
   {
-    label: 'Team Presentation',
-    caption: 'STEM Night at Iolani',
+    label: 'Programming',
+    caption: 'Uploading code to the Arduino',
     span: 'normal',
   },
   {
-    label: 'Outreach Event',
-    caption: 'Hawaii State Library Workshop',
+    label: 'Pair Programming',
+    caption: 'Debugging wiring and code',
     span: 'wide',
   },
 ]
@@ -49,7 +50,7 @@ const defaultStats: AboutStat[] = [
   { value: '0', label: 'Workshops Hosted' },
   { value: '0', label: 'Students Reached' },
   { value: '0', label: 'Partner Schools' },
-  { value: '67%', label: 'Donated to STEM' },
+  { value: '2', label: 'Kits Available' },
 ]
 
 export function AboutGallery({ stats = defaultStats }: AboutGalleryProps) {
@@ -86,27 +87,12 @@ export function AboutGallery({ stats = defaultStats }: AboutGalleryProps) {
                 ${image.span === 'tall' ? 'row-span-2' : ''}
               `}
             >
-              {/* Placeholder Content */}
-              <div className="absolute inset-0 flex flex-col items-center justify-center p-4">
-                <div className="w-12 h-12 mb-3 rounded-full bg-slate-200 flex items-center justify-center">
-                  <svg
-                    className="w-6 h-6 text-slate-500"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.5}
-                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                    />
-                  </svg>
-                </div>
-                <p className="text-slate-500 font-mono text-xs text-center">
-                  {image.label}
-                </p>
-              </div>
+              <Image
+                src={`/assets/images/gallery/${idx + 1}.jpg`}
+                alt={image.label}
+                fill
+                className="object-cover group-hover:scale-105 transition-transform duration-500"
+              />
 
               {/* Hover Overlay with Caption */}
               <div className="absolute inset-0 bg-slate-900/70 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
@@ -117,14 +103,6 @@ export function AboutGallery({ stats = defaultStats }: AboutGalleryProps) {
                   <p className="text-white/70 text-xs">{image.caption}</p>
                 </div>
               </div>
-
-              {/* Uncomment when we have actual images */}
-              {/* <Image
-                src={`/assets/images/gallery/${idx + 1}.jpg`}
-                alt={image.label}
-                fill
-                className="object-cover group-hover:scale-105 transition-transform duration-500"
-              /> */}
             </motion.div>
           ))}
         </div>

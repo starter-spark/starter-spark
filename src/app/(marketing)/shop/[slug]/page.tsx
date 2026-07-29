@@ -13,7 +13,6 @@ import {
   jsonLdScript,
 } from '@/lib/structured-data'
 import { siteConfig } from '@/config/site'
-import { getContent } from '@/lib/content'
 import { getSettings } from '@/cms/content'
 import { resolveParams, type MaybePromise } from '@/lib/next-params'
 import type { Json } from '@/lib/supabase/database.types'
@@ -261,11 +260,7 @@ export default async function ProductDetailPage({
   const modelPathFromSpecs = specs?.modelPath
   const finalModelPath = modelPathFromMedia || modelPathFromSpecs
 
-  // Fetch charity percentage and commerce settings together
-  const [charityPercentage, commerce] = await Promise.all([
-    getContent('global.charity.percentage', '67%'),
-    getSettings('settings_commerce'),
-  ])
+  const commerce = await getSettings('settings_commerce')
 
   // Get datasheet URL if available (document with "datasheet" in filename)
   const datasheetMedia = allMedia.find(
@@ -445,7 +440,6 @@ export default async function ProductDetailPage({
                   product.track_inventory ? product.low_stock_threshold : null
                 }
                 maxQuantityPerOrder={product.max_quantity_per_order}
-                charityPercentage={charityPercentage}
                 freeShippingThresholdCents={commerce.freeShippingThresholdCents}
                 reviewSummary={{
                   average: reviewSummary.average,

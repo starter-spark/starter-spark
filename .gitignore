@@ -60,3 +60,4 @@ node_modules/
 /playwright/.auth/
 .env*.local
 .env.local.bak
+.env.example

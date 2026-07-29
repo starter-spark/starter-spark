@@ -33,9 +33,9 @@ export function DifferentiatorsSection({
   card2Title = 'Interactive Curriculum',
   card2Description = 'Learn by doing with our web-based platform featuring interactive wiring diagrams, code editors with real-time feedback, and progress tracking across lessons.',
   card3Title = 'Support for Schools and Clubs',
-  card3Description = "We offer bulk discounts and classroom-ready kits to help educators bring hands-on STEM learning to their students. Whether you're running a robotics club, teaching a STEM unit, or hosting a workshop, StarterSpark provides guidance, resources, and affordable tools to make it happen.",
+  card3Description = "We offer bulk discounts for schools and clubs, and the kits come classroom-ready so you don't have to figure out sourcing. If you're trying to set up a robotics program and don't know where to start, just email us.",
   card4Title = 'Hawaii Roots',
-  card4Description = 'Founded by students from Hawaii who wanted to give back. Every kit sold directly supports local STEM education programs and school robotics teams across the islands.',
+  card4Description = "We're students from Hawaii who couldn't find a good beginner robotics kit, so we built one. Everything was tested by real students before we shipped anything.",
 }: DifferentiatorsSectionProps) {
   const differentiators: DifferentiatorCard[] = [
     { icon: Package, title: card1Title, description: card1Description },

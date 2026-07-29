@@ -4,7 +4,7 @@ import {
   InstagramIcon,
   YoutubeIcon,
 } from '@/components/icons/brand-icons'
-import { Heart } from 'lucide-react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { NewsletterForm } from './NewsletterForm'
 import { createPublicClient } from '@/lib/supabase/public'
@@ -39,20 +39,16 @@ const footerHeadingClass =
   'font-mono text-sm text-cyan-700 mb-4 uppercase tracking-wider'
 
 export async function Footer() {
-  // Fetch dynamic content (using unified global charity keys)
+  // Fetch dynamic content
   const content = await getContents(
     [
       'footer.copyright',
-      'global.charity.percentage',
-      'global.charity.short',
       'footer.brand.tagline',
       'footer.newsletter.title',
       'footer.newsletter.description',
     ],
     {
       'footer.copyright': '© 2025 StarterSpark Robotics. All rights reserved.',
-      'global.charity.percentage': '67%',
-      'global.charity.short': 'of every purchase goes to Hawaii STEM education',
       'footer.brand.tagline':
         "Open-source robotics education designed by students, for students. Building the next generation of Hawaii's engineers.",
       'footer.newsletter.title': 'Stay Updated',
@@ -80,26 +76,23 @@ export async function Footer() {
   }
   return (
     <footer className="bg-white border-t border-slate-200">
-      {/* Charity Banner */}
-      <div className="bg-amber-50 border-b border-amber-200 py-4 px-6 lg:px-20">
-        <div className="max-w-7xl mx-auto flex items-center justify-center gap-2 text-sm">
-          <Heart className="w-4 h-4 text-amber-600" />
-          <span className="text-slate-600 break-words">
-            <span className="font-mono text-amber-700 font-semibold">
-              {content['global.charity.percentage']}
-            </span>{' '}
-            {content['global.charity.short']}
-          </span>
-        </div>
-      </div>
-
       <div className="py-16 px-6 lg:px-20">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-12">
           {/* Brand Column */}
           <div className="lg:col-span-2">
-            <p className="text-2xl font-bold text-slate-900 mb-4 tracking-tighter font-mono">
-              STARTER<span className="text-cyan-700">SPARK</span>
-            </p>
+            <div className="flex items-center gap-2 mb-4">
+              <Image
+                src="/logo-mark.png"
+                alt=""
+                width={32}
+                height={32}
+                className="h-8 w-8"
+                quality={100}
+              />
+              <p className="text-2xl font-bold text-slate-900 tracking-tighter font-mono">
+                STARTER<span className="text-cyan-700">SPARK</span>
+              </p>
+            </div>
             <p className="text-slate-600 max-w-sm mb-6 leading-relaxed text-sm break-words">
               {content['footer.brand.tagline']}
             </p>

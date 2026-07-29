@@ -9,7 +9,7 @@ interface AboutHeroProps {
 
 export function AboutHero({
   headline = 'Making Robotics Education Accessible to Everyone',
-  description = "We believe every student deserves the chance to build, code, and create—regardless of their background or resources. That's why we donate 67% of every dollar to local STEM programs.",
+  description = "We make robotics kits for students who are just starting out. Everything is designed to work even if you've never built anything before.",
 }: AboutHeroProps) {
   // Split headline to highlight the second part in cyan
   // Look for text after a colon or newline, otherwise use the whole thing

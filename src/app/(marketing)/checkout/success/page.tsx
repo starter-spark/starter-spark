@@ -3,7 +3,6 @@ import { CheckCircle, Package, Mail, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { ClearCart } from './ClearCart'
-import { getContent } from '@/lib/content'
 import { cn } from '@/lib/utils'
 import {
   actionPrimaryLink,
@@ -50,9 +49,6 @@ export default async function CheckoutSuccessPage({
     quantity: item.quantity || 1,
     price: Math.round((item.amount_total || 0) / (item.quantity || 1) / 100),
   }))
-
-  // Fetch charity percentage
-  const charityPercentage = await getContent('global.charity.percentage', '67%')
 
   return (
     <div className="bg-slate-50">
@@ -140,18 +136,6 @@ export default async function CheckoutSuccessPage({
                   </p>
                 </div>
               </div>
-            </div>
-
-            {/* Charity Notice */}
-            <div className="p-4 bg-amber-50 rounded border border-amber-200 mb-8">
-              <p className="text-sm text-slate-600">
-                <span className="font-mono text-amber-600 font-semibold">
-                  {charityPercentage}
-                </span>{' '}
-                of your purchase will go directly to Hawaii STEM education
-                programs. Thank you for supporting the next generation of
-                engineers!
-              </p>
             </div>
 
             {/* Actions */}

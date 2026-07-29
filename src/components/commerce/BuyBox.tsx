@@ -34,8 +34,6 @@ interface BuyBoxProps {
   lowStockThreshold?: number | null
   /** Admin-configured max quantity per order (null = no limit) */
   maxQuantityPerOrder?: number | null
-  // Charity percentage from site content
-  charityPercentage?: string
   reviewSummary?: { average: number; total: number } | null
   freeShippingThresholdCents?: number
 }
@@ -116,7 +114,6 @@ export function BuyBox({
   stockQuantity,
   lowStockThreshold,
   maxQuantityPerOrder,
-  charityPercentage = '67%',
   reviewSummary,
   freeShippingThresholdCents = 7500,
 }: BuyBoxProps) {
@@ -380,17 +377,6 @@ export function BuyBox({
             <span>{label}</span>
           </div>
         ))}
-      </div>
-
-      {/* Charity Notice */}
-      <div
-        data-testid="product-charity"
-        className="p-3 bg-amber-50 rounded border border-amber-200 text-sm text-slate-700"
-      >
-        <span className="font-mono text-amber-700 font-semibold">
-          {charityPercentage}
-        </span>{' '}
-        of your purchase supports Hawaii STEM education.
       </div>
     </div>
   )

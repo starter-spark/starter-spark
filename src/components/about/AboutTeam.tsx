@@ -105,9 +105,9 @@ export function AboutTeam({ team = defaultTeam }: AboutTeamProps) {
                     <h3 className="font-mono text-lg text-slate-900 mb-1">
                       {member.name}
                     </h3>
-                    <p className="text-sm font-mono text-cyan-700 mb-3">
+                    {/* <p className="text-sm font-mono text-cyan-700 mb-3">
                       {member.role}
-                    </p>
+                    </p> */}
                     <p className="text-sm text-slate-600 leading-relaxed mb-4">
                       {member.bio}
                     </p>
