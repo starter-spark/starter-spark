@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { createClient } from '@/lib/supabase/client'
+import { DocContent } from '@/components/docs/DocArticle'
 import { createDocPage } from '../actions'
 
 interface Category {
@@ -202,11 +203,8 @@ export default function NewDocPage() {
           <div>
             <Label>Content (Markdown)</Label>
             {showPreview ? (
-              <div className="min-h-[400px] p-4 border border-slate-200 rounded bg-slate-50 prose prose-slate max-w-none">
-                {/* Preview (no markdown renderer) */}
-                <pre className="whitespace-pre-wrap text-sm">
-                  {formData.content || 'No content yet...'}
-                </pre>
+              <div className="min-h-[400px] p-4 border border-slate-200 rounded bg-slate-50">
+                <DocContent content={formData.content || null} />
               </div>
             ) : (
               <Textarea

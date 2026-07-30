@@ -29,6 +29,7 @@ import {
   BookOpen,
   Layers,
   Folder,
+  Paperclip,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -87,6 +88,7 @@ const resourceIcons = new Map<string, typeof User>([
   ['lesson', FileText],
   ['doc_category', Folder],
   ['doc_page', FileText],
+  ['doc_attachment', Paperclip],
   ['team_member', User],
 ])
 
@@ -486,6 +488,22 @@ const actionDescriptions = new Map<
       label: 'Doc Page Unpublished',
       verb: 'unpublished doc page',
       color: 'bg-amber-100 text-amber-700 border-amber-200',
+    },
+  ],
+  [
+    'doc_attachment.uploaded',
+    {
+      label: 'Doc Attachment Uploaded',
+      verb: 'uploaded doc attachment',
+      color: 'bg-green-100 text-green-700 border-green-200',
+    },
+  ],
+  [
+    'doc_attachment.deleted',
+    {
+      label: 'Doc Attachment Deleted',
+      verb: 'deleted doc attachment',
+      color: 'bg-red-100 text-red-700 border-red-200',
     },
   ],
   // Team management

@@ -60,6 +60,8 @@ export type AuditAction =
   | 'doc_page.deleted'
   | 'doc_page.published'
   | 'doc_page.unpublished'
+  | 'doc_attachment.uploaded'
+  | 'doc_attachment.deleted'
   // Team
   // CMS engine
   | 'cms.draft_saved'
@@ -84,6 +86,7 @@ export type AuditResourceType =
   | 'lesson'
   | 'doc_category'
   | 'doc_page'
+  | 'doc_attachment'
   | 'cms_document'
 
 interface AuditLogParams {

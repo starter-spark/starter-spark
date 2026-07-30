@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, use } from 'react'
+import { useState, useEffect, useRef, use } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { toast } from 'sonner'
@@ -10,7 +10,10 @@ import {
   Eye,
   EyeOff,
   ExternalLink,
+  FileDown,
+  Loader2,
   Trash2,
+  Upload,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -28,12 +31,43 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { createClient } from '@/lib/supabase/client'
-import { updateDocPage, deleteDocPage } from '../actions'
+import { formatFileSize } from '@/lib/file-size'
+import { DocContent } from '@/components/docs/DocArticle'
+import {
+  updateDocPage,
+  deleteDocPage,
+  createDocAttachmentUpload,
+  finalizeDocAttachment,
+  deleteDocAttachment,
+} from '../actions'
+
+const ATTACHMENT_ACCEPT = '.pdf,.png,.jpg,.jpeg,.webp,.gif,.zip,.txt,.csv'
 
 interface Category {
   id: string
   name: string
   slug: string
+}
+
+interface Attachment {
+  id: string
+  filename: string
+  storage_path: string
+  file_size: number | null
+  mime_type: string | null
+}
+
+async function loadAttachments(
+  pageId: string,
+  setAttachments: (attachments: Attachment[]) => void,
+) {
+  const supabase = createClient()
+  const { data } = await supabase
+    .from('doc_attachments')
+    .select('id, filename, storage_path, file_size, mime_type')
+    .eq('page_id', pageId)
+    .order('created_at', { ascending: true })
+  setAttachments((data as Attachment[] | null) ?? [])
 }
 
 interface DocPage {
@@ -74,6 +108,12 @@ export default function EditDocPage({
     is_published: false,
   })
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+
+  const [attachments, setAttachments] = useState<Attachment[]>([])
+  const [isUploadingAttachment, setIsUploadingAttachment] = useState(false)
+  const [attachmentToDelete, setAttachmentToDelete] =
+    useState<Attachment | null>(null)
+  const attachmentInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     async function loadData() {
@@ -120,10 +160,79 @@ export default function EditDocPage({
           is_published: typedPage.is_published ?? false,
         })
       }
+      await loadAttachments(pageId, setAttachments)
       setIsLoading(false)
     }
     void loadData()
   }, [pageId])
+
+  async function refreshAttachments() {
+    await loadAttachments(pageId, setAttachments)
+  }
+
+  async function handleAttachmentSelect(
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+
+    setIsUploadingAttachment(true)
+    try {
+      const minted = await createDocAttachmentUpload(
+        pageId,
+        file.name,
+        file.size,
+        file.type,
+      )
+      if (minted.error || !minted.path || !minted.token) {
+        toast.error('Failed to upload attachment', {
+          description: minted.error,
+        })
+        return
+      }
+
+      const supabase = createClient()
+      const { error: uploadError } = await supabase.storage
+        .from('doc-attachments')
+        .uploadToSignedUrl(minted.path, minted.token, file, {
+          contentType: minted.contentType,
+        })
+      if (uploadError) {
+        toast.error('Failed to upload attachment', {
+          description: uploadError.message,
+        })
+        return
+      }
+
+      const result = await finalizeDocAttachment(pageId, minted.path)
+      if (result.error) {
+        toast.error('Failed to upload attachment', {
+          description: result.error,
+        })
+        return
+      }
+
+      toast.success('Attachment uploaded')
+      await refreshAttachments()
+    } finally {
+      setIsUploadingAttachment(false)
+    }
+  }
+
+  async function handleAttachmentDeleteConfirm() {
+    if (!attachmentToDelete) return
+    const attachment = attachmentToDelete
+    setAttachmentToDelete(null)
+
+    const result = await deleteDocAttachment(attachment.id)
+    if (result.error) {
+      toast.error('Failed to delete attachment', { description: result.error })
+    } else {
+      toast.success('Attachment deleted')
+      await refreshAttachments()
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -293,11 +402,8 @@ export default function EditDocPage({
           <div>
             <Label>Content (Markdown)</Label>
             {showPreview ? (
-              <div className="min-h-[400px] p-4 border border-slate-200 rounded bg-slate-50 prose prose-slate max-w-none">
-                {/* Preview (no markdown renderer) */}
-                <pre className="whitespace-pre-wrap text-sm">
-                  {formData.content || 'No content yet...'}
-                </pre>
+              <div className="min-h-[400px] p-4 border border-slate-200 rounded bg-slate-50">
+                <DocContent content={formData.content || null} />
               </div>
             ) : (
               <Textarea
@@ -352,6 +458,104 @@ export default function EditDocPage({
           </div>
         </div>
       </form>
+
+      {/* Attachments */}
+      <div className="bg-white rounded border border-slate-200 p-6 space-y-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="font-mono text-lg font-bold text-slate-900">
+              Attachments
+            </h2>
+            <p className="text-xs text-slate-500">
+              Downloadable files shown at the bottom of the published page (max
+              10MB)
+            </p>
+          </div>
+          <input
+            ref={attachmentInputRef}
+            type="file"
+            accept={ATTACHMENT_ACCEPT}
+            onChange={(e) => void handleAttachmentSelect(e)}
+            className="hidden"
+          />
+          <Button
+            type="button"
+            variant="outline"
+            disabled={isUploadingAttachment}
+            onClick={() => attachmentInputRef.current?.click()}
+            className="w-full sm:w-auto"
+          >
+            {isUploadingAttachment ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Upload className="w-4 h-4 mr-2" />
+            )}
+            {isUploadingAttachment ? 'Uploading...' : 'Upload File'}
+          </Button>
+        </div>
+
+        {attachments.length === 0 ? (
+          <p className="text-sm text-slate-500">No attachments yet.</p>
+        ) : (
+          <div className="space-y-2">
+            {attachments.map((attachment) => (
+              <div
+                key={attachment.id}
+                className="flex items-center gap-3 p-3 rounded border border-slate-200"
+              >
+                <FileDown className="w-5 h-5 text-cyan-700 shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="font-mono text-sm text-slate-900 truncate">
+                    {attachment.filename}
+                  </p>
+                  {attachment.file_size && (
+                    <p className="text-xs text-slate-500">
+                      {formatFileSize(attachment.file_size)}
+                    </p>
+                  )}
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setAttachmentToDelete(attachment)}
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <AlertDialog
+        open={attachmentToDelete !== null}
+        onOpenChange={(open) => {
+          if (!open) setAttachmentToDelete(null)
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Delete &ldquo;{attachmentToDelete?.filename}&rdquo;?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. The file will be permanently deleted
+              from storage.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => void handleAttachmentDeleteConfirm()}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>

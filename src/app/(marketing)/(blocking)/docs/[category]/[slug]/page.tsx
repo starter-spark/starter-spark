@@ -27,9 +27,9 @@ export async function generateMetadata({ params }: Props) {
   const { category: categorySlug, slug } = await resolveParams(params)
   const supabase = await createClient()
 
-  const page = await fetchDocMetadata(supabase, slug)
+  const page = await fetchDocMetadata(supabase, categorySlug, slug)
 
-  if (!page || page.categorySlug !== categorySlug) {
+  if (!page) {
     notFound()
   }
 
@@ -44,18 +44,13 @@ export default async function DocArticlePage({ params }: Props) {
   const supabase = await createClient()
 
   // Fetch the page with its category
-  const page = await fetchDocArticle(supabase, slug)
+  const page = await fetchDocArticle(supabase, categorySlug, slug)
 
   if (!page) {
     notFound()
   }
 
   const category = page.category
-
-  // Verify the category slug matches
-  if (category.slug !== categorySlug) {
-    notFound()
-  }
 
   // Fetch attachments for this page
   const attachments = await fetchDocAttachments(supabase, page.id)

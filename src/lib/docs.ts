@@ -32,6 +32,7 @@ export interface DocAttachment {
   storage_path: string
   file_size: number | null
   mime_type: string | null
+  url: string
 }
 
 export interface DocNavPage {
@@ -82,8 +83,11 @@ export interface DocCategoryWithPages {
 
 export async function fetchDocMetadata(
   supabase: SupabaseServerClient,
+  categorySlug: string,
   slug: string,
 ): Promise<DocMetadata | null> {
+  // doc_pages slugs are only unique per category (UNIQUE(category_id, slug)),
+  // so the lookup must be scoped through the inner-joined category.
   const { data } = await supabase
     .from('doc_pages')
     .select(
@@ -96,6 +100,7 @@ export async function fetchDocMetadata(
     `,
     )
     .eq('slug', slug)
+    .eq('category.slug', categorySlug)
     .eq('is_published', true)
     .single()
 
@@ -192,8 +197,11 @@ export async function fetchDocCategoryWithPages(
 
 export async function fetchDocArticle(
   supabase: SupabaseServerClient,
+  categorySlug: string,
   slug: string,
 ): Promise<DocPageRecord | null> {
+  // doc_pages slugs are only unique per category (UNIQUE(category_id, slug)),
+  // so the lookup must be scoped through the inner-joined category.
   const { data, error } = await supabase
     .from('doc_pages')
     .select(
@@ -213,6 +221,7 @@ export async function fetchDocArticle(
     `,
     )
     .eq('slug', slug)
+    .eq('category.slug', categorySlug)
     .eq('is_published', true)
     .single()
 
@@ -233,7 +242,15 @@ export async function fetchDocAttachments(
     .select('id, filename, storage_path, file_size, mime_type')
     .eq('page_id', pageId)
 
-  return (data as DocAttachment[] | null) ?? []
+  const rows = (data as Omit<DocAttachment, 'url'>[] | null) ?? []
+
+  // storage_path stays bucket-relative in the DB; resolve it to a public URL
+  // here so the bucket can move without a data migration.
+  return rows.map((row) => ({
+    ...row,
+    url: supabase.storage.from('doc-attachments').getPublicUrl(row.storage_path)
+      .data.publicUrl,
+  }))
 }
 
 export async function fetchDocSiblingPages(

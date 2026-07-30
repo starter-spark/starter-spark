@@ -10,6 +10,8 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { cn } from '@/lib/utils'
 import { formatFileSize } from '@/lib/file-size'
+import { safeMarkdownUrlTransform } from '@/lib/safe-url'
+import { createMarkdownComponents } from '@/components/markdown/markdown-components'
 import type { DocAttachment, DocNavPage, DocCategoryInfo } from '@/lib/docs'
 
 const proseClassName = cn(
@@ -29,6 +31,12 @@ const proseClassName = cn(
   'prose-pre:bg-slate-900',
   'prose-pre:text-slate-100',
 )
+
+const markdownComponents = createMarkdownComponents({
+  link: 'text-cyan-700 hover:underline',
+  h1: 'text-2xl font-mono text-slate-900 mt-8 mb-4',
+  h2: 'text-xl font-mono text-slate-900 mt-6 mb-3',
+})
 
 interface DocBreadcrumbsProps {
   category: DocCategoryInfo
@@ -108,7 +116,13 @@ export function DocContent({ content }: DocContentProps) {
   return (
     <div className={proseClassName}>
       {content ? (
-        <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+        <ReactMarkdown
+          remarkPlugins={[remarkGfm]}
+          urlTransform={safeMarkdownUrlTransform}
+          components={markdownComponents}
+        >
+          {content}
+        </ReactMarkdown>
       ) : (
         <p className="text-slate-500 italic">
           This article is being written. Check back soon!
@@ -130,7 +144,7 @@ export function DocAttachments({ attachments }: DocAttachmentsProps) {
         {attachments.map((attachment) => (
           <a
             key={attachment.id}
-            href={attachment.storage_path}
+            href={attachment.url}
             target="_blank"
             rel="noopener noreferrer"
             download

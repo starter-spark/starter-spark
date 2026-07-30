@@ -51,6 +51,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.6,
     },
     {
+      url: `${baseUrl}/docs`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.6,
+    },
+    {
       url: `${baseUrl}/privacy`,
       lastModified: new Date(),
       changeFrequency: 'yearly',
@@ -111,5 +117,48 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.5,
   }))
 
-  return [...staticPages, ...productPages, ...coursePages, ...postPages]
+  // Dynamic documentation category pages
+  const { data: docCategories } = await supabase
+    .from('doc_categories')
+    .select('slug, updated_at')
+    .eq('is_published', true)
+
+  const docCategoryPages: MetadataRoute.Sitemap = (docCategories || []).map(
+    (category) => ({
+      url: `${baseUrl}/docs/${category.slug}`,
+      lastModified: category.updated_at
+        ? new Date(category.updated_at)
+        : new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.5,
+    }),
+  )
+
+  // Dynamic documentation article pages
+  const { data: docPages } = await supabase
+    .from('doc_pages')
+    .select('slug, updated_at, doc_categories!inner(slug)')
+    .eq('is_published', true)
+
+  const docArticlePages: MetadataRoute.Sitemap = (docPages || []).map(
+    (page) => {
+      const categorySlug = (page.doc_categories as unknown as { slug: string })
+        ?.slug
+      return {
+        url: `${baseUrl}/docs/${categorySlug}/${page.slug}`,
+        lastModified: page.updated_at ? new Date(page.updated_at) : new Date(),
+        changeFrequency: 'weekly',
+        priority: 0.5,
+      }
+    },
+  )
+
+  return [
+    ...staticPages,
+    ...productPages,
+    ...coursePages,
+    ...postPages,
+    ...docCategoryPages,
+    ...docArticlePages,
+  ]
 }
