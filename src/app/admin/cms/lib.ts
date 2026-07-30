@@ -18,6 +18,8 @@ export interface SerializedField {
   widget: FieldWidget
   help?: string
   options?: { value: string; label: string }[]
+  /** Select widgets: show a clear control (the schema accepts '') */
+  clearable?: boolean
 }
 
 const typeDefs = new Map<string, TypeDef>(Object.entries(cmsRegistry))

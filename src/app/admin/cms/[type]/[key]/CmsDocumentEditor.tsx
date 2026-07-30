@@ -325,30 +325,47 @@ export function CmsDocumentEditor({
                           }}
                         />
                       ) : field.widget === 'select' ? (
-                        <Select
-                          value={
-                            typeof value === 'string' && value !== ''
-                              ? value
-                              : undefined
-                          }
-                          onValueChange={(next) => {
-                            setField(field.name, next)
-                          }}
-                        >
-                          <SelectTrigger id={inputId} className="w-full">
-                            <SelectValue placeholder="Select an option" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {(field.options ?? []).map((option) => (
-                              <SelectItem
-                                key={option.value}
-                                value={option.value}
+                        <div className="flex items-center gap-2">
+                          <Select
+                            value={
+                              typeof value === 'string' && value !== ''
+                                ? value
+                                : undefined
+                            }
+                            onValueChange={(next) => {
+                              setField(field.name, next)
+                            }}
+                          >
+                            <SelectTrigger id={inputId} className="w-full">
+                              <SelectValue placeholder="Select an option" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {(field.options ?? []).map((option) => (
+                                <SelectItem
+                                  key={option.value}
+                                  value={option.value}
+                                >
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {field.clearable &&
+                            typeof value === 'string' &&
+                            value !== '' && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="shrink-0 text-slate-500 hover:text-slate-900"
+                                onClick={() => {
+                                  setField(field.name, '')
+                                }}
                               >
-                                {option.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                                Clear
+                              </Button>
+                            )}
+                        </div>
                       ) : (
                         <Input
                           id={inputId}

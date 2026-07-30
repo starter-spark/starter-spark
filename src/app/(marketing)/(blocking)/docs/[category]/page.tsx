@@ -1,15 +1,10 @@
 // (blocking) route group: no loading.tsx/Suspense above this page, so the
 // lookups settle before the shell flushes and notFound() commits a real 404.
-import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ChevronRight, FileText, ArrowLeft, BookOpen } from 'lucide-react'
+import { getCollection, getEntryMeta } from '@/cms/content'
 import { formatShortDate } from '@/lib/utils'
-import {
-  fetchDocCategoryMeta,
-  fetchDocCategoryWithPages,
-  type DocCategoryPage,
-} from '@/lib/docs'
 import { resolveParams, type MaybePromise } from '@/lib/next-params'
 
 interface Props {
@@ -18,35 +13,31 @@ interface Props {
 
 export async function generateMetadata({ params }: Props) {
   const { category: categorySlug } = await resolveParams(params)
-  const supabase = await createClient()
 
-  const category = await fetchDocCategoryMeta(supabase, categorySlug)
-
+  const category = await getEntryMeta('doc_category', categorySlug)
   if (!category) {
     notFound()
   }
 
   return {
-    title: `${category.name} - Documentation - StarterSpark`,
-    description: category.description || `Documentation for ${category.name}`,
+    title: `${category.data.name} - Documentation - StarterSpark`,
+    description:
+      category.data.description || `Documentation for ${category.data.name}`,
   }
 }
 
 export default async function DocCategoryPage({ params }: Props) {
   const { category: categorySlug } = await resolveParams(params)
-  const supabase = await createClient()
 
-  // Fetch category with its pages
-  const category = await fetchDocCategoryWithPages(supabase, categorySlug)
-
+  const category = await getEntryMeta('doc_category', categorySlug)
   if (!category) {
     notFound()
   }
 
-  const typedCategory = category
-
-  // Sort pages by sort_order
-  const sortedPages = sortCategoryPages(typedCategory.pages || [])
+  // getCollection returns entries in admin-defined order
+  const pages = (await getCollection('doc_page')).filter(
+    (page) => page.data.category === categorySlug,
+  )
 
   return (
     <div className="bg-slate-50 min-h-screen">
@@ -61,7 +52,7 @@ export default async function DocCategoryPage({ params }: Props) {
               Documentation
             </Link>
             <ChevronRight className="w-4 h-4" />
-            <span className="text-slate-900">{typedCategory.name}</span>
+            <span className="text-slate-900">{category.data.name}</span>
           </nav>
         </div>
       </section>
@@ -77,11 +68,11 @@ export default async function DocCategoryPage({ params }: Props) {
             Back to Documentation
           </Link>
           <h1 className="font-mono text-3xl lg:text-4xl font-bold text-slate-900 mb-3">
-            {typedCategory.name}
+            {category.data.name}
           </h1>
-          {typedCategory.description && (
+          {category.data.description && (
             <p className="text-lg text-slate-600">
-              {typedCategory.description}
+              {category.data.description}
             </p>
           )}
         </div>
@@ -90,7 +81,7 @@ export default async function DocCategoryPage({ params }: Props) {
       {/* Articles List */}
       <section className="pb-24 px-6 lg:px-20">
         <div className="max-w-4xl mx-auto">
-          {sortedPages.length === 0 ? (
+          {pages.length === 0 ? (
             <div className="text-center py-16 bg-white rounded border border-slate-200">
               <BookOpen className="w-12 h-12 mx-auto text-slate-300 mb-4" />
               <h2 className="font-mono text-xl text-slate-900 mb-2">
@@ -102,11 +93,14 @@ export default async function DocCategoryPage({ params }: Props) {
             </div>
           ) : (
             <div className="space-y-3">
-              {sortedPages.map((page) => (
+              {pages.map((page) => (
                 <DocCategoryPageCard
-                  key={page.id}
-                  page={page}
-                  categorySlug={typedCategory.slug}
+                  key={page.key}
+                  slug={page.key}
+                  title={page.data.title}
+                  excerpt={page.data.excerpt}
+                  publishedAt={page.publishedAt}
+                  categorySlug={categorySlug}
                 />
               ))}
             </div>
@@ -117,24 +111,26 @@ export default async function DocCategoryPage({ params }: Props) {
   )
 }
 
-function sortCategoryPages(pages: DocCategoryPage[]) {
-  return [...pages].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
-}
-
 function DocCategoryPageCard({
-  page,
+  slug,
+  title,
+  excerpt,
+  publishedAt,
   categorySlug,
 }: {
-  page: DocCategoryPage
+  slug: string
+  title: string
+  excerpt: string
+  publishedAt: string | null
   categorySlug: string
 }) {
-  const updatedLabel = page.updated_at
-    ? `Updated ${formatShortDate(page.updated_at)}`
+  const updatedLabel = publishedAt
+    ? `Updated ${formatShortDate(publishedAt)}`
     : 'Recently updated'
 
   return (
     <Link
-      href={`/docs/${categorySlug}/${page.slug}`}
+      href={`/docs/${categorySlug}/${slug}`}
       className="group flex items-start gap-4 p-5 bg-white rounded border border-slate-200 hover:border-cyan-300 hover:shadow-sm transition-all"
     >
       <div className="w-10 h-10 rounded bg-cyan-50 flex items-center justify-center flex-shrink-0 group-hover:bg-cyan-100 transition-colors">
@@ -142,12 +138,10 @@ function DocCategoryPageCard({
       </div>
       <div className="flex-1 min-w-0">
         <h2 className="font-mono text-lg text-slate-900 mb-1 group-hover:text-cyan-700 transition-colors">
-          {page.title}
+          {title}
         </h2>
-        {page.excerpt && (
-          <p className="text-sm text-slate-600 line-clamp-2 mb-2">
-            {page.excerpt}
-          </p>
+        {excerpt && (
+          <p className="text-sm text-slate-600 line-clamp-2 mb-2">{excerpt}</p>
         )}
         <p className="text-xs text-slate-400">{updatedLabel}</p>
       </div>

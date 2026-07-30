@@ -1,11 +1,17 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
-import { getCmsDocumentDetail } from '@/cms/admin'
+import { getCmsDocumentDetail, referenceOptionsFor } from '@/cms/admin'
+import {
+  ATTACHMENT_MIME_TYPES_BY_EXTENSION,
+  ATTACHMENTS_BUCKET,
+  getCmsAttachments,
+} from '@/cms/attachments'
 import { isCmsType } from '@/cms/registry'
 import { Button } from '@/components/ui/button'
 import { resolveParams, type MaybePromise } from '@/lib/next-params'
 import { defaultDataFor, serializeFields, typeDef } from '../../lib'
+import { CmsAttachmentsPanel } from './CmsAttachmentsPanel'
 import { CmsDocumentEditor } from './CmsDocumentEditor'
 
 export const metadata = {
@@ -36,6 +42,24 @@ export default async function CmsEditorPage({
   const initialData = { ...defaults, ...(detail?.data ?? {}) }
   const backHref =
     def.kind === 'singleton' ? '/admin/cms' : `/admin/cms/${type}`
+
+  // Reference fields render as selects over the referenced collection's
+  // live entries, resolved here so the client editor stays schema-agnostic.
+  const referenceOptions = await referenceOptionsFor(type)
+  const fieldDefs = new Map(Object.entries(def.fields))
+  const fields = serializeFields(type).map((field) => {
+    const options = referenceOptions.get(field.name)
+    if (!options) return field
+    const schema = fieldDefs.get(field.name)?.schema
+    return {
+      ...field,
+      options,
+      clearable: schema ? schema.safeParse('').success : false,
+    }
+  })
+
+  const attachments =
+    def.attachments && detail ? await getCmsAttachments(type, key) : null
 
   return (
     <div className="space-y-6">
@@ -85,8 +109,25 @@ export default async function CmsEditorPage({
           isPublished: version.isPublished,
           isDraft: version.isDraft,
         }))}
-        fields={serializeFields(type)}
+        fields={fields}
       />
+
+      {attachments !== null && (
+        <CmsAttachmentsPanel
+          type={type}
+          typeKey={key}
+          bucket={ATTACHMENTS_BUCKET}
+          accept={[...ATTACHMENT_MIME_TYPES_BY_EXTENSION.keys()]
+            .map((ext) => `.${ext}`)
+            .join(',')}
+          attachments={attachments.map((attachment) => ({
+            id: attachment.id,
+            filename: attachment.filename,
+            fileSize: attachment.fileSize,
+            url: attachment.url,
+          }))}
+        />
+      )}
     </div>
   )
 }

@@ -3,23 +3,13 @@
 import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Search, FileText, Loader2 } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
 import { useDebouncedCallback } from 'use-debounce'
-
-interface SearchResult {
-  id: string
-  title: string
-  excerpt: string | null
-  slug: string
-  category_slug: string
-  category_name: string
-  rank: number
-}
+import { searchDocs, type DocSearchResult } from './search'
 
 export function DocSearch() {
   const router = useRouter()
   const [query, setQuery] = useState('')
-  const [results, setResults] = useState<SearchResult[]>([])
+  const [results, setResults] = useState<DocSearchResult[]>([])
   const [isSearching, setIsSearching] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
 
@@ -31,18 +21,11 @@ export function DocSearch() {
     }
 
     setIsSearching(true)
-    const supabase = createClient()
-
-    const { data, error } = await supabase.rpc('search_docs', {
-      search_query: searchQuery,
-      result_limit: 10,
-    })
-
-    if (error) {
+    try {
+      setResults(await searchDocs(searchQuery))
+    } catch {
       // Search failed - just show no results
       setResults([])
-    } else {
-      setResults(data || [])
     }
     setIsSearching(false)
   }, 300)
@@ -57,11 +40,11 @@ export function DocSearch() {
     [performSearch],
   )
 
-  const handleResultClick = (result: SearchResult) => {
+  const handleResultClick = (result: DocSearchResult) => {
     setIsOpen(false)
     setQuery('')
     setResults([])
-    router.push(`/docs/${result.category_slug}/${result.slug}`)
+    router.push(`/docs/${result.categorySlug}/${result.key}`)
   }
 
   const handleBlur = () => {
@@ -102,7 +85,7 @@ export function DocSearch() {
           ) : (
             <ul className="divide-y divide-slate-100">
               {results.map((result) => (
-                <li key={result.id}>
+                <li key={result.key}>
                   <button
                     type="button"
                     onClick={() => handleResultClick(result)}
@@ -115,7 +98,7 @@ export function DocSearch() {
                           {result.title}
                         </p>
                         <p className="text-xs text-cyan-700 mb-1">
-                          {result.category_name}
+                          {result.categoryName}
                         </p>
                         {result.excerpt && (
                           <p className="text-xs text-slate-500 line-clamp-2">

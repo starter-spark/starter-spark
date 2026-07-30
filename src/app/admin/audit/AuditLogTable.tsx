@@ -551,8 +551,6 @@ const resourceLinks = new Map<string, (id: string) => string>([
   ['course', (id) => `/admin/learn/${id}`],
   ['module', () => `/admin/learn`],
   ['lesson', () => `/admin/learn`],
-  ['doc_category', () => `/admin/docs/categories`],
-  ['doc_page', (id) => `/admin/docs/${id}`],
   ['team_member', () => `/admin/cms/team_member`],
 ])
 

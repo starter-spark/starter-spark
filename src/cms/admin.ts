@@ -1,5 +1,5 @@
 import { cmsDb } from './db'
-import { typeSchema, type CmsType } from './registry'
+import { isCmsType, typeDefOf, typeSchema, type CmsType } from './registry'
 
 /**
  * Read helpers for the admin UI (server components only). Unlike the public
@@ -28,6 +28,8 @@ export interface AdminVersionSummary {
 }
 
 export interface AdminDocumentDetail {
+  /** cms_documents.id — attachments and other side tables key off it */
+  id: string
   key: string
   /** Draft-preferred data for editing; null only for never-saved singletons */
   data: Record<string, unknown> | null
@@ -78,6 +80,35 @@ export async function listCmsDocuments(
   })
 }
 
+/**
+ * The live entries a reference field can point at, as select options:
+ * every non-deleted entry of the referenced type (drafts included — an
+ * admin can wire up content before either side is published).
+ */
+export async function referenceOptionsFor(
+  type: CmsType,
+): Promise<Map<string, { value: string; label: string }[]>> {
+  const options = new Map<string, { value: string; label: string }[]>()
+  for (const [name, field] of Object.entries(typeDefOf(type).fields)) {
+    const ref = field.reference
+    if (!ref || !isCmsType(ref.type)) continue
+    const entries = await listCmsDocuments(ref.type)
+    options.set(
+      name,
+      entries.map((entry) => {
+        const label = entry.data
+          ? Object.entries(entry.data).find(([k]) => k === ref.labelField)?.[1]
+          : undefined
+        return {
+          value: entry.key,
+          label: typeof label === 'string' && label ? label : entry.key,
+        }
+      }),
+    )
+  }
+  return options
+}
+
 export async function getCmsDocumentDetail(
   type: CmsType,
   key: string,
@@ -106,6 +137,7 @@ export async function getCmsDocumentDetail(
   const parsed = editing ? typeSchema(type).safeParse(editing.data) : null
 
   return {
+    id: doc.id,
     key: doc.key,
     data: parsed?.success ? parsed.data : null,
     latestVersion: latest?.version ?? 0,

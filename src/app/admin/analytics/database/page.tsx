@@ -17,7 +17,6 @@ import {
   KeyRound,
   Calendar,
   MessageSquare,
-  FileText,
   BarChart3,
   ExternalLink,
   GraduationCap,
@@ -49,7 +48,6 @@ async function getDatabaseStats() {
     posts,
     comments,
     cmsDocuments,
-    docPages,
     lessonProgress,
     courses,
     lessons,
@@ -63,7 +61,6 @@ async function getDatabaseStats() {
     supabase.from('posts').select('id', { count: 'exact', head: true }),
     supabase.from('comments').select('id', { count: 'exact', head: true }),
     supabase.from('cms_documents').select('id', { count: 'exact', head: true }),
-    supabase.from('doc_pages').select('id', { count: 'exact', head: true }),
     supabase
       .from('lesson_progress')
       .select('id', { count: 'exact', head: true }),
@@ -83,7 +80,6 @@ async function getDatabaseStats() {
     posts: posts.count || 0,
     comments: comments.count || 0,
     cmsDocuments: cmsDocuments.count || 0,
-    docPages: docPages.count || 0,
     lessonProgress: lessonProgress.count || 0,
     courses: courses.count || 0,
     lessons: lessons.count || 0,
@@ -175,12 +171,6 @@ export default async function DatabaseAnalyticsPage() {
       icon: BarChart3,
       count: stats.lessonProgress,
       description: 'Learning progress records',
-    },
-    {
-      name: 'Doc Pages',
-      icon: FileText,
-      count: stats.docPages,
-      description: 'Documentation pages',
     },
     {
       name: 'Achievements',

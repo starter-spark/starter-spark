@@ -608,151 +608,37 @@ export type Database = {
       doc_attachments: {
         Row: {
           created_at: string | null
+          document_id: string
           file_size: number | null
           filename: string
           id: string
           mime_type: string | null
-          page_id: string
           storage_path: string
         }
         Insert: {
           created_at?: string | null
+          document_id: string
           file_size?: number | null
           filename: string
           id?: string
           mime_type?: string | null
-          page_id: string
           storage_path: string
         }
         Update: {
           created_at?: string | null
+          document_id?: string
           file_size?: number | null
           filename?: string
           id?: string
           mime_type?: string | null
-          page_id?: string
           storage_path?: string
         }
         Relationships: [
           {
-            foreignKeyName: 'doc_attachments_page_id_fkey'
-            columns: ['page_id']
+            foreignKeyName: 'doc_attachments_document_id_fkey'
+            columns: ['document_id']
             isOneToOne: false
-            referencedRelation: 'doc_pages'
-            referencedColumns: ['id']
-          },
-        ]
-      }
-      doc_categories: {
-        Row: {
-          created_at: string | null
-          description: string | null
-          icon: string | null
-          id: string
-          is_published: boolean | null
-          name: string
-          parent_id: string | null
-          slug: string
-          sort_order: number | null
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          description?: string | null
-          icon?: string | null
-          id?: string
-          is_published?: boolean | null
-          name: string
-          parent_id?: string | null
-          slug: string
-          sort_order?: number | null
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          description?: string | null
-          icon?: string | null
-          id?: string
-          is_published?: boolean | null
-          name?: string
-          parent_id?: string | null
-          slug?: string
-          sort_order?: number | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'doc_categories_parent_id_fkey'
-            columns: ['parent_id']
-            isOneToOne: false
-            referencedRelation: 'doc_categories'
-            referencedColumns: ['id']
-          },
-        ]
-      }
-      doc_pages: {
-        Row: {
-          category_id: string
-          content: string | null
-          created_at: string | null
-          created_by: string | null
-          excerpt: string | null
-          id: string
-          is_published: boolean | null
-          slug: string
-          sort_order: number | null
-          title: string
-          updated_at: string | null
-          updated_by: string | null
-        }
-        Insert: {
-          category_id: string
-          content?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          excerpt?: string | null
-          id?: string
-          is_published?: boolean | null
-          slug: string
-          sort_order?: number | null
-          title: string
-          updated_at?: string | null
-          updated_by?: string | null
-        }
-        Update: {
-          category_id?: string
-          content?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          excerpt?: string | null
-          id?: string
-          is_published?: boolean | null
-          slug?: string
-          sort_order?: number | null
-          title?: string
-          updated_at?: string | null
-          updated_by?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'doc_pages_category_id_fkey'
-            columns: ['category_id']
-            isOneToOne: false
-            referencedRelation: 'doc_categories'
-            referencedColumns: ['id']
-          },
-          {
-            foreignKeyName: 'doc_pages_created_by_fkey'
-            columns: ['created_by']
-            isOneToOne: false
-            referencedRelation: 'profiles'
-            referencedColumns: ['id']
-          },
-          {
-            foreignKeyName: 'doc_pages_updated_by_fkey'
-            columns: ['updated_by']
-            isOneToOne: false
-            referencedRelation: 'profiles'
+            referencedRelation: 'cms_documents'
             referencedColumns: ['id']
           },
         ]
@@ -2178,18 +2064,6 @@ export type Database = {
       record_article_feedback: {
         Args: { article_id: string; is_helpful: boolean }
         Returns: undefined
-      }
-      search_docs: {
-        Args: { result_limit?: number; search_query: string }
-        Returns: {
-          category_name: string
-          category_slug: string
-          excerpt: string
-          id: string
-          rank: number
-          slug: string
-          title: string
-        }[]
       }
       track_teapot_view: { Args: never; Returns: number }
       unban_user_from_forums: {

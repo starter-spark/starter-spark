@@ -6,11 +6,14 @@ import { createClient } from '@/lib/supabase/server'
 import { requireAdminOrStaff } from '@/lib/auth'
 import { logAuditEvent } from '@/lib/audit'
 import type { Json } from '@/lib/supabase/database.types'
+import { listCmsDocuments } from './admin'
 import { cmsDb, type CmsDocumentRow } from './db'
 import { cmsTag } from './content'
 import {
   cmsRegistry,
+  cmsTypeNames,
   isCmsType,
+  typeDefOf,
   typeSchema,
   type CmsType,
   type TypeDef,
@@ -80,6 +83,67 @@ function revalidate(type: CmsType, key: string) {
 }
 
 /**
+ * Reference-field integrity. Drafts may leave a reference unset ('' — new
+ * entries start empty) and may point at unpublished entries, but publishing
+ * requires a published target — otherwise "Published" would lie: the public
+ * page only renders when the whole reference chain is live.
+ */
+async function referenceProblem(
+  def: TypeDef,
+  data: unknown,
+  mode: 'save' | 'publish',
+): Promise<string | null> {
+  if (typeof data !== 'object' || data === null) return null
+  const values = new Map(Object.entries(data as Record<string, unknown>))
+  for (const [name, field] of Object.entries(def.fields)) {
+    const ref = field.reference
+    if (!ref) continue
+    const value = values.get(name)
+    if (typeof value !== 'string' || value === '') {
+      if (mode === 'publish') {
+        return `Set a ${field.label.toLowerCase()} before publishing`
+      }
+      continue
+    }
+    const target = isCmsType(ref.type)
+      ? await loadDocument(ref.type, value)
+      : null
+    if (!target) {
+      return `${field.label} "${value}" does not exist`
+    }
+    if (mode === 'publish' && !target.published_version_id) {
+      return `Publish ${field.label.toLowerCase()} "${value}" before publishing this entry`
+    }
+  }
+  return null
+}
+
+/**
+ * Live entries (draft or published) whose reference fields point at this
+ * key. Deleting a referenced entry is the only way a reference could
+ * dangle, so deleteCmsEntry blocks on a non-zero count.
+ */
+async function liveReferenceCount(
+  targetType: CmsType,
+  targetKey: string,
+): Promise<number> {
+  let count = 0
+  for (const type of cmsTypeNames) {
+    for (const [name, field] of Object.entries(typeDefOf(type).fields)) {
+      if (field.reference?.type !== targetType) continue
+      const docs = await listCmsDocuments(type)
+      for (const doc of docs) {
+        const value = doc.data
+          ? Object.entries(doc.data).find(([k]) => k === name)?.[1]
+          : undefined
+        if (value === targetKey) count += 1
+      }
+    }
+  }
+  return count
+}
+
+/**
  * Save a draft. For existing documents, `baseVersion` must be the latest
  * version the editor loaded — a stale save returns `conflict` instead of
  * silently clobbering someone else's work. Pass `key: null` to create a new
@@ -114,6 +178,13 @@ export async function saveCmsDraft(input: {
   }
 
   try {
+    const referenceError = await referenceProblem(
+      def as TypeDef,
+      parsed.data,
+      'save',
+    )
+    if (referenceError) return { success: false, error: referenceError }
+
     let key = input.key
     let documentId: string
 
@@ -255,12 +326,19 @@ export async function publishCmsVersion(input: {
     // The target version must belong to this document
     const { data: version, error: versionError } = await cmsDb
       .from('cms_versions')
-      .select('id, version')
+      .select('id, version, data')
       .eq('id', targetVersionId)
       .eq('document_id', doc.id)
       .maybeSingle()
     if (versionError) return { success: false, error: versionError.message }
     if (!version) return { success: false, error: 'Version not found' }
+
+    const referenceError = await referenceProblem(
+      typeDefOf(type),
+      version.data,
+      'publish',
+    )
+    if (referenceError) return { success: false, error: referenceError }
 
     const clearDraft = doc.draft_version_id === targetVersionId
     const { error: updateError } = await cmsDb
@@ -342,6 +420,17 @@ export async function deleteCmsEntry(input: {
   try {
     const doc = await loadDocument(input.type, input.key)
     if (!doc) return { success: false, error: 'Entry not found' }
+
+    const referencedBy = await liveReferenceCount(input.type, input.key)
+    if (referencedBy > 0) {
+      return {
+        success: false,
+        error:
+          referencedBy === 1
+            ? 'Cannot delete: 1 entry references this one. Point it at something else first.'
+            : `Cannot delete: ${referencedBy} entries reference this one. Point them at something else first.`,
+      }
+    }
 
     const { error } = await cmsDb
       .from('cms_documents')

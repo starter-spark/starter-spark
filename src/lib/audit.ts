@@ -51,18 +51,6 @@ export type AuditAction =
   | 'lesson.updated'
   | 'lesson.deleted'
   | 'lesson.reordered'
-  // Docs
-  | 'doc_category.created'
-  | 'doc_category.updated'
-  | 'doc_category.deleted'
-  | 'doc_page.created'
-  | 'doc_page.updated'
-  | 'doc_page.deleted'
-  | 'doc_page.published'
-  | 'doc_page.unpublished'
-  | 'doc_attachment.uploaded'
-  | 'doc_attachment.deleted'
-  // Team
   // CMS engine
   | 'cms.draft_saved'
   | 'cms.published'
@@ -70,6 +58,8 @@ export type AuditAction =
   | 'cms.draft_discarded'
   | 'cms.entry_deleted'
   | 'cms.reordered'
+  | 'cms.attachment_uploaded'
+  | 'cms.attachment_deleted'
 
 export type AuditResourceType =
   | 'user'
@@ -84,9 +74,6 @@ export type AuditResourceType =
   | 'course'
   | 'module'
   | 'lesson'
-  | 'doc_category'
-  | 'doc_page'
-  | 'doc_attachment'
   | 'cms_document'
 
 interface AuditLogParams {

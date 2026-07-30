@@ -34,6 +34,12 @@ export interface FieldDef {
   help?: string
   /** For widget 'select' */
   options?: { value: string; label: string }[]
+  /**
+   * Cross-collection reference: the value is an entry key of another type.
+   * Rendered as a select whose options are that collection's live entries;
+   * a non-empty value must exist to save, and publishing requires one.
+   */
+  reference?: { type: string; labelField: string }
 }
 
 export interface TypeDef {
@@ -50,6 +56,8 @@ export interface TypeDef {
    * public URL slug) instead of getting a generated one.
    */
   keyed?: boolean
+  /** Documents of this type can carry uploaded file attachments. */
+  attachments?: boolean
 }
 
 export const cmsRegistry = {
@@ -1056,6 +1064,78 @@ export const cmsRegistry = {
     },
     listFields: ['title'],
   },
+  doc_category: {
+    kind: 'collection',
+    label: 'Docs · Categories',
+    description:
+      'Documentation sections. The entry key is the URL slug: each category lists its articles at /docs/{slug}.',
+    keyed: true,
+    fields: {
+      name: {
+        schema: z.string().min(1).max(120),
+        label: 'Name',
+        widget: 'input',
+      },
+      description: {
+        schema: z.string().max(500).default(''),
+        label: 'Description',
+        widget: 'textarea',
+      },
+      icon: {
+        schema: z
+          .enum(['Rocket', 'Cpu', 'Zap', 'Wrench', 'Book', 'BookOpen'])
+          .default('BookOpen'),
+        label: 'Icon',
+        widget: 'select',
+        options: [
+          { value: 'Rocket', label: 'Rocket' },
+          { value: 'Cpu', label: 'Chip' },
+          { value: 'Zap', label: 'Lightning' },
+          { value: 'Wrench', label: 'Wrench' },
+          { value: 'Book', label: 'Book' },
+          { value: 'BookOpen', label: 'Open book' },
+        ],
+      },
+    },
+    listFields: ['name', 'icon'],
+    orderable: true,
+  },
+  doc_page: {
+    kind: 'collection',
+    label: 'Docs · Articles',
+    description:
+      'Documentation articles. The entry key is the URL slug: articles render at /docs/{category}/{slug}.',
+    keyed: true,
+    attachments: true,
+    fields: {
+      title: {
+        schema: z.string().min(1).max(200),
+        label: 'Title',
+        widget: 'input',
+      },
+      category: {
+        schema: z.string().default(''),
+        label: 'Category',
+        widget: 'select',
+        reference: { type: 'doc_category', labelField: 'name' },
+        help: 'A draft can be uncategorized; publishing requires a category',
+      },
+      excerpt: {
+        schema: z.string().max(500).default(''),
+        label: 'Excerpt',
+        widget: 'textarea',
+        help: 'Short summary shown in category lists and search results',
+      },
+      body: {
+        schema: z.string().max(100000).default(''),
+        label: 'Body',
+        widget: 'textarea',
+        help: 'Markdown. Empty shows a "being written" placeholder.',
+      },
+    },
+    listFields: ['title', 'category'],
+    orderable: true,
+  },
   about_page: {
     kind: 'singleton',
     label: 'About page',
@@ -1121,6 +1201,13 @@ export type CmsData<T extends CmsType> = z.infer<z.ZodObject<FieldSchemas<T>>>
 
 export function isCmsType(value: string): value is CmsType {
   return value in cmsRegistry
+}
+
+const typeDefs = new Map<string, TypeDef>(Object.entries(cmsRegistry))
+
+/** A type's definition without the const-literal narrowing. */
+export function typeDefOf(type: CmsType): TypeDef {
+  return typeDefs.get(type) as TypeDef
 }
 
 export const cmsTypeNames = Object.keys(cmsRegistry) as CmsType[]

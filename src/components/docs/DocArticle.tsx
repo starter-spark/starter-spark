@@ -12,7 +12,17 @@ import { cn } from '@/lib/utils'
 import { formatFileSize } from '@/lib/file-size'
 import { safeMarkdownUrlTransform } from '@/lib/safe-url'
 import { createMarkdownComponents } from '@/components/markdown/markdown-components'
-import type { DocAttachment, DocNavPage, DocCategoryInfo } from '@/lib/docs'
+import type { CmsAttachment } from '@/cms/attachments'
+
+export interface DocCategoryInfo {
+  name: string
+  slug: string
+}
+
+export interface DocNavPage {
+  title: string
+  slug: string
+}
 
 const proseClassName = cn(
   'prose',
@@ -133,7 +143,7 @@ export function DocContent({ content }: DocContentProps) {
 }
 
 interface DocAttachmentsProps {
-  attachments: DocAttachment[]
+  attachments: CmsAttachment[]
 }
 
 export function DocAttachments({ attachments }: DocAttachmentsProps) {
@@ -155,9 +165,9 @@ export function DocAttachments({ attachments }: DocAttachmentsProps) {
               <p className="font-mono text-sm text-slate-900 truncate">
                 {attachment.filename}
               </p>
-              {attachment.file_size && (
+              {attachment.fileSize !== null && (
                 <p className="text-xs text-slate-500">
-                  {formatFileSize(attachment.file_size)}
+                  {formatFileSize(attachment.fileSize)}
                 </p>
               )}
             </div>

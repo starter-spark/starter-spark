@@ -1,4 +1,3 @@
-import { createClient } from '@/lib/supabase/server'
 import type { ComponentType } from 'react'
 import {
   BookOpen,
@@ -11,8 +10,8 @@ import {
   Search,
 } from 'lucide-react'
 import Link from 'next/link'
+import { getCollection } from '@/cms/content'
 import { DocSearch } from './DocSearch'
-import { fetchDocCategories, type DocCategoryListItem } from '@/lib/docs'
 
 export const metadata = {
   title: 'Documentation - StarterSpark Robotics',
@@ -31,19 +30,23 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 }
 
 export default async function DocsPage() {
-  const supabase = await createClient()
+  const [categories, pages] = await Promise.all([
+    getCollection('doc_category'),
+    getCollection('doc_page'),
+  ])
 
-  // Fetch published categories with their published pages
-  const categories = await fetchDocCategories(supabase)
-
-  // Filter to only show categories that have published pages OR use all if no pages yet
-  const typedCategories = categories
-
-  // Count total pages
-  const totalPages = typedCategories.reduce(
-    (acc, cat) => acc + (cat.pages?.length || 0),
-    0,
+  // Articles are reachable only through a published category
+  const categoryKeys = new Set(categories.map((category) => category.key))
+  const reachablePages = pages.filter((page) =>
+    categoryKeys.has(page.data.category),
   )
+  const countByCategory = new Map<string, number>()
+  for (const page of reachablePages) {
+    countByCategory.set(
+      page.data.category,
+      (countByCategory.get(page.data.category) ?? 0) + 1,
+    )
+  }
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -85,9 +88,12 @@ export default async function DocsPage() {
           <div className="flex flex-wrap gap-4 mt-6">
             <DocStatCard
               icon={BookOpen}
-              label={`${typedCategories.length} Categories`}
+              label={`${categories.length} Categories`}
             />
-            <DocStatCard icon={Search} label={`${totalPages} Articles`} />
+            <DocStatCard
+              icon={Search}
+              label={`${reachablePages.length} Articles`}
+            />
           </div>
         </header>
 
@@ -98,7 +104,7 @@ export default async function DocsPage() {
             <h2 id="categories-heading" className="sr-only">
               Documentation Categories
             </h2>
-            {typedCategories.length === 0 ? (
+            {categories.length === 0 ? (
               <div className="text-center py-16 bg-white rounded border border-slate-200">
                 <BookOpen className="w-12 h-12 mx-auto text-slate-300 mb-4" />
                 <h3 className="font-mono text-xl text-slate-900 mb-2">
@@ -111,8 +117,15 @@ export default async function DocsPage() {
               </div>
             ) : (
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {typedCategories.map((category) => (
-                  <DocCategoryCard key={category.id} category={category} />
+                {categories.map((category) => (
+                  <DocCategoryCard
+                    key={category.key}
+                    slug={category.key}
+                    name={category.data.name}
+                    description={category.data.description}
+                    icon={category.data.icon}
+                    pageCount={countByCategory.get(category.key) ?? 0}
+                  />
                 ))}
               </div>
             )}
@@ -163,13 +176,24 @@ function DocStatCard({
   )
 }
 
-function DocCategoryCard({ category }: { category: DocCategoryListItem }) {
-  const Icon = iconMap[category.icon || 'BookOpen'] || BookOpen
-  const pageCount = category.pages?.length || 0
+function DocCategoryCard({
+  slug,
+  name,
+  description,
+  icon,
+  pageCount,
+}: {
+  slug: string
+  name: string
+  description: string
+  icon: string
+  pageCount: number
+}) {
+  const Icon = iconMap[icon || 'BookOpen'] || BookOpen
 
   return (
     <Link
-      href={`/docs/${category.slug}`}
+      href={`/docs/${slug}`}
       className="group block bg-white rounded border border-slate-200 hover:border-cyan-300 transition-all overflow-hidden"
     >
       <div className="p-6">
@@ -180,10 +204,10 @@ function DocCategoryCard({ category }: { category: DocCategoryListItem }) {
           <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-cyan-600 transition-colors" />
         </div>
         <h3 className="font-mono text-lg text-slate-900 mb-2 group-hover:text-cyan-700 transition-colors">
-          {category.name}
+          {name}
         </h3>
         <p className="text-sm text-slate-600 mb-4 line-clamp-2">
-          {category.description || 'Explore articles in this category'}
+          {description || 'Explore articles in this category'}
         </p>
         <p className="text-xs font-mono text-slate-500">
           {pageCount} {pageCount === 1 ? 'article' : 'articles'}
