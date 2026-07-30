@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
+import { isoToLocalDatetimeInput } from '@/lib/datetime'
 import type { SerializedField } from '../../lib'
 
 export interface CmsHistoryRow {
@@ -305,6 +306,21 @@ export function CmsDocumentEditor({
                             setField(
                               field.name,
                               Number.isNaN(parsed) ? 0 : parsed,
+                            )
+                          }}
+                        />
+                      ) : field.widget === 'datetime' ? (
+                        <Input
+                          id={inputId}
+                          type="datetime-local"
+                          value={isoToLocalDatetimeInput(asText(value))}
+                          onChange={(e) => {
+                            // Stored as ISO (UTC); empty clears the bound
+                            setField(
+                              field.name,
+                              e.target.value === ''
+                                ? ''
+                                : new Date(e.target.value).toISOString(),
                             )
                           }}
                         />

@@ -2,7 +2,7 @@ import { Suspense } from 'react'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { CartSheet } from '@/components/commerce'
-import { SiteBanner } from '@/components/layout/SiteBanner'
+import { SiteBannerWrapper } from '@/components/layout/SiteBannerWrapper'
 import { createClient } from '@/lib/supabase/server'
 import { Skeleton } from '@/components/ui/skeleton'
 
@@ -82,7 +82,7 @@ export default function MarketingLayout({
       >
         Skip to main content
       </a>
-      <SiteBanner />
+      <SiteBannerWrapper />
       <Suspense fallback={<HeaderSkeleton />}>
         <HeaderWithUser />
       </Suspense>

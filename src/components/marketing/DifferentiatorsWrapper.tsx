@@ -1,21 +1,24 @@
-import { getSingleton } from '@/cms/content'
+import { getCollection, getSingleton } from '@/cms/content'
 import { DifferentiatorsSection } from './Differentiators'
 
 export async function DifferentiatorsWrapper() {
-  const copy = await getSingleton('home_differentiators')
+  const [copy, cards] = await Promise.all([
+    getSingleton('home_differentiators'),
+    getCollection('differentiator_card'),
+  ])
 
   return (
     <DifferentiatorsSection
       title={copy.title}
       description={copy.description}
-      card1Title={copy.card1Title}
-      card1Description={copy.card1Description}
-      card2Title={copy.card2Title}
-      card2Description={copy.card2Description}
-      card3Title={copy.card3Title}
-      card3Description={copy.card3Description}
-      card4Title={copy.card4Title}
-      card4Description={copy.card4Description}
+      cards={cards
+        .filter((c) => c.data.visible)
+        .map((c) => ({
+          key: c.key,
+          title: c.data.title,
+          description: c.data.description,
+          icon: c.data.icon,
+        }))}
     />
   )
 }

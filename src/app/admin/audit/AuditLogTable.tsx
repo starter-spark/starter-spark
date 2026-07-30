@@ -535,7 +535,7 @@ const resourceLinks = new Map<string, (id: string) => string>([
   ['lesson', () => `/admin/learn`],
   ['doc_category', () => `/admin/docs/categories`],
   ['doc_page', (id) => `/admin/docs/${id}`],
-  ['team_member', () => `/admin/content/team`],
+  ['team_member', () => `/admin/cms/team_member`],
 ])
 
 function formatDate(dateStr: string | null): string {

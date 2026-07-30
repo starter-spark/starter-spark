@@ -16,6 +16,16 @@ export type FieldWidget =
   | 'number'
   | 'checkbox'
   | 'select'
+  | 'datetime'
+
+/** ISO timestamp or empty string; the admin edits it as a local datetime. */
+const optionalInstant = () =>
+  z
+    .string()
+    .default('')
+    .refine((v) => v === '' || !Number.isNaN(Date.parse(v)), {
+      message: 'Invalid date',
+    })
 
 export interface FieldDef {
   schema: z.ZodType
@@ -226,7 +236,8 @@ export const cmsRegistry = {
   home_differentiators: {
     kind: 'singleton',
     label: 'Homepage · Why StarterSpark',
-    description: 'The four "why us" cards on the homepage.',
+    description:
+      'Heading for the "why us" section. The cards themselves are the Differentiator Cards collection.',
     fields: {
       title: {
         schema: z.string().min(1).max(200).default('Why StarterSpark?'),
@@ -242,75 +253,200 @@ export const cmsRegistry = {
         label: 'Description',
         widget: 'textarea',
       },
-      card1Title: {
-        schema: z.string().min(1).max(200).default('Complete Package'),
-        label: 'Card 1 title',
+    },
+  },
+  differentiator_card: {
+    kind: 'collection',
+    label: 'Differentiator Cards',
+    description:
+      'The "why us" cards on the homepage. Insert as many as you like; the grid renders every visible card in order.',
+    fields: {
+      title: {
+        schema: z.string().min(1).max(200),
+        label: 'Title',
         widget: 'input',
       },
-      card1Description: {
-        schema: z
-          .string()
-          .min(1)
-          .max(2000)
-          .default(
-            'Everything you need in one box: pre-cut parts, electronics, fasteners, and our step-by-step digital curriculum. No hunting for components or compatibility issues.',
-          ),
-        label: 'Card 1 description',
+      description: {
+        schema: z.string().min(1).max(2000),
+        label: 'Description',
         widget: 'textarea',
       },
-      card2Title: {
-        schema: z.string().min(1).max(200).default('Interactive Curriculum'),
-        label: 'Card 2 title',
-        widget: 'input',
-      },
-      card2Description: {
+      icon: {
         schema: z
-          .string()
-          .min(1)
-          .max(2000)
-          .default(
-            'The platform has interactive wiring diagrams, a built-in code editor, and progress tracking across lessons. You can see where every wire goes before you touch anything, which honestly saves a lot of frustration.',
-          ),
-        label: 'Card 2 description',
-        widget: 'textarea',
+          .enum([
+            'package',
+            'graduation-cap',
+            'users',
+            'map-pin',
+            'wrench',
+            'heart',
+            'zap',
+            'shield',
+          ])
+          .default('package'),
+        label: 'Icon',
+        widget: 'select',
+        options: [
+          { value: 'package', label: 'Package' },
+          { value: 'graduation-cap', label: 'Graduation cap' },
+          { value: 'users', label: 'People' },
+          { value: 'map-pin', label: 'Map pin' },
+          { value: 'wrench', label: 'Wrench' },
+          { value: 'heart', label: 'Heart' },
+          { value: 'zap', label: 'Lightning' },
+          { value: 'shield', label: 'Shield' },
+        ],
       },
-      card3Title: {
-        schema: z
-          .string()
-          .min(1)
-          .max(200)
-          .default('Support for Schools and Clubs'),
-        label: 'Card 3 title',
-        widget: 'input',
-      },
-      card3Description: {
-        schema: z
-          .string()
-          .min(1)
-          .max(2000)
-          .default(
-            "We offer bulk discounts for schools and clubs, and the kits come classroom-ready so you don't have to figure out sourcing. If you're trying to set up a robotics program and don't know where to start, just email us.",
-          ),
-        label: 'Card 3 description',
-        widget: 'textarea',
-      },
-      card4Title: {
-        schema: z.string().min(1).max(200).default('Hawaii Roots'),
-        label: 'Card 4 title',
-        widget: 'input',
-      },
-      card4Description: {
-        schema: z
-          .string()
-          .min(1)
-          .max(2000)
-          .default(
-            "We're students from Hawaii who couldn't find a good beginner robotics kit, so we built one. Everything was tested by real students before we shipped anything.",
-          ),
-        label: 'Card 4 description',
-        widget: 'textarea',
+      visible: {
+        schema: z.boolean().default(true),
+        label: 'Visible',
+        widget: 'checkbox',
       },
     },
+    listFields: ['title', 'icon', 'visible'],
+    orderable: true,
+  },
+  team_member: {
+    kind: 'collection',
+    label: 'Team Members',
+    description:
+      'Profiles shown on the About page, in order. Hide someone with the visible toggle instead of deleting them.',
+    fields: {
+      name: {
+        schema: z.string().min(1).max(120),
+        label: 'Name',
+        widget: 'input',
+      },
+      role: {
+        schema: z.string().min(1).max(120),
+        label: 'Role',
+        widget: 'input',
+      },
+      bio: {
+        schema: z.string().max(2000).default(''),
+        label: 'Bio',
+        widget: 'textarea',
+      },
+      imageUrl: {
+        schema: z.string().max(500).default(''),
+        label: 'Photo URL',
+        widget: 'input',
+        help: 'Link to a hosted photo; empty shows the initials avatar',
+      },
+      githubUrl: {
+        schema: z.string().max(300).default(''),
+        label: 'GitHub URL',
+        widget: 'input',
+      },
+      linkedinUrl: {
+        schema: z.string().max(300).default(''),
+        label: 'LinkedIn URL',
+        widget: 'input',
+      },
+      twitterUrl: {
+        schema: z.string().max(300).default(''),
+        label: 'Twitter/X URL',
+        widget: 'input',
+      },
+      visible: {
+        schema: z.boolean().default(true),
+        label: 'Visible',
+        widget: 'checkbox',
+      },
+    },
+    listFields: ['name', 'role', 'visible'],
+    orderable: true,
+  },
+  banner: {
+    kind: 'collection',
+    label: 'Banners',
+    description:
+      'Site-wide announcement bars. Scheduling, page targeting, and dismissal are all per-banner.',
+    fields: {
+      title: {
+        schema: z.string().min(1).max(200),
+        label: 'Title',
+        widget: 'input',
+        help: 'Internal label; not shown on the site',
+      },
+      message: {
+        schema: z.string().min(1).max(500),
+        label: 'Message',
+        widget: 'input',
+      },
+      colorScheme: {
+        schema: z
+          .enum([
+            'info',
+            'warning',
+            'success',
+            'error',
+            'sale',
+            'promo',
+            'announcement',
+            'gift',
+          ])
+          .default('info'),
+        label: 'Style',
+        widget: 'select',
+        options: [
+          { value: 'info', label: 'Info (cyan)' },
+          { value: 'warning', label: 'Warning (amber)' },
+          { value: 'success', label: 'Success (green)' },
+          { value: 'error', label: 'Error (red)' },
+          { value: 'sale', label: 'Sale (rose)' },
+          { value: 'promo', label: 'Promo (violet)' },
+          { value: 'announcement', label: 'Announcement (slate)' },
+          { value: 'gift', label: 'Gift (emerald)' },
+        ],
+      },
+      linkText: {
+        schema: z.string().max(100).default(''),
+        label: 'Link text',
+        widget: 'input',
+      },
+      linkUrl: {
+        schema: z.string().max(500).default(''),
+        label: 'Link URL',
+        widget: 'input',
+      },
+      dismissible: {
+        schema: z.boolean().default(true),
+        label: 'Dismissible',
+        widget: 'checkbox',
+      },
+      dismissHours: {
+        schema: z.number().int().min(0).default(0),
+        label: 'Reappear after (hours)',
+        widget: 'number',
+        help: '0 = a dismissed banner stays dismissed forever',
+      },
+      pages: {
+        schema: z.string().min(1).default('*'),
+        label: 'Pages',
+        widget: 'input',
+        help: '"*" for every page, or comma-separated paths like /shop, /cart',
+      },
+      startsAt: {
+        schema: optionalInstant(),
+        label: 'Starts at',
+        widget: 'datetime',
+        help: 'Empty = immediately',
+      },
+      endsAt: {
+        schema: optionalInstant(),
+        label: 'Ends at',
+        widget: 'datetime',
+        help: 'Empty = never',
+      },
+      visible: {
+        schema: z.boolean().default(true),
+        label: 'Visible',
+        widget: 'checkbox',
+      },
+    },
+    listFields: ['title', 'colorScheme', 'visible'],
+    orderable: true,
   },
   home_learning: {
     kind: 'singleton',

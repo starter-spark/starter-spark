@@ -39,12 +39,6 @@ export type AuditAction =
   | 'stats.updated'
   | 'stats.deleted'
   // Banners
-  | 'banner.created'
-  | 'banner.updated'
-  | 'banner.deleted'
-  | 'banner.duplicated'
-  | 'banner.activated'
-  | 'banner.deactivated'
   // Learning
   | 'course.created'
   | 'course.updated'
@@ -67,10 +61,6 @@ export type AuditAction =
   | 'doc_page.published'
   | 'doc_page.unpublished'
   // Team
-  | 'team_member.created'
-  | 'team_member.updated'
-  | 'team_member.deleted'
-  | 'team_member.reordered'
   // CMS engine
   | 'cms.draft_saved'
   | 'cms.published'
@@ -89,13 +79,11 @@ export type AuditResourceType =
   | 'review'
   | 'settings'
   | 'stats'
-  | 'banner'
   | 'course'
   | 'module'
   | 'lesson'
   | 'doc_category'
   | 'doc_page'
-  | 'team_member'
   | 'cms_document'
 
 interface AuditLogParams {

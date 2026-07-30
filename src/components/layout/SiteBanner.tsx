@@ -16,17 +16,16 @@ import { motion, AnimatePresence } from 'motion/react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
-interface Banner {
+export interface BannerProps {
   id: string
-  title: string
   message: string
-  link_url: string | null
-  link_text: string | null
-  icon: string | null
-  color_scheme: string
+  colorScheme: string
+  linkText: string
+  linkUrl: string
+  dismissible: boolean
+  /** 0 = a dismissed banner stays dismissed forever */
+  dismissHours: number
   pages: string[]
-  is_dismissible: boolean
-  dismiss_duration_hours: number | null
 }
 
 // Status banners: system messages.
@@ -114,23 +113,19 @@ function getDismissKey(bannerId: string) {
   return `banner_dismissed_${bannerId}`
 }
 
-function isDismissed(
-  bannerId: string,
-  dismissDurationHours: number | null,
-): boolean {
+function isDismissed(bannerId: string, dismissHours: number): boolean {
   if (globalThis.window === undefined) return false
 
   const dismissedAt = localStorage.getItem(getDismissKey(bannerId))
   if (!dismissedAt) return false
 
-  // If dismiss_duration_hours is null, banner stays dismissed forever
-  if (dismissDurationHours === null) return true
+  // 0 hours = banner stays dismissed forever
+  if (dismissHours === 0) return true
 
-  // Check if enough time has passed
   const dismissedTime = Number.parseInt(dismissedAt, 10)
   const hoursSinceDismissed = (Date.now() - dismissedTime) / (1000 * 60 * 60)
 
-  return hoursSinceDismissed < dismissDurationHours
+  return hoursSinceDismissed < dismissHours
 }
 
 function dismissBanner(bannerId: string) {
@@ -139,7 +134,7 @@ function dismissBanner(bannerId: string) {
 }
 
 function shouldShowOnPage(pages: string[], currentPath: string): boolean {
-  // Show on all pages if pages array contains "*"
+  // Show on all pages if pages contains "*"
   if (pages.includes('*')) return true
 
   // Check exact match or prefix match (for nested routes)
@@ -168,121 +163,52 @@ function getSafeLinkUrl(linkUrl: string): string | null {
   return null
 }
 
-export function SiteBanner() {
-  const [banners, setBanners] = useState<Banner[]>([])
-  const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set())
-  const [isLoading, setIsLoading] = useState(true)
+export function SiteBanner({ banners }: { banners: BannerProps[] }) {
   const pathname = usePathname()
+  // Dismissal state lives in localStorage, so it only exists after mount;
+  // banners render dismissed-free on the server and hide on hydration.
+  const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set())
+  const [hasMounted, setHasMounted] = useState(false)
 
   useEffect(() => {
-    async function fetchBanners() {
-      try {
-        const response = await fetch('/api/site-banners', { cache: 'no-store' })
-        if (!response.ok) {
-          const payload: unknown = await response.json().catch(() => null)
-          const message =
-            typeof payload === 'object' &&
-            payload !== null &&
-            'error' in payload &&
-            typeof (payload as { error?: unknown }).error === 'string'
-              ? (payload as { error: string }).error
-              : 'Unknown error'
-          console.error('Failed to fetch banners:', message)
-          setIsLoading(false)
-          return
-        }
-        const data: unknown = await response.json().catch(() => [])
-        const rawBanners = Array.isArray(data) ? data : []
-
-        // Transform data to match Banner interface with defaults
-        const transformedBanners: Banner[] = rawBanners.flatMap((item) => {
-          if (!item || typeof item !== 'object') return []
-          const b = item as Partial<Banner>
-          if (
-            typeof b.id !== 'string' ||
-            typeof b.title !== 'string' ||
-            typeof b.message !== 'string'
-          ) {
-            return []
-          }
-
-          const pages = Array.isArray(b.pages)
-            ? b.pages.filter((page) => typeof page === 'string')
-            : []
-
-          return [
-            {
-              id: b.id,
-              title: b.title,
-              message: b.message,
-              link_url: typeof b.link_url === 'string' ? b.link_url : null,
-              link_text: typeof b.link_text === 'string' ? b.link_text : null,
-              icon: typeof b.icon === 'string' ? b.icon : null,
-              color_scheme:
-                typeof b.color_scheme === 'string' && b.color_scheme
-                  ? b.color_scheme
-                  : 'info',
-              pages,
-              is_dismissible:
-                typeof b.is_dismissible === 'boolean' ? b.is_dismissible : true,
-              dismiss_duration_hours:
-                typeof b.dismiss_duration_hours === 'number'
-                  ? b.dismiss_duration_hours
-                  : null,
-            },
-          ]
-        })
-
-        setBanners(transformedBanners)
-
-        // Check which banners are already dismissed
-        const dismissed = new Set<string>()
-        for (const banner of transformedBanners) {
-          if (isDismissed(banner.id, banner.dismiss_duration_hours)) {
-            dismissed.add(banner.id)
-          }
-        }
-        setDismissedIds(dismissed)
-        setIsLoading(false)
-        return
-      } catch (error) {
-        console.error('Failed to fetch banners:', error)
-        setIsLoading(false)
-        return
+    const dismissed = new Set<string>()
+    for (const banner of banners) {
+      if (isDismissed(banner.id, banner.dismissHours)) {
+        dismissed.add(banner.id)
       }
     }
-
-    void fetchBanners()
-  }, [])
+    setDismissedIds(dismissed)
+    setHasMounted(true)
+  }, [banners])
 
   const handleDismiss = (bannerId: string) => {
     dismissBanner(bannerId)
     setDismissedIds((prev) => new Set([...prev, bannerId]))
   }
 
-  // Filter banners for current page and not dismissed
+  // Before mount we can't know what's dismissed; render nothing dismissed and
+  // let hydration reconcile (matches the server-rendered HTML).
   const visibleBanners = banners.filter(
     (banner) =>
-      shouldShowOnPage(banner.pages, pathname) && !dismissedIds.has(banner.id),
+      shouldShowOnPage(banner.pages, pathname) &&
+      (!hasMounted || !dismissedIds.has(banner.id)),
   )
 
-  if (isLoading || visibleBanners.length === 0) {
+  if (visibleBanners.length === 0) {
     return null
   }
 
   return (
     <AnimatePresence>
       {visibleBanners.map((banner) => {
-        const scheme = COLOR_SCHEMES[banner.color_scheme] || COLOR_SCHEMES.info
+        const scheme = COLOR_SCHEMES[banner.colorScheme] || COLOR_SCHEMES.info
         const IconComponent = scheme.icon
-        const safeLinkUrl = banner.link_url
-          ? getSafeLinkUrl(banner.link_url)
-          : null
+        const safeLinkUrl = getSafeLinkUrl(banner.linkUrl)
 
         return (
           <motion.div
             key={banner.id}
-            initial={{ height: 0 }}
+            initial={false}
             animate={{ height: 'auto' }}
             exit={{ height: 0 }}
             transition={{ duration: 0.3, ease: 'easeOut' }}
@@ -299,16 +225,16 @@ export function SiteBanner() {
                   </p>
                 </div>
 
-                {safeLinkUrl && banner.link_text && (
+                {safeLinkUrl && banner.linkText && (
                   <Link
                     href={safeLinkUrl}
                     className={`text-sm font-semibold underline underline-offset-2 hover:no-underline transition-colors ${scheme.linkStyle}`}
                   >
-                    {banner.link_text}
+                    {banner.linkText}
                   </Link>
                 )}
 
-                {banner.is_dismissible && (
+                {banner.dismissible && (
                   <button
                     onClick={() => {
                       handleDismiss(banner.id)

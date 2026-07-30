@@ -41,6 +41,7 @@ import {
 } from '../actions'
 import { MediaUploader, type MediaItem } from '@/components/admin/MediaUploader'
 import { type Database } from '@/lib/supabase/database.types'
+import { isoToLocalDatetimeInput } from '@/lib/datetime'
 import {
   AdminTextArea,
   adminLabelClass,
@@ -121,13 +122,6 @@ interface ProductFormProps {
 
 // datetime-local inputs read/write LOCAL wall-clock time; the stored value
 // is a UTC ISO string, so it must be converted (not sliced) for display.
-function isoToLocalDatetimeInput(iso: string): string {
-  const d = new Date(iso)
-  if (Number.isNaN(d.getTime())) return ''
-  const pad = (n: number) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
-}
-
 export function ProductForm({
   product,
   initialTags = [],

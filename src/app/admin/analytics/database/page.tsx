@@ -19,7 +19,6 @@ import {
   MessageSquare,
   FileText,
   BarChart3,
-  Megaphone,
   ExternalLink,
   GraduationCap,
   Trophy,
@@ -52,7 +51,6 @@ async function getDatabaseStats() {
     cmsDocuments,
     docPages,
     lessonProgress,
-    siteBanners,
     courses,
     lessons,
     achievements,
@@ -69,7 +67,6 @@ async function getDatabaseStats() {
     supabase
       .from('lesson_progress')
       .select('id', { count: 'exact', head: true }),
-    supabase.from('site_banners').select('id', { count: 'exact', head: true }),
     supabase.from('courses').select('id', { count: 'exact', head: true }),
     supabase.from('lessons').select('id', { count: 'exact', head: true }),
     supabase.from('achievements').select('id', { count: 'exact', head: true }),
@@ -88,7 +85,6 @@ async function getDatabaseStats() {
     cmsDocuments: cmsDocuments.count || 0,
     docPages: docPages.count || 0,
     lessonProgress: lessonProgress.count || 0,
-    siteBanners: siteBanners.count || 0,
     courses: courses.count || 0,
     lessons: lessons.count || 0,
     achievements: achievements.count || 0,
@@ -185,12 +181,6 @@ export default async function DatabaseAnalyticsPage() {
       icon: FileText,
       count: stats.docPages,
       description: 'Documentation pages',
-    },
-    {
-      name: 'Site Banners',
-      icon: Megaphone,
-      count: stats.siteBanners,
-      description: 'Site announcements',
     },
     {
       name: 'Achievements',

@@ -1563,66 +1563,6 @@ export type Database = {
         }
         Relationships: []
       }
-      site_banners: {
-        Row: {
-          color_scheme: string | null
-          created_at: string | null
-          created_by: string | null
-          dismiss_duration_hours: number | null
-          ends_at: string | null
-          icon: string | null
-          id: string
-          is_active: boolean | null
-          is_dismissible: boolean | null
-          link_text: string | null
-          link_url: string | null
-          message: string
-          pages: string[] | null
-          sort_order: number | null
-          starts_at: string | null
-          title: string
-          updated_at: string | null
-        }
-        Insert: {
-          color_scheme?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          dismiss_duration_hours?: number | null
-          ends_at?: string | null
-          icon?: string | null
-          id?: string
-          is_active?: boolean | null
-          is_dismissible?: boolean | null
-          link_text?: string | null
-          link_url?: string | null
-          message: string
-          pages?: string[] | null
-          sort_order?: number | null
-          starts_at?: string | null
-          title: string
-          updated_at?: string | null
-        }
-        Update: {
-          color_scheme?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          dismiss_duration_hours?: number | null
-          ends_at?: string | null
-          icon?: string | null
-          id?: string
-          is_active?: boolean | null
-          is_dismissible?: boolean | null
-          link_text?: string | null
-          link_url?: string | null
-          message?: string
-          pages?: string[] | null
-          sort_order?: number | null
-          starts_at?: string | null
-          title?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
       stripe_checkout_fulfillments: {
         Row: {
           attempt_count: number
@@ -1659,45 +1599,6 @@ export type Database = {
           stripe_event_id?: string | null
           stripe_session_id?: string
           updated_at?: string
-        }
-        Relationships: []
-      }
-      team_members: {
-        Row: {
-          bio: string | null
-          created_at: string | null
-          id: string
-          image_url: string | null
-          is_active: boolean | null
-          name: string
-          role: string
-          social_links: Json | null
-          sort_order: number | null
-          updated_at: string | null
-        }
-        Insert: {
-          bio?: string | null
-          created_at?: string | null
-          id?: string
-          image_url?: string | null
-          is_active?: boolean | null
-          name: string
-          role: string
-          social_links?: Json | null
-          sort_order?: number | null
-          updated_at?: string | null
-        }
-        Update: {
-          bio?: string | null
-          created_at?: string | null
-          id?: string
-          image_url?: string | null
-          is_active?: boolean | null
-          name?: string
-          role?: string
-          social_links?: Json | null
-          sort_order?: number | null
-          updated_at?: string | null
         }
         Relationships: []
       }

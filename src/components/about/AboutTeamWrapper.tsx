@@ -1,50 +1,22 @@
-import { createPublicClient } from '@/lib/supabase/public'
+import { getCollection } from '@/cms/content'
 import { AboutTeam } from './AboutTeam'
 
-interface TeamMember {
-  id: string
-  name: string
-  role: string
-  bio: string | null
-  image_url: string | null
-  social_links: {
-    github?: string
-    linkedin?: string
-    twitter?: string
-  } | null
-}
-
 export async function AboutTeamWrapper() {
-  let members: TeamMember[] = []
-  try {
-    const supabase = createPublicClient()
-    const { data, error } = await supabase
-      .from('team_members')
-      .select('id, name, role, bio, image_url, social_links')
-      .eq('is_active', true)
-      .order('sort_order', { ascending: true })
+  const members = await getCollection('team_member')
 
-    if (error) {
-      console.error('Error fetching team members:', error)
-    }
-    members = (data as TeamMember[]) || []
-  } catch (error) {
-    console.error('Error fetching team members:', error)
-  }
-
-  // Transform to match the expected format
-  const team = members.map((m) => {
-    const socialLinks = m.social_links
-    return {
-      name: m.name,
-      role: m.role,
-      bio: m.bio || '',
-      image: m.image_url || undefined,
-      github: socialLinks?.github,
-      linkedin: socialLinks?.linkedin,
-      twitter: socialLinks?.twitter,
-    }
-  })
+  // Render every visible entry in order — the collection is the source of
+  // truth, no hardcoded names or counts.
+  const team = members
+    .filter((m) => m.data.visible)
+    .map((m) => ({
+      name: m.data.name,
+      role: m.data.role,
+      bio: m.data.bio,
+      image: m.data.imageUrl || undefined,
+      github: m.data.githubUrl || undefined,
+      linkedin: m.data.linkedinUrl || undefined,
+      twitter: m.data.twitterUrl || undefined,
+    }))
 
   return <AboutTeam team={team} />
 }
