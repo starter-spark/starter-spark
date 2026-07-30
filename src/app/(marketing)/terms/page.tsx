@@ -1,39 +1,29 @@
 import type { Metadata } from 'next'
-import { createPublicClient } from '@/lib/supabase/public'
+import { getEntryMeta } from '@/cms/content'
 import { formatDate } from '@/lib/utils'
 import { LegalPage } from '@/components/legal/LegalPage'
 
-export const metadata: Metadata = {
-  title: 'Terms of Service',
-  description:
-    'StarterSpark Robotics terms of service - terms and conditions for using our products.',
+export async function generateMetadata(): Promise<Metadata> {
+  const entry = await getEntryMeta('page', 'terms')
+  return {
+    title: entry?.data.seoTitle || entry?.data.title || 'Terms of Service',
+    description:
+      entry?.data.seoDescription ||
+      'StarterSpark Robotics terms of service - terms and conditions for using our products.',
+  }
 }
 
 export default async function TermsPage() {
-  let page: {
-    title: string | null
-    content: string | null
-    updated_at: string | null
-  } | null = null
-  try {
-    const supabase = createPublicClient()
-    const { data } = await supabase
-      .from('page_content')
-      .select('title, content, updated_at')
-      .eq('page_key', 'terms')
-      .not('published_at', 'is', null)
-      .maybeSingle()
-    page = data
-  } catch (error) {
-    console.error('Failed to fetch terms of service content:', error)
-  }
-
-  const lastUpdated = page?.updated_at ? formatDate(page.updated_at) : null
+  const entry = await getEntryMeta('page', 'terms')
+  const lastUpdated =
+    entry && entry.data.showLastUpdated && entry.publishedAt
+      ? formatDate(entry.publishedAt)
+      : null
 
   return (
     <LegalPage
-      title={page?.title || 'Terms of Service'}
-      content={page?.content || null}
+      title={entry?.data.title || 'Terms of Service'}
+      content={entry?.data.body || null}
       lastUpdated={lastUpdated}
       emptyMessage="Terms of service content is being updated. Please check back later."
     />

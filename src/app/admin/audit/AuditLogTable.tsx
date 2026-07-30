@@ -530,7 +530,6 @@ const resourceLinks = new Map<string, (id: string) => string>([
   ['event', (id) => `/admin/events/${id}`],
   ['post', (id) => `/admin/community?search=${id}`],
   ['comment', () => `/admin/community`],
-  ['content', (id) => `/admin/content/${id}`],
   ['course', (id) => `/admin/learn/${id}`],
   ['module', () => `/admin/learn`],
   ['lesson', () => `/admin/learn`],

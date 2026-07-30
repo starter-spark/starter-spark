@@ -50,7 +50,6 @@ async function getDatabaseStats() {
     posts,
     comments,
     cmsDocuments,
-    pageContent,
     docPages,
     lessonProgress,
     siteBanners,
@@ -66,7 +65,6 @@ async function getDatabaseStats() {
     supabase.from('posts').select('id', { count: 'exact', head: true }),
     supabase.from('comments').select('id', { count: 'exact', head: true }),
     supabase.from('cms_documents').select('id', { count: 'exact', head: true }),
-    supabase.from('page_content').select('id', { count: 'exact', head: true }),
     supabase.from('doc_pages').select('id', { count: 'exact', head: true }),
     supabase
       .from('lesson_progress')
@@ -88,7 +86,6 @@ async function getDatabaseStats() {
     posts: posts.count || 0,
     comments: comments.count || 0,
     cmsDocuments: cmsDocuments.count || 0,
-    pageContent: pageContent.count || 0,
     docPages: docPages.count || 0,
     lessonProgress: lessonProgress.count || 0,
     siteBanners: siteBanners.count || 0,
@@ -188,12 +185,6 @@ export default async function DatabaseAnalyticsPage() {
       icon: FileText,
       count: stats.docPages,
       description: 'Documentation pages',
-    },
-    {
-      name: 'Page Content',
-      icon: FileText,
-      count: stats.pageContent,
-      description: 'CMS pages',
     },
     {
       name: 'Site Banners',

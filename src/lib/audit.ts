@@ -33,11 +33,6 @@ export type AuditAction =
   | 'review.status_changed'
   | 'review.deleted'
   // Content
-  | 'content.updated'
-  | 'content.published'
-  | 'content.unpublished'
-  | 'content.created'
-  | 'content.deleted'
   // Settings
   | 'settings.updated'
   | 'stats.created'
@@ -92,7 +87,6 @@ export type AuditResourceType =
   | 'post'
   | 'comment'
   | 'review'
-  | 'content'
   | 'settings'
   | 'stats'
   | 'banner'

@@ -30,12 +30,16 @@ export interface TypeDef {
   kind: 'singleton' | 'collection'
   label: string
   description: string
-  /** v1 supports flat objects only; block fields arrive with the pages phase */
   fields: Record<string, FieldDef>
   /** Which fields show as columns in the admin list view (collections) */
   listFields?: string[]
   /** Whether admins can drag-reorder entries (collections) */
   orderable?: boolean
+  /**
+   * Keyed collections: the admin supplies the key at creation (it is the
+   * public URL slug) instead of getting a generated one.
+   */
+  keyed?: boolean
 }
 
 export const cmsRegistry = {
@@ -876,6 +880,82 @@ export const cmsRegistry = {
           .default('Get notified about new kits and workshops.'),
         label: 'Newsletter description',
         widget: 'input',
+      },
+    },
+  },
+  page: {
+    kind: 'collection',
+    label: 'Pages',
+    description:
+      'Standalone markdown pages. The entry key is the URL slug: privacy and terms render at /privacy and /terms, everything else at /p/{slug}.',
+    keyed: true,
+    fields: {
+      title: {
+        schema: z.string().min(1).max(200),
+        label: 'Title',
+        widget: 'input',
+      },
+      body: {
+        schema: z.string().min(1).max(50000),
+        label: 'Body',
+        widget: 'textarea',
+        help: 'Markdown. Headings (##) become the table of contents.',
+      },
+      seoTitle: {
+        schema: z.string().max(200).default(''),
+        label: 'SEO title',
+        widget: 'input',
+        help: 'Optional; the page title is used when empty',
+      },
+      seoDescription: {
+        schema: z.string().max(500).default(''),
+        label: 'SEO description',
+        widget: 'textarea',
+      },
+      showLastUpdated: {
+        schema: z.boolean().default(true),
+        label: 'Show "last updated" date',
+        widget: 'checkbox',
+      },
+    },
+    listFields: ['title'],
+  },
+  about_page: {
+    kind: 'singleton',
+    label: 'About page',
+    description: 'Hero copy and the story section of the About page.',
+    fields: {
+      heroHeadline: {
+        schema: z
+          .string()
+          .min(1)
+          .max(200)
+          .default("Robotics education shouldn't have a $200 entry fee."),
+        label: 'Hero headline',
+        widget: 'input',
+      },
+      heroDescription: {
+        schema: z
+          .string()
+          .min(1)
+          .max(2000)
+          .default(
+            "We're a student-run team based in Honolulu making hardware kits you actually build yourself, no experience required, no high markups. If you can follow a wiring diagram, you can start here.",
+          ),
+        label: 'Hero description',
+        widget: 'textarea',
+      },
+      story: {
+        schema: z
+          .string()
+          .min(1)
+          .max(20000)
+          .default(
+            "## How it started\n\nOur first robotics experience was in 5th grade. It was fine, nothing life-changing, and we moved on. Fast-forward to high school: FRC teams with expensive drivetrains, tight-knit communities, REV Robotics kits, CNC-milled aluminum. We loved it. But we kept picturing our ten-year-old selves back then — wiring LEGO motors to plastic bricks, piecing together block code. The hardware that made high school robotics fun and advanced? Way too expensive for our old school. We never got to fry a real servo at ten, so we built something that starts at zero, because we remember what zero feels like.\n\n## How we build\n\nEvery kit ships with open-source hardware and guided curriculum we wrote ourselves. You assemble it, wire it, and write the code, we don't do it for you, because that's not how you actually learn anything. To keep costs down, we 3D print the structural parts ourselves. It allows us to rapidly prototype while still being firm enough for real use. It's lighter than machined aluminum, and affordable enough that we don't have to pass a markup on to you. The electronics in each kit are also selected for what they can teach you. We try our best to make each kit distinct enough where you'll learn something new in each one.",
+          ),
+        label: 'Story',
+        widget: 'textarea',
+        help: 'Markdown. Rendered as the "Our Story" section.',
       },
     },
   },

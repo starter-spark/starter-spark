@@ -55,6 +55,7 @@ export default async function CmsTypePage({
         type={type}
         columns={listColumns(type)}
         orderable={def.orderable ?? false}
+        keyed={def.keyed ?? false}
         defaultData={defaultDataFor(type)}
         entries={documents.map((doc) => ({
           key: doc.key,

@@ -8,7 +8,13 @@ import { logAuditEvent } from '@/lib/audit'
 import type { Json } from '@/lib/supabase/database.types'
 import { cmsDb, type CmsDocumentRow } from './db'
 import { cmsTag } from './content'
-import { cmsRegistry, isCmsType, typeSchema, type CmsType } from './registry'
+import {
+  cmsRegistry,
+  isCmsType,
+  typeSchema,
+  type CmsType,
+  type TypeDef,
+} from './registry'
 
 /**
  * All CMS writes. Guarded by requireAdminOrStaff, validated against the
@@ -79,12 +85,16 @@ function revalidate(type: CmsType, key: string) {
  * silently clobbering someone else's work. Pass `key: null` to create a new
  * collection entry.
  */
+const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
+
 export async function saveCmsDraft(input: {
   type: string
   key: string | null
   data: unknown
   baseVersion: number
   note?: string
+  /** For keyed collections: the admin-chosen key (URL slug) of a new entry */
+  newKey?: string
 }): Promise<CmsActionResult> {
   const auth = await guard()
   if ('error' in auth) return { success: false, error: auth.error }
@@ -108,8 +118,24 @@ export async function saveCmsDraft(input: {
     let documentId: string
 
     if (key === null) {
-      if (def.kind === 'singleton') key = 'default'
-      else key = randomUUID()
+      if (def.kind === 'singleton') {
+        key = 'default'
+      } else if ((def as TypeDef).keyed) {
+        const slug = input.newKey?.trim().toLowerCase() ?? ''
+        if (!SLUG_PATTERN.test(slug) || slug.length > 60) {
+          return {
+            success: false,
+            error:
+              'Enter a URL slug: lowercase letters, numbers, and hyphens (e.g. "return-policy")',
+          }
+        }
+        if (await loadDocument(type, slug)) {
+          return { success: false, error: `"${slug}" already exists` }
+        }
+        key = slug
+      } else {
+        key = randomUUID()
+      }
     }
 
     const existing = await loadDocument(type, key)
@@ -132,7 +158,14 @@ export async function saveCmsDraft(input: {
         .select('id')
         .single()
       if (docError || !doc) {
-        return { success: false, error: docError?.message ?? 'Insert failed' }
+        // unique(type,key) also covers soft-deleted documents
+        const taken = docError?.code === '23505'
+        return {
+          success: false,
+          error: taken
+            ? `"${key}" is already in use (possibly by a deleted entry)`
+            : (docError?.message ?? 'Insert failed'),
+        }
       }
       documentId = doc.id
     } else {

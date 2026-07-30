@@ -16,6 +16,8 @@ export interface CmsEntry<T extends CmsType> {
   key: string
   sortOrder: number
   data: CmsData<T>
+  /** When the rendered version went live (draft save time in preview mode) */
+  publishedAt: string | null
 }
 
 export function cmsTag(type: CmsType, key?: string): string {
@@ -47,15 +49,20 @@ async function isDraftMode(): Promise<boolean> {
   }
 }
 
-async function fetchPublishedEntries(
-  type: CmsType,
-): Promise<{ key: string; sort_order: number; data: unknown }[]> {
+async function fetchPublishedEntries(type: CmsType): Promise<
+  {
+    key: string
+    sort_order: number
+    data: unknown
+    published_at: string | null
+  }[]
+> {
   // Published content is public by design (RLS exposes exactly the published
   // version of live documents), so this read needs no service role.
   const supabase = createPublicClient()
   const { data, error } = await supabase
     .from('cms_published')
-    .select('key, sort_order, data')
+    .select('key, sort_order, data, published_at')
     .eq('type', type)
     .order('sort_order', { ascending: true })
     .order('key', { ascending: true })
@@ -69,13 +76,25 @@ async function fetchPublishedEntries(
   return (data ?? []).flatMap((row) =>
     row.key === null || row.sort_order === null
       ? []
-      : [{ key: row.key, sort_order: Number(row.sort_order), data: row.data }],
+      : [
+          {
+            key: row.key,
+            sort_order: Number(row.sort_order),
+            data: row.data,
+            published_at: row.published_at,
+          },
+        ],
   )
 }
 
-async function fetchDraftEntries(
-  type: CmsType,
-): Promise<{ key: string; sort_order: number; data: unknown }[]> {
+async function fetchDraftEntries(type: CmsType): Promise<
+  {
+    key: string
+    sort_order: number
+    data: unknown
+    published_at: string | null
+  }[]
+> {
   // Preview: prefer the draft version, fall back to published, include
   // documents that have never been published.
   const { data: docs, error } = await cmsDb
@@ -98,23 +117,25 @@ async function fetchDraftEntries(
 
   const { data: versions, error: versionsError } = await cmsDb
     .from('cms_versions')
-    .select('id, data')
+    .select('id, data, created_at')
     .in('id', versionIds)
   if (versionsError || !versions) {
     if (versionsError)
       console.error(`cms: failed to fetch ${type} versions:`, versionsError)
     return []
   }
-  const byId = new Map(versions.map((v) => [v.id, v.data]))
+  const byId = new Map(versions.map((v) => [v.id, v]))
 
   return docs.flatMap((d) => {
     const versionId = d.draft_version_id ?? d.published_version_id
-    if (!versionId || !byId.has(versionId)) return []
+    const version = versionId ? byId.get(versionId) : undefined
+    if (!version) return []
     return [
       {
         key: d.key,
         sort_order: Number(d.sort_order),
-        data: byId.get(versionId),
+        data: version.data,
+        published_at: version.created_at,
       },
     ]
   })
@@ -131,7 +152,16 @@ async function loadEntries<T extends CmsType>(type: T): Promise<CmsEntry<T>[]> {
 
   return rows.flatMap((row) => {
     const data = parseData(type, row.key, row.data)
-    return data ? [{ key: row.key, sortOrder: row.sort_order, data }] : []
+    return data
+      ? [
+          {
+            key: row.key,
+            sortOrder: row.sort_order,
+            data,
+            publishedAt: row.published_at,
+          },
+        ]
+      : []
   })
 }
 
@@ -147,8 +177,16 @@ export async function getEntry<T extends CmsType>(
   type: T,
   key = 'default',
 ): Promise<CmsData<T> | null> {
+  return (await getEntryMeta(type, key))?.data ?? null
+}
+
+/** One entry with its metadata (publish time), or null. */
+export async function getEntryMeta<T extends CmsType>(
+  type: T,
+  key = 'default',
+): Promise<CmsEntry<T> | null> {
   const entries = await loadEntries(type)
-  return entries.find((e) => e.key === key)?.data ?? null
+  return entries.find((e) => e.key === key) ?? null
 }
 
 /**

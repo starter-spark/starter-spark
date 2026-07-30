@@ -39,6 +39,8 @@ interface CmsCollectionListProps {
   type: string
   columns: { name: string; label: string }[]
   orderable: boolean
+  /** Keyed collections: the admin chooses the entry key (URL slug) */
+  keyed: boolean
   defaultData: Record<string, unknown>
   entries: CollectionEntry[]
 }
@@ -63,6 +65,7 @@ export function CmsCollectionList({
   type,
   columns,
   orderable,
+  keyed,
   defaultData,
   entries: initialEntries,
 }: CmsCollectionListProps) {
@@ -70,6 +73,8 @@ export function CmsCollectionList({
   const [entries, setEntries] = useState<CollectionEntry[]>(initialEntries)
   const [listError, setListError] = useState<string | null>(null)
   const [isCreating, setIsCreating] = useState(false)
+  const [slugFormOpen, setSlugFormOpen] = useState(false)
+  const [newSlug, setNewSlug] = useState('')
   const [isDeleting, setIsDeleting] = useState(false)
   const [deletingEntry, setDeletingEntry] = useState<CollectionEntry | null>(
     null,
@@ -78,6 +83,10 @@ export function CmsCollectionList({
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
 
   const handleCreate = async () => {
+    if (keyed && !slugFormOpen) {
+      setSlugFormOpen(true)
+      return
+    }
     setIsCreating(true)
     const result = await saveCmsDraft({
       type,
@@ -85,6 +94,7 @@ export function CmsCollectionList({
       data: defaultData,
       baseVersion: 0,
       note: 'Created from admin',
+      ...(keyed ? { newKey: newSlug } : {}),
     })
     if (result.success && result.key) {
       router.push(`/admin/cms/${type}/${result.key}`)
@@ -156,10 +166,25 @@ export function CmsCollectionList({
         </div>
       )}
 
-      <div className="mb-4 flex justify-end">
+      <div className="mb-4 flex items-center justify-end gap-2">
+        {keyed && slugFormOpen && (
+          <input
+            type="text"
+            value={newSlug}
+            onChange={(e) => {
+              setNewSlug(e.target.value)
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') void handleCreate()
+            }}
+            placeholder="url-slug (e.g. return-policy)"
+            autoFocus
+            className="h-9 rounded-md border border-slate-300 px-3 font-mono text-sm focus:border-cyan-600 focus:outline-none"
+          />
+        )}
         <Button
           onClick={() => void handleCreate()}
-          disabled={isCreating}
+          disabled={isCreating || (keyed && slugFormOpen && !newSlug.trim())}
           className="bg-cyan-700 hover:bg-cyan-600"
         >
           {isCreating ? (
@@ -167,7 +192,7 @@ export function CmsCollectionList({
           ) : (
             <Plus className="mr-2 h-4 w-4" />
           )}
-          New entry
+          {keyed && slugFormOpen ? 'Create page' : 'New entry'}
         </Button>
       </div>
 
