@@ -70,8 +70,8 @@ test.describe('Product Page - Buy Box', () => {
       localStorage.removeItem('starterspark-cart')
     })
 
-    const decreaseBtn = page.getByLabel('Decrease quantity')
-    const increaseBtn = page.getByLabel('Increase quantity')
+    const decreaseBtn = page.getByRole('button', { name: 'Decrease quantity' })
+    const increaseBtn = page.getByRole('button', { name: 'Increase quantity' })
 
     await expect(decreaseBtn).toBeVisible()
     await expect(increaseBtn).toBeVisible()
@@ -86,7 +86,7 @@ test.describe('Product Page - Buy Box', () => {
       localStorage.removeItem('starterspark-cart')
     })
 
-    const increaseBtn = page.getByLabel('Increase quantity')
+    const increaseBtn = page.getByRole('button', { name: 'Increase quantity' })
 
     // Initial quantity should be 1
     const quantity = page.locator('.text-center.font-mono').first()
@@ -108,8 +108,8 @@ test.describe('Product Page - Buy Box', () => {
       localStorage.removeItem('starterspark-cart')
     })
 
-    const increaseBtn = page.getByLabel('Increase quantity')
-    const decreaseBtn = page.getByLabel('Decrease quantity')
+    const increaseBtn = page.getByRole('button', { name: 'Increase quantity' })
+    const decreaseBtn = page.getByRole('button', { name: 'Decrease quantity' })
 
     // Set to 3 first
     await increaseBtn.click()
@@ -131,7 +131,7 @@ test.describe('Product Page - Buy Box', () => {
       localStorage.removeItem('starterspark-cart')
     })
 
-    const decreaseBtn = page.getByLabel('Decrease quantity')
+    const decreaseBtn = page.getByRole('button', { name: 'Decrease quantity' })
     const quantity = page.locator('.text-center.font-mono').first()
 
     // Quantity should start at 1
@@ -148,7 +148,7 @@ test.describe('Product Page - Buy Box', () => {
       localStorage.removeItem('starterspark-cart')
     })
 
-    const increaseBtn = page.getByLabel('Increase quantity')
+    const increaseBtn = page.getByRole('button', { name: 'Increase quantity' })
     const addToCartBtn = page.getByRole('button', { name: /add to cart/i })
 
     // Set quantity to 3
@@ -178,7 +178,9 @@ test.describe('Product Page - Buy Box', () => {
     })
 
     // Scope to main to avoid matching cart dialog controls
-    const increaseBtn = page.locator('main').getByLabel('Increase quantity')
+    const increaseBtn = page
+      .locator('main')
+      .getByRole('button', { name: 'Increase quantity' })
     const addToCartBtn = page
       .locator('main')
       .getByRole('button', { name: /add to cart/i })

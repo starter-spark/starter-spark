@@ -60,7 +60,9 @@ test.describe('Cart - Empty State', () => {
 
     if (isMobile) {
       // On mobile, check that the mobile menu button is visible
-      await expect(page.getByLabel('Toggle menu')).toBeVisible()
+      await expect(
+        page.getByRole('banner').getByLabel('Toggle menu'),
+      ).toBeVisible()
     } else {
       // On desktop, cart badge should not be visible when empty
       const badge = page.locator(

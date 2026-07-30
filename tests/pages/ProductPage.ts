@@ -45,8 +45,12 @@ export class ProductPage {
     // Buy box
     this.buyBox = page.locator('[class*="sticky"]').first()
     this.quantityDisplay = page.locator('text=/^\\d+$/').first()
-    this.decreaseQuantityBtn = page.getByLabel('Decrease quantity')
-    this.increaseQuantityBtn = page.getByLabel('Increase quantity')
+    this.decreaseQuantityBtn = page.getByRole('button', {
+      name: 'Decrease quantity',
+    })
+    this.increaseQuantityBtn = page.getByRole('button', {
+      name: 'Increase quantity',
+    })
     this.addToCartBtn = page.getByRole('button', { name: /add to cart/i })
 
     // Trust signals, use first() to handle potential duplicates
