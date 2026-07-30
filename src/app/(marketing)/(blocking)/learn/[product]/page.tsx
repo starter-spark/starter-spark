@@ -1,3 +1,5 @@
+// (blocking) route group: no loading.tsx/Suspense above this page, so the
+// course lookup settles before the shell flushes and notFound() commits a real 404.
 import { createClient } from '@/lib/supabase/server'
 import { formatDuration } from '@/lib/utils'
 import { Button } from '@/components/ui/button'

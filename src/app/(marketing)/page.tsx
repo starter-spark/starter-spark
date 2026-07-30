@@ -15,7 +15,7 @@ import {
   LearningPreviewSkeleton,
   MissionImpactSkeleton,
   EventsPreviewSkeleton,
-} from './loading'
+} from './skeletons'
 
 export default function Home() {
   const organizationSchema = getOrganizationSchema()

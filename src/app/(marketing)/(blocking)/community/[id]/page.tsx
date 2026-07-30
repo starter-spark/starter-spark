@@ -1,3 +1,5 @@
+// (blocking) route group: no loading.tsx/Suspense above this page, so the
+// post lookup settles before the shell flushes and notFound() commits a real 404.
 import { createClient } from '@/lib/supabase/server'
 import { formatRelativeTime } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -33,8 +35,13 @@ export async function generateMetadata({
     .eq(isUUID ? 'id' : 'slug', id)
     .maybeSingle()
 
-  if (error || !post) {
+  if (error) {
+    // Transient DB error: let the page render decide (it throws a 500).
     return { title: 'Question Not Found' }
+  }
+
+  if (!post) {
+    notFound()
   }
 
   const title = post.title

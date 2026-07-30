@@ -1,3 +1,5 @@
+// (blocking) route group: no loading.tsx/Suspense above this page, so the
+// lookups settle before the shell flushes and notFound() commits a real 404.
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import { formatShortDate } from '@/lib/utils'
@@ -28,7 +30,7 @@ export async function generateMetadata({ params }: Props) {
   const page = await fetchDocMetadata(supabase, slug)
 
   if (!page || page.categorySlug !== categorySlug) {
-    return { title: 'Article Not Found' }
+    notFound()
   }
 
   return {

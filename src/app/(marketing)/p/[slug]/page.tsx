@@ -1,3 +1,5 @@
+// No loading.tsx above this route on purpose: the CMS lookup settles before
+// the shell flushes, so notFound() commits a real 404 status.
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getEntryMeta } from '@/cms/content'
@@ -15,7 +17,7 @@ export async function generateMetadata({
   const { slug } = await resolveParams(params)
   const entry = await getEntryMeta('page', slug)
   if (!entry) {
-    return { title: 'Page Not Found' }
+    notFound()
   }
   return {
     title: entry.data.seoTitle || entry.data.title,

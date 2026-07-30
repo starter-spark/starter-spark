@@ -1,3 +1,5 @@
+// (blocking) route group: no loading.tsx/Suspense above this page, so the
+// lesson lookup settles before the shell flushes and notFound() commits a real 404.
 import { createClient } from '@/lib/supabase/server'
 import { ChevronRight, Home } from 'lucide-react'
 import Link from 'next/link'

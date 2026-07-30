@@ -327,15 +327,3 @@ export function EventsPreviewSkeleton() {
   )
 }
 
-export default function MarketingLoading() {
-  return (
-    <div className="bg-slate-50">
-      <HeroSkeleton />
-      <DifferentiatorsSkeleton />
-      <FeaturedProductSkeleton />
-      <LearningPreviewSkeleton />
-      <MissionImpactSkeleton />
-      <EventsPreviewSkeleton />
-    </div>
-  )
-}

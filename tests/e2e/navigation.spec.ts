@@ -268,9 +268,9 @@ test.describe('Breadcrumb and Back Navigation', () => {
 
 test.describe('404 Page', () => {
   test('should show 404 page for non-existent routes', async ({ page }) => {
-    await page.goto('/this-page-does-not-exist-123456')
+    const response = await page.goto('/this-page-does-not-exist-123456')
+    expect(response?.status()).toBe(404)
 
-    // Either 404 status or Next.js custom 404 page
     // Use first() since multiple elements may contain "404" or "not found"
     const notFoundText = page
       .getByText(/404|not found|page.*not.*exist/i)
@@ -279,14 +279,27 @@ test.describe('404 Page', () => {
   })
 
   test('should show 404 for non-existent product', async ({ page }) => {
-    await page.goto('/shop/product-that-does-not-exist-xyz')
+    const response = await page.goto('/shop/product-that-does-not-exist-xyz')
 
-    // Should show not found or redirect
-    const notFoundOrRedirect =
-      page.url().includes('shop/product-that-does-not-exist-xyz') ||
-      page.url().includes('404')
+    // A real 404 status (not a streamed soft-404) plus the not-found UI
+    expect(response?.status()).toBe(404)
+    const notFoundText = page.getByText(/404|not found/i).first()
+    await expect(notFoundText).toBeVisible()
+  })
 
-    // The page should handle missing products gracefully
-    expect(notFoundOrRedirect || (await page.title())).toBeTruthy()
+  test('should return 404 status for unknown dynamic content', async ({
+    request,
+  }) => {
+    const paths = [
+      '/p/page-that-does-not-exist-xyz',
+      '/docs/category-that-does-not-exist/doc-that-does-not-exist',
+      '/docs/category-that-does-not-exist',
+      '/community/post-that-does-not-exist-xyz',
+      '/learn/course-that-does-not-exist-xyz',
+    ]
+    for (const path of paths) {
+      const response = await request.get(path)
+      expect(response.status(), `${path} should return 404`).toBe(404)
+    }
   })
 })

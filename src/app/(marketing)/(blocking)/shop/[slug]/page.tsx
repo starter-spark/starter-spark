@@ -1,7 +1,12 @@
+// (blocking) route group: no loading.tsx/Suspense wraps this page, so the
+// product lookup settles before the shell flushes and notFound() can still
+// commit a real 404 status. Viewer-specific work streams via <Suspense> below.
+import { Suspense } from 'react'
 import { createPublicClient } from '@/lib/supabase/public'
 import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { ProductGallery, BuyBox, ProductTabs } from '@/components/commerce'
+import { LoadingBlock } from '@/components/loading'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { headers } from 'next/headers'
@@ -80,7 +85,7 @@ export async function generateMetadata({
   }
 
   if (!product) {
-    return { title: 'Product Not Found' }
+    notFound()
   }
 
   // Get primary image for OG
@@ -260,8 +265,6 @@ export default async function ProductDetailPage({
   const modelPathFromSpecs = specs?.modelPath
   const finalModelPath = modelPathFromMedia || modelPathFromSpecs
 
-  const commerce = await getSingleton('settings_commerce')
-
   // Get datasheet URL if available (document with "datasheet" in filename)
   const datasheetMedia = allMedia.find(
     (m) =>
@@ -270,82 +273,25 @@ export default async function ProductDetailPage({
   const datasheetUrl = datasheetMedia?.url
 
   // ---------------------------------------------------------------------------
-  // Reviews (public list + current user's review)
+  // Reviews (public list; the viewer's own review state streams in
+  // ProductTabsSection so it doesn't block the shell)
   // ---------------------------------------------------------------------------
 
   const reviewsClient = await createClient()
-  const {
-    data: { user },
-  } = await reviewsClient.auth.getUser()
-
-  const isAuthenticated = Boolean(user)
-  const viewerUserId = user?.id ?? null
-
-  let canReview = false
-  let userReview: UserReview | null = null
-
-  if (user) {
-    const { data: ownsProduct } = await reviewsClient.rpc('user_owns_product', {
-      p_product_id: product.id,
-    })
-    canReview = ownsProduct === true
-
-    if (!canReview && user.email) {
-      const emails = Array.from(new Set([user.email, user.email.toLowerCase()]))
-      for (const email of emails) {
-        const { data: pendingPurchase, error: pendingError } =
-          await supabaseAdmin
-            .from('licenses')
-            .select('id')
-            .eq('product_id', product.id)
-            .eq('source', 'online_purchase')
-            .eq('status', 'pending')
-            .is('owner_id', null)
-            .eq('customer_email', email)
-            .limit(1)
-
-        if (pendingError) {
-          console.error(
-            'Error checking pending purchase license:',
-            pendingError,
-          )
-          continue
-        }
-        if (pendingPurchase && pendingPurchase.length > 0) {
-          canReview = true
-          break
-        }
-      }
-    }
-
-    const { data: myReview, error: myReviewError } = await reviewsClient
-      .from('product_reviews')
-      .select(
-        'id, rating, title, body, status, created_at, edited_at, incentive_disclosure, is_verified_purchase',
-      )
-      .eq('product_id', product.id)
-      .eq('author_id', user.id)
-      .maybeSingle()
-
-    if (myReviewError) {
-      console.error('Error fetching user review:', myReviewError)
-    }
-
-    if (myReview) {
-      userReview = myReview
-    }
-  }
-
-  const { data: reviewRows, error: reviewsError } = await reviewsClient
-    .from('product_reviews')
-    .select(
-      // eslint-disable-next-line no-secrets/no-secrets
-      'id, author_id, rating, title, body, created_at, edited_at, incentive_disclosure, is_verified_purchase, status, author:profiles!product_reviews_author_id_fkey(full_name, avatar_url, avatar_seed)',
-    )
-    .eq('product_id', product.id)
-    .in('status', ['published', 'flagged'])
-    .order('created_at', { ascending: false })
-    .limit(50)
+  const [commerce, { data: reviewRows, error: reviewsError }] =
+    await Promise.all([
+      getSingleton('settings_commerce'),
+      reviewsClient
+        .from('product_reviews')
+        .select(
+          // eslint-disable-next-line no-secrets/no-secrets
+          'id, author_id, rating, title, body, created_at, edited_at, incentive_disclosure, is_verified_purchase, status, author:profiles!product_reviews_author_id_fkey(full_name, avatar_url, avatar_seed)',
+        )
+        .eq('product_id', product.id)
+        .in('status', ['published', 'flagged'])
+        .order('created_at', { ascending: false })
+        .limit(50),
+    ])
 
   if (reviewsError) {
     console.error('Error fetching reviews:', reviewsError)
@@ -454,25 +400,146 @@ export default async function ProductDetailPage({
       {/* Product Tabs */}
       <section className="pb-24 px-6 lg:px-20 bg-white border-t border-slate-200">
         <div className="max-w-7xl mx-auto pt-12">
-          <ProductTabs
-            description={product.description || ''}
-            learningOutcomes={learningOutcomes}
-            includedItems={includedItems}
-            specs={technicalSpecs}
-            datasheetUrl={datasheetUrl}
-            reviews={{
-              productId: product.id,
-              productSlug: slug,
-              items: reviews,
-              isAuthenticated,
-              viewerUserId,
-              canReview,
-              userReview,
-            }}
-          />
+          <Suspense fallback={<ProductTabsFallback />}>
+            <ProductTabsSection
+              productId={product.id}
+              slug={slug}
+              description={product.description || ''}
+              learningOutcomes={learningOutcomes}
+              includedItems={includedItems}
+              technicalSpecs={technicalSpecs}
+              datasheetUrl={datasheetUrl}
+              reviews={reviews}
+            />
+          </Suspense>
         </div>
       </section>
     </div>
+  )
+}
+
+interface ProductTabsSectionProps {
+  productId: string
+  slug: string
+  description: string
+  learningOutcomes: string[]
+  includedItems: { quantity: number; name: string; description: string }[]
+  technicalSpecs: { label: string; value: string }[]
+  datasheetUrl: string | undefined
+  reviews: ReviewListItem[]
+}
+
+// Viewer-specific review state (session, ownership, own review). Lives below
+// the page's Suspense boundary: it streams in after the shell and never
+// delays the response status.
+async function ProductTabsSection({
+  productId,
+  slug,
+  description,
+  learningOutcomes,
+  includedItems,
+  technicalSpecs,
+  datasheetUrl,
+  reviews,
+}: ProductTabsSectionProps) {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  const isAuthenticated = Boolean(user)
+  const viewerUserId = user?.id ?? null
+
+  let canReview = false
+  let userReview: UserReview | null = null
+
+  if (user) {
+    const { data: ownsProduct } = await supabase.rpc('user_owns_product', {
+      p_product_id: productId,
+    })
+    canReview = ownsProduct === true
+
+    if (!canReview && user.email) {
+      const emails = Array.from(new Set([user.email, user.email.toLowerCase()]))
+      for (const email of emails) {
+        const { data: pendingPurchase, error: pendingError } =
+          await supabaseAdmin
+            .from('licenses')
+            .select('id')
+            .eq('product_id', productId)
+            .eq('source', 'online_purchase')
+            .eq('status', 'pending')
+            .is('owner_id', null)
+            .eq('customer_email', email)
+            .limit(1)
+
+        if (pendingError) {
+          console.error(
+            'Error checking pending purchase license:',
+            pendingError,
+          )
+          continue
+        }
+        if (pendingPurchase && pendingPurchase.length > 0) {
+          canReview = true
+          break
+        }
+      }
+    }
+
+    const { data: myReview, error: myReviewError } = await supabase
+      .from('product_reviews')
+      .select(
+        'id, rating, title, body, status, created_at, edited_at, incentive_disclosure, is_verified_purchase',
+      )
+      .eq('product_id', productId)
+      .eq('author_id', user.id)
+      .maybeSingle()
+
+    if (myReviewError) {
+      console.error('Error fetching user review:', myReviewError)
+    }
+
+    if (myReview) {
+      userReview = myReview
+    }
+  }
+
+  return (
+    <ProductTabs
+      description={description}
+      learningOutcomes={learningOutcomes}
+      includedItems={includedItems}
+      specs={technicalSpecs}
+      datasheetUrl={datasheetUrl}
+      reviews={{
+        productId,
+        productSlug: slug,
+        items: reviews,
+        isAuthenticated,
+        viewerUserId,
+        canReview,
+        userReview,
+      }}
+    />
+  )
+}
+
+function ProductTabsFallback() {
+  return (
+    <>
+      <div className="flex flex-wrap gap-3 mb-8">
+        {Array.from({ length: 3 }, (_, i) => (
+          <LoadingBlock key={i} className="h-9 w-28" tone="soft" />
+        ))}
+      </div>
+      <div className="space-y-4">
+        <LoadingBlock className="h-4 w-full" tone="soft" />
+        <LoadingBlock className="h-4 w-11/12" tone="soft" />
+        <LoadingBlock className="h-4 w-10/12" tone="soft" />
+        <LoadingBlock className="h-36 w-full" tone="soft" />
+      </div>
+    </>
   )
 }
 
