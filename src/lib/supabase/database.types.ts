@@ -1680,90 +1680,6 @@ export type Database = {
         }
         Relationships: []
       }
-      site_content: {
-        Row: {
-          category: string
-          content: string
-          content_key: string
-          content_type: string
-          default_value: string | null
-          description: string | null
-          id: string
-          last_updated_by: string | null
-          sort_order: number | null
-          updated_at: string | null
-        }
-        Insert: {
-          category: string
-          content: string
-          content_key: string
-          content_type?: string
-          default_value?: string | null
-          description?: string | null
-          id?: string
-          last_updated_by?: string | null
-          sort_order?: number | null
-          updated_at?: string | null
-        }
-        Update: {
-          category?: string
-          content?: string
-          content_key?: string
-          content_type?: string
-          default_value?: string | null
-          description?: string | null
-          id?: string
-          last_updated_by?: string | null
-          sort_order?: number | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      site_stats: {
-        Row: {
-          auto_source: string | null
-          created_at: string | null
-          description: string | null
-          id: string
-          is_auto_calculated: boolean | null
-          key: string
-          label: string
-          sort_order: number | null
-          suffix: string | null
-          updated_at: string | null
-          value: number
-          visible_on: string[]
-        }
-        Insert: {
-          auto_source?: string | null
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          is_auto_calculated?: boolean | null
-          key: string
-          label: string
-          sort_order?: number | null
-          suffix?: string | null
-          updated_at?: string | null
-          value?: number
-          visible_on?: string[]
-        }
-        Update: {
-          auto_source?: string | null
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          is_auto_calculated?: boolean | null
-          key?: string
-          label?: string
-          sort_order?: number | null
-          suffix?: string | null
-          updated_at?: string | null
-          value?: number
-          visible_on?: string[]
-        }
-        Relationships: []
-      }
       stripe_checkout_fulfillments: {
         Row: {
           attempt_count: number
@@ -2402,24 +2318,11 @@ export type Database = {
         Args: { p_course_id: string; p_user_id: string }
         Returns: number
       }
-      get_site_stats: {
-        Args: { page_filter?: string }
-        Returns: {
-          key: string
-          label: string
-          suffix: string
-          value: number
-        }[]
-      }
       increment_article_view: {
         Args: { article_id: string }
         Returns: undefined
       }
       increment_post_view: { Args: { p_post_id: string }; Returns: undefined }
-      increment_stat: {
-        Args: { amount?: number; stat_key: string }
-        Returns: number
-      }
       increment_teapot_api_calls: { Args: never; Returns: number }
       is_admin:
         | { Args: never; Returns: boolean }

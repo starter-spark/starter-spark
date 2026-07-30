@@ -29,43 +29,43 @@ interface CheckoutResponse {
 }
 
 export interface CartContentProps {
-  title?: string
-  continueShopping?: string
-  emptyTitle?: string
-  emptyDescription?: string
-  emptyCta?: string
-  summaryTitle?: string
-  subtotalLabel?: string
-  savingsLabel?: string
-  shippingLabel?: string
-  totalLabel?: string
-  freeShippingHint?: string
-  checkoutButton?: string
-  processingText?: string
-  trustFreeShipping?: string
-  trustSecureCheckout?: string
-  freeShippingThresholdCents?: number
-  shippingRateCents?: number
+  title: string
+  continueShopping: string
+  emptyTitle: string
+  emptyDescription: string
+  emptyCta: string
+  summaryTitle: string
+  subtotalLabel: string
+  savingsLabel: string
+  shippingLabel: string
+  totalLabel: string
+  freeShippingHint: string
+  checkoutButton: string
+  processingText: string
+  trustFreeShipping: string
+  trustSecureCheckout: string
+  freeShippingThresholdCents: number
+  shippingRateCents: number
 }
 
 export function CartContent({
-  title = 'Your Cart',
-  continueShopping = 'Continue Shopping',
-  emptyTitle = 'Your cart is empty',
-  emptyDescription = "Looks like you haven't added any kits yet. Browse our collection to get started on your robotics journey.",
-  emptyCta = 'Browse Kits',
-  summaryTitle = 'Order Summary',
-  subtotalLabel = 'Subtotal',
-  savingsLabel = 'Your Savings',
-  shippingLabel = 'Shipping',
-  totalLabel = 'Total',
-  freeShippingHint = 'Add ${amount} more for free shipping',
-  checkoutButton = 'Checkout',
-  processingText = 'Processing...',
-  trustFreeShipping = 'Free shipping on orders $75+',
-  trustSecureCheckout = 'Secure checkout with Stripe',
-  freeShippingThresholdCents = 7500,
-  shippingRateCents = 999,
+  title,
+  continueShopping,
+  emptyTitle,
+  emptyDescription,
+  emptyCta,
+  summaryTitle,
+  subtotalLabel,
+  savingsLabel,
+  shippingLabel,
+  totalLabel,
+  freeShippingHint,
+  checkoutButton,
+  processingText,
+  trustFreeShipping,
+  trustSecureCheckout,
+  freeShippingThresholdCents,
+  shippingRateCents,
 }: CartContentProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [checkoutError, setCheckoutError] = useState<string | null>(null)
@@ -119,7 +119,8 @@ export function CartContent({
   const freeShippingThreshold = freeShippingThresholdCents / 100
   const shipping = total >= freeShippingThreshold ? 0 : shippingRateCents / 100
   const grandTotal = total + shipping
-  const amountForFreeShipping = (freeShippingThreshold - total).toFixed(2)
+  // Pre-formatted for the {amount} placeholder in the hint copy.
+  const amountForFreeShipping = `$${(freeShippingThreshold - total).toFixed(2)}`
 
   // Show loading state during hydration
   if (!hasHydrated) {
@@ -348,7 +349,7 @@ export function CartContent({
                     {shipping > 0 && (
                       <p className="text-xs text-slate-500">
                         {freeShippingHint.replace(
-                          '${amount}',
+                          '{amount}',
                           amountForFreeShipping,
                         )}
                       </p>

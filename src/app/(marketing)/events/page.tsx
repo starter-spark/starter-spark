@@ -8,7 +8,7 @@ import {
   getBreadcrumbSchema,
   jsonLdScript,
 } from '@/lib/structured-data'
-import { getContents } from '@/lib/content'
+import { getSingleton } from '@/cms/content'
 import type { Metadata } from 'next'
 import { siteConfig } from '@/config/site'
 import {
@@ -182,16 +182,7 @@ export default async function EventsPage() {
   const supabase = await createClient()
 
   // Fetch dynamic content
-  const content = await getContents(
-    ['events.header.title', 'events.header.description', 'events.empty'],
-    {
-      'events.header.title': 'Learn With Us',
-      'events.header.description':
-        'Hands-on workshops, competitions, and community events throughout Hawaii. Join us to learn robotics, meet fellow builders, and grow your skills.',
-      'events.empty':
-        'No upcoming events. Check back soon for new workshops and events!',
-    },
-  )
+  const copy = await getSingleton('events_page')
 
   // Fetch all public events
   let events: Event[] = []
@@ -272,10 +263,10 @@ export default async function EventsPage() {
           {/* Title block with left accent */}
           <div className="border-l-4 border-cyan-600 pl-4">
             <h1 className="font-mono text-2xl sm:text-3xl font-bold text-slate-900">
-              {content['events.header.title']}
+              {copy.headerTitle}
             </h1>
             <p className="mt-2 text-slate-600 max-w-xl">
-              {content['events.header.description']}
+              {copy.headerDescription}
             </p>
           </div>
         </header>
@@ -300,7 +291,7 @@ export default async function EventsPage() {
             ) : (
               <div className="bg-white border border-slate-200 rounded p-8 text-center">
                 <Calendar className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-                <p className="text-slate-600">{content['events.empty']}</p>
+                <p className="text-slate-600">{copy.empty}</p>
               </div>
             )}
           </section>

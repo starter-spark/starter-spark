@@ -103,6 +103,782 @@ export const cmsRegistry = {
     listFields: ['label', 'value', 'autoSource', 'visible'],
     orderable: true,
   },
+  home_hero: {
+    kind: 'singleton',
+    label: 'Homepage · Hero',
+    description: 'The big opening section at the top of the homepage.',
+    fields: {
+      taglineTop: {
+        schema: z.string().min(1).max(200).default('Shipping only to Hawaii'),
+        label: 'Top tagline',
+        widget: 'input',
+      },
+      headline: {
+        schema: z
+          .string()
+          .min(1)
+          .max(200)
+          .default("Start here.\nFigure it out.\nWe'll help."),
+        label: 'Headline',
+        widget: 'textarea',
+        help: 'Line breaks render as separate lines',
+      },
+      subheadline: {
+        schema: z.string().min(1).max(200).default("That's the whole point."),
+        label: 'Subheadline',
+        widget: 'input',
+      },
+      taglineBottom: {
+        schema: z
+          .string()
+          .min(1)
+          .max(200)
+          .default('Open Source Hardware • Affordable • For Hawaii'),
+        label: 'Bottom tagline',
+        widget: 'input',
+      },
+      ctaPrimary: {
+        schema: z.string().min(1).max(80).default('Shop Kits'),
+        label: 'Primary button',
+        widget: 'input',
+      },
+      ctaSecondary: {
+        schema: z.string().min(1).max(80).default('Explore Free Courses'),
+        label: 'Secondary button',
+        widget: 'input',
+      },
+    },
+  },
+  home_mission: {
+    kind: 'singleton',
+    label: 'Homepage · Mission',
+    description: 'The "More Than a Kit" story section on the homepage.',
+    fields: {
+      title: {
+        schema: z.string().min(1).max(200).default('More Than a Kit'),
+        label: 'Title',
+        widget: 'input',
+      },
+      subtitle: {
+        schema: z
+          .string()
+          .min(1)
+          .max(2000)
+          .default(
+            'We built this because we wanted it to exist. Everything we make is designed for students who are just starting out.',
+          ),
+        label: 'Subtitle',
+        widget: 'textarea',
+      },
+      story1: {
+        schema: z
+          .string()
+          .min(1)
+          .max(2000)
+          .default(
+            'A lot of testing, clogged up printers and prototypes under our desks, and eventually something that works!',
+          ),
+        label: 'Story paragraph 1',
+        widget: 'textarea',
+      },
+      story2: {
+        schema: z
+          .string()
+          .min(1)
+          .max(2000)
+          .default(
+            'Every kit we ship has been tested by real students. Not just us. We bring the kits to schools and run workshops to figure out what breaks and what works. The stuff that makes it into the kit is what actually survived that process.',
+          ),
+        label: 'Story paragraph 2',
+        widget: 'textarea',
+      },
+      commitmentTitle: {
+        schema: z.string().min(1).max(200).default('Open Source'),
+        label: 'Commitment title',
+        widget: 'input',
+      },
+      commitmentText: {
+        schema: z
+          .string()
+          .min(1)
+          .max(2000)
+          .default(
+            "Hardware schematics, 3D print files, and curriculum are all open source. You can download everything for free on each kit's shop page. You don't need to buy the kit to use what we built, but it'll save you a lot of time :)",
+          ),
+        label: 'Commitment text',
+        widget: 'textarea',
+      },
+      commitmentSubtext: {
+        schema: z
+          .string()
+          .min(1)
+          .max(200)
+          .default('If you want to build it yourself, go for it.'),
+        label: 'Commitment subtext',
+        widget: 'input',
+      },
+    },
+  },
+  home_differentiators: {
+    kind: 'singleton',
+    label: 'Homepage · Why StarterSpark',
+    description: 'The four "why us" cards on the homepage.',
+    fields: {
+      title: {
+        schema: z.string().min(1).max(200).default('Why StarterSpark?'),
+        label: 'Title',
+        widget: 'input',
+      },
+      description: {
+        schema: z
+          .string()
+          .min(1)
+          .max(2000)
+          .default('We built the kit we wished existed when we were kids.'),
+        label: 'Description',
+        widget: 'textarea',
+      },
+      card1Title: {
+        schema: z.string().min(1).max(200).default('Complete Package'),
+        label: 'Card 1 title',
+        widget: 'input',
+      },
+      card1Description: {
+        schema: z
+          .string()
+          .min(1)
+          .max(2000)
+          .default(
+            'Everything you need in one box: pre-cut parts, electronics, fasteners, and our step-by-step digital curriculum. No hunting for components or compatibility issues.',
+          ),
+        label: 'Card 1 description',
+        widget: 'textarea',
+      },
+      card2Title: {
+        schema: z.string().min(1).max(200).default('Interactive Curriculum'),
+        label: 'Card 2 title',
+        widget: 'input',
+      },
+      card2Description: {
+        schema: z
+          .string()
+          .min(1)
+          .max(2000)
+          .default(
+            'The platform has interactive wiring diagrams, a built-in code editor, and progress tracking across lessons. You can see where every wire goes before you touch anything, which honestly saves a lot of frustration.',
+          ),
+        label: 'Card 2 description',
+        widget: 'textarea',
+      },
+      card3Title: {
+        schema: z
+          .string()
+          .min(1)
+          .max(200)
+          .default('Support for Schools and Clubs'),
+        label: 'Card 3 title',
+        widget: 'input',
+      },
+      card3Description: {
+        schema: z
+          .string()
+          .min(1)
+          .max(2000)
+          .default(
+            "We offer bulk discounts for schools and clubs, and the kits come classroom-ready so you don't have to figure out sourcing. If you're trying to set up a robotics program and don't know where to start, just email us.",
+          ),
+        label: 'Card 3 description',
+        widget: 'textarea',
+      },
+      card4Title: {
+        schema: z.string().min(1).max(200).default('Hawaii Roots'),
+        label: 'Card 4 title',
+        widget: 'input',
+      },
+      card4Description: {
+        schema: z
+          .string()
+          .min(1)
+          .max(2000)
+          .default(
+            "We're students from Hawaii who couldn't find a good beginner robotics kit, so we built one. Everything was tested by real students before we shipped anything.",
+          ),
+        label: 'Card 4 description',
+        widget: 'textarea',
+      },
+    },
+  },
+  home_learning: {
+    kind: 'singleton',
+    label: 'Homepage · How It Works',
+    description: 'The two-block learning walkthrough on the homepage.',
+    fields: {
+      title: {
+        schema: z.string().min(1).max(200).default('How It Works'),
+        label: 'Title',
+        widget: 'input',
+      },
+      description: {
+        schema: z
+          .string()
+          .min(1)
+          .max(2000)
+          .default(
+            'The platform walks you through the whole thing, from when you open the box all the way to running your first program.',
+          ),
+        label: 'Description',
+        widget: 'textarea',
+      },
+      block1Title: {
+        schema: z
+          .string()
+          .min(1)
+          .max(200)
+          .default('Step-by-Step Digital Guides'),
+        label: 'Block 1 title',
+        widget: 'input',
+      },
+      block1Description1: {
+        schema: z
+          .string()
+          .min(1)
+          .max(2000)
+          .default(
+            'Each lesson builds on the last, taking you from basic assembly through advanced programming. Our interactive diagrams show exactly where each wire connects, and you can hover over components to learn what they do.',
+          ),
+        label: 'Block 1 paragraph 1',
+        widget: 'textarea',
+      },
+      block1Description2: {
+        schema: z
+          .string()
+          .min(1)
+          .max(2000)
+          .default(
+            'The built-in code editor lets you write, test, and upload your programs directly from the browser. Real-time syntax highlighting and error checking help you learn proper coding practices from day one.',
+          ),
+        label: 'Block 1 paragraph 2',
+        widget: 'textarea',
+      },
+      block1Cta: {
+        schema: z.string().min(1).max(80).default('Start Learning'),
+        label: 'Block 1 button',
+        widget: 'input',
+      },
+      block2Title: {
+        schema: z
+          .string()
+          .min(1)
+          .max(200)
+          .default('Expert Support When You Need It'),
+        label: 'Block 2 title',
+        widget: 'input',
+      },
+      block2Description1: {
+        schema: z
+          .string()
+          .min(1)
+          .max(2000)
+          .default(
+            'Stuck on a step? Our community forum, The Lab, connects you with fellow builders and our support team. Most questions get answered within hours, not days.',
+          ),
+        label: 'Block 2 paragraph 1',
+        widget: 'textarea',
+      },
+      block2Description2: {
+        schema: z
+          .string()
+          .min(1)
+          .max(2000)
+          .default(
+            'Staff members check in on discussions regularly and reply to questions. Most people hear back the same day.',
+          ),
+        label: 'Block 2 paragraph 2',
+        widget: 'textarea',
+      },
+      block2Cta: {
+        schema: z.string().min(1).max(80).default('Visit The Lab'),
+        label: 'Block 2 button',
+        widget: 'input',
+      },
+    },
+  },
+  home_community: {
+    kind: 'singleton',
+    label: 'Homepage · Community',
+    description:
+      'The homepage section previewing upcoming workshops and The Lab.',
+    fields: {
+      title: {
+        schema: z.string().min(1).max(200).default('Workshops & The Lab'),
+        label: 'Title',
+        widget: 'input',
+      },
+      description: {
+        schema: z
+          .string()
+          .min(1)
+          .max(2000)
+          .default(
+            "We run in-person workshops across Hawaii, and we have an online forum called The Lab where people ask questions and share what they're working on.",
+          ),
+        label: 'Description',
+        widget: 'textarea',
+      },
+      workshopsTitle: {
+        schema: z.string().min(1).max(200).default('Upcoming Workshops'),
+        label: 'Workshops title',
+        widget: 'input',
+      },
+      workshopsViewAll: {
+        schema: z.string().min(1).max(80).default('View All'),
+        label: 'Workshops "view all" link',
+        widget: 'input',
+      },
+      workshopsEmptyTitle: {
+        schema: z.string().min(1).max(200).default('No Upcoming Events'),
+        label: 'Workshops empty title',
+        widget: 'input',
+      },
+      workshopsEmptyDescription: {
+        schema: z
+          .string()
+          .min(1)
+          .max(2000)
+          .default(
+            'Check back soon for new workshops and events in your area.',
+          ),
+        label: 'Workshops empty description',
+        widget: 'textarea',
+      },
+      workshopsEmptyCta: {
+        schema: z.string().min(1).max(80).default('View Past Events'),
+        label: 'Workshops empty button',
+        widget: 'input',
+      },
+      workshopsCta: {
+        schema: z.string().min(1).max(80).default('Register for a Workshop'),
+        label: 'Workshops button',
+        widget: 'input',
+      },
+      workshopsCtaEmpty: {
+        schema: z.string().min(1).max(80).default('View All Events'),
+        label: 'Workshops button (no events)',
+        widget: 'input',
+      },
+      labTitle: {
+        schema: z.string().min(1).max(200).default('The Lab'),
+        label: 'Lab title',
+        widget: 'input',
+      },
+      labJoinNow: {
+        schema: z.string().min(1).max(80).default('Join Now'),
+        label: 'Lab "join now" link',
+        widget: 'input',
+      },
+      labMembersLabel: {
+        schema: z.string().min(1).max(80).default('Members'),
+        label: 'Lab members label',
+        widget: 'input',
+      },
+      labDiscussionsLabel: {
+        schema: z.string().min(1).max(80).default('Discussions'),
+        label: 'Lab discussions label',
+        widget: 'input',
+      },
+      labEmptyTitle: {
+        schema: z.string().min(1).max(200).default('Be the First to Ask'),
+        label: 'Lab empty title',
+        widget: 'input',
+      },
+      labEmptyDescription: {
+        schema: z
+          .string()
+          .min(1)
+          .max(2000)
+          .default(
+            'Start a discussion and help build our community of makers.',
+          ),
+        label: 'Lab empty description',
+        widget: 'textarea',
+      },
+      labEmptyCta: {
+        schema: z.string().min(1).max(80).default('Ask a Question'),
+        label: 'Lab empty button',
+        widget: 'input',
+      },
+      labCta: {
+        schema: z.string().min(1).max(80).default('Join The Lab'),
+        label: 'Lab button',
+        widget: 'input',
+      },
+    },
+  },
+  shop_page: {
+    kind: 'singleton',
+    label: 'Shop page',
+    description: 'Header copy and empty state for the shop listing.',
+    fields: {
+      headerTitle: {
+        schema: z.string().min(1).max(200).default('Shop'),
+        label: 'Header title',
+        widget: 'input',
+      },
+      headerDescription: {
+        schema: z
+          .string()
+          .min(1)
+          .max(2000)
+          .default(
+            'Hardware kits you actually build yourself. No prior experience needed.',
+          ),
+        label: 'Header description',
+        widget: 'textarea',
+      },
+      empty: {
+        schema: z
+          .string()
+          .min(1)
+          .max(500)
+          .default('No products available at this time.'),
+        label: 'Empty state',
+        widget: 'input',
+      },
+    },
+  },
+  community_page: {
+    kind: 'singleton',
+    label: 'Community page',
+    description: 'Header copy and empty state for The Lab.',
+    fields: {
+      headerTitle: {
+        schema: z.string().min(1).max(200).default('The Lab'),
+        label: 'Header title',
+        widget: 'input',
+      },
+      headerDescription: {
+        schema: z
+          .string()
+          .min(1)
+          .max(2000)
+          .default(
+            "Ask questions, share what you're building, and get help when you're stuck.",
+          ),
+        label: 'Header description',
+        widget: 'textarea',
+      },
+      empty: {
+        schema: z
+          .string()
+          .min(1)
+          .max(500)
+          .default('No discussions yet. Be the first to ask a question!'),
+        label: 'Empty state',
+        widget: 'input',
+      },
+    },
+  },
+  events_page: {
+    kind: 'singleton',
+    label: 'Events page',
+    description: 'Header copy and empty state for the events listing.',
+    fields: {
+      headerTitle: {
+        schema: z.string().min(1).max(200).default('Events'),
+        label: 'Header title',
+        widget: 'input',
+      },
+      headerDescription: {
+        schema: z
+          .string()
+          .min(1)
+          .max(2000)
+          .default(
+            'We run hands-on workshops and competitions across Hawaii if you want to come out and build something with other people.',
+          ),
+        label: 'Header description',
+        widget: 'textarea',
+      },
+      empty: {
+        schema: z
+          .string()
+          .min(1)
+          .max(500)
+          .default(
+            'No upcoming events. Check back soon for new workshops and events!',
+          ),
+        label: 'Empty state',
+        widget: 'input',
+      },
+    },
+  },
+  cart_page: {
+    kind: 'singleton',
+    label: 'Cart page',
+    description: 'All cart copy: headings, summary labels, and trust lines.',
+    fields: {
+      title: {
+        schema: z.string().min(1).max(200).default('Your Cart'),
+        label: 'Title',
+        widget: 'input',
+      },
+      continueShopping: {
+        schema: z.string().min(1).max(80).default('Continue Shopping'),
+        label: '"Continue shopping" link',
+        widget: 'input',
+      },
+      emptyTitle: {
+        schema: z.string().min(1).max(200).default('Your cart is empty'),
+        label: 'Empty cart title',
+        widget: 'input',
+      },
+      emptyDescription: {
+        schema: z
+          .string()
+          .min(1)
+          .max(2000)
+          .default(
+            "Looks like you haven't added anything yet. Check out the kits and see what's inside.",
+          ),
+        label: 'Empty cart description',
+        widget: 'textarea',
+      },
+      emptyCta: {
+        schema: z.string().min(1).max(80).default('Browse Kits'),
+        label: 'Empty cart button',
+        widget: 'input',
+      },
+      summaryTitle: {
+        schema: z.string().min(1).max(200).default('Order Summary'),
+        label: 'Summary title',
+        widget: 'input',
+      },
+      subtotalLabel: {
+        schema: z.string().min(1).max(80).default('Subtotal'),
+        label: 'Subtotal label',
+        widget: 'input',
+      },
+      savingsLabel: {
+        schema: z.string().min(1).max(80).default('Your Savings'),
+        label: 'Savings label',
+        widget: 'input',
+      },
+      shippingLabel: {
+        schema: z.string().min(1).max(80).default('Shipping'),
+        label: 'Shipping label',
+        widget: 'input',
+      },
+      totalLabel: {
+        schema: z.string().min(1).max(80).default('Total'),
+        label: 'Total label',
+        widget: 'input',
+      },
+      freeShippingHint: {
+        schema: z
+          .string()
+          .min(1)
+          .max(200)
+          .default('Add {amount} more for free shipping'),
+        label: 'Free shipping hint',
+        widget: 'input',
+        help: '{amount} is replaced with the remaining dollar amount, e.g. $12.50',
+      },
+      checkoutButton: {
+        schema: z.string().min(1).max(80).default('Checkout'),
+        label: 'Checkout button',
+        widget: 'input',
+      },
+      processingText: {
+        schema: z.string().min(1).max(80).default('Processing...'),
+        label: 'Checkout processing text',
+        widget: 'input',
+      },
+      trustFreeShipping: {
+        schema: z
+          .string()
+          .min(1)
+          .max(200)
+          .default('Free shipping on orders $75+'),
+        label: 'Trust line: shipping',
+        widget: 'input',
+      },
+      trustSecureCheckout: {
+        schema: z
+          .string()
+          .min(1)
+          .max(200)
+          .default('Secure checkout with Stripe'),
+        label: 'Trust line: checkout',
+        widget: 'input',
+      },
+    },
+  },
+  workshop_page: {
+    kind: 'singleton',
+    label: 'Workshop page',
+    description: 'All copy on the signed-in workshop hub.',
+    fields: {
+      headerTitle: {
+        schema: z.string().min(1).max(200).default('Workshop'),
+        label: 'Header title',
+        widget: 'input',
+      },
+      headerDescription: {
+        schema: z
+          .string()
+          .min(1)
+          .max(2000)
+          .default(
+            'Your personal robotics workspace. Track progress, access tools, and manage your kits.',
+          ),
+        label: 'Header description',
+        widget: 'textarea',
+      },
+      headerDescriptionSignedOut: {
+        schema: z
+          .string()
+          .min(1)
+          .max(2000)
+          .default('Sign in to access your kits and learning materials.'),
+        label: 'Header description (signed out)',
+        widget: 'textarea',
+      },
+      noKits: {
+        schema: z
+          .string()
+          .min(1)
+          .max(500)
+          .default(
+            "You don't have any kits yet. Purchase a kit to get started!",
+          ),
+        label: 'No kits message',
+        widget: 'input',
+      },
+      signInTitle: {
+        schema: z.string().min(1).max(200).default('Sign In Required'),
+        label: 'Sign-in title',
+        widget: 'input',
+      },
+      signInDescription: {
+        schema: z
+          .string()
+          .min(1)
+          .max(2000)
+          .default(
+            'Sign in to view your kits, track your learning progress, and claim new kit codes.',
+          ),
+        label: 'Sign-in description',
+        widget: 'textarea',
+      },
+      signInButton: {
+        schema: z.string().min(1).max(80).default('Sign In'),
+        label: 'Sign-in button',
+        widget: 'input',
+      },
+      signInShopButton: {
+        schema: z.string().min(1).max(80).default('Shop Kits'),
+        label: 'Sign-in shop button',
+        widget: 'input',
+      },
+      kitsTitle: {
+        schema: z.string().min(1).max(200).default('My Kits'),
+        label: 'Kits title',
+        widget: 'input',
+      },
+      kitsEmptySubtitle: {
+        schema: z
+          .string()
+          .min(1)
+          .max(500)
+          .default('Purchase a kit or enter a code to get started.'),
+        label: 'Kits empty subtitle',
+        widget: 'input',
+      },
+      kitsEmptyCta: {
+        schema: z.string().min(1).max(80).default('Browse Kits'),
+        label: 'Kits empty button',
+        widget: 'input',
+      },
+      claimTitle: {
+        schema: z.string().min(1).max(200).default('Claim a Kit'),
+        label: 'Claim title',
+        widget: 'input',
+      },
+      claimDescription: {
+        schema: z
+          .string()
+          .min(1)
+          .max(2000)
+          .default('Have a kit code? Enter it below to activate your kit.'),
+        label: 'Claim description',
+        widget: 'textarea',
+      },
+      pendingTitle: {
+        schema: z.string().min(1).max(200).default('Pending Licenses'),
+        label: 'Pending licenses title',
+        widget: 'input',
+      },
+      pendingDescription: {
+        schema: z
+          .string()
+          .min(1)
+          .max(2000)
+          .default(
+            "These licenses were purchased with your email. Claim to add to your account or reject if you didn't make this purchase.",
+          ),
+        label: 'Pending licenses description',
+        widget: 'textarea',
+      },
+      coursesEmpty: {
+        schema: z
+          .string()
+          .min(1)
+          .max(500)
+          .default('No courses available yet. Check back soon!'),
+        label: 'Courses empty state',
+        widget: 'input',
+      },
+    },
+  },
+  footer: {
+    kind: 'singleton',
+    label: 'Footer',
+    description: 'Sitewide footer copy.',
+    fields: {
+      tagline: {
+        schema: z
+          .string()
+          .min(1)
+          .max(500)
+          .default('Robotics kits for people who are just starting out.'),
+        label: 'Brand tagline',
+        widget: 'input',
+      },
+      copyright: {
+        schema: z
+          .string()
+          .min(1)
+          .max(200)
+          .default('© 2025-2026 StarterSpark Robotics. All rights reserved.'),
+        label: 'Copyright line',
+        widget: 'input',
+      },
+      newsletterTitle: {
+        schema: z.string().min(1).max(200).default('Stay Updated'),
+        label: 'Newsletter title',
+        widget: 'input',
+      },
+      newsletterDescription: {
+        schema: z
+          .string()
+          .min(1)
+          .max(500)
+          .default('Get notified about new kits and workshops.'),
+        label: 'Newsletter description',
+        widget: 'input',
+      },
+    },
+  },
 } as const satisfies Record<string, TypeDef>
 
 export type CmsType = keyof typeof cmsRegistry

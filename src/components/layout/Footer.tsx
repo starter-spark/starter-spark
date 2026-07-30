@@ -8,7 +8,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { NewsletterForm } from './NewsletterForm'
 import { createPublicClient } from '@/lib/supabase/public'
-import { getContents } from '@/lib/content'
+import { getSingleton } from '@/cms/content'
 import { cn } from '@/lib/utils'
 
 // Custom X (Twitter) icon since simple-icons doesn't have it as "X"
@@ -40,22 +40,7 @@ const footerHeadingClass =
 
 export async function Footer() {
   // Fetch dynamic content
-  const content = await getContents(
-    [
-      'footer.copyright',
-      'footer.brand.tagline',
-      'footer.newsletter.title',
-      'footer.newsletter.description',
-    ],
-    {
-      'footer.copyright': '© 2025 StarterSpark Robotics. All rights reserved.',
-      'footer.brand.tagline':
-        "Open-source robotics education designed by students, for students. Building the next generation of Hawaii's engineers.",
-      'footer.newsletter.title': 'Stay Updated',
-      'footer.newsletter.description':
-        'Get notified about new kits and workshops.',
-    },
-  )
+  const copy = await getSingleton('footer')
 
   let footerProducts: FooterProduct[] = []
   try {
@@ -94,7 +79,7 @@ export async function Footer() {
               </p>
             </div>
             <p className="text-slate-600 max-w-sm mb-6 leading-relaxed text-sm break-words">
-              {content['footer.brand.tagline']}
+              {copy.tagline}
             </p>
             <div className="flex gap-3">
               <Button
@@ -248,10 +233,10 @@ export async function Footer() {
           {/* Newsletter Column */}
           <div>
             <p className={cn(footerHeadingClass, 'break-words')}>
-              {content['footer.newsletter.title']}
+              {copy.newsletterTitle}
             </p>
             <p className="text-sm text-slate-600 mb-4 break-words">
-              {content['footer.newsletter.description']}
+              {copy.newsletterDescription}
             </p>
             <NewsletterForm />
           </div>
@@ -261,7 +246,7 @@ export async function Footer() {
       {/* Bottom Bar */}
       <div className="border-t border-slate-200 py-6 px-6 lg:px-20">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-slate-500">
-          <p className="font-mono break-words">{content['footer.copyright']}</p>
+          <p className="font-mono break-words">{copy.copyright}</p>
           <nav aria-label="Legal">
             <div className="flex gap-6">
               <Link href="/privacy" className={footerLinkClass}>

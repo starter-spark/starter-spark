@@ -152,11 +152,11 @@ export async function getEntry<T extends CmsType>(
 }
 
 /**
- * Singleton settings, guaranteed non-null: every settings field carries a
+ * A singleton document, guaranteed non-null: every singleton field carries a
  * schema default, so a missing document degrades to defaults instead of
  * failing — and callers never carry their own fallback copies.
  */
-export async function getSettings<T extends CmsType>(
+export async function getSingleton<T extends CmsType>(
   type: T,
 ): Promise<CmsData<T>> {
   if (cmsRegistry[type].kind !== 'singleton') {

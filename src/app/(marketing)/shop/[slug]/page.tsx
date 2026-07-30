@@ -13,7 +13,7 @@ import {
   jsonLdScript,
 } from '@/lib/structured-data'
 import { siteConfig } from '@/config/site'
-import { getSettings } from '@/cms/content'
+import { getSingleton } from '@/cms/content'
 import { resolveParams, type MaybePromise } from '@/lib/next-params'
 import type { Json } from '@/lib/supabase/database.types'
 import type {
@@ -260,7 +260,7 @@ export default async function ProductDetailPage({
   const modelPathFromSpecs = specs?.modelPath
   const finalModelPath = modelPathFromMedia || modelPathFromSpecs
 
-  const commerce = await getSettings('settings_commerce')
+  const commerce = await getSingleton('settings_commerce')
 
   // Get datasheet URL if available (document with "datasheet" in filename)
   const datasheetMedia = allMedia.find(

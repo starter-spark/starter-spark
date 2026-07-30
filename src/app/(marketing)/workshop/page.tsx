@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { ClaimCodeForm } from './ClaimCodeForm'
 import { KitCard } from './KitCard'
 import { PendingLicensesSection } from './PendingLicensesSection'
-import { getContents } from '@/lib/content'
+import { getSingleton } from '@/cms/content'
 import { getUserAchievements } from '@/lib/achievements'
 import { WorkshopTabs } from './WorkshopTabs'
 import { CoursesTab } from './CoursesTab'
@@ -62,50 +62,7 @@ export default async function WorkshopPage({
   }
 
   // Fetch dynamic content
-  const content = await getContents(
-    [
-      'workshop.header.title',
-      'workshop.header.description',
-      'workshop.header.description_signed_out',
-      'workshop.no_kits',
-      'workshop.signIn.title',
-      'workshop.signIn.description',
-      'workshop.signIn.button',
-      'workshop.signIn.shopButton',
-      'workshop.kits.title',
-      'workshop.kits.empty.subtitle',
-      'workshop.kits.empty.cta',
-      'workshop.claim.title',
-      'workshop.claim.description',
-      'workshop.pending.title',
-      'workshop.pending.description',
-      'learn.empty',
-    ],
-    {
-      'workshop.header.title': 'Workshop',
-      'workshop.header.description':
-        'Your learning hub - courses, tools, and progress all in one place.',
-      'workshop.header.description_signed_out':
-        'Sign in to access your kits and learning materials.',
-      'workshop.no_kits': "You don't have any kits yet.",
-      'workshop.signIn.title': 'Sign In Required',
-      'workshop.signIn.description':
-        'Sign in to view your kits, track your learning progress, and claim new kit codes.',
-      'workshop.signIn.button': 'Sign In',
-      'workshop.signIn.shopButton': 'Shop Kits',
-      'workshop.kits.title': 'My Kits',
-      'workshop.kits.empty.subtitle':
-        'Purchase a kit or enter a code to get started.',
-      'workshop.kits.empty.cta': 'Browse Kits',
-      'workshop.claim.title': 'Claim a Kit',
-      'workshop.claim.description':
-        'Have a kit code? Enter it below to activate your kit.',
-      'workshop.pending.title': 'Pending Licenses',
-      'workshop.pending.description':
-        "These licenses were purchased with your email. Claim to add to your account or reject if you didn't make this purchase.",
-      'learn.empty': 'No courses available yet. Check back soon.',
-    },
-  )
+  const copy = await getSingleton('workshop_page')
 
   // Data: kits
   let groupedKits: {
@@ -398,12 +355,10 @@ export default async function WorkshopPage({
         <div className="max-w-7xl mx-auto">
           <p className="text-sm font-mono text-cyan-700 mb-2">Dashboard</p>
           <h1 className="font-mono text-4xl lg:text-5xl font-bold text-slate-900 mb-4 break-words">
-            {content['workshop.header.title']}
+            {copy.headerTitle}
           </h1>
           <p className="text-lg text-slate-600 max-w-2xl break-words">
-            {user
-              ? content['workshop.header.description']
-              : content['workshop.header.description_signed_out']}
+            {user ? copy.headerDescription : copy.headerDescriptionSignedOut}
           </p>
         </div>
       </section>
@@ -419,8 +374,8 @@ export default async function WorkshopPage({
                 <PendingLicensesSection
                   pendingLicenses={pendingLicenses}
                   claimedByOtherLicenses={claimedByOtherLicenses}
-                  title={content['workshop.pending.title']}
-                  description={content['workshop.pending.description']}
+                  title={copy.pendingTitle}
+                  description={copy.pendingDescription}
                 />
 
                 {/* Tabbed Content */}
@@ -434,7 +389,7 @@ export default async function WorkshopPage({
                         learningStats={learningStats}
                         isLoggedIn={!!user}
                         userId={user.id}
-                        emptyMessage={content['learn.empty']}
+                        emptyMessage={copy.coursesEmpty}
                       />
                     }
                     toolsContent={<ToolsTab />}
@@ -460,7 +415,7 @@ export default async function WorkshopPage({
                 <div className="bg-white rounded border border-slate-200 p-6">
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="font-mono text-lg text-slate-900">
-                      {content['workshop.kits.title']}
+                      {copy.kitsTitle}
                     </h2>
                     <span className="text-xs text-slate-500 font-mono">
                       {totalLicenses}{' '}
@@ -474,19 +429,17 @@ export default async function WorkshopPage({
                         <Package className="w-6 h-6 text-slate-400" />
                       </div>
                       <p className="text-sm text-slate-600 mb-2">
-                        {content['workshop.no_kits']}
+                        {copy.noKits}
                       </p>
                       <p className="text-xs text-slate-500 mb-4">
-                        {content['workshop.kits.empty.subtitle']}
+                        {copy.kitsEmptySubtitle}
                       </p>
                       <Button
                         asChild
                         size="sm"
                         className="bg-cyan-700 hover:bg-cyan-600 text-white font-mono"
                       >
-                        <Link href="/shop">
-                          {content['workshop.kits.empty.cta']}
-                        </Link>
+                        <Link href="/shop">{copy.kitsEmptyCta}</Link>
                       </Button>
                     </div>
                   ) : (
@@ -511,11 +464,11 @@ export default async function WorkshopPage({
                   <div className="flex items-center gap-2 mb-4">
                     <Key className="w-5 h-5 text-cyan-700" />
                     <h3 className="font-mono text-lg text-slate-900">
-                      {content['workshop.claim.title']}
+                      {copy.claimTitle}
                     </h3>
                   </div>
                   <p className="text-sm text-slate-600 mb-4">
-                    {content['workshop.claim.description']}
+                    {copy.claimDescription}
                   </p>
                   <ClaimCodeForm />
                 </div>
@@ -532,10 +485,10 @@ export default async function WorkshopPage({
                 <LogIn className="w-10 h-10 text-slate-500" />
               </div>
               <h2 className="font-mono text-2xl text-slate-900 mb-2">
-                {content['workshop.signIn.title']}
+                {copy.signInTitle}
               </h2>
               <p className="text-slate-600 mb-8 max-w-md mx-auto">
-                {content['workshop.signIn.description']}
+                {copy.signInDescription}
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button
@@ -544,7 +497,7 @@ export default async function WorkshopPage({
                 >
                   <Link href="/login">
                     <LogIn className="w-4 h-4 mr-2" />
-                    {content['workshop.signIn.button']}
+                    {copy.signInButton}
                   </Link>
                 </Button>
                 <Button
@@ -554,7 +507,7 @@ export default async function WorkshopPage({
                 >
                   <Link href="/shop">
                     <Package className="w-4 h-4 mr-2" />
-                    {content['workshop.signIn.shopButton']}
+                    {copy.signInShopButton}
                   </Link>
                 </Button>
               </div>

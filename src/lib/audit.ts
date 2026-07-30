@@ -43,8 +43,6 @@ export type AuditAction =
   | 'stats.created'
   | 'stats.updated'
   | 'stats.deleted'
-  | 'site_content.updated'
-  | 'site_content.reset'
   // Banners
   | 'banner.created'
   | 'banner.updated'
@@ -97,7 +95,6 @@ export type AuditResourceType =
   | 'content'
   | 'settings'
   | 'stats'
-  | 'site_content'
   | 'banner'
   | 'course'
   | 'module'

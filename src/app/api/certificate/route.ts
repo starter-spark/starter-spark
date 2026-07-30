@@ -1,7 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { type NextRequest, NextResponse } from 'next/server'
 import { jsPDF } from 'jspdf'
-import { getContent } from '@/lib/content'
 import { isUuid } from '@/lib/uuid'
 import { rateLimit } from '@/lib/rate-limit'
 import { formatDate } from '@/lib/utils'
@@ -224,17 +223,6 @@ export async function GET(request: NextRequest) {
   const completionDate = formatDate(completionTimestamp ?? Date.now())
   doc.setFontSize(12)
   doc.text(`Completed on ${completionDate}`, pageWidth / 2, 155, {
-    align: 'center',
-  })
-
-  // Footer (charity content)
-  const charityMessage = await getContent(
-    'global.charity.full',
-    '67% of every purchase supports Hawaii youth robotics education',
-  )
-  doc.setFontSize(9)
-  doc.setTextColor(148, 163, 184) // Slate 400
-  doc.text(charityMessage, pageWidth / 2, pageHeight - 20, {
     align: 'center',
   })
 

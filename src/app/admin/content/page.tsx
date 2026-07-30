@@ -19,7 +19,6 @@ import {
   Plus,
   Globe,
   ExternalLink,
-  Type,
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -88,47 +87,7 @@ export default async function ContentPage() {
         <h1 className="text-2xl font-mono text-slate-900">
           Content Management
         </h1>
-        <p className="text-slate-600">
-          Edit static pages, team profiles, and site content
-        </p>
-      </div>
-
-      {/* Site Content Section */}
-      <div>
-        <h2 className="text-lg font-mono text-slate-900 mb-4">Site Content</h2>
-        <Card className="bg-white border-slate-200">
-          <CardHeader className="flex flex-row items-start justify-between space-y-0">
-            <div className="flex items-start gap-3">
-              <div className="p-2 bg-cyan-100 rounded">
-                <Type className="h-5 w-5 text-cyan-700" />
-              </div>
-              <div>
-                <CardTitle className="text-lg">Site-Wide Text</CardTitle>
-                <CardDescription>
-                  Edit headers, empty states, buttons, and text across the
-                  entire site
-                </CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-sm text-slate-500">
-                Customize text on homepage, shop, events, community, and more
-              </p>
-              <Button
-                asChild
-                size="sm"
-                className="bg-cyan-700 hover:bg-cyan-600 w-full sm:w-auto"
-              >
-                <Link href="/admin/content/site">
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit Site Content
-                </Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <p className="text-slate-600">Edit static pages and team profiles</p>
       </div>
 
       {/* Team Members Section */}

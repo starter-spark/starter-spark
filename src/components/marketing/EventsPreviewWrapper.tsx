@@ -1,33 +1,10 @@
 import { createClient } from '@/lib/supabase/server'
-import { getContents } from '@/lib/content'
+import { getSingleton } from '@/cms/content'
 import {
   EventsPreviewSection,
   type Workshop,
   type Discussion,
 } from './EventsPreview'
-
-const DEFAULT_CONTENT = {
-  'home.community.title': 'Join the Community',
-  'home.community.description':
-    'Learn together at our workshops or connect with builders in The Lab.',
-  'home.community.workshops.title': 'Upcoming Workshops',
-  'home.community.workshops.viewAll': 'View All',
-  'home.community.workshops.empty.title': 'No Upcoming Events',
-  'home.community.workshops.empty.description':
-    'Check back soon for new workshops and events in your area.',
-  'home.community.workshops.empty.cta': 'View Past Events',
-  'home.community.workshops.cta': 'Register for a Workshop',
-  'home.community.workshops.ctaEmpty': 'View All Events',
-  'home.community.lab.title': 'The Lab',
-  'home.community.lab.joinNow': 'Join Now',
-  'home.community.lab.membersLabel': 'Members',
-  'home.community.lab.discussionsLabel': 'Discussions',
-  'home.community.lab.empty.title': 'Be the First to Ask',
-  'home.community.lab.empty.description':
-    'Start a discussion and help build our community of makers.',
-  'home.community.lab.empty.cta': 'Ask a Question',
-  'home.community.lab.cta': 'Join The Lab',
-}
 
 /**
  * Server component that fetches upcoming events, recent discussions, and content
@@ -38,14 +15,14 @@ export async function EventsPreview() {
 
   // Run ALL queries in parallel - this is the key optimization
   const [
-    content,
+    copy,
     eventsResult,
     postsResult,
     memberCountResult,
     discussionCountResult,
   ] = await Promise.all([
     // 1. Content
-    getContents(Object.keys(DEFAULT_CONTENT), DEFAULT_CONTENT),
+    getSingleton('home_community'),
 
     // 2. Upcoming events
     supabase
@@ -151,25 +128,23 @@ export async function EventsPreview() {
         totalMembers: memberCount,
         totalDiscussions: discussionCount,
       }}
-      title={content['home.community.title']}
-      description={content['home.community.description']}
-      workshopsTitle={content['home.community.workshops.title']}
-      workshopsViewAll={content['home.community.workshops.viewAll']}
-      workshopsEmptyTitle={content['home.community.workshops.empty.title']}
-      workshopsEmptyDescription={
-        content['home.community.workshops.empty.description']
-      }
-      workshopsEmptyCta={content['home.community.workshops.empty.cta']}
-      workshopsCta={content['home.community.workshops.cta']}
-      workshopsCtaEmpty={content['home.community.workshops.ctaEmpty']}
-      labTitle={content['home.community.lab.title']}
-      labJoinNow={content['home.community.lab.joinNow']}
-      labMembersLabel={content['home.community.lab.membersLabel']}
-      labDiscussionsLabel={content['home.community.lab.discussionsLabel']}
-      labEmptyTitle={content['home.community.lab.empty.title']}
-      labEmptyDescription={content['home.community.lab.empty.description']}
-      labEmptyCta={content['home.community.lab.empty.cta']}
-      labCta={content['home.community.lab.cta']}
+      title={copy.title}
+      description={copy.description}
+      workshopsTitle={copy.workshopsTitle}
+      workshopsViewAll={copy.workshopsViewAll}
+      workshopsEmptyTitle={copy.workshopsEmptyTitle}
+      workshopsEmptyDescription={copy.workshopsEmptyDescription}
+      workshopsEmptyCta={copy.workshopsEmptyCta}
+      workshopsCta={copy.workshopsCta}
+      workshopsCtaEmpty={copy.workshopsCtaEmpty}
+      labTitle={copy.labTitle}
+      labJoinNow={copy.labJoinNow}
+      labMembersLabel={copy.labMembersLabel}
+      labDiscussionsLabel={copy.labDiscussionsLabel}
+      labEmptyTitle={copy.labEmptyTitle}
+      labEmptyDescription={copy.labEmptyDescription}
+      labEmptyCta={copy.labEmptyCta}
+      labCta={copy.labCta}
     />
   )
 }

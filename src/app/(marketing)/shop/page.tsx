@@ -3,7 +3,7 @@ import { ShopFilters } from './ShopFilters'
 import { Package } from 'lucide-react'
 import Link from 'next/link'
 import { type ProductTag } from '@/components/commerce'
-import { getContents } from '@/lib/content'
+import { getSingleton } from '@/cms/content'
 import type { Metadata } from 'next'
 import { siteConfig } from '@/config/site'
 
@@ -41,15 +41,7 @@ export const metadata: Metadata = {
 
 export default async function ShopPage() {
   // Fetch dynamic content
-  const content = await getContents(
-    ['shop.header.title', 'shop.header.description', 'shop.empty'],
-    {
-      'shop.header.title': 'Robotics Kits',
-      'shop.header.description':
-        'Everything you need to start building. Each kit includes components, tools, and full access to our learning platform.',
-      'shop.empty': 'No products available at this time.',
-    },
-  )
+  const copy = await getSingleton('shop_page')
 
   // Transform and sort products for display
   interface ProductTagItem {
@@ -221,10 +213,10 @@ export default async function ShopPage() {
         <div className="max-w-7xl mx-auto">
           <p className="text-sm font-mono text-cyan-700 mb-2">Shop</p>
           <h1 className="font-mono text-4xl lg:text-5xl font-bold text-slate-900 mb-4 break-words">
-            {content['shop.header.title']}
+            {copy.headerTitle}
           </h1>
           <p className="text-lg text-slate-600 max-w-2xl break-words">
-            {content['shop.header.description']}
+            {copy.headerDescription}
           </p>
         </div>
       </section>
@@ -247,7 +239,7 @@ export default async function ShopPage() {
                 Products Coming Soon
               </h3>
               <p className="text-slate-600 max-w-md mb-6 break-words">
-                {content['shop.empty']}
+                {copy.empty}
               </p>
               <Link
                 href="/#newsletter"

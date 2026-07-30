@@ -44,7 +44,7 @@ describe('cms registry', () => {
     expect(bad.success).toBe(false)
   })
 
-  it('every singleton field carries a default so getSettings can never throw', () => {
+  it('every singleton field carries a default so getSingleton can never throw', () => {
     for (const [name, def] of Object.entries(cmsRegistry)) {
       if (def.kind !== 'singleton') continue
       const parsed = typeSchema(name as never).safeParse({})

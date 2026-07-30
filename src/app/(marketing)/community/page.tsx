@@ -6,7 +6,7 @@ import { ForumFilters } from './ForumFilters'
 import { PostsList, type Post } from './PostsList'
 import { PUBLIC_POST_STATUSES } from './constants'
 import { Suspense } from 'react'
-import { getContents } from '@/lib/content'
+import { getSingleton } from '@/cms/content'
 import type { Metadata } from 'next'
 import { siteConfig } from '@/config/site'
 import { resolveParams, type MaybePromise } from '@/lib/next-params'
@@ -99,19 +99,7 @@ export default async function CommunityPage({
   const searchQuery = params.q?.trim().slice(0, 120)
 
   // Fetch dynamic content
-  const content = await getContents(
-    [
-      'community.header.title',
-      'community.header.description',
-      'community.empty',
-    ],
-    {
-      'community.header.title': 'The Lab',
-      'community.header.description':
-        'Get help from the community. Ask questions, share solutions, and connect with other builders. Every question gets answered.',
-      'community.empty': 'No discussions yet. Be the first to ask a question!',
-    },
-  )
+  const copy = await getSingleton('community_page')
 
   let posts: Post[] = []
   let products: { id: string; name: string; slug: string }[] = []
@@ -244,10 +232,10 @@ export default async function CommunityPage({
           {/* Title block with left accent */}
           <div className="border-l-4 border-cyan-600 pl-4">
             <h1 className="font-mono text-2xl sm:text-3xl font-bold text-slate-900">
-              {content['community.header.title']}
+              {copy.headerTitle}
             </h1>
             <p className="mt-2 text-slate-600 max-w-xl">
-              {content['community.header.description']}
+              {copy.headerDescription}
             </p>
           </div>
         </header>
@@ -291,7 +279,7 @@ export default async function CommunityPage({
                 initialPosts={posts}
                 totalCount={totalCount}
                 itemsPerPage={ITEMS_PER_PAGE}
-                emptyMessage={content['community.empty']}
+                emptyMessage={copy.empty}
                 statusFilter={statusFilter}
                 tagFilter={tagFilter}
                 productFilter={params.product}

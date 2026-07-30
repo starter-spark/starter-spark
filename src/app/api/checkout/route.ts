@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server'
 import { rateLimit } from '@/lib/rate-limit'
 import { createClient } from '@/lib/supabase/server'
 import { checkBotAndReject } from '@/lib/botid'
-import { getSettings } from '@/cms/content'
+import { getSingleton } from '@/cms/content'
 
 interface CartItem {
   slug: string
@@ -150,7 +150,7 @@ export async function POST(request: Request) {
     // All math in integer cents; float sums here once charged $9.99 shipping
     // on a cart totalling exactly the threshold.
     const { freeShippingThresholdCents, shippingRateCents } =
-      await getSettings('settings_commerce')
+      await getSingleton('settings_commerce')
     const subtotalCents = verifiedItems.reduce(
       (sum, item) => sum + item.priceCents * item.quantity,
       0,
