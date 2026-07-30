@@ -10,11 +10,11 @@ import { openFirstProductFromShop } from '../helpers/shop'
 
 const waitForHeader = async (page: Page) => {
   await page.waitForLoadState('domcontentloaded')
-  await page.locator('header').waitFor()
-  await page
-    .locator('header[data-hydrated="true"]')
-    .waitFor({ timeout: 2000 })
-    .catch(() => {})
+  // While the header Suspense boundary streams in, the DOM briefly holds two
+  // <header> elements (visible fallback + hidden streamed copy), so a bare
+  // `header` locator violates strict mode. The hydrated header is unique,
+  // and the badge assertions below need hydration anyway.
+  await page.locator('header[data-hydrated="true"]').waitFor()
 }
 
 test.describe('Cart - Empty State', () => {

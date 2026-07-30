@@ -130,9 +130,12 @@ test.describe('Product Page Accessibility', () => {
     const opened = await openFirstProductFromShop(page)
     if (!opened) return
 
-    // Quantity buttons should have aria-labels
-    const decreaseBtn = page.getByLabel(/decrease/i)
-    const increaseBtn = page.getByLabel(/increase/i)
+    // Quantity buttons should have accessible names. Use role-based locators:
+    // while a Suspense boundary streams in, the raw copy of the content sits
+    // in a hidden template element, so label-based locators can transiently
+    // match two elements and violate strict mode.
+    const decreaseBtn = page.getByRole('button', { name: /decrease/i })
+    const increaseBtn = page.getByRole('button', { name: /increase/i })
 
     await expect(decreaseBtn).toBeVisible()
     await expect(increaseBtn).toBeVisible()
