@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useSyncExternalStore } from 'react'
 import {
   X,
   Info,
@@ -128,9 +128,22 @@ function isDismissed(bannerId: string, dismissHours: number): boolean {
   return hoursSinceDismissed < dismissHours
 }
 
+// Dismissal state lives in localStorage; components subscribe through a tiny
+// external store so hydration renders the server HTML first (nothing
+// dismissed) and reconciles immediately after.
+const dismissListeners = new Set<() => void>()
+
+function subscribeDismissals(callback: () => void): () => void {
+  dismissListeners.add(callback)
+  return () => {
+    dismissListeners.delete(callback)
+  }
+}
+
 function dismissBanner(bannerId: string) {
   if (globalThis.window === undefined) return
   localStorage.setItem(getDismissKey(bannerId), Date.now().toString())
+  for (const listener of dismissListeners) listener()
 }
 
 function shouldShowOnPage(pages: string[], currentPath: string): boolean {
@@ -165,33 +178,22 @@ function getSafeLinkUrl(linkUrl: string): string | null {
 
 export function SiteBanner({ banners }: { banners: BannerProps[] }) {
   const pathname = usePathname()
-  // Dismissal state lives in localStorage, so it only exists after mount;
-  // banners render dismissed-free on the server and hide on hydration.
-  const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set())
-  const [hasMounted, setHasMounted] = useState(false)
+  // One char per banner: '1' = dismissed. The server snapshot reports nothing
+  // dismissed, matching the server-rendered HTML; the client snapshot takes
+  // over right after hydration.
+  const dismissedMask = useSyncExternalStore(
+    subscribeDismissals,
+    () =>
+      banners
+        .map((b) => (isDismissed(b.id, b.dismissHours) ? '1' : '0'))
+        .join(''),
+    () => '0'.repeat(banners.length),
+  )
 
-  useEffect(() => {
-    const dismissed = new Set<string>()
-    for (const banner of banners) {
-      if (isDismissed(banner.id, banner.dismissHours)) {
-        dismissed.add(banner.id)
-      }
-    }
-    setDismissedIds(dismissed)
-    setHasMounted(true)
-  }, [banners])
-
-  const handleDismiss = (bannerId: string) => {
-    dismissBanner(bannerId)
-    setDismissedIds((prev) => new Set([...prev, bannerId]))
-  }
-
-  // Before mount we can't know what's dismissed; render nothing dismissed and
-  // let hydration reconcile (matches the server-rendered HTML).
   const visibleBanners = banners.filter(
-    (banner) =>
+    (banner, index) =>
       shouldShowOnPage(banner.pages, pathname) &&
-      (!hasMounted || !dismissedIds.has(banner.id)),
+      dismissedMask.charAt(index) !== '1',
   )
 
   if (visibleBanners.length === 0) {
@@ -237,7 +239,7 @@ export function SiteBanner({ banners }: { banners: BannerProps[] }) {
                 {banner.dismissible && (
                   <button
                     onClick={() => {
-                      handleDismiss(banner.id)
+                      dismissBanner(banner.id)
                     }}
                     className={`absolute right-4 p-1.5 rounded-full transition-colors ${scheme.dismissStyle}`}
                     aria-label="Dismiss banner"
