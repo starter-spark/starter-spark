@@ -51,6 +51,7 @@ import {
   GripVertical,
   Plus,
   Download,
+  History,
   Image as ImageIcon,
   Heading as HeadingIcon,
   AlertTriangle,
@@ -58,6 +59,8 @@ import {
   Upload,
 } from 'lucide-react'
 import { updateLesson, deleteLesson } from '../../../actions'
+import { discardCmsDraft, publishCmsVersion, saveCmsDraft } from '@/cms/actions'
+import { Badge } from '@/components/ui/badge'
 import { LessonContent } from '@/components/learn/LessonContent'
 import { CodeEditor } from '@/components/learn/CodeEditor'
 import { FlowEditor } from '@/components/learn/FlowEditor'
@@ -81,11 +84,6 @@ interface Lesson {
   is_optional: boolean
   prerequisites: string[] | null
   sort_order: number
-  content: string
-  content_blocks: unknown[]
-  video_url: string | null
-  code_starter: string | null
-  code_solution: string | null
   module: {
     id: string
     title: string
@@ -96,10 +94,26 @@ interface Lesson {
   }
 }
 
+export interface LessonContentState {
+  blocks: unknown[]
+  baseVersion: number
+  hasDraft: boolean
+  isPublished: boolean
+  history: {
+    id: string
+    version: number
+    note: string | null
+    createdAt: string
+    isPublished: boolean
+    isDraft: boolean
+  }[]
+}
+
 interface LessonEditorProps {
   lesson: Lesson
   courseId: string
   availableLessons: { id: string; title: string }[]
+  content: LessonContentState
 }
 
 const lessonTypeConfig: Record<
@@ -221,127 +235,15 @@ function isBlockLike(
   return isRecord(value) && typeof value.type === 'string'
 }
 
-function normalizeBlocks(raw: unknown, lesson: Lesson): LessonBlock[] {
-  const fromDb: LessonBlock[] = []
-  if (Array.isArray(raw)) {
-    for (const item of raw) {
-      if (!isRecord(item)) continue
-      const type = typeof item.type === 'string' ? item.type : 'text'
-      const id = typeof item.id === 'string' ? item.id : randomId()
-      fromDb.push({ id, type, ...item })
-    }
+function ensureBlockIds(raw: unknown[]): LessonBlock[] {
+  const blocks: LessonBlock[] = []
+  for (const item of raw) {
+    if (!isRecord(item)) continue
+    const type = typeof item.type === 'string' ? item.type : 'text'
+    const id = typeof item.id === 'string' && item.id ? item.id : randomId()
+    blocks.push({ ...item, id, type })
   }
-
-  if (fromDb.length > 0) return fromDb
-
-  const seeded: LessonBlock[] = []
-  if (lesson.video_url) {
-    seeded.push({ id: randomId(), type: 'video', url: lesson.video_url })
-  }
-  if (lesson.content?.trim()) {
-    seeded.push({ id: randomId(), type: 'text', content: lesson.content })
-  }
-  if (lesson.lesson_type === 'code_challenge' && lesson.code_starter) {
-    seeded.push({
-      id: randomId(),
-      type: 'interactive_code',
-      language: 'cpp',
-      starterCode: lesson.code_starter,
-      solutionCode: lesson.code_solution || '',
-    })
-  }
-  return seeded
-}
-
-function escapeMarkdown(text: string): string {
-  return text.replaceAll('\r\n', '\n').trim()
-}
-
-function blocksToLegacyFields(blocks: LessonBlock[]): {
-  content: string
-  videoUrl: string
-  codeStarter: string
-  codeSolution: string
-} {
-  let videoUrl = ''
-  let codeStarter = ''
-  let codeSolution = ''
-
-  const parts: string[] = []
-
-  for (const block of blocks) {
-    const type = block.type
-
-    if (type === 'video' && !videoUrl && typeof block.url === 'string') {
-      videoUrl = block.url
-      parts.push(`Video: ${block.url}`)
-      continue
-    }
-
-    if (
-      type === 'interactive_code' &&
-      !codeStarter &&
-      typeof block.starterCode === 'string'
-    ) {
-      codeStarter = block.starterCode
-      if (typeof block.solutionCode === 'string')
-        codeSolution = block.solutionCode
-      const lang = typeof block.language === 'string' ? block.language : 'cpp'
-      parts.push('```' + lang)
-      parts.push(escapeMarkdown(codeStarter), '```')
-      continue
-    }
-
-    if (type === 'heading') {
-      const level = typeof block.level === 'number' ? block.level : 2
-      const heading = typeof block.content === 'string' ? block.content : ''
-      const prefix = level === 1 ? '##' : level === 2 ? '###' : '####'
-      parts.push(`${prefix} ${heading}`.trim())
-      continue
-    }
-
-    if (type === 'text' && typeof block.content === 'string') {
-      parts.push(escapeMarkdown(block.content))
-      continue
-    }
-
-    if (type === 'code' && typeof block.code === 'string') {
-      const lang = typeof block.language === 'string' ? block.language : 'text'
-      parts.push('```' + lang)
-      parts.push(escapeMarkdown(block.code), '```')
-      continue
-    }
-
-    if (type === 'callout' && typeof block.content === 'string') {
-      const variant = typeof block.variant === 'string' ? block.variant : 'info'
-      parts.push(`:::${variant}`)
-      parts.push(escapeMarkdown(block.content), ':::')
-      continue
-    }
-
-    if (type === 'image' && typeof block.url === 'string') {
-      const alt = typeof block.alt === 'string' ? block.alt : ''
-      parts.push(`![${alt}](${block.url})`)
-      continue
-    }
-
-    if (type === 'download' && typeof block.url === 'string') {
-      const filename =
-        typeof block.filename === 'string' ? block.filename : 'Download'
-      parts.push(`[${filename}](${block.url})`)
-      if (typeof block.description === 'string' && block.description.trim()) {
-        parts.push(block.description)
-      }
-      continue
-    }
-  }
-
-  return {
-    content: parts.filter(Boolean).join('\n\n').trim(),
-    videoUrl,
-    codeStarter,
-    codeSolution,
-  }
+  return blocks
 }
 
 const builtInTemplates: { id: string; label: string; blocks: LessonBlock[] }[] =
@@ -392,7 +294,7 @@ const builtInTemplates: { id: string; label: string; blocks: LessonBlock[] }[] =
           type: 'quiz',
           question: 'Question?',
           options: ['A', 'B', 'C'],
-          correct: 0,
+          correctAnswer: 0,
           explanation: '',
         },
       ],
@@ -421,19 +323,35 @@ export function LessonEditor({
   lesson,
   courseId,
   availableLessons,
+  content,
 }: LessonEditorProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [deleting, setDeleting] = useState(false)
 
+  const [title, setTitle] = useState(lesson.title)
+  const [description, setDescription] = useState(lesson.description || '')
+  const [estimatedMinutes, setEstimatedMinutes] = useState(
+    String(lesson.estimated_minutes),
+  )
   const [lessonType, setLessonType] = useState(lesson.lesson_type || 'content')
   const [difficulty, setDifficulty] = useState(lesson.difficulty || 'beginner')
   const [published, setPublished] = useState(lesson.is_published)
   const [optional, setOptional] = useState(lesson.is_optional)
 
   const [blocks, setBlocks] = useState<LessonBlock[]>(() =>
-    normalizeBlocks(lesson.content_blocks, lesson),
+    ensureBlockIds(content.blocks),
   )
+
+  // Engine state for the content document (draft/publish/history)
+  const [baseVersion, setBaseVersion] = useState(content.baseVersion)
+  const [hasDraft, setHasDraft] = useState(content.hasDraft)
+  const [contentPublished, setContentPublished] = useState(content.isPublished)
+  const [publishing, setPublishing] = useState(false)
+  const [discarding, setDiscarding] = useState(false)
+  const [restoreTarget, setRestoreTarget] = useState<
+    LessonContentState['history'][number] | null
+  >(null)
 
   const [prerequisites, setPrerequisites] = useState<string[]>(
     () => lesson.prerequisites || [],
@@ -447,19 +365,49 @@ export function LessonEditor({
 
   // Track initial state for unsaved changes detection
   const [initialBlocksSnapshot, setInitialBlocksSnapshot] = useState(() =>
-    JSON.stringify(normalizeBlocks(lesson.content_blocks, lesson)),
+    JSON.stringify(ensureBlockIds(content.blocks)),
   )
   const [initialPrereqsSnapshot, setInitialPrereqsSnapshot] = useState(() =>
     JSON.stringify(lesson.prerequisites || []),
   )
+  const metadataSignature = JSON.stringify({
+    title,
+    description,
+    estimatedMinutes,
+    lessonType,
+    difficulty,
+    published,
+    optional,
+  })
+  const [initialMetadataSnapshot, setInitialMetadataSnapshot] = useState(() =>
+    JSON.stringify({
+      title: lesson.title,
+      description: lesson.description || '',
+      estimatedMinutes: String(lesson.estimated_minutes),
+      lessonType: lesson.lesson_type || 'content',
+      difficulty: lesson.difficulty || 'beginner',
+      published: lesson.is_published,
+      optional: lesson.is_optional,
+    }),
+  )
 
   // Compute if there are unsaved changes
+  const blocksDirty = useMemo(
+    () => JSON.stringify(blocks) !== initialBlocksSnapshot,
+    [blocks, initialBlocksSnapshot],
+  )
   const hasUnsavedChanges = useMemo(() => {
-    const blocksChanged = JSON.stringify(blocks) !== initialBlocksSnapshot
     const prereqsChanged =
       JSON.stringify(prerequisites) !== initialPrereqsSnapshot
-    return blocksChanged || prereqsChanged
-  }, [blocks, initialBlocksSnapshot, initialPrereqsSnapshot, prerequisites])
+    const metadataChanged = metadataSignature !== initialMetadataSnapshot
+    return blocksDirty || prereqsChanged || metadataChanged
+  }, [
+    blocksDirty,
+    initialPrereqsSnapshot,
+    prerequisites,
+    metadataSignature,
+    initialMetadataSnapshot,
+  ])
 
   // Warn before leaving page with unsaved changes
   useEffect(() => {
@@ -480,7 +428,9 @@ export function LessonEditor({
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 's') {
         e.preventDefault()
-        if (!isPending && formRef.current) {
+        // A save racing an in-flight publish/discard would use a stale
+        // baseVersion and conflict against itself
+        if (!isPending && !publishing && !discarding && formRef.current) {
           formRef.current.requestSubmit()
         }
       }
@@ -488,15 +438,14 @@ export function LessonEditor({
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isPending])
+  }, [isPending, publishing, discarding])
 
   // Reset dirty state after successful save
   const markAsSaved = useCallback(() => {
     setInitialBlocksSnapshot(JSON.stringify(blocks))
     setInitialPrereqsSnapshot(JSON.stringify(prerequisites))
-  }, [blocks, prerequisites])
-
-  const derived = useMemo(() => blocksToLegacyFields(blocks), [blocks])
+    setInitialMetadataSnapshot(metadataSignature)
+  }, [blocks, prerequisites, metadataSignature])
 
   const filteredPrereqLessons = useMemo(() => {
     const q = prereqQuery.trim().toLowerCase()
@@ -505,6 +454,31 @@ export function LessonEditor({
     return list.filter((l) => l.title.toLowerCase().includes(q))
   }, [availableLessons, lesson.id, prereqQuery])
 
+  /**
+   * Content changes are saved as an engine draft — the live lesson only
+   * changes on Publish. A stale baseVersion means someone else saved first;
+   * the engine returns a conflict instead of clobbering their work.
+   */
+  const saveContentDraft = async (): Promise<boolean> => {
+    const draft = await saveCmsDraft({
+      type: 'lesson_content',
+      key: lesson.id,
+      data: { blocks },
+      baseVersion,
+    })
+    if (!draft.success) {
+      toast.error(
+        draft.conflict ? 'Someone else saved first' : 'Failed to save content',
+        { description: draft.error },
+      )
+      return false
+    }
+    if (typeof draft.version === 'number') setBaseVersion(draft.version)
+    setHasDraft(true)
+    setInitialBlocksSnapshot(JSON.stringify(blocks))
+    return true
+  }
+
   const handleSave = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const formData = new FormData(e.currentTarget)
@@ -512,12 +486,89 @@ export function LessonEditor({
       const result = await updateLesson(lesson.id, courseId, formData)
       if (result.error) {
         toast.error('Failed to save lesson', { description: result.error })
-      } else {
-        markAsSaved()
-        toast.success('Lesson saved successfully')
-        router.refresh()
+        return
       }
+      if (blocksDirty) {
+        if (!(await saveContentDraft())) return
+        toast.success('Saved', {
+          description: contentPublished
+            ? 'Content saved as a draft — publish to update the live lesson'
+            : 'Content saved as a draft',
+        })
+      } else {
+        toast.success('Lesson saved')
+      }
+      markAsSaved()
+      router.refresh()
     })
+  }
+
+  const handlePublishContent = async () => {
+    setPublishing(true)
+    // No draft (e.g. right after a discard) publishes what the editor
+    // shows: save it first so "Nothing to publish" is unreachable
+    if (blocksDirty || !hasDraft) {
+      if (!(await saveContentDraft())) {
+        setPublishing(false)
+        return
+      }
+    }
+    const result = await publishCmsVersion({
+      type: 'lesson_content',
+      key: lesson.id,
+    })
+    if (result.success) {
+      setContentPublished(true)
+      setHasDraft(false)
+      toast.success('Content published', {
+        description: 'Learners see this version now',
+      })
+      router.refresh()
+    } else {
+      toast.error('Failed to publish content', { description: result.error })
+    }
+    setPublishing(false)
+  }
+
+  const handleDiscardDraft = async () => {
+    setDiscarding(true)
+    const result = await discardCmsDraft({
+      type: 'lesson_content',
+      key: lesson.id,
+    })
+    if (result.success) {
+      setHasDraft(false)
+      toast.success('Draft discarded', {
+        description:
+          'The published version stays live. Reload to load it into the editor.',
+      })
+      router.refresh()
+    } else {
+      toast.error('Failed to discard draft', { description: result.error })
+    }
+    setDiscarding(false)
+  }
+
+  const handleRestore = async () => {
+    if (!restoreTarget) return
+    setPublishing(true)
+    const result = await publishCmsVersion({
+      type: 'lesson_content',
+      key: lesson.id,
+      versionId: restoreTarget.id,
+    })
+    if (result.success) {
+      setContentPublished(true)
+      if (restoreTarget.isDraft) setHasDraft(false)
+      toast.success(`Restored and published v${restoreTarget.version}`, {
+        description: 'Reload to load it into the editor.',
+      })
+      router.refresh()
+    } else {
+      toast.error('Failed to restore version', { description: result.error })
+    }
+    setPublishing(false)
+    setRestoreTarget(null)
   }
 
   const handleDelete = async () => {
@@ -557,7 +608,7 @@ export function LessonEditor({
                           ...base,
                           question: '',
                           options: [''],
-                          correct: 0,
+                          correctAnswer: 0,
                           explanation: '',
                         }
                       : type === 'interactive_code'
@@ -728,20 +779,9 @@ export function LessonEditor({
       />
       <input
         type="hidden"
-        name="content_blocks"
-        value={JSON.stringify(blocks)}
-      />
-      <input
-        type="hidden"
         name="prerequisites"
         value={JSON.stringify(prerequisites)}
       />
-
-      {/* Derived legacy fields (kept for backward compatibility) */}
-      <input type="hidden" name="content" value={derived.content} />
-      <input type="hidden" name="video_url" value={derived.videoUrl} />
-      <input type="hidden" name="code_starter" value={derived.codeStarter} />
-      <input type="hidden" name="code_solution" value={derived.codeSolution} />
 
       {/* Top actions */}
       <div className="flex flex-wrap items-center gap-2 justify-between rounded-lg border border-slate-200 bg-white px-4 py-3">
@@ -804,7 +844,10 @@ export function LessonEditor({
                   <Input
                     id="title"
                     name="title"
-                    defaultValue={lesson.title}
+                    value={title}
+                    onChange={(e) => {
+                      setTitle(e.target.value)
+                    }}
                     required
                   />
                 </div>
@@ -835,7 +878,10 @@ export function LessonEditor({
                 <Textarea
                   id="description"
                   name="description"
-                  defaultValue={lesson.description || ''}
+                  value={description}
+                  onChange={(e) => {
+                    setDescription(e.target.value)
+                  }}
                   rows={2}
                   placeholder="Brief description of what this lesson covers..."
                 />
@@ -862,7 +908,10 @@ export function LessonEditor({
                     name="estimated_minutes"
                     type="number"
                     min={1}
-                    defaultValue={lesson.estimated_minutes}
+                    value={estimatedMinutes}
+                    onChange={(e) => {
+                      setEstimatedMinutes(e.target.value)
+                    }}
                   />
                 </div>
                 <div className="flex flex-col gap-4 pt-2">
@@ -942,9 +991,37 @@ export function LessonEditor({
           {/* Blocks */}
           <div className="rounded-lg border border-slate-200 bg-white">
             <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
-              <h2 className="font-mono text-lg font-semibold text-slate-900">
-                Content Blocks
-              </h2>
+              <div className="flex items-center gap-3">
+                <h2 className="font-mono text-lg font-semibold text-slate-900">
+                  Content Blocks
+                </h2>
+                <div className="flex flex-wrap gap-1">
+                  {hasDraft && (
+                    <Badge
+                      variant="outline"
+                      className="bg-amber-50 text-amber-700 border-amber-200"
+                    >
+                      Draft
+                    </Badge>
+                  )}
+                  {contentPublished && (
+                    <Badge
+                      variant="outline"
+                      className="bg-green-50 text-green-700 border-green-200"
+                    >
+                      Published
+                    </Badge>
+                  )}
+                  {!hasDraft && !contentPublished && (
+                    <Badge
+                      variant="outline"
+                      className="bg-slate-50 text-slate-600 border-slate-200"
+                    >
+                      Unpublished
+                    </Badge>
+                  )}
+                </div>
+              </div>
               <div className="flex items-center gap-2">
                 <Select value={templateId} onValueChange={setTemplateId}>
                   <SelectTrigger className="w-56">
@@ -1083,20 +1160,47 @@ export function LessonEditor({
               </AlertDialogContent>
             </AlertDialog>
 
-            <Button
-              type="submit"
-              className="bg-cyan-700 hover:bg-cyan-600"
-              disabled={isPending}
-            >
-              <Save className="mr-2 h-4 w-4" />
-              {isPending ? 'Saving...' : 'Save Changes'}
-            </Button>
+            <div className="flex flex-wrap items-center gap-2">
+              {hasDraft && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                  disabled={discarding || publishing || isPending}
+                  onClick={() => void handleDiscardDraft()}
+                >
+                  {discarding ? 'Discarding...' : 'Discard draft'}
+                </Button>
+              )}
+              <Button
+                type="submit"
+                variant="outline"
+                disabled={isPending || publishing || discarding}
+              >
+                <Save className="mr-2 h-4 w-4" />
+                {isPending ? 'Saving...' : 'Save Changes'}
+              </Button>
+              <Button
+                type="button"
+                className="bg-cyan-700 hover:bg-cyan-600"
+                disabled={
+                  publishing ||
+                  isPending ||
+                  discarding ||
+                  (!blocksDirty && !hasDraft && contentPublished)
+                }
+                onClick={() => void handlePublishContent()}
+              >
+                <Upload className="mr-2 h-4 w-4" />
+                {publishing ? 'Publishing...' : 'Publish Content'}
+              </Button>
+            </div>
           </div>
         </div>
 
-        {/* Preview */}
-        <div className="lg:col-span-2">
-          <div className="lg:sticky lg:top-6 rounded-lg border border-slate-200 bg-white">
+        {/* Preview + history */}
+        <div className="lg:col-span-2 space-y-6">
+          <div className="rounded-lg border border-slate-200 bg-white">
             <div className="border-b border-slate-200 px-6 py-4">
               <h2 className="font-mono text-lg font-semibold text-slate-900">
                 Live Preview
@@ -1106,15 +1210,116 @@ export function LessonEditor({
               </p>
             </div>
             <div className="p-6 max-h-[70vh] overflow-auto">
-              <LessonContent
-                content={derived.content}
-                contentBlocks={blocks}
-                lessonType={lessonType}
-              />
+              <LessonContent blocks={blocks} />
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-slate-200 bg-white">
+            <div className="border-b border-slate-200 px-6 py-4">
+              <div className="flex items-center gap-2">
+                <History className="h-4 w-4 text-slate-500" />
+                <h2 className="font-mono text-lg font-semibold text-slate-900">
+                  Content History
+                </h2>
+              </div>
+              <p className="text-xs text-slate-500">
+                Every save is a version; restore publishes an older one.
+              </p>
+            </div>
+            <div className="p-6">
+              {content.history.length === 0 ? (
+                <p className="text-sm text-slate-500">
+                  No versions yet. Save to start the history.
+                </p>
+              ) : (
+                <ul className="space-y-3">
+                  {content.history.map((version) => (
+                    <li
+                      key={version.id}
+                      className="rounded border border-slate-200 p-3"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="font-mono text-sm font-medium text-slate-900">
+                            v{version.version}
+                          </span>
+                          {version.isPublished && (
+                            <Badge
+                              variant="outline"
+                              className="bg-green-50 text-green-700 border-green-200"
+                            >
+                              Published
+                            </Badge>
+                          )}
+                          {version.isDraft && (
+                            <Badge
+                              variant="outline"
+                              className="bg-amber-50 text-amber-700 border-amber-200"
+                            >
+                              Draft
+                            </Badge>
+                          )}
+                        </div>
+                        {!version.isPublished && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            disabled={publishing || isPending}
+                            onClick={() => {
+                              setRestoreTarget(version)
+                            }}
+                          >
+                            Restore
+                          </Button>
+                        )}
+                      </div>
+                      <p className="mt-1 text-xs text-slate-500">
+                        {new Date(version.createdAt).toLocaleString()}
+                      </p>
+                      {version.note && (
+                        <p className="mt-1 text-sm text-slate-600">
+                          {version.note}
+                        </p>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           </div>
         </div>
       </div>
+
+      {/* Restore confirmation */}
+      <AlertDialog
+        open={restoreTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) setRestoreTarget(null)
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Restore v{restoreTarget?.version}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              This publishes version {restoreTarget?.version} for learners
+              immediately. The editor keeps your current blocks until you
+              reload.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-cyan-700 hover:bg-cyan-600"
+              onClick={() => void handleRestore()}
+            >
+              Restore
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </form>
   )
 }
@@ -1550,7 +1755,8 @@ function QuizEditor({
   const options = Array.isArray(block.options)
     ? block.options.filter((o): o is string => typeof o === 'string')
     : ['']
-  const correct = typeof block.correct === 'number' ? block.correct : 0
+  const correctAnswer =
+    typeof block.correctAnswer === 'number' ? block.correctAnswer : 0
   const explanation =
     typeof block.explanation === 'string' ? block.explanation : ''
 
@@ -1600,7 +1806,22 @@ function QuizEditor({
                     variant="ghost"
                     className="text-red-600 hover:text-red-700 hover:bg-red-50"
                     onClick={() => {
-                      onChange({ options: options.filter((_, i) => i !== idx) })
+                      // Removing an option shifts everything after it, so
+                      // the stored answer index has to move with it.
+                      const nextOptions = options.filter((_, i) => i !== idx)
+                      const shifted =
+                        correctAnswer > idx
+                          ? correctAnswer - 1
+                          : correctAnswer === idx
+                            ? 0
+                            : correctAnswer
+                      onChange({
+                        options: nextOptions,
+                        correctAnswer: Math.min(
+                          shifted,
+                          Math.max(0, nextOptions.length - 1),
+                        ),
+                      })
                     }}
                     aria-label="Remove option"
                   >
@@ -1618,9 +1839,9 @@ function QuizEditor({
         <div className="space-y-2">
           <Label>Correct option</Label>
           <select
-            value={String(correct)}
+            value={String(correctAnswer)}
             onChange={(e) => {
-              onChange({ correct: Number(e.target.value) })
+              onChange({ correctAnswer: Number(e.target.value) })
             }}
             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-mono"
           >

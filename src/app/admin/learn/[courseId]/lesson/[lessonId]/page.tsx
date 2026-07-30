@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { getCmsDocumentDetail } from '@/cms/admin'
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -9,7 +10,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb'
-import { LessonEditor } from './LessonEditor'
+import { LessonEditor, type LessonContentState } from './LessonEditor'
 import { resolveParams, type MaybePromise } from '@/lib/next-params'
 
 export const metadata = {
@@ -28,11 +29,6 @@ interface Lesson {
   is_optional: boolean
   prerequisites: string[] | null
   sort_order: number
-  content: string
-  content_blocks: unknown[]
-  video_url: string | null
-  code_starter: string | null
-  code_solution: string | null
   module: {
     id: string
     title: string
@@ -64,13 +60,6 @@ async function getLesson(
       is_optional,
       prerequisites,
       sort_order,
-      content_data:lesson_content (
-        content,
-        content_blocks,
-        video_url,
-        code_starter,
-        code_solution
-      ),
       module:modules (
         id,
         title,
@@ -107,15 +96,6 @@ async function getLesson(
     return null
   }
 
-  const lessonContent = data.content_data as {
-    content: string | null
-    content_blocks: unknown[] | null
-    video_url: string | null
-    code_starter: string | null
-    code_solution: string | null
-  } | null
-  const contentBlocks = lessonContent?.content_blocks
-
   const lesson: Lesson = {
     id: data.id,
     title: data.title,
@@ -128,11 +108,6 @@ async function getLesson(
     is_optional: data.is_optional!,
     prerequisites: data.prerequisites ?? null,
     sort_order: data.sort_order,
-    content: lessonContent?.content || '',
-    content_blocks: Array.isArray(contentBlocks) ? contentBlocks : [],
-    video_url: lessonContent?.video_url ?? null,
-    code_starter: lessonContent?.code_starter ?? null,
-    code_solution: lessonContent?.code_solution ?? null,
     module: {
       id: moduleData.id,
       title: moduleData.title,
@@ -187,6 +162,24 @@ export default async function EditLessonPage({
     notFound()
   }
 
+  // The lesson's content lives in the engine, keyed by the lesson id
+  const detail = await getCmsDocumentDetail('lesson_content', lessonId)
+  const blocks = Array.isArray(detail?.data?.blocks) ? detail.data.blocks : []
+  const content: LessonContentState = {
+    blocks,
+    baseVersion: detail?.latestVersion ?? 0,
+    hasDraft: detail?.hasDraft ?? false,
+    isPublished: detail?.isPublished ?? false,
+    history: (detail?.history ?? []).map((version) => ({
+      id: version.id,
+      version: version.version,
+      note: version.note,
+      createdAt: version.createdAt,
+      isPublished: version.isPublished,
+      isDraft: version.isDraft,
+    })),
+  }
+
   return (
     <div className="space-y-6">
       {/* Breadcrumb */}
@@ -231,6 +224,7 @@ export default async function EditLessonPage({
         lesson={lesson}
         courseId={courseId}
         availableLessons={availableLessons}
+        content={content}
       />
     </div>
   )

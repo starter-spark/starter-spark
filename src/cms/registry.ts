@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { lessonBlockSchema } from './blocks'
 
 /**
  * The CMS registry: the single source of truth for every content type.
@@ -17,6 +18,8 @@ export type FieldWidget =
   | 'checkbox'
   | 'select'
   | 'datetime'
+  /** Structured block array; only bespoke admin UIs edit it */
+  | 'blocks'
 
 /** ISO timestamp or empty string; the admin edits it as a local datetime. */
 const optionalInstant = () =>
@@ -58,6 +61,17 @@ export interface TypeDef {
   keyed?: boolean
   /** Documents of this type can carry uploaded file attachments. */
   attachments?: boolean
+  /**
+   * Gated types never appear on the anon-readable published path (the
+   * database policies exclude them); delivery goes through getGatedEntry
+   * after the caller's own access check.
+   */
+  gated?: boolean
+  /**
+   * Types with a bespoke admin UI: hidden from the /admin/cms index, and
+   * the generic CMS routes redirect here instead of rendering a form.
+   */
+  customAdminPath?: string
 }
 
 export const cmsRegistry = {
@@ -1135,6 +1149,21 @@ export const cmsRegistry = {
     },
     listFields: ['title', 'category'],
     orderable: true,
+  },
+  lesson_content: {
+    kind: 'collection',
+    label: 'Lesson Content',
+    description:
+      'Lesson bodies for the learning platform, keyed by lesson id. License-gated on the site; edited through the lesson editor under Learn.',
+    gated: true,
+    customAdminPath: '/admin/learn',
+    fields: {
+      blocks: {
+        schema: z.array(lessonBlockSchema).default([]),
+        label: 'Content blocks',
+        widget: 'blocks',
+      },
+    },
   },
   about_page: {
     kind: 'singleton',

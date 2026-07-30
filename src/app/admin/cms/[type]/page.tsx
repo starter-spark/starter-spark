@@ -23,6 +23,9 @@ export default async function CmsTypePage({
   }
 
   const def = typeDef(type)
+  if (def.customAdminPath) {
+    redirect(def.customAdminPath)
+  }
   if (def.kind === 'singleton') {
     redirect(`/admin/cms/${type}/default`)
   }

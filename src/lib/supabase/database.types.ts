@@ -697,50 +697,6 @@ export type Database = {
         }
         Relationships: []
       }
-      lesson_content: {
-        Row: {
-          code_solution: string | null
-          code_starter: string | null
-          content: string
-          content_blocks: Json
-          downloads: Json
-          lesson_id: string
-          updated_at: string | null
-          video_url: string | null
-          visual_blocks: Json | null
-        }
-        Insert: {
-          code_solution?: string | null
-          code_starter?: string | null
-          content?: string
-          content_blocks?: Json
-          downloads?: Json
-          lesson_id: string
-          updated_at?: string | null
-          video_url?: string | null
-          visual_blocks?: Json | null
-        }
-        Update: {
-          code_solution?: string | null
-          code_starter?: string | null
-          content?: string
-          content_blocks?: Json
-          downloads?: Json
-          lesson_id?: string
-          updated_at?: string | null
-          video_url?: string | null
-          visual_blocks?: Json | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'lesson_content_lesson_id_fkey'
-            columns: ['lesson_id']
-            isOneToOne: true
-            referencedRelation: 'lessons'
-            referencedColumns: ['id']
-          },
-        ]
-      }
       lesson_progress: {
         Row: {
           completed_at: string | null

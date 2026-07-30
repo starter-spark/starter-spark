@@ -2,7 +2,13 @@ import { unstable_cache } from 'next/cache'
 import { draftMode } from 'next/headers'
 import { createPublicClient } from '@/lib/supabase/public'
 import { cmsDb } from './db'
-import { cmsRegistry, typeSchema, type CmsData, type CmsType } from './registry'
+import {
+  cmsRegistry,
+  typeDefOf,
+  typeSchema,
+  type CmsData,
+  type CmsType,
+} from './registry'
 
 /**
  * Public delivery layer. Published reads are cached and tagged
@@ -142,6 +148,12 @@ async function fetchDraftEntries(type: CmsType): Promise<
 }
 
 async function loadEntries<T extends CmsType>(type: T): Promise<CmsEntry<T>[]> {
+  // Gated types are excluded from the anon-readable policies; serving them
+  // through the public read path would return nothing in production and
+  // leak paid content in any environment where the policies drifted.
+  if (typeDefOf(type).gated) {
+    throw new Error(`cms: ${type} is gated — read it with getGatedEntry`)
+  }
   const rows = (await isDraftMode())
     ? await fetchDraftEntries(type)
     : await unstable_cache(
@@ -187,6 +199,82 @@ export async function getEntryMeta<T extends CmsType>(
 ): Promise<CmsEntry<T> | null> {
   const entries = await loadEntries(type)
   return entries.find((e) => e.key === key) ?? null
+}
+
+async function fetchGatedPublishedEntry(
+  type: CmsType,
+  key: string,
+): Promise<{
+  key: string
+  sort_order: number
+  data: unknown
+  published_at: string | null
+} | null> {
+  const { data: doc, error } = await cmsDb
+    .from('cms_documents')
+    .select('key, sort_order, published_version_id')
+    .eq('type', type)
+    .eq('key', key)
+    .is('deleted_at', null)
+    .maybeSingle()
+  if (error) {
+    console.error(`cms: failed to fetch gated ${type}/${key}:`, error)
+    return null
+  }
+  if (!doc?.published_version_id) return null
+
+  const { data: version, error: versionError } = await cmsDb
+    .from('cms_versions')
+    .select('data, created_at')
+    .eq('id', doc.published_version_id)
+    .maybeSingle()
+  if (versionError || !version) {
+    if (versionError) {
+      console.error(`cms: failed to fetch gated ${type}/${key}:`, versionError)
+    }
+    return null
+  }
+
+  return {
+    key: doc.key,
+    sort_order: Number(doc.sort_order),
+    data: version.data,
+    published_at: version.created_at,
+  }
+}
+
+/**
+ * One published entry of a gated type, read with the service role and
+ * cached under the document's tag. The CALLER is the access control:
+ * invoke this only after its own check (e.g. the lesson page's license
+ * check) has passed. Draft mode prefers the draft version (the preview
+ * cookie is staff-gated).
+ */
+export async function getGatedEntry<T extends CmsType>(
+  type: T,
+  key: string,
+): Promise<CmsEntry<T> | null> {
+  if (!typeDefOf(type).gated) {
+    throw new Error(`cms: ${type} is not gated — use getEntry/getEntryMeta`)
+  }
+
+  const row = (await isDraftMode())
+    ? ((await fetchDraftEntries(type)).find((r) => r.key === key) ?? null)
+    : await unstable_cache(
+        async () => fetchGatedPublishedEntry(type, key),
+        ['cms-gated', type, key],
+        { tags: ['cms', cmsTag(type, key)] },
+      )()
+  if (!row) return null
+
+  const data = parseData(type, row.key, row.data)
+  if (!data) return null
+  return {
+    key: row.key,
+    sortOrder: row.sort_order,
+    data,
+    publishedAt: row.published_at,
+  }
 }
 
 /**

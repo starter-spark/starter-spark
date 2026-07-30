@@ -86,12 +86,8 @@ const inlineCodeClassName =
   'bg-slate-100 px-1.5 py-0.5 rounded font-mono text-sm'
 
 interface LessonContentProps {
-  content: string
-  contentBlocks?: unknown[] | null
-  lessonType?: string
-  videoUrl?: string | null
-  codeStarter?: string | null
-  codeSolution?: string | null
+  /** Validated lesson_content blocks (the engine's single content model) */
+  blocks: unknown[]
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -638,16 +634,22 @@ function QuizBlock({
   question,
   options,
   correctAnswer,
+  explanation,
 }: {
   question: string
   options: string[]
   correctAnswer: number | null
+  explanation?: string
 }) {
   const [selected, setSelected] = useState<number | null>(null)
   const [submitted, setSubmitted] = useState(false)
   const stats = useLessonStatsOptional()
 
   const isCorrect = submitted && selected === correctAnswer
+  const correctOption =
+    correctAnswer !== null && correctAnswer >= 0
+      ? options.at(correctAnswer)
+      : undefined
 
   const handleSubmit = () => {
     setSubmitted(true)
@@ -726,8 +728,13 @@ function QuizBlock({
           <p className="text-sm font-medium">
             {isCorrect
               ? 'Correct!'
-              : `Incorrect. The correct answer is: ${options[correctAnswer ?? 0]}`}
+              : correctOption !== undefined
+                ? `Incorrect. The correct answer is: ${correctOption}`
+                : 'Incorrect.'}
           </p>
+          {explanation && (
+            <p className="mt-2 text-sm text-slate-700">{explanation}</p>
+          )}
         </div>
       )}
       {submitted && (
@@ -819,15 +826,8 @@ function CodeChallenge({
   )
 }
 
-export function LessonContent({
-  content,
-  contentBlocks,
-  lessonType = 'content',
-  videoUrl,
-  codeStarter,
-  codeSolution,
-}: LessonContentProps) {
-  const blocks = Array.isArray(contentBlocks) ? contentBlocks : []
+export function LessonContent({ blocks: rawBlocks }: LessonContentProps) {
+  const blocks = Array.isArray(rawBlocks) ? rawBlocks : []
 
   const [checkedItems, setCheckedItems] = useState<Set<number>>(new Set())
   let checkboxIndex = 0
@@ -1015,10 +1015,7 @@ export function LessonContent({
           if (type === 'video') {
             const url = asString(block.url)
             if (!url) return null
-            const startTime =
-              asNumber(block.startTime) ||
-              asNumber(block.start_time) ||
-              undefined
+            const startTime = asNumber(block.startTime) || undefined
             // Parse chapters from block
             const rawChapters = Array.isArray(block.chapters)
               ? block.chapters
@@ -1124,8 +1121,8 @@ export function LessonContent({
             const options = Array.isArray(block.options)
               ? block.options.filter((o): o is string => typeof o === 'string')
               : []
-            const correctAnswer =
-              asNumber(block.correctAnswer) ?? asNumber(block.correct_answer)
+            const correctAnswer = asNumber(block.correctAnswer)
+            const explanation = asString(block.explanation) || undefined
             const blockId = asString(block.id) || `quiz-${index}`
             return (
               <QuizBlock
@@ -1133,6 +1130,7 @@ export function LessonContent({
                 question={question}
                 options={options}
                 correctAnswer={correctAnswer}
+                explanation={explanation}
               />
             )
           }
@@ -1170,9 +1168,7 @@ export function LessonContent({
               : (block as unknown)
             const solutionFlow = isRecord(block.solutionFlowData)
               ? block.solutionFlowData
-              : isRecord(block.solution)
-                ? block.solution
-                : undefined
+              : undefined
             return (
               <LazyVisualBlocksChallenge
                 key={asString(block.id) || String(index)}
@@ -1229,25 +1225,13 @@ export function LessonContent({
 
   return (
     <div className="space-y-8">
-      {blocks.length > 0 ? (
-        renderBlocks()
+      {blocks.length === 0 ? (
+        <p className="text-slate-500 italic">
+          This lesson is being written. Check back soon!
+        </p>
       ) : (
-        <>
-          {videoUrl && <VideoPlayer url={videoUrl} />}
-          <article className="prose prose-slate max-w-none">
-            {renderMarkdown(content)}
-          </article>
-        </>
+        renderBlocks()
       )}
-
-      {lessonType === 'code_challenge' &&
-        codeStarter &&
-        blocks.length === 0 && (
-          <CodeChallenge
-            starterCode={codeStarter}
-            solutionCode={codeSolution}
-          />
-        )}
     </div>
   )
 }

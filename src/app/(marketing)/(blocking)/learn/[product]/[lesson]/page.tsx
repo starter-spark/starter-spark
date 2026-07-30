@@ -1,6 +1,7 @@
 // (blocking) route group: no loading.tsx/Suspense above this page, so the
 // lesson lookup settles before the shell flushes and notFound() commits a real 404.
 import { createClient } from '@/lib/supabase/server'
+import { getGatedEntry } from '@/cms/content'
 import { ChevronRight, Home } from 'lucide-react'
 import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
@@ -166,25 +167,8 @@ export default async function LessonPage({
     redirect(`/learn/${productSlug}`)
   }
 
-  interface LessonContentData {
-    content: string
-    content_blocks: unknown
-    video_url: string | null
-    code_starter: string | null
-    code_solution: string | null
-  }
-
-  const { data: lessonContentRaw, error: lessonContentError } = await supabase
-    .from('lesson_content')
-    .select('content, content_blocks, video_url, code_starter, code_solution')
-    .eq('lesson_id', lesson.id)
-    .maybeSingle()
-
-  if (lessonContentError) {
-    console.error('Error fetching lesson content:', lessonContentError)
-  }
-
-  const lessonContent = lessonContentRaw as LessonContentData | null
+  // The license check above is the access control for this gated read
+  const lessonContent = await getGatedEntry('lesson_content', lesson.id)
 
   // Fetch user's lesson progress for this course
   const completedLessonIds = new Set<string>()
@@ -243,10 +227,6 @@ export default async function LessonPage({
       ? Math.round((nextCompletedRequiredCount / totalRequiredLessons) * 100)
       : progressPercent
 
-  const contentBlocks = Array.isArray(lessonContent?.content_blocks)
-    ? (lessonContent?.content_blocks as unknown[])
-    : null
-
   return (
     <div className="bg-slate-50 flex">
       <LessonPrefetch hrefs={prefetchHrefs} />
@@ -301,16 +281,9 @@ export default async function LessonPage({
             {lesson.title}
           </h1>
 
-          {/* Lesson content (from DB) */}
+          {/* Lesson content (published engine version) */}
           <LessonStatsWrapper lessonId={lesson.id}>
-            <LessonContent
-              content={lessonContent?.content || ''}
-              contentBlocks={contentBlocks}
-              lessonType={lesson.lesson_type || 'content'}
-              videoUrl={lessonContent?.video_url}
-              codeStarter={lessonContent?.code_starter}
-              codeSolution={lessonContent?.code_solution}
-            />
+            <LessonContent blocks={lessonContent?.data.blocks ?? []} />
           </LessonStatsWrapper>
 
           {/* Navigation */}

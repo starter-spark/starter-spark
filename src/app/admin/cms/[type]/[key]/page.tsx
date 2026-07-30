@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
 import { getCmsDocumentDetail, referenceOptionsFor } from '@/cms/admin'
 import {
@@ -29,6 +29,9 @@ export default async function CmsEditorPage({
   }
 
   const def = typeDef(type)
+  if (def.customAdminPath) {
+    redirect(def.customAdminPath)
+  }
   if (def.kind === 'singleton' && key !== 'default') {
     notFound()
   }

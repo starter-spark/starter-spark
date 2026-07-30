@@ -18,10 +18,14 @@ export const metadata = {
 }
 
 export default async function CmsIndexPage() {
-  const documents = await Promise.all(
-    cmsTypeNames.map((type) => listCmsDocuments(type)),
+  // Types with a bespoke admin (e.g. lesson content) are managed there
+  const listedTypes = cmsTypeNames.filter(
+    (type) => !typeDef(type).customAdminPath,
   )
-  const types = cmsTypeNames.map((type, index) => {
+  const documents = await Promise.all(
+    listedTypes.map((type) => listCmsDocuments(type)),
+  )
+  const types = listedTypes.map((type, index) => {
     const def = typeDef(type)
     return {
       type,

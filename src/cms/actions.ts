@@ -212,7 +212,13 @@ export async function saveCmsDraft(input: {
     const existing = await loadDocument(type, key)
 
     if (!existing) {
-      if (input.key !== null && def.kind === 'collection') {
+      // Bespoke-admin collections own their keys (e.g. lesson ids), so a
+      // save may recreate a missing document; generic collections cannot.
+      if (
+        input.key !== null &&
+        def.kind === 'collection' &&
+        !(def as TypeDef).customAdminPath
+      ) {
         return { success: false, error: 'Entry not found' }
       }
       // New document (or first save of a singleton): append at the end
@@ -416,6 +422,14 @@ export async function deleteCmsEntry(input: {
   if (cmsRegistry[input.type].kind !== 'collection') {
     return { success: false, error: 'Settings cannot be deleted' }
   }
+  // Bespoke-admin documents live and die with their owning record (e.g. a
+  // lesson); deleting one here would strand the owner with no content slot.
+  if (typeDefOf(input.type).customAdminPath) {
+    return {
+      success: false,
+      error: 'This content is managed from its own admin section',
+    }
+  }
 
   try {
     const doc = await loadDocument(input.type, input.key)
@@ -462,6 +476,12 @@ export async function reorderCmsEntries(input: {
   if ('error' in auth) return { success: false, error: auth.error }
   if (!isCmsType(input.type)) {
     return { success: false, error: `Unknown content type: ${input.type}` }
+  }
+  if (typeDefOf(input.type).customAdminPath) {
+    return {
+      success: false,
+      error: 'This content is managed from its own admin section',
+    }
   }
 
   try {

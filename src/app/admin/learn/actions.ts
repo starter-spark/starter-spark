@@ -3,9 +3,12 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
-import type { Json } from '@/lib/supabase/database.types'
 import { requireAdminOrStaff } from '@/lib/auth'
 import { logAuditEvent } from '@/lib/audit'
+import {
+  createLessonContentDocument,
+  softDeleteLessonContentDocuments,
+} from '@/cms/lesson-content'
 import crypto from 'node:crypto'
 
 // Generate slug from title
@@ -52,20 +55,6 @@ async function generateUniqueSlug(
 
   // Fallback to random suffix if somehow we have 100+ duplicates
   return `${baseSlug}-${crypto.randomUUID().slice(0, 8)}`
-}
-
-function safeJsonArray(
-  value: string,
-  label: string,
-): { ok: true; value: Json[] } | { ok: false; error: string } {
-  try {
-    const parsed: unknown = JSON.parse(value)
-    if (!Array.isArray(parsed))
-      return { ok: false, error: `${label} must be a JSON array` }
-    return { ok: true, value: parsed as unknown as Json[] }
-  } catch {
-    return { ok: false, error: `${label} is not valid JSON` }
-  }
 }
 
 // Course actions
@@ -206,6 +195,22 @@ export async function deleteCourse(courseId: string) {
   if (!guard.ok) return { error: guard.error }
   const user = guard.user
 
+  // Modules and lessons cascade away with the course; capture the lesson
+  // ids first so their content documents can be retired too. A failed
+  // capture aborts — once the cascade runs the ids are gone and the
+  // documents unreachable.
+  const { data: courseModules, error: captureError } = await supabase
+    .from('modules')
+    .select('lessons (id)')
+    .eq('course_id', courseId)
+  if (captureError) {
+    console.error('Error capturing course lessons:', captureError)
+    return { error: 'Failed to delete course — try again' }
+  }
+  const cascadedLessonIds = (courseModules ?? []).flatMap((m) =>
+    ((m.lessons ?? []) as { id: string }[]).map((lesson) => lesson.id),
+  )
+
   const { data: deleted, error } = await supabase
     .from('courses')
     .delete()
@@ -221,6 +226,8 @@ export async function deleteCourse(courseId: string) {
   if (!deleted) {
     return { error: 'Course not found' }
   }
+
+  await softDeleteLessonContentDocuments(cascadedLessonIds)
 
   await logAuditEvent({
     userId: user.id,
@@ -391,6 +398,18 @@ export async function deleteModule(moduleId: string, courseId: string) {
   if (!guard.ok) return { error: guard.error }
   const user = guard.user
 
+  // Lessons cascade away with the module; capture them first so their
+  // content documents can be retired too. A failed capture aborts — once
+  // the cascade runs the ids are gone and the documents unreachable.
+  const { data: moduleLessons, error: captureError } = await supabase
+    .from('lessons')
+    .select('id')
+    .eq('module_id', moduleId)
+  if (captureError) {
+    console.error('Error capturing module lessons:', captureError)
+    return { error: 'Failed to delete module — try again' }
+  }
+
   const { data: deleted, error } = await supabase
     .from('modules')
     .delete()
@@ -407,6 +426,10 @@ export async function deleteModule(moduleId: string, courseId: string) {
   if (!deleted) {
     return { error: 'Module not found' }
   }
+
+  await softDeleteLessonContentDocuments(
+    (moduleLessons ?? []).map((lesson) => lesson.id),
+  )
 
   await logAuditEvent({
     userId: user.id,
@@ -566,16 +589,11 @@ export async function createLesson(
     return { error: 'Failed to create lesson' }
   }
 
-  const { error: contentError } = await supabase.from('lesson_content').insert({
-    lesson_id: data.id,
-    content: '',
-    content_blocks: [],
-    downloads: [],
-  })
-  if (contentError) {
-    console.error('Error creating lesson content:', contentError)
+  const content = await createLessonContentDocument(data.id)
+  if (content.error) {
+    console.error('Error creating lesson content:', content.error)
     await supabase.from('lessons').delete().eq('id', data.id)
-    return { error: contentError.message }
+    return { error: content.error }
   }
 
   await logAuditEvent({
@@ -608,25 +626,13 @@ export async function updateLesson(
 
   const title = formData.get('title') as string
   const description = formData.get('description') as string
-  const content = (formData.get('content') as string) || ''
   const lessonType = (formData.get('lesson_type') as string) || 'content'
   const difficulty = (formData.get('difficulty') as string) || 'beginner'
   const estimatedMinutes =
     Number.parseInt(formData.get('estimated_minutes') as string) || 15
   const isPublished = formData.get('is_published') === 'true'
   const isOptional = formData.get('is_optional') === 'true'
-  const videoUrl = formData.get('video_url') as string
-  const codeStarter = formData.get('code_starter') as string
-  const codeSolution = formData.get('code_solution') as string
   const prerequisitesRaw = formData.get('prerequisites') as string
-
-  const contentBlocksRaw = formData.get('content_blocks') as string
-  let contentBlocks: Json[] = []
-  if (contentBlocksRaw) {
-    const parsed = safeJsonArray(contentBlocksRaw, 'Content blocks')
-    if (!parsed.ok) return { error: parsed.error }
-    contentBlocks = parsed.value
-  }
 
   let prerequisites: string[] | null = null
   if (prerequisitesRaw) {
@@ -671,24 +677,6 @@ export async function updateLesson(
     return { error: 'Lesson not found' }
   }
 
-  const { error: contentError } = await supabase.from('lesson_content').upsert(
-    {
-      lesson_id: lessonId,
-      content,
-      content_blocks: contentBlocks,
-      video_url: videoUrl || null,
-      code_starter: codeStarter || null,
-      code_solution: codeSolution || null,
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: 'lesson_id' },
-  )
-
-  if (contentError) {
-    console.error('Error updating lesson content:', contentError)
-    return { error: contentError.message }
-  }
-
   await logAuditEvent({
     userId: user.id,
     action: 'lesson.updated',
@@ -731,6 +719,8 @@ export async function deleteLesson(lessonId: string, courseId: string) {
   if (!deleted) {
     return { error: 'Lesson not found' }
   }
+
+  await softDeleteLessonContentDocuments([deleted.id])
 
   await logAuditEvent({
     userId: user.id,
