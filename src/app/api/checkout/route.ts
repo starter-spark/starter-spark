@@ -207,6 +207,13 @@ export async function POST(request: Request) {
       '}',
     ].join('')
 
+    // Logged-in buyers get their account email locked into the Stripe session
+    // so the license's customer_email matches their account and the workshop
+    // claim flow can find it. Guests type their email on the Stripe page.
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
     // Create Stripe Checkout Session
     // Note: Item info is stored in each line_item's product_data.metadata.slug
     // The webhook retrieves line_items directly from Stripe to avoid metadata size limits
@@ -222,8 +229,9 @@ export async function POST(request: Request) {
       phone_number_collection: {
         enabled: true,
       },
-      // Guest checkout, no customer_email required
-      // Stripe will collect email during checkout
+      ...(user?.email
+        ? { customer_email: user.email, metadata: { user_id: user.id } }
+        : {}),
     })
 
     return NextResponse.json({ url: session.url })
