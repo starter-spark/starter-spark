@@ -60,16 +60,12 @@ export function AboutTeam({ team = defaultTeam }: AboutTeamProps) {
           viewport={{ once: true }}
           className="text-center mb-16"
         >
-          <h2 className="font-mono text-3xl lg:text-4xl text-slate-900 mb-4">
+          <h2 className="font-mono text-3xl lg:text-4xl text-slate-900">
             Meet the Team
           </h2>
-          <p className="text-slate-600 max-w-2xl mx-auto">
-            Four students from Honolulu who believe engineering should be for
-            everyone.
-          </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="flex flex-wrap justify-center gap-6">
           {displayTeam.map((member, idx) => (
             <motion.div
               key={member.name}
@@ -77,6 +73,7 @@ export function AboutTeam({ team = defaultTeam }: AboutTeamProps) {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: idx * 0.1 }}
+              className="w-full md:w-[calc(50%-0.75rem)] lg:w-[calc(25%-1.125rem)]"
             >
               <Card className="h-full bg-white border-slate-200 shadow-sm hover:shadow-md transition-shadow">
                 <CardContent className="p-6">
