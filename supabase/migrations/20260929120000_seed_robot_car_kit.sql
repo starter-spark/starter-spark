@@ -24,7 +24,7 @@ INSERT INTO products (
 ) VALUES (
   'robot-car',
   'The Robot Car',
-  'Build your very own robot car and teach it to think! Screw together the 3D-printed chassis, bolt on the motors and wheels, and wire up a real Arduino Nano, the same tiny computer that engineers use. Then write the code that brings it to life. Your car can spot walls with its ultrasonic "eyes" and steer around them, follow a black line all by itself, show faces on its LED screen, and zoom around with the included IR remote. Our step-by-step guide walks you through every screw and every line of code, so you can go from box to driving robot in one afternoon. Smart kits. Zero stress.',
+  'Build your very own robot car and teach it to think! Screw together the 3D-printed chassis, bolt on the motors and wheels, and wire up a real Arduino Nano, the same tiny computer that engineers use. Then write the code that brings it to life. Your car can spot walls with its ultrasonic "eyes" and steer around them, follow a black line all by itself, show faces on its LED screen, and zoom around with the included IR remote. Our step-by-step guide walks you through every screw and every line of code, so you can go from box to driving robot in one afternoon.',
   6599,
   false,
   'draft',
