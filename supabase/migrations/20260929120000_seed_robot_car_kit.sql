@@ -12,8 +12,6 @@
 -- the price and the items marked CONFIRM below have been checked.
 --
 -- CONFIRM before launch:
---   * Battery: the CAD models a holder (64.5 x 70.8 x 20.5 mm) but not the cell
---     type, so the copy says "battery holder" and cells are listed as not included.
 --   * IR remote: the CAD has an IR receiver but no remote. The remote is not listed.
 --   * Line sensor channel count: the CAD models it as a single 97 x 27 mm board.
 
@@ -59,8 +57,10 @@ INSERT INTO products (
       { "quantity": 1, "name": "8×8 LED matrix", "description": "64 LEDs for expressions, arrows and status." },
       { "quantity": 2, "name": "Acrylic chassis plates", "description": "Pre-cut 136 × 150 mm lower and upper decks with raised frames that locate each module." },
       { "quantity": 4, "name": "Motor brackets", "description": "Acrylic uprights that clamp each motor to the lower deck." },
-      { "quantity": 1, "name": "Battery holder", "description": "Mounts on the lower deck. Batteries not included." },
+      { "quantity": 1, "name": "4× AA battery holder", "description": "Mounts on the lower deck. AA batteries not included." },
       { "quantity": 1, "name": "Hardware pack", "description": "4 × M3 30 mm hex standoffs, 8 spacers, 30 screws and bolts and 6 nuts." },
+      { "quantity": 1, "name": "Mini M3 Allen key", "description": "Fits every socket-cap screw in the kit. A full-size hex key of your own makes the build easier." },
+      { "quantity": 1, "name": "Mini screwdriver", "description": "For the small module screws. We recommend using your own full-size screwdriver if you have one." },
       { "quantity": 1, "name": "Digital curriculum", "description": "Step-by-step build guide, wiring diagrams and Arduino lessons." }
     ],
     "technicalSpecs": [
@@ -73,8 +73,9 @@ INSERT INTO products (
       { "label": "Chassis", "value": "Two 3 mm acrylic decks on 30 mm M3 standoffs" },
       { "label": "Dimensions", "value": "190 × 153 × 109 mm (W × L × H)" },
       { "label": "Parts", "value": "70 components, all fasteners included" },
-      { "label": "Power", "value": "Onboard battery holder (batteries not included)" },
+      { "label": "Power", "value": "4× AA battery holder (batteries not included)" },
       { "label": "Programming", "value": "Arduino IDE over mini-USB" },
+      { "label": "Tools", "value": "Mini M3 Allen key and screwdriver included" },
       { "label": "Build Time", "value": "~3 hours" },
       { "label": "Skill Level", "value": "Beginner friendly" }
     ]
