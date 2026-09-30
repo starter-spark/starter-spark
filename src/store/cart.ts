@@ -14,7 +14,13 @@ export interface CartItem {
   originalPrice?: number
   /** Max quantity available (from stock tracking). Undefined means unlimited. */
   maxQuantity?: number
+  /** Filament colour chosen for 3D-printed parts, when the product offers a choice. */
+  color?: string
 }
+
+/** Identifies a cart line: the same product in two colours is two lines. */
+export const cartItemKey = (item: Pick<CartItem, 'slug' | 'color'>) =>
+  item.color ? `${item.slug}::${item.color}` : item.slug
 
 interface CartState {
   items: CartItem[]
@@ -23,8 +29,9 @@ interface CartState {
 
 interface CartActions {
   addItem: (item: Omit<CartItem, 'quantity'>, quantity?: number) => void
-  removeItem: (slug: string) => void
-  updateQuantity: (slug: string, quantity: number) => void
+  /** Takes a line key from `cartItemKey` (a bare slug for items without a colour). */
+  removeItem: (key: string) => void
+  updateQuantity: (key: string, quantity: number) => void
   clearCart: () => void
   toggleCart: () => void
   openCart: () => void
@@ -60,7 +67,8 @@ export const useCartStore = create<CartStore>()(
 
       addItem: (item, quantity = 1) => {
         const items = get().items
-        const existingItem = items.find((i) => i.slug === item.slug)
+        const key = cartItemKey(item)
+        const existingItem = items.find((i) => cartItemKey(i) === key)
 
         if (existingItem) {
           // Respect maxQuantity if set
@@ -70,7 +78,7 @@ export const useCartStore = create<CartStore>()(
 
           set({
             items: items.map((i) =>
-              i.slug === item.slug
+              cartItemKey(i) === key
                 ? { ...i, quantity: clampedQuantity, maxQuantity: maxQty }
                 : i,
             ),
@@ -89,26 +97,26 @@ export const useCartStore = create<CartStore>()(
         set({ isOpen: true })
       },
 
-      removeItem: (slug) => {
+      removeItem: (key) => {
         set({
-          items: get().items.filter((i) => i.slug !== slug),
+          items: get().items.filter((i) => cartItemKey(i) !== key),
         })
       },
 
-      updateQuantity: (slug, quantity) => {
+      updateQuantity: (key, quantity) => {
         if (quantity <= 0) {
-          get().removeItem(slug)
+          get().removeItem(key)
           return
         }
 
-        const item = get().items.find((i) => i.slug === slug)
+        const item = get().items.find((i) => cartItemKey(i) === key)
         const clampedQuantity = item?.maxQuantity
           ? Math.min(quantity, item.maxQuantity)
           : quantity
 
         set({
           items: get().items.map((i) =>
-            i.slug === slug ? { ...i, quantity: clampedQuantity } : i,
+            cartItemKey(i) === key ? { ...i, quantity: clampedQuantity } : i,
           ),
         })
       },

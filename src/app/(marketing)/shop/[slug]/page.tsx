@@ -18,6 +18,7 @@ import { resolveParams, type MaybePromise } from '@/lib/next-params'
 import type { Json } from '@/lib/supabase/database.types'
 import type { ReviewAuthor, ReviewListItem, UserReview } from '@/features/reviews/types'
 import { computeReviewSummary } from '@/features/reviews/summary'
+import { getFilamentColors } from '@/lib/filament-colors'
 
 // Type for product specs JSONB
 interface ProductSpecs {
@@ -437,6 +438,7 @@ export default async function ProductDetailPage({
                   average: reviewSummary.average,
                   total: reviewSummary.total,
                 }}
+                colors={getFilamentColors(product.specs)}
               />
             </div>
           </div>

@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { rateLimit } from '@/lib/rate-limit'
 import { createClient } from '@/lib/supabase/server'
 import { checkBotAndReject } from '@/lib/botid'
+import { getFilamentColors, matchFilamentColor } from '@/lib/filament-colors'
 
 interface CartItem {
   slug: string
@@ -10,6 +11,7 @@ interface CartItem {
   price: number
   quantity: number
   image?: string
+  color?: string
 }
 
 export async function POST(request: Request) {
@@ -32,6 +34,11 @@ export async function POST(request: Request) {
 
     // Normalize and validate items (no negative/NaN/huge quantities, merge duplicates)
     const quantitiesBySlug = new Map<string, number>()
+    // Same product in different colours stays on separate lines
+    const lines = new Map<
+      string,
+      { slug: string; color: string | null; quantity: number }
+    >()
     for (const raw of rawItems) {
       if (!raw || typeof raw !== 'object') {
         return NextResponse.json(
@@ -67,6 +74,12 @@ export async function POST(request: Request) {
         )
       }
 
+      const colorRaw = typeof item.color === 'string' ? item.color.trim() : ''
+      if (colorRaw.length > 40) {
+        return NextResponse.json({ error: 'Invalid color' }, { status: 400 })
+      }
+      const color = colorRaw || null
+
       const nextQty = (quantitiesBySlug.get(slug) ?? 0) + quantityRaw
       if (nextQty > 99) {
         return NextResponse.json(
@@ -75,14 +88,14 @@ export async function POST(request: Request) {
         )
       }
       quantitiesBySlug.set(slug, nextQty)
+
+      const lineKey = `${slug}::${color ?? ''}`
+      const line = lines.get(lineKey)
+      if (line) line.quantity += quantityRaw
+      else lines.set(lineKey, { slug, color, quantity: quantityRaw })
     }
 
-    const items = Array.from(quantitiesBySlug.entries()).map(
-      ([slug, quantity]) => ({
-        slug,
-        quantity,
-      }),
-    )
+    const items = Array.from(lines.values())
 
     if (!items || items.length === 0) {
       return NextResponse.json({ error: 'No items in cart' }, { status: 400 })
@@ -90,11 +103,11 @@ export async function POST(request: Request) {
 
     // Verify prices from database (discount validation)
     const supabase = await createClient()
-    const slugs = items.map((item) => item.slug)
+    const slugs = [...new Set(items.map((item) => item.slug))]
     const { data: products, error: dbError } = await supabase
       .from('products')
       .select(
-        'slug, name, price_cents, discount_percent, discount_expires_at, original_price_cents',
+        'slug, name, price_cents, discount_percent, discount_expires_at, original_price_cents, specs',
       )
       .in('slug', slugs)
 
@@ -113,6 +126,7 @@ export async function POST(request: Request) {
     const verifiedItems: {
       slug: string
       name: string
+      color: string | null
       priceCents: number
       quantity: number
     }[] = []
@@ -137,9 +151,22 @@ export async function POST(request: Request) {
         }
       }
 
+      // Products with filament choices need one of their listed colours
+      let color: string | null = null
+      if (getFilamentColors(product.specs).length > 0) {
+        color = item.color ? matchFilamentColor(product.specs, item.color) : null
+        if (!color) {
+          return NextResponse.json(
+            { error: `Please choose a color for ${product.name}` },
+            { status: 400 },
+          )
+        }
+      }
+
       verifiedItems.push({
         slug: product.slug,
         name: product.name,
+        color,
         priceCents: currentPriceCents,
         quantity: item.quantity,
       })
@@ -157,10 +184,10 @@ export async function POST(request: Request) {
       price_data: {
         currency: 'usd',
         product_data: {
-          name: item.name,
-          metadata: {
-            slug: item.slug,
-          },
+          name: item.color ? `${item.name} (${item.color})` : item.name,
+          metadata: item.color
+            ? { slug: item.slug, color: item.color }
+            : { slug: item.slug },
         },
         unit_amount: item.priceCents,
       },

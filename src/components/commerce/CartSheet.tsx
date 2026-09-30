@@ -8,7 +8,12 @@ import {
   SheetTitle,
   SheetFooter,
 } from '@/components/ui/sheet'
-import { useCartStore, selectCartTotal, selectCartCount } from '@/store/cart'
+import {
+  useCartStore,
+  selectCartTotal,
+  selectCartCount,
+  cartItemKey,
+} from '@/store/cart'
 import { Minus, Plus, Trash2, ShoppingBag } from 'lucide-react'
 import Link from 'next/link'
 import { QuantityButton } from '@/components/commerce/QuantityButton'
@@ -52,7 +57,7 @@ export function CartSheet() {
             <div className="flex-1 overflow-auto py-4 space-y-4">
               {items.map((item) => (
                 <div
-                  key={item.slug}
+                  key={cartItemKey(item)}
                   className="flex gap-4 p-4 bg-slate-50 rounded border border-slate-200"
                 >
                   {/* Image Placeholder */}
@@ -67,6 +72,11 @@ export function CartSheet() {
                     <h4 className="font-medium text-slate-900 text-sm truncate">
                       {item.name}
                     </h4>
+                    {item.color && (
+                      <p className="text-xs text-slate-600 mt-0.5">
+                        Color: {item.color}
+                      </p>
+                    )}
                     <p className="text-amber-600 font-mono text-sm mt-1">
                       ${item.price.toFixed(2)}
                     </p>
@@ -78,9 +88,9 @@ export function CartSheet() {
                         tone={item.quantity === 1 ? 'danger' : 'neutral'}
                         onClick={() => {
                           if (item.quantity === 1) {
-                            removeItem(item.slug)
+                            removeItem(cartItemKey(item))
                           } else {
-                            updateQuantity(item.slug, item.quantity - 1)
+                            updateQuantity(cartItemKey(item), item.quantity - 1)
                           }
                         }}
                         aria-label={
@@ -101,7 +111,7 @@ export function CartSheet() {
                       <QuantityButton
                         size="sm"
                         onClick={() => {
-                          updateQuantity(item.slug, item.quantity + 1)
+                          updateQuantity(cartItemKey(item), item.quantity + 1)
                         }}
                         disabled={item.maxQuantity !== undefined && item.quantity >= item.maxQuantity}
                         aria-label="Increase quantity"

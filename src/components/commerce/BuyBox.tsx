@@ -16,6 +16,7 @@ import { trackAddToCart } from '@/lib/analytics'
 import { cn } from '@/lib/utils'
 import { QuantityButton } from '@/components/commerce/QuantityButton'
 import { StarRating } from '@/features/reviews/components/StarRating'
+import type { FilamentColor } from '@/lib/filament-colors'
 
 interface BuyBoxProps {
   id: string
@@ -36,6 +37,8 @@ interface BuyBoxProps {
   // Charity percentage from site content
   charityPercentage?: string
   reviewSummary?: { average: number; total: number } | null
+  /** Filament colours the buyer picks from; empty means no choice. */
+  colors?: FilamentColor[]
 }
 
 const trustSignals = [
@@ -111,8 +114,11 @@ export function BuyBox({
   maxQuantityPerOrder,
   charityPercentage = '67%',
   reviewSummary,
+  colors = [],
 }: BuyBoxProps) {
   const [quantity, setQuantity] = useState(1)
+  const [color, setColor] = useState(colors[0]?.name)
+  const colorLabelId = useId()
   const [shiftHeld, setShiftHeld] = useState(false)
   const quantityLabelId = useId()
   const addItem = useCartStore((state) => state.addItem)
@@ -180,6 +186,7 @@ export function BuyBox({
           : undefined,
         // Pass max quantity for cart stock enforcement
         maxQuantity: maxQuantity < 99 ? maxQuantity : undefined,
+        ...(color ? { color } : {}),
       },
       quantity,
     )
@@ -280,6 +287,53 @@ export function BuyBox({
           </p>
         )}
       </div>
+
+      {/* Filament colour picker */}
+      {inStock && colors.length > 0 && (
+        <div className="space-y-2">
+          <div className="text-sm text-slate-700">
+            <span id={colorLabelId}>Color</span>
+            {color && (
+              <span className="text-slate-900 font-medium">: {color}</span>
+            )}
+          </div>
+          <div
+            role="radiogroup"
+            aria-labelledby={colorLabelId}
+            className="flex flex-wrap gap-3"
+          >
+            {colors.map((option) => {
+              const selected = option.name === color
+              return (
+                <button
+                  key={option.name}
+                  type="button"
+                  role="radio"
+                  aria-checked={selected}
+                  aria-label={option.name}
+                  title={option.name}
+                  onClick={() => {
+                    setColor(option.name)
+                  }}
+                  className={cn(
+                    'cursor-pointer flex items-center gap-2 rounded border px-3 py-2 text-sm transition-colors',
+                    selected
+                      ? 'border-cyan-700 ring-1 ring-cyan-700 text-slate-900'
+                      : 'border-slate-200 text-slate-700 hover:border-slate-300',
+                  )}
+                >
+                  <span
+                    aria-hidden="true"
+                    className="h-5 w-5 rounded-full border border-slate-300"
+                    style={{ backgroundColor: option.hex }}
+                  />
+                  {option.name}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Quantity Selector - only show when in stock */}
       {inStock && (

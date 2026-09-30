@@ -1,5 +1,10 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { useCartStore, selectCartTotal, selectCartCount } from './cart'
+import {
+  useCartStore,
+  selectCartTotal,
+  selectCartCount,
+  cartItemKey,
+} from './cart'
 
 describe('Cart Store', () => {
   // Reset store before each test
@@ -247,6 +252,42 @@ describe('Cart Selectors', () => {
 
       const state = useCartStore.getState()
       expect(selectCartCount(state)).toBe(7)
+    })
+  })
+
+  describe('colors', () => {
+    const black = {
+      slug: 'robot-car',
+      name: 'Robot Car',
+      price: 65.99,
+      color: 'Black',
+    }
+    const blueGrey = { ...black, color: 'Blue Grey' }
+
+    it('keeps the same product in different colors on separate lines', () => {
+      useCartStore.getState().addItem(black)
+      useCartStore.getState().addItem(blueGrey, 2)
+      useCartStore.getState().addItem(black)
+
+      const { items } = useCartStore.getState()
+      expect(items).toHaveLength(2)
+      expect(items.find((i) => i.color === 'Black')?.quantity).toBe(2)
+      expect(items.find((i) => i.color === 'Blue Grey')?.quantity).toBe(2)
+    })
+
+    it('updates and removes only the chosen color', () => {
+      useCartStore.getState().addItem(black)
+      useCartStore.getState().addItem(blueGrey)
+
+      useCartStore.getState().updateQuantity(cartItemKey(blueGrey), 5)
+      useCartStore.getState().removeItem(cartItemKey(black))
+
+      const { items } = useCartStore.getState()
+      expect(items).toEqual([{ ...blueGrey, quantity: 5 }])
+    })
+
+    it('uses the bare slug as the key for items without a color', () => {
+      expect(cartItemKey({ slug: 'sensor-kit' })).toBe('sensor-kit')
     })
   })
 })

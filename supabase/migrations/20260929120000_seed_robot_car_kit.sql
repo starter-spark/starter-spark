@@ -30,6 +30,7 @@ INSERT INTO products (
   'draft',
   '{
     "modelPath": "/assets/3d/car/car.glb",
+    "Filament Colors": "Black, Blue Grey",
     "category": "kit",
     "badge": "New",
     "learningOutcomes": [

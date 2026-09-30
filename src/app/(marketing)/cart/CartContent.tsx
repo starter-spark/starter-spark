@@ -8,6 +8,7 @@ import {
   selectCartTotal,
   selectCartCount,
   selectCartSavings,
+  cartItemKey,
 } from '@/store/cart'
 import {
   Minus,
@@ -210,7 +211,7 @@ export function CartContent({
                   {/* Items */}
                   <div className="divide-y divide-slate-100">
                     {items.map((item) => (
-                      <div key={item.slug} className="p-6 flex gap-6">
+                      <div key={cartItemKey(item)} className="p-6 flex gap-6">
                         {/* Image Placeholder */}
                         <div className="w-24 h-24 rounded bg-slate-100 border border-slate-200 flex items-center justify-center flex-shrink-0">
                           <span className="text-slate-500 text-xs font-mono">
@@ -230,7 +231,7 @@ export function CartContent({
                             <button
                               type="button"
                               onClick={() => {
-                                removeItem(item.slug)
+                                removeItem(cartItemKey(item))
                               }}
                               className="cursor-pointer p-1 text-slate-500 hover:text-red-600 transition-colors"
                               aria-label="Remove item"
@@ -239,6 +240,11 @@ export function CartContent({
                             </button>
                           </div>
 
+                          {item.color && (
+                            <p className="text-sm text-slate-600 -mt-1 mb-2">
+                              Color: {item.color}
+                            </p>
+                          )}
                           <p className="text-amber-600 font-mono mb-4">
                             ${item.price.toFixed(2)}
                           </p>
@@ -251,9 +257,12 @@ export function CartContent({
                                 tone={item.quantity === 1 ? 'danger' : 'neutral'}
                                 onClick={() => {
                                   if (item.quantity === 1) {
-                                    removeItem(item.slug)
+                                    removeItem(cartItemKey(item))
                                   } else {
-                                    updateQuantity(item.slug, item.quantity - 1)
+                                    updateQuantity(
+                                      cartItemKey(item),
+                                      item.quantity - 1,
+                                    )
                                   }
                                 }}
                                 aria-label={
@@ -274,7 +283,10 @@ export function CartContent({
                               <QuantityButton
                                 size="md"
                                 onClick={() => {
-                                  updateQuantity(item.slug, item.quantity + 1)
+                                  updateQuantity(
+                                    cartItemKey(item),
+                                    item.quantity + 1,
+                                  )
                                 }}
                                 disabled={item.maxQuantity !== undefined && item.quantity >= item.maxQuantity}
                                 aria-label="Increase quantity"
