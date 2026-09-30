@@ -4,15 +4,13 @@
 -- (StarterSpark-Animation/StarterSpark.blend, 70 parts, car frame in mm).
 --
 -- ============================================================================
--- PLACEHOLDER PRICE: price_cents = 6900 ($69.00) is a recommendation, not a
--- decision. Change it (here or in /admin) before setting status to 'active'.
+-- Price: $65.99, set by fea on 2026-09-29.
 -- ============================================================================
 --
 -- The product is seeded as 'draft' so it stays out of the shop listing until
 -- the price and the items marked CONFIRM below have been checked.
 --
 -- CONFIRM before launch:
---   * IR remote: the CAD has an IR receiver but no remote. The remote is not listed.
 --   * Line sensor channel count: the CAD models it as a single 97 x 27 mm board.
 
 INSERT INTO products (
@@ -27,7 +25,7 @@ INSERT INTO products (
   'robot-car',
   'The Robot Car',
   'Build a two-deck robot car that sees, follows lines and takes orders. Bolt together the acrylic chassis, wire up an Arduino Nano, a TB6612 motor driver and a pan-and-scan ultrasonic sensor, then write the code that makes it dodge walls, trace a black line and answer an IR remote. Every part is pre-cut, every screw has its place, and our step-by-step digital curriculum walks you from first bolt to first autonomous lap. Smart kits. Zero stress.',
-  6900,
+  6599,
   false,
   'draft',
   '{
@@ -39,7 +37,7 @@ INSERT INTO products (
       "Drive two DC gear motors forward, back and through turns with a TB6612 H-bridge and PWM",
       "Measure distance with an HC-SR04 ultrasonic sensor and sweep it with an SG90 servo",
       "Follow a black line using an IR reflectance sensor array under the chassis",
-      "Decode IR remote signals to steer the car by hand",
+      "Decode signals from the included IR remote to steer the car by hand",
       "Draw faces and status icons on an 8×8 LED matrix",
       "Combine sensors into autonomous modes: obstacle avoidance and line following"
     ],
@@ -53,7 +51,8 @@ INSERT INTO products (
       { "quantity": 1, "name": "HC-SR04 ultrasonic sensor", "description": "Distance sensing from 2 cm to 4 m, in a clear acrylic bracket." },
       { "quantity": 1, "name": "SG90 micro servo", "description": "Pans the ultrasonic sensor left and right to scan for obstacles." },
       { "quantity": 1, "name": "IR line-tracking sensor", "description": "Reflectance sensor board mounted under the chassis to follow a line." },
-      { "quantity": 1, "name": "IR receiver module", "description": "Picks up commands from a standard IR remote." },
+      { "quantity": 1, "name": "IR receiver module", "description": "Picks up commands from the included IR remote." },
+      { "quantity": 1, "name": "IR remote", "description": "Drive the car by hand and switch between modes." },
       { "quantity": 1, "name": "8×8 LED matrix", "description": "64 LEDs for expressions, arrows and status." },
       { "quantity": 2, "name": "Acrylic chassis plates", "description": "Pre-cut 136 × 150 mm lower and upper decks with raised frames that locate each module." },
       { "quantity": 4, "name": "Motor brackets", "description": "Acrylic uprights that clamp each motor to the lower deck." },
@@ -68,7 +67,7 @@ INSERT INTO products (
       { "label": "Motor Driver", "value": "TB6612FNG dual H-bridge" },
       { "label": "Drive", "value": "2× 6 V DC gear motors, differential steering + ball caster" },
       { "label": "Wheels", "value": "65 mm diameter, 164 mm track" },
-      { "label": "Sensors", "value": "HC-SR04 ultrasonic (servo-panned), IR line tracker, IR receiver" },
+      { "label": "Sensors", "value": "HC-SR04 ultrasonic (servo-panned), IR line tracker, IR receiver + remote" },
       { "label": "Display", "value": "8×8 LED matrix" },
       { "label": "Chassis", "value": "Two 3 mm acrylic decks on 30 mm M3 standoffs" },
       { "label": "Dimensions", "value": "190 × 153 × 109 mm (W × L × H)" },
