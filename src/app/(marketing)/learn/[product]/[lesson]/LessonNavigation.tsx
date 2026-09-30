@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useCallback, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { CheckCircle2, ChevronLeft, ChevronRight, FastForward } from 'lucide-react'
 
@@ -12,6 +12,7 @@ interface LessonNavigationProps {
   lessonId: string
   progressStorageKey: string
   nextProgressPercent: number
+  completesCourse?: boolean
   showSkipButton?: boolean
 }
 
@@ -32,6 +33,27 @@ function shouldSendCompletion(event: React.MouseEvent<HTMLElement>): boolean {
   return true
 }
 
+// Same burst as a correct quiz answer
+async function celebrate(target: HTMLElement | null) {
+  const rect = target?.getBoundingClientRect()
+  const origin = rect
+    ? {
+        x: (rect.left + rect.width / 2) / window.innerWidth,
+        y: (rect.top + rect.height / 2) / window.innerHeight,
+      }
+    : { x: 0.5, y: 0.6 }
+  // Load confetti only when someone finishes a course
+  const { default: confetti } = await import('canvas-confetti')
+  void confetti({
+    particleCount: 80,
+    spread: 70,
+    startVelocity: 35,
+    origin,
+    colors: ['#0e7490', '#06b6d4', '#22d3ee', '#67e8f9', '#facc15'],
+    disableForReducedMotion: true,
+  })
+}
+
 export function LessonNavigation({
   prevHref,
   nextHref,
@@ -39,14 +61,19 @@ export function LessonNavigation({
   lessonId,
   progressStorageKey,
   nextProgressPercent,
+  completesCourse = false,
   showSkipButton = true,
 }: LessonNavigationProps) {
   const [isSkipping, setIsSkipping] = useState(false)
+  const nextButtonRef = useRef<HTMLAnchorElement>(null)
 
   const markComplete = useCallback(
     (event: React.MouseEvent<HTMLElement>) => {
       if (globalThis.window === undefined) return
       if (!shouldSendCompletion(event)) return
+
+      // The confetti canvas lives on <body>, so it keeps playing after navigation
+      if (completesCourse) void celebrate(nextButtonRef.current)
 
       safeSessionStorageSet(
         `${progressStorageKey}:pending`,
@@ -75,7 +102,7 @@ export function LessonNavigation({
         // Best-effort, non-blocking.
       })
     },
-    [lessonId, nextProgressPercent, progressStorageKey],
+    [completesCourse, lessonId, nextProgressPercent, progressStorageKey],
   )
 
   const handleSkip = useCallback(async () => {
@@ -87,12 +114,17 @@ export function LessonNavigation({
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ lessonId }),
       })
+      if (completesCourse) {
+        // A full page load would clear the confetti, so let it play first
+        await celebrate(nextButtonRef.current)
+        await new Promise((resolve) => setTimeout(resolve, 1500))
+      }
       // Navigate to next lesson
       window.location.href = nextHref
     } catch {
       setIsSkipping(false)
     }
-  }, [lessonId, nextHref])
+  }, [completesCourse, lessonId, nextHref])
 
   return (
     <div className="mt-12 pt-8 border-t border-slate-200">
@@ -132,7 +164,7 @@ export function LessonNavigation({
               : 'bg-cyan-700 hover:bg-cyan-600 text-white font-mono'
           }
         >
-          <Link href={nextHref} onClick={markComplete}>
+          <Link ref={nextButtonRef} href={nextHref} onClick={markComplete}>
             {isLastLesson ? (
               <>
                 <CheckCircle2 className="w-4 h-4 mr-2" />

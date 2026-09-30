@@ -340,6 +340,9 @@ export default async function LessonPage({
             lessonId={lesson.id}
             progressStorageKey={`learn:${user.id}:course:${courseData.id}:progress`}
             nextProgressPercent={nextProgressPercent}
+            completesCourse={
+              progressPercent < 100 && nextProgressPercent >= 100
+            }
           />
         </div>
       </div>

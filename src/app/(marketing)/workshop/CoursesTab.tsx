@@ -99,11 +99,18 @@ export function CoursesTab({
                     (completedInCourse / requiredLessonIds.length) * 100,
                   )
                 : 0
+            // Outline finished courses in green
+            const isCourseComplete =
+              isOwned && requiredLessonIds.length > 0 && progressPercent >= 100
 
             return (
               <div
                 key={course.id}
-                className="bg-white rounded border border-slate-200 overflow-hidden hover:border-cyan-700 transition-colors"
+                className={
+                  isCourseComplete
+                    ? 'bg-white rounded border-2 border-green-500 overflow-hidden hover:border-green-600 transition-colors'
+                    : 'bg-white rounded border border-slate-200 overflow-hidden hover:border-cyan-700 transition-colors'
+                }
               >
                 {/* Course Header */}
                 <div className="p-6 border-b border-slate-100">
