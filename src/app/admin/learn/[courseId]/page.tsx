@@ -141,13 +141,31 @@ async function getCourse(courseId: string): Promise<Course | null> {
   return course
 }
 
+async function getProducts() {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('products')
+    .select('id, name')
+    .order('name')
+
+  if (error) {
+    console.error('Error fetching products:', error)
+    return []
+  }
+
+  return data
+}
+
 export default async function EditCoursePage({
   params,
 }: {
   params: MaybePromise<{ courseId: string }>
 }) {
   const { courseId } = await resolveParams(params)
-  const course = await getCourse(courseId)
+  const [course, products] = await Promise.all([
+    getCourse(courseId),
+    getProducts(),
+  ])
 
   if (!course) {
     notFound()
@@ -189,7 +207,7 @@ export default async function EditCoursePage({
       </div>
 
       {/* Course Editor */}
-      <CourseEditor course={course} />
+      <CourseEditor course={course} products={products} />
     </div>
   )
 }

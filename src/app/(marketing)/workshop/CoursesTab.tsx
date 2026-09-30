@@ -129,6 +129,11 @@ export function CoursesTab({
                       </span>
                     )}
                   </div>
+                  {product && (
+                    <p className="text-xs font-mono text-cyan-700 mb-1">
+                      {product.name}
+                    </p>
+                  )}
                   <h2 className="font-mono text-xl text-slate-900 mb-2">
                     {course.title}
                   </h2>

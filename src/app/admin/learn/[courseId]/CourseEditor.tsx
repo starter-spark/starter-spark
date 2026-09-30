@@ -113,6 +113,7 @@ interface Course {
 
 interface CourseEditorProps {
   course: Course
+  products: { id: string; name: string }[]
 }
 
 const lessonTypeIcons: Record<string, typeof FileText> = {
@@ -131,13 +132,16 @@ const lessonTypeLabels: Record<string, string> = {
   project: 'Project',
 }
 
-export function CourseEditor({ course }: CourseEditorProps) {
+export function CourseEditor({ course, products }: CourseEditorProps) {
   const router = useRouter()
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [newModuleOpen, setNewModuleOpen] = useState(false)
   const [reordering, setReordering] = useState(false)
   const [courseDifficulty, setCourseDifficulty] = useState(course.difficulty)
+  const [courseProductId, setCourseProductId] = useState(
+    course.product?.id ?? '',
+  )
   const [coursePublished, setCoursePublished] = useState(course.is_published)
   const courseFormRef = useRef<HTMLFormElement>(null)
 
@@ -388,6 +392,26 @@ export function CourseEditor({ course }: CourseEditorProps) {
               </Select>
               <input type="hidden" name="difficulty" value={courseDifficulty} />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="product_id">Kit</Label>
+            <Select value={courseProductId} onValueChange={setCourseProductId}>
+              <SelectTrigger id="product_id">
+                <SelectValue placeholder="Select a kit" />
+              </SelectTrigger>
+              <SelectContent>
+                {products.map((product) => (
+                  <SelectItem key={product.id} value={product.id}>
+                    {product.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <input type="hidden" name="product_id" value={courseProductId} />
+            <p className="text-xs text-slate-500">
+              Kids must own this kit to open the course
+            </p>
           </div>
 
           <div className="space-y-2">

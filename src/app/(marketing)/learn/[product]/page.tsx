@@ -278,7 +278,7 @@ export default async function CoursePage({
                     <h1 className="font-mono text-3xl lg:text-4xl font-bold text-slate-900 mb-4">
                       {course.title}
                     </h1>
-                    <p className="text-lg text-slate-600 max-w-2xl mb-6">
+                    <p className="text-lg text-slate-600 max-w-2xl mb-6 whitespace-pre-line">
                       {course.description}
                     </p>
 
