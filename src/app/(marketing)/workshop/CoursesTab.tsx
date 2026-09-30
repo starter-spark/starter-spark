@@ -189,7 +189,7 @@ export function CoursesTab({
                   {/* CTA */}
                   {product && (
                     <Link
-                      href={`/learn/${product.slug}`}
+                      href={`/learn/${product.slug}#course-${course.id}`}
                       className="flex items-center justify-center gap-2 w-full py-2 px-4 bg-cyan-700 hover:bg-cyan-600 text-white font-mono text-sm rounded transition-colors"
                     >
                       {isOwned ? 'Continue Learning' : 'View Course'}

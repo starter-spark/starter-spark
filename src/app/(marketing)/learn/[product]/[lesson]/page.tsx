@@ -35,8 +35,8 @@ export default async function LessonPage({
     notFound()
   }
 
-  // Then fetch the published course structure by product_id
-  const { data: courseData, error: courseError } = await supabase
+  // Then fetch the published course structures by product_id (a kit can have several)
+  const { data: coursesData, error: courseError } = await supabase
     .from('courses')
     .select(
       `
@@ -65,14 +65,14 @@ export default async function LessonPage({
     )
     .eq('product_id', product.id)
     .eq('is_published', true)
-    .maybeSingle()
+    .order('created_at', { ascending: true })
 
   if (courseError) {
     console.error('Error fetching course structure:', courseError)
     throw new Error('Failed to load course')
   }
 
-  if (!courseData) {
+  if (!coursesData || coursesData.length === 0) {
     notFound()
   }
 
@@ -97,8 +97,7 @@ export default async function LessonPage({
         }[]
       | null
   }
-  const modules = courseData.modules as unknown as ModuleWithLessons[] | null
-  const sortedModules =
+  const sortModules = (modules: ModuleWithLessons[] | null) =>
     modules
       ?.filter((m) => m.is_published !== false)
       ?.sort((a, b) => a.sort_order - b.sort_order)
@@ -109,6 +108,21 @@ export default async function LessonPage({
             ?.filter((l) => l.is_published !== false)
             .sort((a, b) => a.sort_order - b.sort_order) || [],
       })) || []
+
+  // Use the first course (oldest first) that contains this lesson
+  const courseStructures = coursesData.map((course) => ({
+    course,
+    sortedModules: sortModules(
+      course.modules as unknown as ModuleWithLessons[] | null,
+    ),
+  }))
+  const match = courseStructures.find(({ sortedModules }) =>
+    sortedModules.some((mod) => mod.lessons.some((l) => l.slug === lessonSlug)),
+  )
+  if (!match) {
+    notFound()
+  }
+  const { course: courseData, sortedModules } = match
 
   const flatLessons = sortedModules.flatMap((mod) =>
     mod.lessons.map((l) => ({ ...l, moduleId: mod.id })),
