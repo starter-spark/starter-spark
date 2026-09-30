@@ -609,10 +609,12 @@ function QuizBlock({
   question,
   options,
   correctAnswer,
+  explanation,
 }: {
   question: string
   options: string[]
   correctAnswer: number | null
+  explanation?: string
 }) {
   const [selected, setSelected] = useState<number | null>(null)
   const [submitted, setSubmitted] = useState(false)
@@ -620,8 +622,33 @@ function QuizBlock({
 
   const isCorrect = submitted && selected === correctAnswer
 
+  const checkButtonRef = useRef<HTMLButtonElement>(null)
+
+  const celebrate = async () => {
+    const rect = checkButtonRef.current?.getBoundingClientRect()
+    const origin = rect
+      ? {
+          x: (rect.left + rect.width / 2) / window.innerWidth,
+          y: (rect.top + rect.height / 2) / window.innerHeight,
+        }
+      : { x: 0.5, y: 0.6 }
+    // Load confetti only when someone gets an answer right
+    const { default: confetti } = await import('canvas-confetti')
+    void confetti({
+      particleCount: 80,
+      spread: 70,
+      startVelocity: 35,
+      origin,
+      colors: ['#0e7490', '#06b6d4', '#22d3ee', '#67e8f9', '#facc15'],
+      disableForReducedMotion: true,
+    })
+  }
+
   const handleSubmit = () => {
     setSubmitted(true)
+    if (selected === correctAnswer) {
+      void celebrate()
+    }
     // Record quiz answer for stats
     if (stats) {
       stats.recordQuizAnswer(selected === correctAnswer)
@@ -636,7 +663,8 @@ function QuizBlock({
       <div className="space-y-2">
         {options.map((opt, i) => {
           const isSelected = selected === i
-          const showCorrect = submitted && correctAnswer === i
+          // Only reveal the right option once it has been picked, so Try Again still means something
+          const showCorrect = isCorrect && correctAnswer === i
           const showIncorrect = submitted && isSelected && correctAnswer !== i
 
           return (
@@ -683,6 +711,7 @@ function QuizBlock({
       </div>
       {!submitted && selected !== null && (
         <button
+          ref={checkButtonRef}
           type="button"
           onClick={handleSubmit}
           className="mt-4 px-4 py-2 rounded bg-cyan-700 hover:bg-cyan-600 text-white font-mono text-sm transition-colors"
@@ -695,13 +724,14 @@ function QuizBlock({
           className={`mt-4 p-3 rounded ${isCorrect ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}
         >
           <p className="text-sm font-medium">
-            {isCorrect
-              ? 'Correct!'
-              : `Incorrect. The correct answer is: ${options[correctAnswer ?? 0]}`}
+            {isCorrect ? 'Correct!' : 'Not quite. Have another go!'}
           </p>
+          {isCorrect && explanation && (
+            <p className="text-sm mt-1">{explanation}</p>
+          )}
         </div>
       )}
-      {submitted && (
+      {submitted && !isCorrect && (
         <button
           type="button"
           onClick={() => {
@@ -1083,8 +1113,12 @@ export function LessonContent({
             const options = Array.isArray(block.options)
               ? block.options.filter((o): o is string => typeof o === 'string')
               : []
+            // The lesson editor saves the answer as `correct`; older content may use the other names
             const correctAnswer =
-              asNumber(block.correctAnswer) ?? asNumber(block.correct_answer)
+              asNumber(block.correct) ??
+              asNumber(block.correctAnswer) ??
+              asNumber(block.correct_answer)
+            const explanation = asString(block.explanation) || undefined
             const blockId = asString(block.id) || `quiz-${index}`
             return (
               <QuizBlock
@@ -1092,6 +1126,7 @@ export function LessonContent({
                 question={question}
                 options={options}
                 correctAnswer={correctAnswer}
+                explanation={explanation}
               />
             )
           }
