@@ -48,8 +48,8 @@ export default async function CoursePage({
     notFound()
   }
 
-  // Then fetch the course by product_id
-  const { data: course, error } = await supabase
+  // Then fetch the published courses by product_id (a kit can have several)
+  const { data: courses, error } = await supabase
     .from('courses')
     .select(
       `
@@ -80,14 +80,14 @@ export default async function CoursePage({
     )
     .eq('product_id', product.id)
     .eq('is_published', true)
-    .maybeSingle()
+    .order('created_at', { ascending: true })
 
   if (error) {
-    console.error('Error fetching course:', error)
+    console.error('Error fetching courses:', error)
     throw new Error('Failed to load course')
   }
 
-  if (!course) {
+  if (!courses || courses.length === 0) {
     notFound()
   }
 
@@ -111,8 +111,7 @@ export default async function CoursePage({
         }[]
       | null
   }
-  const modules = course.modules as unknown as ModuleWithLessons[] | null
-  const sortedModules =
+  const sortModules = (modules: ModuleWithLessons[] | null) =>
     modules
       ?.filter((m) => m.is_published !== false)
       ?.sort((a, b) => a.sort_order - b.sort_order)
@@ -155,289 +154,335 @@ export default async function CoursePage({
     }
   }
 
-  // Calculate progress based on required (non-optional) lessons
-  const allLessons = sortedModules.flatMap((mod) => mod.lessons)
-  const requiredLessons = allLessons.filter((l) => !l.is_optional)
-  const totalLessons = allLessons.length
-  const totalRequiredLessons = requiredLessons.length
-  const completedRequiredCount = requiredLessons.filter((l) =>
-    completedLessonIds.includes(l.id),
-  ).length
-  const progressPercent =
-    totalRequiredLessons > 0
-      ? Math.round((completedRequiredCount / totalRequiredLessons) * 100)
-      : 0
+  // Build each course's curriculum, progress and SEO data
+  const courseViews = courses.map((course) => {
+    const sortedModules = sortModules(
+      course.modules as unknown as ModuleWithLessons[] | null,
+    )
 
-  const courseCtaLabel =
-    progressPercent >= 100
-      ? 'Review Course'
-      : progressPercent > 0
-        ? 'Continue Course'
-        : 'Start Course'
+    // Calculate progress based on required (non-optional) lessons
+    const allLessons = sortedModules.flatMap((mod) => mod.lessons)
+    const requiredLessons = allLessons.filter((l) => !l.is_optional)
+    const totalLessons = allLessons.length
+    const totalRequiredLessons = requiredLessons.length
+    const completedRequiredCount = requiredLessons.filter((l) =>
+      completedLessonIds.includes(l.id),
+    ).length
+    const progressPercent =
+      totalRequiredLessons > 0
+        ? Math.round((completedRequiredCount / totalRequiredLessons) * 100)
+        : 0
 
-  // Get first incomplete required lesson (optional lessons don't block completion)
-  const firstIncompleteLesson = requiredLessons.find(
-    (lesson) => !completedLessonIds.includes(lesson.id),
-  )
-  const firstLesson =
-    firstIncompleteLesson || requiredLessons[0] || allLessons[0]
+    const courseCtaLabel =
+      progressPercent >= 100
+        ? 'Review Course'
+        : progressPercent > 0
+          ? 'Continue Course'
+          : 'Start Course'
 
-  // Generate structured data for SEO
-  const courseSchema = getCourseSchema({
-    name: course.title,
-    description: course.description || '',
-    slug: product.slug,
-    difficulty: course.difficulty || undefined,
-    duration: formatDuration(course.duration_minutes),
-    modules: sortedModules.map((mod) => ({
-      name: mod.title,
-      description: mod.description || undefined,
-    })),
+    // Get first incomplete required lesson (optional lessons don't block completion)
+    const firstIncompleteLesson = requiredLessons.find(
+      (lesson) => !completedLessonIds.includes(lesson.id),
+    )
+    const firstLesson =
+      firstIncompleteLesson || requiredLessons[0] || allLessons[0]
+
+    // Generate structured data for SEO
+    const courseSchema = getCourseSchema({
+      name: course.title,
+      description: course.description || '',
+      slug: product.slug,
+      difficulty: course.difficulty || undefined,
+      duration: formatDuration(course.duration_minutes),
+      modules: sortedModules.map((mod) => ({
+        name: mod.title,
+        description: mod.description || undefined,
+      })),
+    })
+
+    return {
+      course,
+      sortedModules,
+      totalLessons,
+      progressPercent,
+      courseCtaLabel,
+      firstLesson,
+      courseSchema,
+    }
   })
 
   const breadcrumbSchema = getBreadcrumbSchema([
     { name: 'Home', url: '/' },
     { name: 'Learn', url: '/learn' },
-    { name: course.title, url: `/learn/${product.slug}` },
+    {
+      name: courses.length === 1 ? courses[0].title : product.name,
+      url: `/learn/${product.slug}`,
+    },
   ])
 
   return (
     <div className="bg-slate-50">
       {/* JSON-LD Structured Data for SEO */}
-      <script nonce={nonce} type="application/ld+json">
-        {jsonLdScript(courseSchema)}
-      </script>
+      {courseViews.map(({ course, courseSchema }) => (
+        <script key={course.id} nonce={nonce} type="application/ld+json">
+          {jsonLdScript(courseSchema)}
+        </script>
+      ))}
       <script nonce={nonce} type="application/ld+json">
         {jsonLdScript(breadcrumbSchema)}
       </script>
-      {/* Header */}
-      <section className="pt-32 pb-8 px-6 lg:px-20 bg-white border-b border-slate-200">
-        <div className="max-w-7xl mx-auto">
-          <Link
-            href="/learn"
-            className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-cyan-700 mb-6"
+      {courseViews.map(
+        (
+          {
+            course,
+            sortedModules,
+            totalLessons,
+            progressPercent,
+            courseCtaLabel,
+            firstLesson,
+          },
+          courseIndex,
+        ) => (
+          <div
+            key={course.id}
+            id={`course-${course.id}`}
+            className="scroll-mt-20"
           >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Courses
-          </Link>
-
-          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded bg-cyan-50 flex items-center justify-center">
-                  <BookOpen className="w-6 h-6 text-cyan-700" />
-                </div>
-                {isOwned && (
-                  <span className="text-xs font-mono bg-green-100 text-green-700 px-2 py-1 rounded">
-                    Owned
-                  </span>
-                )}
-              </div>
-              <h1 className="font-mono text-3xl lg:text-4xl font-bold text-slate-900 mb-4">
-                {course.title}
-              </h1>
-              <p className="text-lg text-slate-600 max-w-2xl mb-6">
-                {course.description}
-              </p>
-
-              <div className="flex flex-wrap items-center gap-6 text-sm text-slate-600">
-                <div className="flex items-center gap-2">
-                  <Target className="w-4 h-4 text-slate-500" />
-                  <span className="capitalize">{course.difficulty}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-slate-500" />
-                  <span>{formatDuration(course.duration_minutes)}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <BookOpen className="w-4 h-4 text-slate-500" />
-                  <span>{totalLessons} lessons</span>
-                </div>
-              </div>
-            </div>
-
-            {/* CTA Card */}
-            <div className="lg:w-80 bg-slate-50 rounded border border-slate-200 p-6">
-              {isOwned ? (
-                <>
-                  <div className="text-center mb-4">
-                    <div className="text-2xl font-mono text-slate-900 mb-1">
-                      {progressPercent}%
-                    </div>
-                    <p className="text-sm text-slate-500">completed</p>
-                  </div>
-                  <div className="h-2 bg-slate-200 rounded-full overflow-hidden mb-6">
-                    {user && (
-                      <AnimatedProgressFill
-                        progress={progressPercent}
-                        storageKey={`learn:${user.id}:course:${course.id}:progress`}
-                        className="h-full bg-cyan-700 rounded-full"
-                      />
-                    )}
-                  </div>
-                  {firstLesson && (
-                    <Button
-                      asChild
-                      className="w-full bg-cyan-700 hover:bg-cyan-600 text-white font-mono"
-                    >
-                      <Link href={`/learn/${product.slug}/${firstLesson.slug}`}>
-                        {courseCtaLabel}
-                        <ChevronRight className="w-4 h-4 ml-2" />
-                      </Link>
-                    </Button>
-                  )}
-                  {progressPercent >= 100 && (
-                    <Button
-                      asChild
-                      variant="outline"
-                      className="w-full mt-3 border-cyan-700 text-cyan-700 hover:bg-cyan-50 font-mono"
-                    >
-                      <a
-                        href={`/api/certificate?courseId=${course.id}`}
-                        download
-                      >
-                        <Award className="w-4 h-4 mr-2" />
-                        Download Certificate
-                      </a>
-                    </Button>
-                  )}
-                </>
-              ) : (
-                <>
-                  <div className="flex items-center gap-3 mb-4">
-                    <Package className="w-5 h-5 text-slate-500" />
-                    <span className="text-sm text-slate-600">
-                      Kit required to access lessons
-                    </span>
-                  </div>
-                  <Button
-                    asChild
-                    className="w-full bg-cyan-700 hover:bg-cyan-600 text-white font-mono"
+            {/* Header */}
+            <section
+              className={`${courseIndex === 0 ? 'pt-32' : 'pt-12'} pb-8 px-6 lg:px-20 bg-white border-b border-slate-200`}
+            >
+              <div className="max-w-7xl mx-auto">
+                {courseIndex === 0 && (
+                  <Link
+                    href="/learn"
+                    className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-cyan-700 mb-6"
                   >
-                    <Link href={`/shop/${product.slug}`}>
-                      Get the Kit
-                      <ChevronRight className="w-4 h-4 ml-2" />
-                    </Link>
-                  </Button>
-                  <p className="text-xs text-slate-500 text-center mt-3">
-                    Already have a kit?{' '}
-                    <Link
-                      href="/workshop"
-                      className="text-cyan-700 hover:underline"
-                    >
-                      Claim your code
-                    </Link>
-                  </p>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      </section>
+                    <ArrowLeft className="w-4 h-4" />
+                    Back to Courses
+                  </Link>
+                )}
 
-      {/* Curriculum */}
-      <section className="py-12 px-6 lg:px-20">
-        <div className="max-w-7xl mx-auto">
-          <h2 className="font-mono text-2xl text-slate-900 mb-8">Curriculum</h2>
+                <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-12 h-12 rounded bg-cyan-50 flex items-center justify-center">
+                        <BookOpen className="w-6 h-6 text-cyan-700" />
+                      </div>
+                      {isOwned && (
+                        <span className="text-xs font-mono bg-green-100 text-green-700 px-2 py-1 rounded">
+                          Owned
+                        </span>
+                      )}
+                    </div>
+                    <h1 className="font-mono text-3xl lg:text-4xl font-bold text-slate-900 mb-4">
+                      {course.title}
+                    </h1>
+                    <p className="text-lg text-slate-600 max-w-2xl mb-6 whitespace-pre-line">
+                      {course.description}
+                    </p>
 
-          <div className="space-y-6">
-            {sortedModules.map((module, moduleIndex) => (
-              <div
-                key={module.id}
-                className="bg-white rounded border border-slate-200 overflow-hidden"
-              >
-                {/* Module Header */}
-                <div className="p-6 border-b border-slate-100">
-                  <h3 className="font-mono text-lg text-slate-900 mb-1">
-                    Module {moduleIndex + 1}: {module.title}
-                  </h3>
-                  <p className="text-sm text-slate-600">{module.description}</p>
-                </div>
+                    <div className="flex flex-wrap items-center gap-6 text-sm text-slate-600">
+                      <div className="flex items-center gap-2">
+                        <Target className="w-4 h-4 text-slate-500" />
+                        <span className="capitalize">{course.difficulty}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-slate-500" />
+                        <span>{formatDuration(course.duration_minutes)}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <BookOpen className="w-4 h-4 text-slate-500" />
+                        <span>{totalLessons} lessons</span>
+                      </div>
+                    </div>
+                  </div>
 
-                {/* Lessons */}
-                <div className="divide-y divide-slate-100">
-                  {module.lessons.map((lesson) => {
-                    const isAccessible = isOwned
-                    const isCompleted = completedLessonIds.includes(lesson.id)
-                    const href = `/learn/${product.slug}/${lesson.slug}`
-
-                    if (isAccessible) {
-                      return (
-                        <Link
-                          key={lesson.id}
-                          href={href}
-                          aria-label={`Open lesson: ${lesson.title}`}
-                          className="group flex items-center gap-4 p-4 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-600/20 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
-                        >
-                          {/* Status Icon */}
-                          <div className="flex-shrink-0">
-                            {isCompleted ? (
-                              <CheckCircle2 className="w-5 h-5 text-green-500" />
-                            ) : (
-                              <div className="w-5 h-5 rounded-full border-2 border-slate-300" />
-                            )}
+                  {/* CTA Card */}
+                  <div className="lg:w-80 bg-slate-50 rounded border border-slate-200 p-6">
+                    {isOwned ? (
+                      <>
+                        <div className="text-center mb-4">
+                          <div className="text-2xl font-mono text-slate-900 mb-1">
+                            {progressPercent}%
                           </div>
-
-                          {/* Lesson Info */}
-                          <div className="flex-1 min-w-0">
-                            <h4 className="font-medium text-slate-900 group-hover:text-cyan-700 transition-colors">
-                              {lesson.title}
-                            </h4>
-                            <p className="text-sm text-slate-500 line-clamp-1">
-                              {lesson.description}
-                            </p>
-                          </div>
-
-                          {/* Duration */}
-                          <div className="flex-shrink-0 text-sm text-slate-500 font-mono">
-                            {lesson.duration_minutes} min
-                          </div>
-
-                          {/* Arrow */}
-                          <ChevronRight className="w-4 h-4 text-slate-500 flex-shrink-0" />
-                        </Link>
-                      )
-                    }
-
-                    return (
-                      <div
-                        key={lesson.id}
-                        className="flex items-center gap-4 p-4 opacity-60"
-                      >
-                        {/* Status Icon */}
-                        <div className="flex-shrink-0">
-                          {isCompleted ? (
-                            <CheckCircle2 className="w-5 h-5 text-green-500" />
-                          ) : (
-                            <Lock className="w-5 h-5 text-slate-500" />
+                          <p className="text-sm text-slate-500">completed</p>
+                        </div>
+                        <div className="h-2 bg-slate-200 rounded-full overflow-hidden mb-6">
+                          {user && (
+                            <AnimatedProgressFill
+                              progress={progressPercent}
+                              storageKey={`learn:${user.id}:course:${course.id}:progress`}
+                              className="h-full bg-cyan-700 rounded-full"
+                            />
                           )}
                         </div>
-
-                        {/* Lesson Info */}
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-medium text-slate-900">
-                            {lesson.title}
-                          </h4>
-                          <p className="text-sm text-slate-500 line-clamp-1">
-                            {lesson.description}
-                          </p>
+                        {firstLesson && (
+                          <Button
+                            asChild
+                            className="w-full bg-cyan-700 hover:bg-cyan-600 text-white font-mono"
+                          >
+                            <Link href={`/learn/${product.slug}/${firstLesson.slug}`}>
+                              {courseCtaLabel}
+                              <ChevronRight className="w-4 h-4 ml-2" />
+                            </Link>
+                          </Button>
+                        )}
+                        {progressPercent >= 100 && (
+                          <Button
+                            asChild
+                            variant="outline"
+                            className="w-full mt-3 border-cyan-700 text-cyan-700 hover:bg-cyan-50 font-mono"
+                          >
+                            <a
+                              href={`/api/certificate?courseId=${course.id}`}
+                              download
+                            >
+                              <Award className="w-4 h-4 mr-2" />
+                              Download Certificate
+                            </a>
+                          </Button>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <div className="flex items-center gap-3 mb-4">
+                          <Package className="w-5 h-5 text-slate-500" />
+                          <span className="text-sm text-slate-600">
+                            Kit required to access lessons
+                          </span>
                         </div>
-
-                        {/* Duration */}
-                        <div className="flex-shrink-0 text-sm text-slate-500 font-mono">
-                          {lesson.duration_minutes} min
-                        </div>
-
-                        {/* Arrow */}
-                      </div>
-                    )
-                  })}
+                        <Button
+                          asChild
+                          className="w-full bg-cyan-700 hover:bg-cyan-600 text-white font-mono"
+                        >
+                          <Link href={`/shop/${product.slug}`}>
+                            Get the Kit
+                            <ChevronRight className="w-4 h-4 ml-2" />
+                          </Link>
+                        </Button>
+                        <p className="text-xs text-slate-500 text-center mt-3">
+                          Already have a kit?{' '}
+                          <Link
+                            href="/workshop"
+                            className="text-cyan-700 hover:underline"
+                          >
+                            Claim your code
+                          </Link>
+                        </p>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
-            ))}
+            </section>
+
+            {/* Curriculum */}
+            <section className="py-12 px-6 lg:px-20">
+              <div className="max-w-7xl mx-auto">
+                <h2 className="font-mono text-2xl text-slate-900 mb-8">Curriculum</h2>
+
+                <div className="space-y-6">
+                  {sortedModules.map((module, moduleIndex) => (
+                    <div
+                      key={module.id}
+                      className="bg-white rounded border border-slate-200 overflow-hidden"
+                    >
+                      {/* Module Header */}
+                      <div className="p-6 border-b border-slate-100">
+                        <h3 className="font-mono text-lg text-slate-900 mb-1">
+                          Module {moduleIndex + 1}: {module.title}
+                        </h3>
+                        <p className="text-sm text-slate-600">{module.description}</p>
+                      </div>
+
+                      {/* Lessons */}
+                      <div className="divide-y divide-slate-100">
+                        {module.lessons.map((lesson) => {
+                          const isAccessible = isOwned
+                          const isCompleted = completedLessonIds.includes(lesson.id)
+                          const href = `/learn/${product.slug}/${lesson.slug}`
+
+                          if (isAccessible) {
+                            return (
+                              <Link
+                                key={lesson.id}
+                                href={href}
+                                aria-label={`Open lesson: ${lesson.title}`}
+                                className="group flex items-center gap-4 p-4 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-600/20 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+                              >
+                                {/* Status Icon */}
+                                <div className="flex-shrink-0">
+                                  {isCompleted ? (
+                                    <CheckCircle2 className="w-5 h-5 text-green-500" />
+                                  ) : (
+                                    <div className="w-5 h-5 rounded-full border-2 border-slate-300" />
+                                  )}
+                                </div>
+
+                                {/* Lesson Info */}
+                                <div className="flex-1 min-w-0">
+                                  <h4 className="font-medium text-slate-900 group-hover:text-cyan-700 transition-colors">
+                                    {lesson.title}
+                                  </h4>
+                                  <p className="text-sm text-slate-500 line-clamp-1">
+                                    {lesson.description}
+                                  </p>
+                                </div>
+
+                                {/* Duration */}
+                                <div className="flex-shrink-0 text-sm text-slate-500 font-mono">
+                                  {lesson.duration_minutes} min
+                                </div>
+
+                                {/* Arrow */}
+                                <ChevronRight className="w-4 h-4 text-slate-500 flex-shrink-0" />
+                              </Link>
+                            )
+                          }
+
+                          return (
+                            <div
+                              key={lesson.id}
+                              className="flex items-center gap-4 p-4 opacity-60"
+                            >
+                              {/* Status Icon */}
+                              <div className="flex-shrink-0">
+                                {isCompleted ? (
+                                  <CheckCircle2 className="w-5 h-5 text-green-500" />
+                                ) : (
+                                  <Lock className="w-5 h-5 text-slate-500" />
+                                )}
+                              </div>
+
+                              {/* Lesson Info */}
+                              <div className="flex-1 min-w-0">
+                                <h4 className="font-medium text-slate-900">
+                                  {lesson.title}
+                                </h4>
+                                <p className="text-sm text-slate-500 line-clamp-1">
+                                  {lesson.description}
+                                </p>
+                              </div>
+
+                              {/* Duration */}
+                              <div className="flex-shrink-0 text-sm text-slate-500 font-mono">
+                                {lesson.duration_minutes} min
+                              </div>
+
+                              {/* Arrow */}
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
           </div>
-        </div>
-      </section>
+        ),
+      )}
     </div>
   )
 }

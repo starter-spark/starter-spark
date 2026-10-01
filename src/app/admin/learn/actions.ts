@@ -152,6 +152,7 @@ export async function updateCourse(courseId: string, formData: FormData) {
   const durationMinutes =
     Number.parseInt(formData.get('duration_minutes') as string) || 0
   const isPublished = formData.get('is_published') === 'true'
+  const productId = formData.get('product_id') as string | null
 
   if (!title) return { error: 'Title is required' }
   const slug = generateSlug(title)
@@ -166,6 +167,7 @@ export async function updateCourse(courseId: string, formData: FormData) {
       difficulty,
       duration_minutes: durationMinutes,
       is_published: isPublished,
+      ...(productId ? { product_id: productId } : {}),
       updated_at: new Date().toISOString(),
     })
     .eq('id', courseId)
@@ -192,6 +194,7 @@ export async function updateCourse(courseId: string, formData: FormData) {
       difficulty,
       duration_minutes: durationMinutes,
       is_published: isPublished,
+      ...(productId ? { product_id: productId } : {}),
     },
   })
 

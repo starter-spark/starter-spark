@@ -99,11 +99,18 @@ export function CoursesTab({
                     (completedInCourse / requiredLessonIds.length) * 100,
                   )
                 : 0
+            // Outline finished courses in green
+            const isCourseComplete =
+              isOwned && requiredLessonIds.length > 0 && progressPercent >= 100
 
             return (
               <div
                 key={course.id}
-                className="bg-white rounded border border-slate-200 overflow-hidden hover:border-cyan-700 transition-colors"
+                className={
+                  isCourseComplete
+                    ? 'bg-white rounded border-2 border-green-500 overflow-hidden hover:border-green-600 transition-colors'
+                    : 'bg-white rounded border border-slate-200 overflow-hidden hover:border-cyan-700 transition-colors'
+                }
               >
                 {/* Course Header */}
                 <div className="p-6 border-b border-slate-100">
@@ -122,6 +129,11 @@ export function CoursesTab({
                       </span>
                     )}
                   </div>
+                  {product && (
+                    <p className="text-xs font-mono text-cyan-700 mb-1">
+                      {product.name}
+                    </p>
+                  )}
                   <h2 className="font-mono text-xl text-slate-900 mb-2">
                     {course.title}
                   </h2>
@@ -189,7 +201,7 @@ export function CoursesTab({
                   {/* CTA */}
                   {product && (
                     <Link
-                      href={`/learn/${product.slug}`}
+                      href={`/learn/${product.slug}#course-${course.id}`}
                       className="flex items-center justify-center gap-2 w-full py-2 px-4 bg-cyan-700 hover:bg-cyan-600 text-white font-mono text-sm rounded transition-colors"
                     >
                       {isOwned ? 'Continue Learning' : 'View Course'}
