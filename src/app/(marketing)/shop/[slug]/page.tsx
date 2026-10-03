@@ -257,6 +257,10 @@ export default async function ProductDetailPage({
   const modelPathFromSpecs = specs?.modelPath
   const finalModelPath = modelPathFromMedia || modelPathFromSpecs
 
+  // First product video, shown as its own gallery tab
+  const videoMedia = allMedia.find((m) => m.type === 'video')
+  const videoUrl = videoMedia ? await resolveMediaUrl(videoMedia) : undefined
+
   // Fetch charity percentage from site content
   const charityPercentage = await getContent('global.charity.percentage', '67%')
 
@@ -411,6 +415,7 @@ export default async function ProductDetailPage({
                 images={images}
                 modelPath={finalModelPath}
                 modelPreviewUrl={primaryImage}
+                videoUrl={videoUrl}
                 productName={product.name}
               />
             </div>

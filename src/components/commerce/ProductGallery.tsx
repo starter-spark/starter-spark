@@ -1,7 +1,14 @@
 'use client'
 
 import { Button } from '@/components/ui/button'
-import { Box, ChevronLeft, ChevronRight, ImageIcon, ZoomIn } from 'lucide-react'
+import {
+  Box,
+  ChevronLeft,
+  ChevronRight,
+  ImageIcon,
+  Play,
+  ZoomIn,
+} from 'lucide-react'
 import dynamic from 'next/dynamic'
 import Image from 'next/image'
 import { useMemo, useState, useCallback } from 'react'
@@ -19,6 +26,7 @@ interface ProductGalleryProps {
   images?: string[]
   modelPath?: string
   modelPreviewUrl?: string // Preview image shown while 3D model loads
+  videoUrl?: string
   productName: string
 }
 
@@ -43,9 +51,11 @@ function ImageFallback({ label }: { label: string }) {
 export function ProductGallery({
   images = [],
   modelPath,
+  modelPreviewUrl,
+  videoUrl,
   productName,
 }: ProductGalleryProps) {
-  const [view, setView] = useState<'3d' | 'images'>(
+  const [view, setView] = useState<'3d' | 'video' | 'images'>(
     modelPath && images.length === 0 ? '3d' : 'images',
   )
   const [selectedImage, setSelectedImage] = useState(0)
@@ -101,6 +111,18 @@ export function ProductGallery({
         {/* Content */}
         {view === '3d' && modelPath ? (
           <ProductViewer3D modelPath={modelPath} />
+        ) : view === 'video' && videoUrl ? (
+          <video
+            key={videoUrl}
+            src={videoUrl}
+            poster={modelPreviewUrl}
+            controls
+            autoPlay
+            muted
+            playsInline
+            preload="metadata"
+            className="absolute inset-0 h-full w-full bg-black object-contain"
+          />
         ) : hasImages && displayImageSrc ? (
           <button
             type="button"
@@ -184,7 +206,7 @@ export function ProductGallery({
       </div>
 
       {/* Thumbnails */}
-      {(modelPath || images.length > 1) && (
+      {(modelPath || videoUrl || images.length > 1) && (
         <div className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {modelPath && (
             <button
@@ -215,6 +237,37 @@ export function ProductGallery({
                   )}
                 >
                   3D
+                </span>
+              </div>
+            </button>
+          )}
+          {videoUrl && (
+            <button
+              type="button"
+              onClick={() => {
+                setView('video')
+              }}
+              className={cn(
+                `${thumbBaseClass} bg-slate-50`,
+                view === 'video' ? thumbActiveClass : thumbInactiveClass,
+              )}
+              aria-label="Play video"
+            >
+              <div className="w-full h-full flex flex-col items-center justify-center">
+                <Play
+                  className={cn(
+                    'w-4 h-4 mb-0.5',
+                    view === 'video' ? 'text-cyan-700' : 'text-slate-600',
+                  )}
+                  aria-hidden="true"
+                />
+                <span
+                  className={cn(
+                    'text-[10px] font-mono',
+                    view === 'video' ? 'text-cyan-700' : 'text-slate-600',
+                  )}
+                >
+                  Video
                 </span>
               </div>
             </button>
