@@ -16,6 +16,7 @@ import { LearnProgressSync } from '@/components/learn/LearnProgressSync'
 interface LessonSidebarProps {
   product: string
   currentLesson: string
+  courseHref: string
   course: {
     title: string
     modules: {
@@ -31,6 +32,7 @@ interface LessonSidebarProps {
 export function LessonSidebar({
   product,
   currentLesson,
+  courseHref,
   course,
   completedLessonIds,
   progressPercent,
@@ -132,7 +134,7 @@ export function LessonSidebar({
       {/* Header */}
       <div className="p-4 border-b border-slate-200">
         <Link
-          href={`/learn/${product}`}
+          href={courseHref}
           className="flex items-center gap-2 text-sm text-slate-600 hover:text-cyan-700 mb-2"
         >
           <Home className="w-4 h-4" />
