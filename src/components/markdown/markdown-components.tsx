@@ -115,8 +115,44 @@ export function createMarkdownComponents(
     </blockquote>
   )
 
+  // GFM tables, scrollable on narrow screens
+  const Table = ({ children, className }: ComponentPropsWithoutRef<'table'>) => (
+    <div className="my-6 overflow-x-auto rounded border border-slate-200">
+      <table className={cn('w-full border-collapse text-sm [&_tr:last-child_td]:border-b-0', className)}>
+        {children}
+      </table>
+    </div>
+  )
+
+  const Th = ({ children, className, style }: ComponentPropsWithoutRef<'th'>) => (
+    <th
+      style={style}
+      className={cn(
+        'border-b border-slate-200 bg-slate-50 px-4 py-2 text-left font-semibold text-slate-900',
+        className,
+      )}
+    >
+      {children}
+    </th>
+  )
+
+  const Td = ({ children, className, style }: ComponentPropsWithoutRef<'td'>) => (
+    <td
+      style={style}
+      className={cn(
+        'border-b border-slate-100 px-4 py-2 align-top text-slate-700',
+        className,
+      )}
+    >
+      {children}
+    </td>
+  )
+
   return {
     a: Link,
+    table: Table,
+    th: Th,
+    td: Td,
     h1: H1,
     h2: H2,
     h3: H3,

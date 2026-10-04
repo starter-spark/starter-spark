@@ -20,6 +20,7 @@ import {
   jsonLdScript,
 } from '@/lib/structured-data'
 import { AnimatedProgressFill } from '@/components/learn/AnimatedProgressFill'
+import { ScrollToHash } from '@/components/learn/ScrollToHash'
 import { headers } from 'next/headers'
 import { resolveParams, type MaybePromise } from '@/lib/next-params'
 
@@ -483,6 +484,7 @@ export default async function CoursePage({
           </div>
         ),
       )}
+      <ScrollToHash />
     </div>
   )
 }

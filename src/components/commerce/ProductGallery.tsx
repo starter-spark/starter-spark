@@ -1,10 +1,19 @@
 'use client'
 
 import { Button } from '@/components/ui/button'
-import { Box, ChevronLeft, ChevronRight, ImageIcon, ZoomIn } from 'lucide-react'
+import {
+  Box,
+  ChevronLeft,
+  ChevronRight,
+  ImageIcon,
+  Play,
+  Volume2,
+  VolumeX,
+  ZoomIn,
+} from 'lucide-react'
 import dynamic from 'next/dynamic'
 import Image from 'next/image'
-import { useMemo, useState, useCallback } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ProductImage, ThumbnailImage } from '@/components/ui/optimized-image'
 import { cn } from '@/lib/utils'
 import { ProductImageLightbox } from '@/components/commerce/ProductImageLightbox'
@@ -19,6 +28,7 @@ interface ProductGalleryProps {
   images?: string[]
   modelPath?: string
   modelPreviewUrl?: string // Preview image shown while 3D model loads
+  videoUrl?: string
   productName: string
 }
 
@@ -28,6 +38,7 @@ const thumbBaseClass =
   'shrink-0 size-20 rounded border overflow-hidden transition-all cursor-pointer'
 const thumbActiveClass = 'border-cyan-700 ring-2 ring-cyan-700/20'
 const thumbInactiveClass = 'border-slate-200 hover:border-slate-300'
+const AUTO_ROTATE_MS = 10_000
 
 function ImageFallback({ label }: { label: string }) {
   return (
@@ -43,13 +54,19 @@ function ImageFallback({ label }: { label: string }) {
 export function ProductGallery({
   images = [],
   modelPath,
+  modelPreviewUrl,
+  videoUrl,
   productName,
 }: ProductGalleryProps) {
-  const [view, setView] = useState<'3d' | 'images'>(
+  const [view, setView] = useState<'3d' | 'video' | 'images'>(
     modelPath && images.length === 0 ? '3d' : 'images',
   )
   const [selectedImage, setSelectedImage] = useState(0)
   const [lightboxOpen, setLightboxOpen] = useState(false)
+  // Photos advance on their own until the shopper picks something
+  const [autoRotate, setAutoRotate] = useState(true)
+  const [videoMuted, setVideoMuted] = useState(true)
+  const videoRef = useRef<HTMLVideoElement>(null)
 
   const hasImages = images.length > 0
   const imageCount = images.length
@@ -62,8 +79,33 @@ export function ProductGallery({
     return images.at(displayImageIndex) ?? images.at(0) ?? null
   }, [displayImageIndex, hasImages, images])
 
+  useEffect(() => {
+    if (!autoRotate || lightboxOpen || view !== 'images' || imageCount < 2) {
+      return
+    }
+    const timer = setInterval(() => {
+      setSelectedImage((idx) => (idx + 1) % imageCount)
+    }, AUTO_ROTATE_MS)
+    return () => {
+      clearInterval(timer)
+    }
+  }, [autoRotate, imageCount, lightboxOpen, view])
+
+  const handleShowView = useCallback((next: '3d' | 'video') => {
+    setAutoRotate(false)
+    setView(next)
+  }, [])
+
+  const handleToggleMute = useCallback(() => {
+    const video = videoRef.current
+    if (!video) return
+    video.muted = !video.muted
+    if (!video.muted && video.paused) void video.play()
+  }, [])
+
   // Handle image selection from thumbnail
   const handleSelectImage = useCallback((idx: number) => {
+    setAutoRotate(false)
     setSelectedImage(idx)
     setView('images')
   }, [])
@@ -78,18 +120,21 @@ export function ProductGallery({
 
   const handleOpenLightbox = useCallback(() => {
     if (!hasImages) return
+    setAutoRotate(false)
     setView('images')
     setLightboxOpen(true)
   }, [hasImages])
 
   const handlePrevImage = useCallback(() => {
     if (!hasImages) return
+    setAutoRotate(false)
     setView('images')
     setSelectedImage((idx) => (idx - 1 + images.length) % images.length)
   }, [hasImages, images.length])
 
   const handleNextImage = useCallback(() => {
     if (!hasImages) return
+    setAutoRotate(false)
     setView('images')
     setSelectedImage((idx) => (idx + 1) % images.length)
   }, [hasImages, images.length])
@@ -101,6 +146,43 @@ export function ProductGallery({
         {/* Content */}
         {view === '3d' && modelPath ? (
           <ProductViewer3D modelPath={modelPath} />
+        ) : view === 'video' && videoUrl ? (
+          <>
+            <video
+              key={videoUrl}
+              ref={videoRef}
+              src={videoUrl}
+              poster={modelPreviewUrl}
+              controls
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="metadata"
+              onLoadStart={() => {
+                setVideoMuted(true)
+              }}
+              onVolumeChange={(e) => {
+                setVideoMuted(e.currentTarget.muted)
+              }}
+              className="absolute inset-0 h-full w-full bg-black object-contain"
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-lg"
+              onClick={handleToggleMute}
+              className="absolute top-3 right-3 z-20 rounded-full bg-black/60 text-white hover:bg-black/75 hover:text-white"
+              aria-label={videoMuted ? 'Turn sound on' : 'Turn sound off'}
+              aria-pressed={!videoMuted}
+            >
+              {videoMuted ? (
+                <VolumeX className="size-5" aria-hidden="true" />
+              ) : (
+                <Volume2 className="size-5" aria-hidden="true" />
+              )}
+            </Button>
+          </>
         ) : hasImages && displayImageSrc ? (
           <button
             type="button"
@@ -184,13 +266,13 @@ export function ProductGallery({
       </div>
 
       {/* Thumbnails */}
-      {(modelPath || images.length > 1) && (
+      {(modelPath || videoUrl || images.length > 1) && (
         <div className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {modelPath && (
             <button
               type="button"
               onClick={() => {
-                setView('3d')
+                handleShowView('3d')
               }}
               className={cn(
                 `${thumbBaseClass} bg-slate-50`,
@@ -215,6 +297,37 @@ export function ProductGallery({
                   )}
                 >
                   3D
+                </span>
+              </div>
+            </button>
+          )}
+          {videoUrl && (
+            <button
+              type="button"
+              onClick={() => {
+                handleShowView('video')
+              }}
+              className={cn(
+                `${thumbBaseClass} bg-slate-50`,
+                view === 'video' ? thumbActiveClass : thumbInactiveClass,
+              )}
+              aria-label="Play video"
+            >
+              <div className="w-full h-full flex flex-col items-center justify-center">
+                <Play
+                  className={cn(
+                    'w-4 h-4 mb-0.5',
+                    view === 'video' ? 'text-cyan-700' : 'text-slate-600',
+                  )}
+                  aria-hidden="true"
+                />
+                <span
+                  className={cn(
+                    'text-[10px] font-mono',
+                    view === 'video' ? 'text-cyan-700' : 'text-slate-600',
+                  )}
+                >
+                  Video
                 </span>
               </div>
             </button>

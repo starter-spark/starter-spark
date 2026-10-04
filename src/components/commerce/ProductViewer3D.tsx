@@ -1,8 +1,23 @@
 'use client'
 
-import { Canvas } from '@react-three/fiber'
-import { OrbitControls, Stage, useGLTF } from '@react-three/drei'
-import { Suspense, useState, useEffect } from 'react'
+import { Canvas, useThree } from '@react-three/fiber'
+import {
+  Center,
+  ContactShadows,
+  Environment,
+  Lightformer,
+  OrbitControls,
+  useGLTF,
+} from '@react-three/drei'
+import {
+  Suspense,
+  useCallback,
+  useState,
+  useEffect,
+  useLayoutEffect,
+} from 'react'
+import { MathUtils, NeutralToneMapping, PerspectiveCamera, Vector3 } from 'three'
+import type { OrbitControls as OrbitControlsImpl } from 'three/examples/jsm/controls/OrbitControls.js'
 import { ClientErrorBoundary } from '@/components/ui/client-error-boundary'
 
 interface ProductViewer3DProps {
@@ -21,8 +36,91 @@ function Model({ path, onLoad }: { path: string; onLoad: () => void }) {
   return <primitive object={scene} />
 }
 
+interface ModelBounds {
+  height: number
+  radius: number
+}
+
+// Camera sits up and to the right of the model, looking down slightly
+const VIEW_DIRECTION = new Vector3(3, 2.2, 5).normalize()
+
+// Soft studio lighting baked into an environment map. Works at any model
+// scale, unlike point lights, and needs no HDR download.
+function StudioLighting() {
+  return (
+    <Environment resolution={256}>
+      <Lightformer
+        form="rect"
+        intensity={1.2}
+        position={[0, 6, 0]}
+        rotation={[Math.PI / 2, 0, 0]}
+        scale={[12, 12, 1]}
+      />
+      <Lightformer
+        form="rect"
+        intensity={1.5}
+        position={[-6, 2, 4]}
+        rotation={[0, Math.PI / 3, 0]}
+        scale={[6, 4, 1]}
+      />
+      <Lightformer
+        form="rect"
+        intensity={0.8}
+        position={[6, 1, 2]}
+        rotation={[0, -Math.PI / 2, 0]}
+        scale={[6, 4, 1]}
+      />
+      <Lightformer
+        form="rect"
+        intensity={0.6}
+        position={[0, 2, -7]}
+        scale={[12, 4, 1]}
+      />
+    </Environment>
+  )
+}
+
+// Fits the camera to the model so it fills the frame whatever units it was exported in
+function FrameCamera({ bounds }: { bounds: ModelBounds | null }) {
+  const camera = useThree((state) => state.camera)
+  const controls = useThree(
+    (state) => state.controls,
+  ) as unknown as OrbitControlsImpl | null
+
+  useLayoutEffect(() => {
+    if (!bounds || !controls || !(camera instanceof PerspectiveCamera)) return
+    const fov = MathUtils.degToRad(camera.fov)
+    const distance = (bounds.radius * 0.85) / Math.sin(fov / 2)
+    const target = new Vector3(0, -bounds.height * 0.08, 0)
+    camera.position.copy(VIEW_DIRECTION).multiplyScalar(distance).add(target)
+    camera.near = distance / 100
+    camera.far = distance * 100
+    camera.updateProjectionMatrix()
+    controls.target.copy(target)
+    controls.minDistance = distance * 0.4
+    controls.maxDistance = distance * 2
+    controls.update()
+  }, [bounds, camera, controls])
+
+  return null
+}
+
 export default function ProductViewer3D({ modelPath }: ProductViewer3DProps) {
   const [isLoaded, setIsLoaded] = useState(false)
+  const [bounds, setBounds] = useState<ModelBounds | null>(null)
+  // Stable so <Center> doesn't re-run its layout effect on every render
+  const handleCentered = useCallback(
+    ({
+      height,
+      boundingSphere,
+    }: {
+      height: number
+      boundingSphere: { radius: number }
+    }) => {
+      setBounds({ height, radius: boundingSphere.radius })
+    },
+    [],
+  )
   const [canRender3d, setCanRender3d] = useState(() => {
     const isWebdriver = typeof navigator !== 'undefined' && navigator.webdriver
     return !isWebdriver && supportsWebGL()
@@ -140,28 +238,45 @@ export default function ProductViewer3D({ modelPath }: ProductViewer3DProps) {
             setIsLoaded(true)
           }}
         >
-          <Canvas camera={{ position: [0, 0, 5], fov: 45 }} aria-hidden="true">
+          <Canvas
+            camera={{ position: [3, 2.2, 5], fov: 35 }}
+            dpr={[1, 2]}
+            onCreated={({ gl }) => {
+              // Neutral keeps filament colours true instead of washing them out
+              gl.toneMapping = NeutralToneMapping
+            }}
+            aria-hidden="true"
+          >
             <Suspense fallback={null}>
-              <Stage
-                intensity={0.8}
-                environment={null}
-                shadows="contact"
-                adjustCamera={false}
-              >
+              <StudioLighting />
+              <directionalLight position={[4, 6, 5]} intensity={1.4} />
+              <Center onCentered={handleCentered}>
                 <Model
                   path={modelPath}
                   onLoad={() => {
                     setIsLoaded(true)
                   }}
                 />
-              </Stage>
-              <OrbitControls
-                enableZoom={true}
-                enablePan={false}
-                minPolarAngle={Math.PI / 4}
-                maxPolarAngle={Math.PI / 1.5}
-              />
+              </Center>
+              {bounds && (
+                <ContactShadows
+                  position={[0, -bounds.height / 2 - 0.001, 0]}
+                  opacity={0.4}
+                  blur={2.5}
+                  scale={bounds.radius * 5}
+                  far={bounds.height}
+                  resolution={512}
+                  frames={1}
+                />
+              )}
+              <FrameCamera bounds={bounds} />
             </Suspense>
+            <OrbitControls
+              makeDefault
+              enablePan={false}
+              minPolarAngle={Math.PI / 6}
+              maxPolarAngle={Math.PI / 2.1}
+            />
           </Canvas>
         </ClientErrorBoundary>
       </div>

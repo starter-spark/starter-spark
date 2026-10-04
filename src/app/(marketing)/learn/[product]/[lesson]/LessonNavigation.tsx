@@ -138,7 +138,7 @@ export function LessonNavigation({
             className="text-sm text-slate-500 hover:text-slate-700 flex items-center gap-1.5 transition-colors disabled:opacity-50"
           >
             <FastForward className="w-4 h-4" />
-            {isSkipping ? 'Skipping...' : 'I already know this — skip ahead'}
+            {isSkipping ? 'Skipping...' : 'I already know this, skip ahead'}
           </button>
         </div>
       )}
