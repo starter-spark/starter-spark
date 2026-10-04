@@ -18,6 +18,7 @@ import { resolveParams, type MaybePromise } from '@/lib/next-params'
 import type { Json } from '@/lib/supabase/database.types'
 import type { ReviewAuthor, ReviewListItem, UserReview } from '@/features/reviews/types'
 import { computeReviewSummary } from '@/features/reviews/summary'
+import { getTechnicalSpecs } from '@/lib/product-specs'
 
 // Type for product specs JSONB
 interface ProductSpecs {
@@ -222,7 +223,7 @@ export default async function ProductDetailPage({
   // Extract data from specs with defaults (modelPath now handled after media extraction)
   const learningOutcomes = specs?.learningOutcomes || []
   const includedItems = specs?.includedItems || []
-  const technicalSpecs = specs?.technicalSpecs || []
+  const technicalSpecs = getTechnicalSpecs(product.specs)
   const price = product.price_cents / 100
   const originalPrice = product.original_price_cents
     ? product.original_price_cents / 100
@@ -255,6 +256,10 @@ export default async function ProductDetailPage({
     : undefined
   const modelPathFromSpecs = specs?.modelPath
   const finalModelPath = modelPathFromMedia || modelPathFromSpecs
+
+  // First product video, shown as its own gallery tab
+  const videoMedia = allMedia.find((m) => m.type === 'video')
+  const videoUrl = videoMedia ? await resolveMediaUrl(videoMedia) : undefined
 
   // Fetch charity percentage from site content
   const charityPercentage = await getContent('global.charity.percentage', '67%')
@@ -410,6 +415,7 @@ export default async function ProductDetailPage({
                 images={images}
                 modelPath={finalModelPath}
                 modelPreviewUrl={primaryImage}
+                videoUrl={videoUrl}
                 productName={product.name}
               />
             </div>

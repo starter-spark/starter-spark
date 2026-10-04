@@ -123,6 +123,8 @@ export default async function LessonPage({
     notFound()
   }
   const { course: courseData, sortedModules } = match
+  // Several courses can share a kit page, so link back to this one
+  const courseHref = `/learn/${productSlug}#course-${courseData.id}`
 
   const flatLessons = sortedModules.flatMap((mod) =>
     mod.lessons.map((l) => ({ ...l, moduleId: mod.id })),
@@ -142,11 +144,11 @@ export default async function LessonPage({
       : null
   const nextHref = nextLesson
     ? `/learn/${productSlug}/${nextLesson.slug}`
-    : `/learn/${productSlug}`
+    : courseHref
   const prefetchHrefs =
-    nextHref === `/learn/${productSlug}`
+    nextHref === courseHref
       ? [nextHref]
-      : [nextHref, `/learn/${productSlug}`]
+      : [nextHref, courseHref]
 
   const {
     data: { user },
@@ -176,7 +178,7 @@ export default async function LessonPage({
 
   // Redirect to course page if not owned
   if (!isOwned) {
-    redirect(`/learn/${productSlug}`)
+    redirect(courseHref)
   }
 
   interface LessonContentData {
@@ -267,6 +269,7 @@ export default async function LessonPage({
       <LessonSidebar
         product={productSlug}
         currentLesson={lessonSlug}
+        courseHref={courseHref}
         course={sidebarCourse}
         completedLessonIds={completedLessonIds}
         progressPercent={progressPercent}
@@ -279,7 +282,7 @@ export default async function LessonPage({
         <div className="lg:hidden sticky top-0 z-40 bg-white border-b border-slate-200 px-4 py-3">
           <div className="flex items-center justify-between">
             <Link
-              href={`/learn/${productSlug}`}
+              href={courseHref}
               className="text-sm text-slate-500 hover:text-cyan-700"
             >
               <Home className="w-5 h-5" />
@@ -300,7 +303,7 @@ export default async function LessonPage({
             </Link>
             <ChevronRight className="w-4 h-4" />
             <Link
-              href={`/learn/${productSlug}`}
+              href={courseHref}
               className="hover:text-cyan-700"
             >
               {courseData.title}
@@ -334,7 +337,7 @@ export default async function LessonPage({
             nextHref={
               nextLesson
                 ? `/learn/${productSlug}/${nextLesson.slug}`
-                : `/learn/${productSlug}`
+                : courseHref
             }
             isLastLesson={!nextLesson}
             lessonId={lesson.id}
