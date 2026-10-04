@@ -84,11 +84,12 @@ export async function FeaturedProduct() {
     }[]
   }
 
-  // Extract only images from product_media (filter out 3D models, videos, documents)
-  const images = (product.product_media || [])
-    .filter((m) => m.type === 'image')
-    .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
-    .map((m) => m.url)
+  // Images for the carousel, plus the first video (3D models stay on the product page)
+  const media = (product.product_media || []).sort(
+    (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0),
+  )
+  const images = media.filter((m) => m.type === 'image').map((m) => m.url)
+  const videoUrl = media.find((m) => m.type === 'video')?.url
 
   const productSchema = getProductSchema({
     name: product.name,
@@ -132,6 +133,7 @@ export async function FeaturedProduct() {
           description: product.description,
           priceCents: product.price_cents,
           images,
+          videoUrl,
         }}
         reviewSummary={reviewSummary}
       />
