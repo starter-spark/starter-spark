@@ -2,7 +2,6 @@ import { createClient } from '@/lib/supabase/server'
 import { ProductSpotlightSection } from './ProductSpotlight'
 import { getProductSchema, jsonLdScript } from '@/lib/structured-data'
 import { headers } from 'next/headers'
-import type { Json } from '@/lib/supabase/database.types'
 
 /**
  * Server component that fetches the featured product and renders ProductSpotlight
@@ -23,7 +22,6 @@ export async function FeaturedProduct() {
       slug: string
       description: string | null
       price_cents: number
-      specs: Json | null
       product_media: {
         type: string
         url: string
@@ -40,7 +38,7 @@ export async function FeaturedProduct() {
         `
         priority,
         products (
-          id, name, slug, description, price_cents, specs,
+          id, name, slug, description, price_cents,
           product_media (
             type,
             url,
@@ -78,37 +76,12 @@ export async function FeaturedProduct() {
     slug: string
     description: string | null
     price_cents: number
-    specs: Json | null
     product_media: {
       type: string
       url: string
       is_primary: boolean | null
       sort_order: number | null
     }[]
-  }
-
-  const normalizeSpecs = (
-    value: Json | null,
-  ): Record<string, string> | null => {
-    if (!value || typeof value !== 'object' || Array.isArray(value)) return null
-    const entries = Object.entries(value)
-    if (entries.length === 0) return null
-    const normalizedEntries: Array<[string, string]> = []
-    for (const [key, entryValue] of entries) {
-      if (entryValue === null || entryValue === undefined) continue
-      if (
-        typeof entryValue === 'string' ||
-        typeof entryValue === 'number' ||
-        typeof entryValue === 'boolean'
-      ) {
-        normalizedEntries.push([key, String(entryValue)])
-      } else {
-        return null
-      }
-    }
-    return normalizedEntries.length > 0
-      ? Object.fromEntries(normalizedEntries)
-      : null
   }
 
   // Extract only images from product_media (filter out 3D models, videos, documents)
@@ -158,7 +131,6 @@ export async function FeaturedProduct() {
           slug: product.slug,
           description: product.description,
           priceCents: product.price_cents,
-          specs: normalizeSpecs(product.specs),
           images,
         }}
         reviewSummary={reviewSummary}

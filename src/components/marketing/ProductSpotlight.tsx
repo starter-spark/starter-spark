@@ -12,23 +12,12 @@ import { SectionIntro } from './SectionIntro'
 import { ctaPrimaryCompact } from './cta-classes'
 import { StarRating } from '@/features/reviews/components/StarRating'
 
-// Default specs shown when product.specs is not available
-const defaultSpecs = [
-  { label: 'Microcontroller', value: 'Arduino Nano (ATmega328P)' },
-  { label: 'Servos', value: '2× SG90, 3× MG996R' },
-  { label: 'Degrees of Freedom', value: '4 (Base, Shoulder, Elbow, Gripper)' },
-  { label: 'Power', value: '4× AA Battery Pack' },
-  { label: 'Build Time', value: '~3 hours' },
-  { label: 'Skill Level', value: 'Beginner friendly' },
-]
-
 interface ProductSpotlightProps {
   product: {
     name: string
     slug: string
     description: string | null
     priceCents: number
-    specs: Record<string, string> | null
     images?: string[]
   }
   reviewSummary?: { average: number; total: number } | null
@@ -55,11 +44,6 @@ export function ProductSpotlightSection({
   const handleSelectImage = useCallback((idx: number) => {
     setSelectedImage(idx)
   }, [])
-
-  // Convert specs object to array format, or use defaults
-  const specs = product.specs
-    ? Object.entries(product.specs).map(([label, value]) => ({ label, value }))
-    : defaultSpecs
 
   const priceDisplay = (product.priceCents / 100).toFixed(2)
 
@@ -220,26 +204,6 @@ export function ProductSpotlightSection({
                   </p>
                 </>
               )}
-            </div>
-
-            {/* Specs Table */}
-            <div className="bg-white rounded border border-slate-200 p-4 mb-8">
-              <h4 className="font-mono text-sm text-slate-500 mb-3 uppercase tracking-wide">
-                Specifications
-              </h4>
-              <div className="space-y-2">
-                {specs.map((spec) => (
-                  <div
-                    key={spec.label}
-                    className="flex justify-between text-sm border-b border-slate-100 pb-2 last:border-0 last:pb-0"
-                  >
-                    <span className="text-slate-500">{spec.label}</span>
-                    <span className="text-slate-900 font-mono">
-                      {spec.value}
-                    </span>
-                  </div>
-                ))}
-              </div>
             </div>
 
             {/* Price and CTA */}
