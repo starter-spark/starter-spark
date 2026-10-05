@@ -23,6 +23,7 @@ import remarkEmoji from 'remark-emoji'
 import { visit } from 'unist-util-visit'
 import type { Plugin } from 'unified'
 import type { Root } from 'mdast'
+import type { Element as HastElement } from 'hast'
 import {
   normalizeLearnAssetValue,
   parseLearnAssetRef,
@@ -86,6 +87,22 @@ const markdownStyles = {
 
 const inlineCodeClassName =
   'bg-slate-100 px-1.5 py-0.5 rounded font-mono text-sm'
+
+// Lesson pictures: capped width, centred. An italic line under a picture
+// (same paragraph or the next one) becomes a small caption.
+const lessonImageClassName =
+  'mx-auto mt-6 mb-2 block h-auto w-full max-w-[560px] rounded-lg'
+const figureClassName = [
+  'mb-4 [&>em]:block [&>em]:text-center [&>em]:text-sm [&>em]:text-slate-500',
+  '[&+p[data-caption]]:-mt-2 [&+p[data-caption]]:text-center [&+p[data-caption]]:text-sm [&+p[data-caption]]:text-slate-500',
+].join(' ')
+
+// Paragraph children, ignoring blank text between them
+function meaningfulChildren(node?: HastElement) {
+  return (node?.children ?? []).filter(
+    (child) => !(child.type === 'text' && !child.value.trim()),
+  )
+}
 
 interface LessonContentProps {
   content: string
@@ -868,6 +885,34 @@ export function LessonContent({
   const markdownComponents: Components = createMarkdownComponents(markdownStyles, {
     strong: ({ children }) => <strong>{children}</strong>,
     em: ({ children }) => <em>{children}</em>,
+    img: ({ src, alt, title }) => (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={src}
+        alt={alt ?? ''}
+        title={title}
+        loading="lazy"
+        className={lessonImageClassName}
+      />
+    ),
+    p: ({ node, children }) => {
+      const kids = meaningfulChildren(node)
+      const hasImage = kids.some(
+        (child) => child.type === 'element' && child.tagName === 'img',
+      )
+      if (hasImage) {
+        return <div className={figureClassName}>{children}</div>
+      }
+      const isCaption =
+        kids.length === 1 &&
+        kids[0].type === 'element' &&
+        kids[0].tagName === 'em'
+      return (
+        <p className={markdownStyles.p} data-caption={isCaption || undefined}>
+          {children}
+        </p>
+      )
+    },
     div: ({
       children,
       ...props
