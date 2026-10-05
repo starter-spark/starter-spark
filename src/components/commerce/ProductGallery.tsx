@@ -39,6 +39,10 @@ const thumbBaseClass =
 const thumbActiveClass = 'border-cyan-700 ring-2 ring-cyan-700/20'
 const thumbInactiveClass = 'border-slate-200 hover:border-slate-300'
 const AUTO_ROTATE_MS = 10_000
+const FADE_MS = 700
+
+// An image index, or the video
+type SlideKey = number | 'video'
 
 function ImageFallback({ label }: { label: string }) {
   return (
@@ -79,17 +83,82 @@ export function ProductGallery({
     return images.at(displayImageIndex) ?? images.at(0) ?? null
   }, [displayImageIndex, hasImages, images])
 
-  useEffect(() => {
-    if (!autoRotate || lightboxOpen || view !== 'images' || imageCount < 2) {
+  // Rotation order: each photo, then the video, then back to the first photo
+  const slideCount = imageCount + (videoUrl ? 1 : 0)
+  const rotating = autoRotate && !lightboxOpen && slideCount > 1
+
+  const advance = useCallback(() => {
+    if (view === 'video') {
+      if (hasImages) {
+        setSelectedImage(0)
+        setView('images')
+      }
       return
     }
-    const timer = setInterval(() => {
-      setSelectedImage((idx) => (idx + 1) % imageCount)
-    }, AUTO_ROTATE_MS)
-    return () => {
-      clearInterval(timer)
+    if (displayImageIndex < imageCount - 1) {
+      setSelectedImage(displayImageIndex + 1)
+    } else if (videoUrl) {
+      setView('video')
+    } else {
+      setSelectedImage(0)
     }
-  }, [autoRotate, imageCount, lightboxOpen, view])
+  }, [displayImageIndex, hasImages, imageCount, videoUrl, view])
+
+  // Photos stay up for 10 seconds
+  useEffect(() => {
+    if (!rotating || view !== 'images') return
+    const timer = setTimeout(advance, AUTO_ROTATE_MS)
+    return () => {
+      clearTimeout(timer)
+    }
+  }, [advance, rotating, view])
+
+  // The video moves on when it ends. If the browser blocks autoplay,
+  // treat it like a photo instead.
+  useEffect(() => {
+    if (!rotating || view !== 'video') return
+    const video = videoRef.current
+    if (!video) return
+    let cancelled = false
+    let timer: ReturnType<typeof setTimeout> | undefined
+    video.play().catch(() => {
+      if (!cancelled) timer = setTimeout(advance, AUTO_ROTATE_MS)
+    })
+    return () => {
+      cancelled = true
+      clearTimeout(timer)
+    }
+  }, [advance, rotating, view])
+
+  // Keep the old slide underneath while the new one fades in
+  const currentKey: SlideKey | null =
+    view === 'video' && videoUrl
+      ? 'video'
+      : view === 'images' && displayImageSrc
+        ? displayImageIndex
+        : null
+  const [shownKey, setShownKey] = useState<SlideKey | null>(currentKey)
+  const [prevKey, setPrevKey] = useState<SlideKey | null>(null)
+  if (currentKey !== shownKey) {
+    setPrevKey(shownKey)
+    setShownKey(currentKey)
+  }
+  useEffect(() => {
+    if (prevKey === null) return
+    const timer = setTimeout(() => {
+      setPrevKey(null)
+    }, FADE_MS)
+    return () => {
+      clearTimeout(timer)
+    }
+  }, [prevKey, currentKey])
+  const slideOrder = (key: SlideKey) => (key === 'video' ? imageCount : key)
+  const layerKeys = [prevKey, currentKey]
+    .filter(
+      (key, i, all): key is SlideKey =>
+        key !== null && all.indexOf(key) === i,
+    )
+    .sort((a, b) => slideOrder(a) - slideOrder(b))
 
   const handleShowView = useCallback((next: '3d' | 'video') => {
     setAutoRotate(false)
@@ -146,91 +215,120 @@ export function ProductGallery({
         {/* Content */}
         {view === '3d' && modelPath ? (
           <ProductViewer3D modelPath={modelPath} />
-        ) : view === 'video' && videoUrl ? (
-          <>
-            <video
-              key={videoUrl}
-              ref={videoRef}
-              src={videoUrl}
-              poster={modelPreviewUrl}
-              controls
-              autoPlay
-              muted
-              loop
-              playsInline
-              preload="metadata"
-              onLoadStart={() => {
-                setVideoMuted(true)
-              }}
-              onVolumeChange={(e) => {
-                setVideoMuted(e.currentTarget.muted)
-              }}
-              className="absolute inset-0 h-full w-full bg-black object-contain"
-            />
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-lg"
-              onClick={handleToggleMute}
-              className="absolute top-3 right-3 z-20 rounded-full bg-black/60 text-white hover:bg-black/75 hover:text-white"
-              aria-label={videoMuted ? 'Turn sound on' : 'Turn sound off'}
-              aria-pressed={!videoMuted}
-            >
-              {videoMuted ? (
-                <VolumeX className="size-5" aria-hidden="true" />
-              ) : (
-                <Volume2 className="size-5" aria-hidden="true" />
-              )}
-            </Button>
-          </>
-        ) : hasImages && displayImageSrc ? (
-          <button
-            type="button"
-            onClick={handleOpenLightbox}
-            className="absolute inset-0 cursor-zoom-in"
-            aria-label="Open image viewer"
-          >
-            <div className="relative h-full w-full">
-              {/* Soft backdrop so letterboxing feels intentional */}
-              <Image
-                src={displayImageSrc}
-                alt=""
-                fill
-                sizes="(max-width: 1024px) 100vw, 60vw"
-                quality={20}
-                loading="lazy"
-                fetchPriority="low"
-                className="object-cover blur-2xl scale-110 opacity-25 pointer-events-none"
-                aria-hidden={true}
-              />
+        ) : currentKey !== null ? (
+          layerKeys.map((key) => {
+            const isCurrent = key === currentKey
+            const imageSrc = key === 'video' ? null : images.at(key)
+            return (
               <div
-                className="absolute inset-0 bg-white/55"
-                aria-hidden="true"
-              />
-              <ProductImage
-                src={displayImageSrc}
-                alt={`${productName} - Image ${displayImageIndex + 1}`}
-                sizes="(max-width: 1024px) 100vw, 60vw"
-                quality={95}
-                wrapperClassName="absolute inset-0"
-                fallback={
-                  <ImageFallback label="Image unavailable" />
-                }
-              />
-              <div
-                className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors"
-                aria-hidden="true"
-              />
-              {images.length > 0 && (
-                <div
-                  className="absolute bottom-3 right-3 rounded-full bg-black/60 text-white p-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                  aria-hidden="true"
-                >
-                  <ZoomIn className="size-4" aria-hidden="true" />
-                </div>
-              )}
-            </div>
-          </button>
+                key={key}
+                className={cn(
+                  'absolute inset-0 bg-white',
+                  isCurrent ? 'z-10' : 'z-0 pointer-events-none',
+                  isCurrent &&
+                    prevKey !== null &&
+                    'motion-safe:animate-in motion-safe:fade-in',
+                )}
+                style={{ animationDuration: `${FADE_MS}ms` }}
+                aria-hidden={!isCurrent}
+              >
+                {key === 'video' ? (
+                  <>
+                    {/* White letterbox matches the video's own background */}
+                    <video
+                      key={videoUrl}
+                      ref={videoRef}
+                      src={videoUrl}
+                      poster={modelPreviewUrl}
+                      controls
+                      autoPlay
+                      muted
+                      loop={!rotating}
+                      playsInline
+                      preload="metadata"
+                      onLoadStart={() => {
+                        setVideoMuted(true)
+                      }}
+                      onVolumeChange={(e) => {
+                        setVideoMuted(e.currentTarget.muted)
+                      }}
+                      onEnded={() => {
+                        if (rotating) advance()
+                      }}
+                      onError={() => {
+                        if (rotating) advance()
+                      }}
+                      className="absolute inset-0 h-full w-full bg-white object-contain"
+                    />
+                    {isCurrent && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-lg"
+                        onClick={handleToggleMute}
+                        className="absolute top-3 right-3 z-20 rounded-full bg-black/60 text-white hover:bg-black/75 hover:text-white"
+                        aria-label={
+                          videoMuted ? 'Turn sound on' : 'Turn sound off'
+                        }
+                        aria-pressed={!videoMuted}
+                      >
+                        {videoMuted ? (
+                          <VolumeX className="size-5" aria-hidden="true" />
+                        ) : (
+                          <Volume2 className="size-5" aria-hidden="true" />
+                        )}
+                      </Button>
+                    )}
+                  </>
+                ) : imageSrc ? (
+                  <button
+                    type="button"
+                    onClick={handleOpenLightbox}
+                    tabIndex={isCurrent ? undefined : -1}
+                    className="absolute inset-0 cursor-zoom-in"
+                    aria-label="Open image viewer"
+                  >
+                    <div className="relative h-full w-full">
+                      {/* Soft backdrop so letterboxing feels intentional */}
+                      <Image
+                        src={imageSrc}
+                        alt=""
+                        fill
+                        sizes="(max-width: 1024px) 100vw, 60vw"
+                        quality={20}
+                        loading="lazy"
+                        fetchPriority="low"
+                        className="object-cover blur-2xl scale-110 opacity-25 pointer-events-none"
+                        aria-hidden={true}
+                      />
+                      <div
+                        className="absolute inset-0 bg-white/55"
+                        aria-hidden="true"
+                      />
+                      <ProductImage
+                        src={imageSrc}
+                        alt={`${productName} - Image ${key + 1}`}
+                        sizes="(max-width: 1024px) 100vw, 60vw"
+                        quality={95}
+                        wrapperClassName="absolute inset-0"
+                        fallback={<ImageFallback label="Image unavailable" />}
+                      />
+                      <div
+                        className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors"
+                        aria-hidden="true"
+                      />
+                      <div
+                        className="absolute bottom-3 right-3 rounded-full bg-black/60 text-white p-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                        aria-hidden="true"
+                      >
+                        <ZoomIn className="size-4" aria-hidden="true" />
+                      </div>
+                    </div>
+                  </button>
+                ) : null}
+              </div>
+            )
+          })
         ) : (
           <ImageFallback label={productName} />
         )}
